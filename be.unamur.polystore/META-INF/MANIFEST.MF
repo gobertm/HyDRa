@@ -1,0 +1,29 @@
+Manifest-Version: 1.0
+Automatic-Module-Name: be.unamur.polystore
+Bundle-ManifestVersion: 2
+Bundle-Name: be.unamur.polystore
+Bundle-Vendor: My Company
+Bundle-Version: 1.0.0.qualifier
+Bundle-SymbolicName: be.unamur.polystore; singleton:=true
+Bundle-ActivationPolicy: lazy
+Require-Bundle: org.eclipse.xtext,
+ org.eclipse.xtext.xbase,
+ org.eclipse.equinox.common;bundle-version="3.5.0",
+ org.eclipse.emf.ecore,
+ org.eclipse.xtext.xbase.lib;bundle-version="2.14.0",
+ org.eclipse.xtext.util,
+ org.eclipse.emf.common,
+ org.antlr.runtime;bundle-version="[3.2.0,3.2.1)"
+Bundle-RequiredExecutionEnvironment: JavaSE-11
+Export-Package: be.unamur.polystore,
+ be.unamur.polystore.pml.impl,
+ be.unamur.polystore.scoping,
+ be.unamur.polystore.validation,
+ be.unamur.polystore.pml,
+ be.unamur.polystore.serializer,
+ be.unamur.polystore.services,
+ be.unamur.polystore.pml.util,
+ be.unamur.polystore.generator,
+ be.unamur.polystore.parser.antlr.internal,
+ be.unamur.polystore.parser.antlr
+Import-Package: org.apache.log4j

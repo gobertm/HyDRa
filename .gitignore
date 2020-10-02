@@ -1,0 +1,9 @@
+target
+src-gen
+xtend-gen
+.settings
+.metadata
+bin
+generated
+test-bin
+.classpath

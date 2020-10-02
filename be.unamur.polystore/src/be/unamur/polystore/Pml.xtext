@@ -1,0 +1,176 @@
+grammar be.unamur.polystore.Pml with org.eclipse.xtext.common.Terminals
+
+generate pml "http://www.unamur.be/polystore/Pml"
+
+Domainmodel:
+    conceptualSchema=ConceptualSchema & physicalSchema=AbstractPhysicalSchema & mappingRules+= MappingRules
+    
+;
+
+ConceptualSchema :
+	'conceptual' 'schema' name=ID '{'
+		(entities+=EntityTypes)+ & (relationships+=RelationshipTypes)*
+	'}'
+;
+
+EntityTypes returns EntityTypes:
+	'entity' 'type' name=ID '{'
+		(attributes+=Attribute (','attributes+=Attribute)*)?
+		'}'
+;
+ 
+RelationshipTypes:
+	'relationship' 'type' name=ID '{'
+	((roles+=RoleName) ('['cardinalities+=Cardinality']') ':' (entities+=[EntityTypes]))+ 
+	(attributes+=Attribute)?
+'}'
+;
+
+Attribute:
+	name=ID ':' (type=DataType)
+;
+
+RoleName:
+	name=ID
+;
+
+Cardinality:
+	'0..*'|'1'|'0..1'
+;
+
+QualifiedName:
+    ID ('.' ID)*
+;
+
+AbstractPhysicalSchema:
+	{AbstractPhysicalSchema} 'physical' 'schema' '{' 
+		(kvschemas+=KeyValueSchema* & documentschemas+= DocumentSchema* & relationalschemas+=RelationalSchema* & graphschemas+= GraphSchema* & columnschemas += ColumnSchema*)
+	'}'
+;
+
+DocumentSchema:
+	'document' 'schema' SchemaName '{'
+	(collections+=Collection)*
+'}'
+;
+
+Collection:
+	'collection' name=ID '{'
+		fields=FieldsCollection
+	'}'
+;
+
+FieldsCollection:
+	{FieldsCollection} 'fields' '{'
+		(fields+=PhysicalAttribute (',' fields+=PhysicalAttribute)*)?
+	'}'
+;
+
+PhysicalAttribute:
+	ShortAttribute | LongAttribute 
+;
+
+LongAttribute:
+	(physicalAttributeName=ID':''['conceptualAttribute=[Attribute|QualifiedName]']')
+;
+
+ShortAttribute:
+	physicalAttributeName=[Attribute]
+;
+
+ColumnSchema:
+	'column' 'schema' SchemaName '{}'
+;
+
+
+GraphSchema:
+	'graph' 'schema' SchemaName '{}'
+;
+
+RelationalSchema:
+	'relational' 'schema' SchemaName '{}'
+;
+
+KeyValueSchema:
+	'key' 'value' 'schema' SchemaName '{}'
+;
+
+MappingRules:
+	{MappingRules} 'mapping' 'rules' '{'
+		(conceptualMappings+= [EntityTypes|QualifiedName]'->' physicalMappings+=[SchemaName])*
+	'}'
+;
+
+SchemaName:
+	name=ID
+;
+
+DataType returns DataType:
+	IntType | 
+	BigintType | 
+	StringType | 
+	TextType | 
+	PointType | 
+	PolygonType | 
+	BoolType | 
+	FloatType | 
+	BlobType | 
+	DateType | 
+	DatetimeType
+	;
+
+IntType returns IntType:
+	{IntType}
+	'int'
+	;
+
+BigintType returns BigintType:
+	{BigintType}
+	'bigint'
+	;
+
+StringType returns StringType:
+	{StringType}
+	'string' ('[' maxSize=INT ']')?
+	;
+
+TextType returns TextType:
+	{TextType}
+	'text'
+	;
+
+PointType returns PointType:
+	{PointType}
+	'point'
+	;
+
+PolygonType returns PolygonType:
+	{PolygonType}
+	'polygon'
+	;
+
+BoolType returns BoolType:
+	{BoolType}
+	'bool'
+	;
+
+FloatType returns FloatType:
+	{FloatType}
+	'float'
+	;
+
+BlobType returns BlobType:
+	{BlobType}
+	'blob'
+	;
+
+
+DateType returns DateType:
+	{DateType}
+	'date'
+	;
+
+DatetimeType returns DatetimeType:
+	{DatetimeType}
+	'datetime'
+	;
