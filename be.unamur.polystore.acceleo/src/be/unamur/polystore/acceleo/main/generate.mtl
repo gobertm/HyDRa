@@ -1,0 +1,15 @@
+[comment encoding = UTF-8 /]
+[module generate('http://www.unamur.be/polystore/Pml')]
+
+
+[template public generateElement(conceptualSchema : ConceptualSchema)]
+[comment @main/]
+[for (entityType: EntityTypes | conceptualSchema.entities)]
+	[file (entityType.name.toUpperFirst().concat('.java'), false, 'UTF-8')]
+public class [entityType.name.toUpperFirst() /] {
+
+}
+	[/file]
+[/for]
+
+[/template]
