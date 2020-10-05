@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project default="generate" name="be.unamur.polystore.acceleo">
     <property name="ECLIPSE_HOME" value="../../../../../eclipse/jee-2020-093/eclipse"/>
-    <property name="ECLIPSE_WORKSPACE" value="../.."/>
+    <property name="ECLIPSE_WORKSPACE" value="../../../workspace2"/>
 
     <!-- The classpath with only the dependencies used by the project -->
     <path id="be.unamur.polystore.acceleo.libraryclasspath">
