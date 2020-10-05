@@ -57,26 +57,38 @@ DocumentSchema:
 Collection:
 	'collection' name=ID '{'
 		fields=FieldsCollection
+		('references' '{'references+=Reference*'}' )?
 	'}'
+;
+
+Reference:
+	name=ID ':' sourceField=[PhysicalField|QualifiedName] '->' targetField=[PhysicalField|QualifiedName]
 ;
 
 FieldsCollection:
 	{FieldsCollection} 'fields' '{'
-		(fields+=PhysicalAttribute (',' fields+=PhysicalAttribute)*)?
+		(fields+=PhysicalField (',' fields+=PhysicalField)*)?
 	'}'
 ;
 
-PhysicalAttribute:
-	ShortAttribute | LongAttribute 
+PhysicalField:
+	ShortField | LongField | EmbeddedObject
 ;
 
-LongAttribute:
-	(physicalAttributeName=ID':''['conceptualAttribute=[Attribute|QualifiedName]']')
+EmbeddedObject:
+	name=ID '['cardinality=Cardinality']'('{'
+		(fields+=PhysicalField*)
+	'}')?
 ;
 
-ShortAttribute:
-	physicalAttributeName=[Attribute]
+LongField:
+	name=ID ':''['mappingName=STRING']'
 ;
+
+ShortField:
+	name=ID
+;
+
 
 ColumnSchema:
 	'column' 'schema' SchemaName '{}'
