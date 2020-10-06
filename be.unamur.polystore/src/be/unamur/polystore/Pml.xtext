@@ -71,8 +71,8 @@ FieldsCollection:
 	'}'
 ;
 
-PhysicalField:
-	ShortField | LongField | EmbeddedObject
+PhysicalField returns PhysicalField:
+	ShortField | EmbeddedObject
 ;
 
 EmbeddedObject:
@@ -81,11 +81,7 @@ EmbeddedObject:
 	'}')?
 ;
 
-LongField:
-	name=ID ':''['mappingName=ID']'
-;
-
-ShortField:
+ShortField returns PhysicalField:
 	name=ID
 ;
 
@@ -100,7 +96,19 @@ GraphSchema:
 ;
 
 RelationalSchema:
-	'relational' 'schema' SchemaName '{}'
+	'relational' 'schema' SchemaName '{'
+		tables+=Table*
+	'}'
+;
+
+Table:
+	'table' name=ID '{'
+		'columns' '{'
+			(columns+=ShortField (',' columns+=ShortField)*)?
+			'}'
+		('references' '{'references+=Reference*'}')? 
+		//Identifier and index section
+	'}'
 ;
 
 KeyValueSchema:

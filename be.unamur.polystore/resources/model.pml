@@ -39,6 +39,25 @@ physical schema {
 			}
 		}
 	}
+	
+	relational schema myRelSchema {
+		table Customer {
+			columns {
+				id,
+				name
+			}
+		}
+		table Order {
+			columns{ 
+				id,
+				cust_id
+			}	
+			references {
+				 bought_by : cust_id -> Customer.id
+			}
+		}
+		
+	}
 	key value schema kvschema {}
 	key value schema fd{}
 }
