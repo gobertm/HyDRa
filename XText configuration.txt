@@ -1,0 +1,30 @@
+Compte-rendu de mes observations lorsque l'on essaye d'importer pour la première fois, un de nos projets XText ou Acceleo:
+
+1) Il se pourrait que la JRE renseignée provoque des erreurs: pour info, j'ai utilisé la JDK 14. Au besoin, modifier les propriétés de CHAQUE projet:
+Click droit sur le projet => Properties => Java Compiler => Changer la JRE
+
+2) Il se pourrait que des librairies soient manquantes. Il faudra alors les rajouter à CHAQUE projet:
+Click droit sur le projet => Properties => Java Build Path => Add Library... => Sélectionner Plug-in Dependencies
+
+3) Il se pourrait que les projets XText ne soient pas configurés sur leurs bons répertoires sources. Il faudra alors configurer CHAQUE projet:
+Click droit sur le projet => Properties => Source: il faut que les répertoires src, src-gen et xtend-gen soient mentionnés (et uniquement ceux-là)
+
+4) Une fois l'importation des différents projets effectués, il faudra générer la grammaire XText:
+be.unamur.polystore/src/be.unamur.polystore/Pml.xtext => Ouvrir le fichier => Click droit dans le contenu => Run as => Generate XText Artifacts
+
+Attention: il sera peut être nécessaire d'exécuter l'étape 4 avant la 3. En effet, la phase 4 pourrait générer de nouveaux répertoires qui sont des répertoires sources (ex: xtend-gen). A voir.
+
+Compte-rendu au moment de la création et configuration du projet acceleo:
+1) au moment de le créer, j'ai du renseigner l'URI de notre métamodel Xtext: http://www.unamur.be/polystore/Pml
+Cette URI est la même que celle présente au début du fichier Pml.xtext
+
+2) une fois le projet créé, j'ai du modifier le MANIFEST pour qu'il soit lié au projet XText d'origine:
+Require-Bundle:  be.unamur.polystore => les classes java du projet  be.unamur.polystore sont maintenant accessibles depuis le projet acceleo. (voir point 3)
+
+3) Grâce à l'étape 2, j'ai pu modifier le fichier Generate.java à deux endroits:
+    a) méthode public Generate(URI modelURI, File targetFolder, List<? extends Object> arguments); j'y ai rajouté la méthode PmlStandaloneSetup.doSetup(), nécessaire à la transformation
+    b) méthode public Generate(EObject model, File targetFolder, List<? extends Object> arguments); j'y ai rajouté la méthode PmlStandaloneSetup.doSetup(), nécessaire à la transformation
+
+Pour ces deux méthodes, j'ai du remplacer le commentaire @generated par autre chose (je pense que cela est nécessaire si on ne veut pas qu'elles soient écrasées au prochain regénerate - j'ai lu ça dans un tuto)
+
+4) Pour exécuter la transformation acceleo la 1ère fois: click droit sur le fichier generate.tml => Run as => Acceleo Application => un panneau de config s'ouvre: il faut mentionner un fichier .pml en model d'entrée ainsi qu'un répertoire target dans lequel seront générées les classes java issues de la transformation
