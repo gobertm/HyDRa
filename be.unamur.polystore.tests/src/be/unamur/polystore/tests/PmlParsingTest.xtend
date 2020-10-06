@@ -44,7 +44,8 @@ class PmlParsingTest {
 							Description,
 							Productnumber,
 							review[0..*]{
-								rate
+								rate,
+								content
 							}
 						}
 					}
@@ -68,5 +69,7 @@ class PmlParsingTest {
 		Assertions.assertNotNull(result)
 		val errors = result.eResource.errors
 		Assertions.assertTrue(errors.isEmpty, '''Unexpected errors: «errors.join(", ")»''')
+		val warnings = result.eResource.warnings
+		Assertions.assertTrue(warnings.isEmpty, '''Unexpected warnings: «warnings.join(", ")»''')
 	}
 }

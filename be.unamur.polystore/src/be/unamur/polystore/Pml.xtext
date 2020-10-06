@@ -9,19 +9,19 @@ Domainmodel:
 
 ConceptualSchema :
 	'conceptual' 'schema' name=ID '{'
-		(entities+=EntityTypes)+ & (relationships+=RelationshipTypes)*
+		(entities+=EntityType)+ & (relationships+=RelationshipType)*
 	'}'
 ;
 
-EntityTypes returns EntityTypes:
+EntityType returns EntityType:
 	'entity' 'type' name=ID '{'
 		(attributes+=Attribute (','attributes+=Attribute)*)?
 		'}'
 ;
  
-RelationshipTypes:
+RelationshipType:
 	'relationship' 'type' name=ID '{'
-	((roles+=RoleName) ('['cardinalities+=Cardinality']') ':' (entities+=[EntityTypes]))+ 
+	((roles+=RoleName) ('['cardinalities+=Cardinality']') ':' (entities+=[EntityType]))+ 
 	(attributes+=Attribute)?
 '}'
 ;
@@ -77,12 +77,12 @@ PhysicalField:
 
 EmbeddedObject:
 	name=ID '['cardinality=Cardinality']'('{'
-		(fields+=PhysicalField*)
+		(fields+=PhysicalField (',' fields+=PhysicalField)*)?
 	'}')?
 ;
 
 LongField:
-	name=ID ':''['mappingName=STRING']'
+	name=ID ':''['mappingName=ID']'
 ;
 
 ShortField:
@@ -109,7 +109,7 @@ KeyValueSchema:
 
 MappingRules:
 	{MappingRules} 'mapping' 'rules' '{'
-		(conceptualMappings+= [EntityTypes|QualifiedName]'->' physicalMappings+=[SchemaName])*
+		(conceptualMappings+= [EntityType|QualifiedName]'->' physicalMappings+=[SchemaName])*
 	'}'
 ;
 

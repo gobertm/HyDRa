@@ -3,6 +3,11 @@
  */
 package be.unamur.polystore.validation;
 
+import org.eclipse.xtext.validation.Check;
+
+import be.unamur.polystore.pml.EntityType;
+import be.unamur.polystore.pml.PmlPackage;
+import be.unamur.polystore.pml.RelationshipType;
 
 /**
  * This class contains custom validation rules. 
@@ -11,15 +16,24 @@ package be.unamur.polystore.validation;
  */
 public class PmlValidator extends AbstractPmlValidator {
 	
-//	public static final String INVALID_NAME = "invalidName";
-//
-//	@Check
-//	public void checkGreetingStartsWithCapital(Greeting greeting) {
-//		if (!Character.isUpperCase(greeting.getName().charAt(0))) {
-//			warning("Name should start with a capital",
-//					PmlPackage.Literals.GREETING__NAME,
-//					INVALID_NAME);
-//		}
-//	}
+	public static final String INVALID_NAME = "invalidName";
+
+	@Check
+	public void checkEntityStartsWithCapital(EntityType entity) {
+		if (!Character.isUpperCase(entity.getName().charAt(0))) {
+			warning("Name should start with a capital",
+					PmlPackage.Literals.ENTITY_TYPE__NAME,
+					INVALID_NAME);
+		}
+	}
+	
+	@Check
+	public void checkRelationshipStartsWithLowerCase(RelationshipType relationship) {
+		if (!Character.isLowerCase(relationship.getName().charAt(0))) {
+			warning("Name should start with a lower case letter",
+					PmlPackage.Literals.RELATIONSHIP_TYPE__NAME,
+					INVALID_NAME);
+		}
+	}
 	
 }
