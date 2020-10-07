@@ -81,7 +81,7 @@ EmbeddedObject:
 	'}')?
 ;
 
-ShortField returns PhysicalField:
+ShortField :
 	name=ID
 ;
 
@@ -117,8 +117,13 @@ KeyValueSchema:
 
 MappingRules:
 	{MappingRules} 'mapping' 'rules' '{'
-		(conceptualMappings+= [EntityType|QualifiedName]'->' physicalMappings+=[SchemaName])*
+		(mappingRules+=MappingRule (','mappingRules+=MappingRule)*)?
 	'}'
+;
+
+
+MappingRule:
+	(entityConceptual=[EntityType|QualifiedName]'('(attributesConceptual+=[Attribute|QualifiedName] (','attributesConceptual+=[Attribute|QualifiedName])*)?')''->' physicalMapping=[SchemaName])
 ;
 
 SchemaName:
