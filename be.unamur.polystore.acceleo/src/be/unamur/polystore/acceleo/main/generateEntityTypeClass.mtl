@@ -1,0 +1,96 @@
+[comment encoding = UTF-8 /]
+[module generateEntityTypeClass('http://www.unamur.be/polystore/Pml')]
+[import be::unamur::polystore::acceleo::main::generateJavaDataType /]
+[import be::unamur::polystore::acceleo::main::generateRelationshipTypeClass /]
+
+
+[query public getConcernedRelationshipTypes(entityType : EntityType, conceptualSchema : ConceptualSchema) : Collection(pml::RelationshipType) = 
+	conceptualSchema.relationships->select(rel | rel.entities->includes(entityType))
+ /]
+
+
+[template public generateClass(entityType : EntityType, conceptualSchema: ConceptualSchema)]
+[file ('pojo/' + entityType.name.toUpperFirst().concat('.java'), false, 'UTF-8')]
+package pojo;
+
+public class [entityType.name.toUpperFirst() /] {
+
+	[for (attr: Attribute | entityType.attributes)]
+	private [generateJavaType(attr.type) /] [attr.name /];
+	[/for]
+
+	[for (rel: RelationshipType | getConcernedRelationshipTypes(entityType, conceptualSchema))]
+		[for (e: EntityType | rel.entities) ]
+			[if (e = entityType and isRelationshipTypeComplex(rel))]
+				[if (rel.cardinalities->at(i) = '0..*')]
+	private java.util.List<[rel.name.toUpperFirst() /]> [rel.name/]ListAs[rel.roles->at(i).name.toUpperFirst()/];
+				[else]
+	private [rel.name.toUpperFirst() /] [rel.name/]As[rel.roles->at(i).name.toUpperFirst()/];
+				[/if]
+			[else]
+				[if (e = entityType)]
+					[if (rel.cardinalities->at(i) = '0..*')]
+	private java.util.List<[rel.entities->at(i.mod(2) + 1).name.toUpperFirst() /]> [rel.roles->at(i.mod(2) + 1).name /]List;
+					[else]
+	private [rel.entities->at(i.mod(2) + 1).name.toUpperFirst() /] [rel.roles->at(i.mod(2) + 1).name /];
+					[/if] 
+				[/if]
+			[/if]
+		[/for]
+	[/for]
+
+	public [entityType.name.toUpperFirst() /]() {}
+
+	[for (attr: Attribute | entityType.attributes)]
+	public [generateJavaType(attr.type) /] get[attr.name.toUpperFirst() /]() {
+		return [attr.name /];
+	}
+
+	public void set[attr.name.toUpperFirst() /]([generateJavaType(attr.type) /] [attr.name /]) {
+		this.[attr.name /] = [attr.name /];
+	}
+	[/for]
+
+	[for (rel: RelationshipType | getConcernedRelationshipTypes(entityType, conceptualSchema))]
+		[for (e: EntityType | rel.entities) ]
+			[if (e = entityType and isRelationshipTypeComplex(rel))]
+				[if (rel.cardinalities->at(i) = '0..*')]
+	public java.util.List<[rel.name.toUpperFirst() /]> get[rel.name.toUpperFirst()/]ListAs[rel.roles->at(i).name.toUpperFirst()/]() {
+		return [rel.name/]ListAs[rel.roles->at(i).name.toUpperFirst()/];
+	}
+
+	public void set[rel.name.toUpperFirst()/]ListAs[rel.roles->at(i).name.toUpperFirst()/](java.util.List<[rel.name.toUpperFirst() /]> [rel.name/]ListAs[rel.roles->at(i).name.toUpperFirst()/]) {
+		this.[rel.name/]ListAs[rel.roles->at(i).name.toUpperFirst()/] = [rel.name/]ListAs[rel.roles->at(i).name.toUpperFirst()/];
+	}
+				[else]
+	public [rel.name.toUpperFirst() /] get[rel.name.toUpperFirst()/]As[rel.roles->at(i).name.toUpperFirst()/]() {
+		return [rel.name/]As[rel.roles->at(i).name.toUpperFirst()/];
+	}
+
+	public void set[rel.name.toUpperFirst()/]As[rel.roles->at(i).name.toUpperFirst()/]([rel.name.toUpperFirst() /] [rel.name/]As[rel.roles->at(i).name.toUpperFirst()/]) {
+		this.[rel.name/]As[rel.roles->at(i).name.toUpperFirst()/] = [rel.name/]As[rel.roles->at(i).name.toUpperFirst()/];
+	}
+				[/if]
+			[else]
+				[if (e = entityType)]
+					[if (rel.cardinalities->at(i) = '0..*')]
+	public java.util.List<[rel.entities->at(i.mod(2) + 1).name.toUpperFirst() /]> get[rel.roles->at(i.mod(2) + 1).name.toUpperFirst() /]List() {
+		return [rel.roles->at(i.mod(2) + 1).name /]List;
+	}
+					[else]
+	public [rel.entities->at(i.mod(2) + 1).name.toUpperFirst() /] get[rel.roles->at(i.mod(2) + 1).name.toUpperFirst() /]() {
+		return [rel.roles->at(i.mod(2) + 1).name /];
+	}
+					[/if] 
+				[/if]
+			[/if]
+		[/for]
+	[/for]
+}
+[/file]
+
+[/template]
+
+
+
+
