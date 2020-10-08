@@ -43,7 +43,7 @@ QualifiedName:
 ;
 
 AbstractPhysicalSchema:
-	{AbstractPhysicalSchema} 'physical' 'schema' '{' 
+	{AbstractPhysicalSchema} 'physical' 'schemas' '{' 
 		(kvschemas+=KeyValueSchema* & documentschemas+= DocumentSchema* & relationalschemas+=RelationalSchema* & graphschemas+= GraphSchema* & columnschemas += ColumnSchema*)
 	'}'
 ;
@@ -111,6 +111,10 @@ Table:
 	'}'
 ;
 
+PhysicalStructure:
+	Table | Collection 
+;
+
 KeyValueSchema:
 	'key' 'value' 'schema' SchemaName '{}'
 ;
@@ -123,7 +127,7 @@ MappingRules:
 
 
 MappingRule:
-	(entityConceptual=[EntityType|QualifiedName]'('(attributesConceptual+=[Attribute|QualifiedName] (','attributesConceptual+=[Attribute|QualifiedName])*)?')''->' physicalMapping=[SchemaName])
+	(entityConceptual=[EntityType|QualifiedName]'('(attributesConceptual+=[Attribute|QualifiedName] (','attributesConceptual+=[Attribute|QualifiedName])*)?')''->' physicalStructure=[PhysicalStructure|QualifiedName])
 ;
 
 SchemaName:
