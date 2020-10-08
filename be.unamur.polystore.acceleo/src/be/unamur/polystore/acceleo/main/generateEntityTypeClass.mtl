@@ -77,9 +77,17 @@ public class [entityType.name.toUpperFirst() /] {
 	public java.util.List<[rel.entities->at(i.mod(2) + 1).name.toUpperFirst() /]> get[rel.roles->at(i.mod(2) + 1).name.toUpperFirst() /]List() {
 		return [rel.roles->at(i.mod(2) + 1).name /]List;
 	}
+
+	public void set[rel.roles->at(i.mod(2) + 1).name.toUpperFirst() /]List(java.util.List<[rel.entities->at(i.mod(2) + 1).name.toUpperFirst() /]> [rel.roles->at(i.mod(2) + 1).name /]List) {
+		this.[rel.roles->at(i.mod(2) + 1).name /]List = [rel.roles->at(i.mod(2) + 1).name /]List;
+	}
 					[else]
 	public [rel.entities->at(i.mod(2) + 1).name.toUpperFirst() /] get[rel.roles->at(i.mod(2) + 1).name.toUpperFirst() /]() {
 		return [rel.roles->at(i.mod(2) + 1).name /];
+	}
+
+	public void set[rel.roles->at(i.mod(2) + 1).name.toUpperFirst() /]([rel.entities->at(i.mod(2) + 1).name.toUpperFirst() /] [rel.roles->at(i.mod(2) + 1).name /]) {
+		this.[rel.roles->at(i.mod(2) + 1).name /] = [rel.roles->at(i.mod(2) + 1).name /];
 	}
 					[/if] 
 				[/if]
