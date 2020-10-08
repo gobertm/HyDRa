@@ -34,7 +34,7 @@ conceptual schema cs {
     	test : date
     }
 }
-physical schema {
+physical schemas {
     document schema myDocSchema{
         collection myCollection{
             fields {
@@ -46,5 +46,4 @@ physical schema {
     key value schema fd{}
 }
 mapping rules {
-  cs.Product -> kvschema
 }
