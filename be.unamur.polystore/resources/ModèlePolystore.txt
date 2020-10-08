@@ -1,0 +1,356 @@
+conceptual schema Store_with_professor {
+
+	entity type Review {
+		id : String, // id = 1,2,3 compteur de review par produit. Donc le véritable identifiant est le couple (Review.id et le product id)
+		rating : integer,
+		content : string,
+	
+		identifier{
+			id,
+			productReview.product
+		}
+	}
+
+	entity type Product {
+		id : integer,
+		name : String,
+		description : String
+	}	
+	
+	
+	entity type Order{
+		id : integer
+	}
+	
+	entity type Category{
+		categoryName : String
+	}
+	
+	
+	entity type Comment {
+		comment : String
+	}
+	
+	entity type Stock {
+		...
+		localisation : String
+		}
+	
+	entity type Client{
+		clientnumber : int, // auto increment id. On en a besoin pour l'exemple bitmap key value.
+		lastname : String,
+		firstname : String,
+		addressnumber : count(client.addresses),  // Increment du nombre d'adresses.
+
+		identifier{
+			clientnumber
+		}
+		
+	}
+	
+	entity type Address {
+		street : String,
+		number : int,
+		zipcode : int
+	}
+	
+	entity type Professor {
+		Id : integer,
+		Name : List[String]
+	}
+	
+	
+	
+	entity type Project {
+		Id : int(8),
+		Description : String,
+		Name : String
+	}
+	
+	entity type Newsletter {
+		Id : integer,
+		...
+		
+	}
+	// Discussion sens des rôles
+	// Version Max 
+	// "Dans la relation 'productStock' le type d'entity Stock joue le role de storage, avec une cardinalité 1." --> = inversion des cardinalités par rapport à DBMain
+	// Version Loup
+	// "Dans la relation 'productStock' Le Stock joue le rôle d'entrepot N fois." 
+	// "Le produit joue le role d'objet stocké une seule fois"
+
+	relationship type productStock {
+		storage[0..*]: Stock,
+		stored_products[1]: Product
+	}
+
+	relationship type clientNewsletter{
+		newsletter[0..*]: Newsletter,
+		subscribers[0..*] : Client
+		hasRegistered : boolean
+	}
+	
+	
+	relationship type projectProfessor {
+		worker [0..*]: Professor,
+		activity [0..*]: Project,
+		employer [0..*]: University
+		start_date : date
+		end_date : date[0-1]
+		
+	}
+	
+	relationship type clientAdress{
+		resident[0..*] : Client,
+		addresses[0..*] : Address 
+	}
+	
+	relationship type productCategory {
+		product[1]: Product, 
+		category[0..*] : Category
+	}
+	
+	
+	relationship type commentReview {
+		review[0..*]: Review, 
+		comments[1]: Comment
+	}
+	
+	relationship type productReview{
+		reviews[1]: Review,
+		product[0..*] : Product,
+		review_date : date
+	}
+	
+	relationship type clientOrder {
+		customer[0..*] : Client,
+		orders[1]: Order
+	}
+
+
+}
+
+// physical hybrid polystore model 
+physical schema {
+
+
+	// Key value db
+	key value schema KVResearchProjectsSchema : myRedis {
+				
+		kvpairs KVProfName {
+			key :"PROFESSOR:"[IDKV]":NAME",
+			value :[ProfName] (list)  // ou (set)(ordered sets) (hll) HyperLogLogs
+			},
+		kvpairs KVProfProjDesc {
+			key : "PROFESSOR:"[IDKV]":PROJECT:[IDPROJ]:Description",
+			value : [ProjDesc]
+			}
+		kvpairs KVProfPROJProjName {
+			key : "PROFESSOR:"[IDKV]":PROJECT:[IDPROJ]:ProjName",
+			value : [ProjName]
+			}
+		kvpairs KVProf : {
+			key : "PROFESSOR:"[IDKV],
+			value : 
+				{		// Hashes redis . HSET PROFESSOR:0 Id 0 Name Cleve
+					Id,				
+					Name // ou   fullname : [Name]
+				}
+				
+		
+		references {
+			involved_in : (ProjDesc,ProjName)->KVProject.Description, KVProject.Name
+		}
+	}
+
+	key value schema KVProject : myredis {
+		
+		kvpairs KVProjDesc {
+			key : "PROJECT:"[Name]":DESCRIPTION",
+			value : [Description]
+		}
+		
+	}
+
+	key value schema KVNewsletterSchema : myRedis {
+
+		kvpairs KVNewsSubscribers {
+			key : "NEWSLETTER_REGISTRATION:"[REGISTEREDNEWSID]"bitmap_subscribers",
+			value : <[ClientID],[hasRegistered]>(bitmap)
+		}
+		
+		kvpairs KVNewsContent {
+			key : "NEWSLETTER":[IDNEWS]:"content",
+			value : [content]
+		}
+		
+		references {
+			subscribers : ClientID -> Schema1.Customer.id
+			newsletters : REGISTEREDNEWSID -> KVNewsletterSchema.IDNEWS
+		}
+		
+	}
+
+	// Relational DB
+	relational schema Schema1 : myMariaDB, SQLITE{
+
+		table Customer{
+			columns {
+				id : int(6),
+				name : char(23)
+			}
+			
+			primary key (id), 
+			unique (name, id), // exemple id
+			index [FULLTEXT, UNIQUE, SPATIAL] (name) // exemple index
+		}
+		
+		table Order {
+			columns{
+				Id : int(8), 
+				cust_id : int(6)
+			}
+			
+			references{
+				bought_by : cust_id -> Schema1.Customer.Id
+			}
+		}
+	}
+
+
+	// DocumentDB
+	document schema docSchema : myDocBD {
+
+		collection Product{
+			fields{
+				_id //Mandatory field
+				Name,
+				Description,
+				Productnumber,
+				reviews[0-N]{
+					rate, // = manière abrégée d'écrire rate:[rate]
+					numberofstars:[rate]
+					content,
+					comments[0-N]{ //ajouter userid pour compliquer encore
+						comment
+					}
+				}
+			}
+			unique index(name), // exemple id
+			index(name) // exemple index
+		}
+		
+		collection Stock {
+			fields{
+				_id,
+				localisation,
+				products[0-N]
+			}
+			
+			references{
+				stores: products -> docSchema.Product._id  // On met uniquement les Ids, pour illustrer le problème des one-to-millions.
+			}
+		}
+	}
+
+	document schema docSchema2 : myDocDB {...} // exemple de schéma supplémentaire mappé à une même bd.
+
+	//Column DB
+
+	column schema colSchema {
+		
+		table Client {
+			rowkey{
+				md5(clientnumber"+"lastname)
+			}
+			
+			columnfamily {
+				personnal {
+					name:[firstname]"-"[lastname]    // la concaténation est représentée dans le schéma physique car name est un attribut dérivé. Et ne doit pas être exprimé au niveau conceptuel. De plus cela permet d'introduire 'name' // uniquement dans un modèle physique choisi. (ex : Client est mappé sur une RDB et sur une ColumnDB)
+					}
+				address{
+					[street][number][zipcode]:[adressnumber]    // 'ruegrandgagne555000:1' et 'ruedebruxelles235000:2'
+					// ou 
+					// [addressnumber]:[street][number][zipcode] '1:ruegrandgagne555000' et '2:ruedebruxelles235000' (voir pdf Design HBase, qui design les noms de colonnes comme étant un compteur)
+				}
+			}
+		}
+	}
+
+	graph schema ManufacturingGraphSchema : myGraphDB {
+		
+		Node Product {
+			// _Id peut être utilisé pour référencer l'id technique généré par Neo4j.
+			Id
+			Name,
+			Description,
+			StockID,  // cet attribut est une référence vers une entité présente dans une autre BD.
+			unique(Name), // exemple d'id.
+			index(Name,Description) // exemple d'index
+
+		}
+		
+		
+		Node Category {
+			_Id,
+			CategoryName
+		}
+		
+		Edge PART_OF {
+			Product -> Category,
+			quantity // whatever attribute
+		}
+		
+		references {
+			stored_in : StockID -> Stock._id 
+
+	}
+
+}
+
+// Mapping Conceptual / Physical model
+mapping rules {
+	// First part = conceptual model -> second part = physical model
+	
+	// Groupe Key value
+	Professor(Id,Name) -> KVResearchProjectsSchema(IDKV,ProfName),
+	projectProfessor.activity -> KVResearchProjectsSchema.involved_in, // ! verify
+	Project.Id -> KVResearchProjectsSchema(IDPROJ),
+	Project(Description,Name) -> KVProject(Description,Name) ,
+	
+	Newsletter.Id-> KVNewsletterSchema.IDNEWS,
+	clientNewsletter.subscribers -> KVNewsletterSchema.subscribers,
+	clientNewsletter.newsletter -> KVNewsletterSchema.newsletters,
+	clientNewsletter.hasRegistered -> KVNewsletterSchema.hasRegistered ,
+	
+	// Groupe relational
+	Client(clientnumber, name) ->Schema1.Customer(id, name),
+	clientOrder.customer -> Schema1.Order.bought_by,
+	Order(Id) -> Schema1.Order(Id),
+	
+	// Groupe document
+	Product(name,description,id)->docSchema.Product(Name,Description, Productnumber),
+	productReview.reviews -> docSchema.Product.reviews,
+	Review(rating, content) -> docSchema.Product.reviews(rate, content),
+	commentReview.comments -> docSchema.Product.reviews.comments,
+	Comment(comment)->docSchema.Product.reviews.comments(comment),
+	
+	
+	Stock(localisation)->docSchema.Stock(localisation),
+	productStock.stored_products->docSchema.Stock.stores,  // ! Cas particulier, tableau de référence de ObjectId mongodb, non présent en conceptuel, utilisation de _id en tant que wildcard/constante. + role "à l'envers" car on mappe le 0-N .
+	// J'ai l'impression qu'il y a un soucis avec les PRODUCT de la collection vs ceux du role.
+	
+	// Groupe colonne 
+	Client(clientnumber, firstname, lastname) -> colSchema.Client(clientnumber, firstname, lastname),
+	Client.adresses(street,number, zipcode) -> colSchema.Client(street, number, zipcode),
+	clientAdress.count(addresses) -> colSchema.Client.adress.adressnumber // !! 
+	
+	// Groupe Graphe
+	Product(id, name,description)->ManufacturingGraphSchema.Product(Id,Name,Description),
+	Category(categoryName)->ManufacturingGraphSchema.Category(CategoryName),
+	productStock.storage -> ManufacturingGraphSchema.stored_in
+	productCategory -> ManufacturingGraphSchema.PART_OF, // Un edge dans Graph est mappé à une relation entière (pas à un rôle spécifique). edge = relation. 
+	
+	
+}
+	

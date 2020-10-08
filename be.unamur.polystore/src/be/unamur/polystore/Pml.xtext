@@ -43,7 +43,7 @@ QualifiedName:
 ;
 
 AbstractPhysicalSchema:
-	{AbstractPhysicalSchema} 'physical' 'schema' '{' 
+	{AbstractPhysicalSchema} 'physical' 'schemas' '{' 
 		(kvschemas+=KeyValueSchema* & documentschemas+= DocumentSchema* & relationalschemas+=RelationalSchema* & graphschemas+= GraphSchema* & columnschemas += ColumnSchema*)
 	'}'
 ;
@@ -71,8 +71,8 @@ FieldsCollection:
 	'}'
 ;
 
-PhysicalField:
-	ShortField | LongField | EmbeddedObject
+PhysicalField returns PhysicalField:
+	ShortField | EmbeddedObject
 ;
 
 EmbeddedObject:
@@ -81,11 +81,7 @@ EmbeddedObject:
 	'}')?
 ;
 
-LongField:
-	name=ID ':''['mappingName=ID']'
-;
-
-ShortField:
+ShortField :
 	name=ID
 ;
 
@@ -100,7 +96,23 @@ GraphSchema:
 ;
 
 RelationalSchema:
-	'relational' 'schema' SchemaName '{}'
+	'relational' 'schema' SchemaName '{'
+		tables+=Table*
+	'}'
+;
+
+Table:
+	'table' name=ID '{'
+		'columns' '{'
+			(columns+=ShortField (',' columns+=ShortField)*)?
+			'}'
+		('references' '{'references+=Reference*'}')? 
+		//Identifier and index section
+	'}'
+;
+
+PhysicalStructure:
+	Table | Collection 
 ;
 
 KeyValueSchema:
@@ -109,8 +121,13 @@ KeyValueSchema:
 
 MappingRules:
 	{MappingRules} 'mapping' 'rules' '{'
-		(conceptualMappings+= [EntityType|QualifiedName]'->' physicalMappings+=[SchemaName])*
+		(mappingRules+=MappingRule (','mappingRules+=MappingRule)*)?
 	'}'
+;
+
+
+MappingRule:
+	(entityConceptual=[EntityType|QualifiedName]'('(attributesConceptual+=[Attribute|QualifiedName] (','attributesConceptual+=[Attribute|QualifiedName])*)?')''->' physicalStructure=[PhysicalStructure|QualifiedName])
 ;
 
 SchemaName:

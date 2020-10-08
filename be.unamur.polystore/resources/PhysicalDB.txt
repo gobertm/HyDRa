@@ -1,0 +1,20 @@
+// Database information
+databases{
+	mariadb myMariaDB {
+		host : 192.168.1.9,
+		dbname : db1,
+		...
+	}
+	
+	sqlite SQLITE {
+		host : 192.168.1.4
+		dbname : db2,
+		...
+	}
+	redis myRedis{...}
+	...
+	hbase myHBase{
+	...
+	numberversions : 5
+	}
+}
