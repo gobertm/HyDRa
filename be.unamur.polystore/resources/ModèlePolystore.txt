@@ -264,7 +264,7 @@ physical schema {
 				md5(clientnumber"+"lastname)
 			}
 			
-			columnfamily {
+			columnfamilies {
 				personnal {
 					name:[firstname]"-"[lastname]    // la concaténation est représentée dans le schéma physique car name est un attribut dérivé. Et ne doit pas être exprimé au niveau conceptuel. De plus cela permet d'introduire 'name' // uniquement dans un modèle physique choisi. (ex : Client est mappé sur une RDB et sur une ColumnDB)
 					}

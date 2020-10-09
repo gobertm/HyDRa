@@ -83,7 +83,27 @@ ShortField :
 
 
 ColumnSchema:
-	'column' 'schema' name=ID '{}'
+	'column' 'schema' name=ID '{'
+		tables+=(TableColumnDB)* ('references' '{'references+=Reference*'}' )?
+	'}'
+;
+
+TableColumnDB:
+	'table' name=ID '{'
+		rowkey=Rowkey ('columnfamilies' '{'columnfamilies+=ColumnFamily*'}')
+	'}'
+;
+
+ColumnFamily:
+	name=ID '{'
+		columns+=ShortField (','columns+= ShortField)*
+	'}'
+;
+
+Rowkey:
+	{Rowkey} 'rowkey' '{'
+	 fields+=ShortField*
+	 '}'
 ;
 
 
@@ -122,7 +142,7 @@ Table:
 ;
 
 AbstractPhysicalStructure:
-	Table | Collection | Node
+	Table | Collection | Node | TableColumnDB
 ;
 
 KeyValueSchema:

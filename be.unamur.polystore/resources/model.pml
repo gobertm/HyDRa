@@ -94,6 +94,28 @@ physical schemas {
 		}
 	}
 	
+	column schema colSchema {
+		
+		table Client {
+			rowkey{
+				clientnumber
+			}
+			
+			columnfamilies {
+				personnal {
+					name,
+					firstname,
+					lastname
+					}
+				address{
+					street,
+					number,
+					zipcode
+				}
+			}
+		}
+	}
+	
 	key value schema kvschema {}
 	key value schema fd{}
 }
