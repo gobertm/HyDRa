@@ -34,9 +34,8 @@ RoleName:
 	name=ID
 ;
 
-Cardinality:
-	'0..*'|'1'|'0..1'
-;
+enum Cardinality returns Cardinality:
+				ZERO_ONE = '0-1' | ONE = '1' | ZERO_MANY = '0-N' | ONE_MANY = '1-N';
 
 QualifiedName:
     ID ('.' ID)*
@@ -56,7 +55,9 @@ DocumentSchema:
 
 Collection:
 	'collection' name=ID '{'
-		fields=FieldsCollection
+		 'fields' '{'
+		(fields+=PhysicalField (',' fields+=PhysicalField)*)?
+	'}'
 		('references' '{'references+=Reference*'}' )?
 	'}'
 ;
@@ -65,11 +66,6 @@ Reference:
 	name=ID ':' sourceField=[PhysicalField|QualifiedName] '->' targetField=[PhysicalField|QualifiedName]
 ;
 
-FieldsCollection:
-	{FieldsCollection} 'fields' '{'
-		(fields+=PhysicalField (',' fields+=PhysicalField)*)?
-	'}'
-;
 
 PhysicalField returns PhysicalField:
 	ShortField | EmbeddedObject
@@ -111,7 +107,7 @@ Table:
 	'}'
 ;
 
-PhysicalStructure:
+AbstractPhysicalStructure:
 	Table | Collection 
 ;
 
@@ -127,7 +123,7 @@ MappingRules:
 
 
 MappingRule:
-	(entityConceptual=[EntityType|QualifiedName]'('(attributesConceptual+=[Attribute|QualifiedName] (','attributesConceptual+=[Attribute|QualifiedName])*)?')''->' physicalStructure=[PhysicalStructure|QualifiedName])
+	(entityConceptual=[EntityType|QualifiedName]'('(attributesConceptual+=[Attribute|QualifiedName] (','attributesConceptual+=[Attribute|QualifiedName])*)?')''->' physicalStructure=[AbstractPhysicalStructure|QualifiedName]'('(physicalFields+=[PhysicalField|QualifiedName] (','physicalFields+=[PhysicalField|QualifiedName])*)?')')
 ;
 
 SchemaName:

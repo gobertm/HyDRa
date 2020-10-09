@@ -22,10 +22,16 @@ public class PmlScopeProvider extends AbstractPmlScopeProvider {
 
 	@Override
 	public IScope getScope(EObject context, EReference reference) {
-		if (context instanceof MappingRule && reference == PmlPackage.Literals.MAPPING_RULE__ATTRIBUTES_CONCEPTUAL) {
+		if (context instanceof MappingRule) {
 			MappingRule rule = EcoreUtil2.getContainerOfType(context, MappingRule.class);
-			return Scopes.scopeFor(rule.getEntityConceptual().getAttributes());
+			if(reference == PmlPackage.Literals.MAPPING_RULE__ATTRIBUTES_CONCEPTUAL) {
+				return Scopes.scopeFor(rule.getEntityConceptual().getAttributes());
+			}
+//			if(reference == PmlPackage.Literals.MAPPING_RULE__PHYSICAL_FIELDS) {
+//				return Scopes.scopeFor(rule.getPhysicalStructure().getFields());
+//			}
 		}
+
 		return super.getScope(context, reference);
 	}
 }
