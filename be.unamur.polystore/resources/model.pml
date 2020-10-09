@@ -12,9 +12,9 @@ conceptual schema cs {
 		stored_products [1] : Product
 	}
 }
-physical schema {
+physical schemas {
 	document schema myDocSchema{
-		collection myCollection{
+		collection productCollection{
 			fields { 
 				id,
 				Name,
@@ -35,7 +35,7 @@ physical schema {
 				products[0..*]
 			}
 			references{
-				stores : myDocSchema.StockCollection.products -> myDocSchema.myCollection.id
+				stores : myDocSchema.StockCollection.products -> myDocSchema.productCollection.id
 			}
 		}
 	}
@@ -53,14 +53,14 @@ physical schema {
 				cust_id
 			}	
 			references {
-				 bought_by : cust_id -> Customer.id
+				 bought_by : cust_id -> myRelSchema.Customer.id
 			}
 		}
-		
 	}
 	key value schema kvschema {}
 	key value schema fd{}
 }
+
 mapping rules { 
-	  cs.Product -> kvschema
+	  cs.Product(description, id, name) -> myDocSchema.productCollection
 	}
