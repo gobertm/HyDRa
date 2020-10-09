@@ -30,15 +30,15 @@ class PmlParsingTest {
 				entity type Stock{
 					localisation : string
 				}
+				entity type Review {
+						id : string, 
+						rating : int,
+						content : string
+					}
 				relationship type productStock{
 					storage [0-N] : Stock
 					stored_products [1] : Product
 				}
-				entity type Review {
-						id : string, 
-						rating : integer,
-						content : string,
-					}
 				relationship type productReview{
 						reviews[1]: Review,
 						product[0-N] : Product,
