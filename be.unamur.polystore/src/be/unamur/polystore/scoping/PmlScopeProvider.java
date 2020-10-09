@@ -9,7 +9,7 @@ import org.eclipse.xtext.EcoreUtil2;
 import org.eclipse.xtext.scoping.IScope;
 import org.eclipse.xtext.scoping.Scopes;
 
-import be.unamur.polystore.pml.MappingRule;
+import be.unamur.polystore.pml.EntityMappingRule;
 import be.unamur.polystore.pml.PmlPackage;
 
 /**
@@ -22,9 +22,9 @@ public class PmlScopeProvider extends AbstractPmlScopeProvider {
 
 	@Override
 	public IScope getScope(EObject context, EReference reference) {
-		if (context instanceof MappingRule) {
-			MappingRule rule = EcoreUtil2.getContainerOfType(context, MappingRule.class);
-			if(reference == PmlPackage.Literals.MAPPING_RULE__ATTRIBUTES_CONCEPTUAL) {
+		if (context instanceof EntityMappingRule) {
+			EntityMappingRule rule = EcoreUtil2.getContainerOfType(context, EntityMappingRule.class);
+			if(reference == PmlPackage.Literals.ENTITY_MAPPING_RULE__ATTRIBUTES_CONCEPTUAL) {
 				return Scopes.scopeFor(rule.getEntityConceptual().getAttributes());
 			}
 //			if(reference == PmlPackage.Literals.MAPPING_RULE__PHYSICAL_FIELDS) {

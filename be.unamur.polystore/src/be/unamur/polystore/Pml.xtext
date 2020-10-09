@@ -48,7 +48,7 @@ AbstractPhysicalSchema:
 ;
 
 DocumentSchema:
-	'document' 'schema' SchemaName '{'
+	'document' 'schema' name=ID '{'
 	(collections+=Collection)*
 '}'
 ;
@@ -83,16 +83,30 @@ ShortField :
 
 
 ColumnSchema:
-	'column' 'schema' SchemaName '{}'
+	'column' 'schema' name=ID '{}'
 ;
 
 
 GraphSchema:
-	'graph' 'schema' SchemaName '{}'
+	'graph' 'schema' name=ID '{'
+		(nodes+=Node)* (edges+=Edge)* ('references' '{'references+=Reference*'}' )?
+	'}'
+;
+
+Node:
+	'Node' name=ID '{'
+		fields+=PhysicalField (','fields+=PhysicalField)*
+	'}'
+;
+
+Edge:
+	'Edge' name=ID '{'
+		sourceNode=[Node] '->' targetNode = [Node] (',' attributes+=ShortField)*
+	'}' 	
 ;
 
 RelationalSchema:
-	'relational' 'schema' SchemaName '{'
+	'relational' 'schema' name=ID '{'
 		tables+=Table*
 	'}'
 ;
@@ -108,26 +122,34 @@ Table:
 ;
 
 AbstractPhysicalStructure:
-	Table | Collection 
+	Table | Collection | Node
 ;
 
 KeyValueSchema:
-	'key' 'value' 'schema' SchemaName '{}'
+	'key' 'value' 'schema' name=ID '{}'
 ;
 
 MappingRules:
 	{MappingRules} 'mapping' 'rules' '{'
-		(mappingRules+=MappingRule (','mappingRules+=MappingRule)*)?
+		(mappingRules+=AbstractMappingRule (','mappingRules+=AbstractMappingRule)*)?
 	'}'
 ;
 
 
-MappingRule:
-	(entityConceptual=[EntityType|QualifiedName]'('(attributesConceptual+=[Attribute|QualifiedName] (','attributesConceptual+=[Attribute|QualifiedName])*)?')''->' physicalStructure=[AbstractPhysicalStructure|QualifiedName]'('(physicalFields+=[PhysicalField|QualifiedName] (','physicalFields+=[PhysicalField|QualifiedName])*)?')')
+AbstractMappingRule:
+	EntityMappingRule | RoleMappingRule
 ;
 
-SchemaName:
-	name=ID
+RoleMappingRule:
+	roleConceptual=[Role|QualifiedName]
+	'->'
+	 physicalStructure=[AbstractPhysicalStructure|QualifiedName]'('(physicalFields+=[PhysicalField|QualifiedName] (','physicalFields+=[PhysicalField|QualifiedName])*)?')'
+;
+
+EntityMappingRule:
+	(entityConceptual=[EntityType|QualifiedName]'('(attributesConceptual+=[Attribute|QualifiedName] (','attributesConceptual+=[Attribute|QualifiedName])*)?')'
+	'->'
+	 physicalStructure=[AbstractPhysicalStructure|QualifiedName]'('(physicalFields+=[PhysicalField|QualifiedName] (','physicalFields+=[PhysicalField|QualifiedName])*)?')')
 ;
 
 DataType returns DataType:

@@ -43,6 +43,7 @@ physical schemas {
 		}
 		collection StockCollection{
 			fields{
+				_id,
 				localisation,
 				products[0-N]
 			}
@@ -69,10 +70,37 @@ physical schemas {
 			}
 		}
 	}
+	graph schema myGraphSchema {
+		Node Product {
+			_id,
+			Name,
+			Description,
+			StockID
+		}
+		
+		Node Category {
+			_Id,
+			CategoryName
+		}
+		
+		Edge PART_OF {
+			Product -> Category,
+			quantity // whatever attribute
+		}
+		
+		references {
+			stored_in : Product.StockID -> myDocSchema.StockCollection._id
+
+		}
+	}
+	
 	key value schema kvschema {}
 	key value schema fd{}
 }
 
 mapping rules { 
-	  cs.Product(description, id, name) -> myDocSchema.productCollection(myDocSchema.productCollection.Name, myDocSchema.productCollection.Productnumber, myDocSchema.productCollection.Description)
+	  cs.Product(description, id, name) -> myDocSchema.productCollection(myDocSchema.productCollection.Name, myDocSchema.productCollection.Productnumber, myDocSchema.productCollection.Description),
+	  cs.productReview.reviews -> myDocSchema.productCollection(myDocSchema.productCollection.review),
+	  cs.Product(id,name,description) -> myGraphSchema.Product(myGraphSchema.Product._id, myGraphSchema.Product.Name,myGraphSchema.Product.Description)
+	  
 	}

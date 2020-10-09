@@ -5,6 +5,7 @@ package be.unamur.polystore.validation;
 
 import org.eclipse.xtext.validation.Check;
 
+import be.unamur.polystore.pml.Edge;
 import be.unamur.polystore.pml.EntityType;
 import be.unamur.polystore.pml.PmlPackage;
 import be.unamur.polystore.pml.RelationshipType;
@@ -33,6 +34,13 @@ public class PmlValidator extends AbstractPmlValidator {
 			warning("Name should start with a lower case letter",
 					PmlPackage.Literals.RELATIONSHIP_TYPE__NAME,
 					INVALID_NAME);
+		}
+	}
+	
+	@Check void checkCapitalLettersForEdge(Edge edge) {
+		for(char c : edge.getName().toCharArray()) {
+			if(!Character.isUpperCase(c) && Character.isAlphabetic(c))
+				warning("Edges name should be full capital letters", PmlPackage.Literals.EDGE__NAME,INVALID_NAME);
 		}
 	}
 	
