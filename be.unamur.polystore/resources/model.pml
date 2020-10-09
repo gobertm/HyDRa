@@ -7,9 +7,21 @@ conceptual schema cs {
 	entity type Stock{
 		localisation : string
 	}
+	
+	entity type Review {
+		id : string,
+		rating : int,
+		content : string
+	}
+	
 	relationship type productStock{
 		storage [0-N] : Stock
 		stored_products [1] : Product
+	}
+	relationship type productReview{
+	reviews[1]: Review,
+	product[0-N] : Product,
+	review_date : date
 	}
 }
 physical schemas {
@@ -62,5 +74,5 @@ physical schemas {
 }
 
 mapping rules { 
-	  cs.Product(description, id, name) -> myDocSchema.productCollection(myDocSchema.productCollection.Description)
+	  cs.Product(description, id, name) -> myDocSchema.productCollection(myDocSchema.productCollection.Name, myDocSchema.productCollection.Productnumber, myDocSchema.productCollection.Description)
 	}

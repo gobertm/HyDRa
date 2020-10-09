@@ -21,17 +21,17 @@ EntityType returns EntityType:
  
 RelationshipType:
 	'relationship' 'type' name=ID '{'
-	((roles+=RoleName) ('['cardinalities+=Cardinality']') ':' (entities+=[EntityType]))+ 
-	(attributes+=Attribute)?
+	(roles+=Role (','roles+=Role)*)+
+	(','attributes+=Attribute)*
 '}'
+;
+
+Role:
+	name = ID ('['cardinality=Cardinality']') ':' entity=[EntityType]
 ;
 
 Attribute:
 	name=ID ':' (type=DataType)
-;
-
-RoleName:
-	name=ID
 ;
 
 enum Cardinality returns Cardinality:
