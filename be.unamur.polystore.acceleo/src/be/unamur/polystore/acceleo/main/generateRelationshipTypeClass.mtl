@@ -2,7 +2,7 @@
 [module generateRelationshipTypeClass('http://www.unamur.be/polystore/Pml')]
 [import be::unamur::polystore::acceleo::main::generateJavaDataType /]
 
- [query public isRelationshipTypeComplex(rel : RelationshipType) : Boolean = rel.attributes->size() > 0 or rel.entities->size() > 2 /]
+ [query public isRelationshipTypeComplex(rel : RelationshipType) : Boolean = rel.attributes->size() > 0 or rel.roles->size() > 2 /]
 
 
 [template public generateClass(rel : RelationshipType, conceptualSchema: ConceptualSchema)]
@@ -12,8 +12,8 @@ package pojo;
 
 public class [rel.name.toUpperFirst() /] {
 
-[for (role: RoleName | rel.roles)]
-	private [(rel.entities->at(i)).name.toUpperFirst()/] [role.name/];	
+[for (role: Role | rel.roles)]
+	private [role.entity.name.toUpperFirst()/] [role.name/];	
 [/for]
 [for (attr: Attribute | rel.attributes)]
 	private [generateJavaType(attr.type)/] [attr.name/];	
@@ -21,12 +21,12 @@ public class [rel.name.toUpperFirst() /] {
 
 	public [rel.name.toUpperFirst() /]() {}
 
-[for (role: RoleName | rel.roles)]
-	public [(rel.entities->at(i)).name.toUpperFirst()/] get[role.name.toUpperFirst()/]() {
+[for (role: Role | rel.roles)]
+	public [role.entity.name.toUpperFirst()/] get[role.name.toUpperFirst()/]() {
 		return [role.name/];
 	}	
 
-	public void set[role.name.toUpperFirst()/]([(rel.entities->at(i)).name.toUpperFirst()/] [role.name/]) {
+	public void set[role.name.toUpperFirst()/]([role.entity.name.toUpperFirst()/] [role.name/]) {
 		this.[role.name/] = [role.name/];
 	}
 	
