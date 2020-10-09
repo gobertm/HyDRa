@@ -5,7 +5,11 @@
 
 
 [query public getConcernedRelationshipTypes(entityType : EntityType, conceptualSchema : ConceptualSchema) : Collection(pml::RelationshipType) = 
-	conceptualSchema.relationships->select(rel | rel.entities->includes(entityType))
+	conceptualSchema.relationships->select(rel: RelationshipType | isConcernedByEntity(rel, entityType))
+ /]
+
+[query public isConcernedByEntity(rel : RelationshipType, ent : EntityType) : Boolean = 
+	(rel.roles-> select(role: Role | role.entity = ent)) -> size() > 0
  /]
 
 
@@ -20,19 +24,19 @@ public class [entityType.name.toUpperFirst() /] {
 	[/for]
 
 	[for (rel: RelationshipType | getConcernedRelationshipTypes(entityType, conceptualSchema))]
-		[for (e: EntityType | rel.entities) ]
-			[if (e = entityType and isRelationshipTypeComplex(rel))]
-				[if (rel.cardinalities->at(i) = '0..*')]
-	private java.util.List<[rel.name.toUpperFirst() /]> [rel.name/]ListAs[rel.roles->at(i).name.toUpperFirst()/];
+		[for (r : Role | rel.roles) ]
+			[if (r.entity = entityType and isRelationshipTypeComplex(rel))]
+				[if (r.cardinality = pml::Cardinality::ZERO_MANY or r.cardinality = pml::Cardinality::ONE_MANY)]
+	private java.util.List<[rel.name.toUpperFirst() /]> [rel.name/]ListAs[r.name.toUpperFirst()/];
 				[else]
-	private [rel.name.toUpperFirst() /] [rel.name/]As[rel.roles->at(i).name.toUpperFirst()/];
+	private [rel.name.toUpperFirst() /] [rel.name/]As[r.name.toUpperFirst()/];
 				[/if]
 			[else]
-				[if (e = entityType)]
-					[if (rel.cardinalities->at(i) = '0..*')]
-	private java.util.List<[rel.entities->at(i.mod(2) + 1).name.toUpperFirst() /]> [rel.roles->at(i.mod(2) + 1).name /]List;
+				[if (r.entity = entityType)]
+					[if (r.cardinality = pml::Cardinality::ZERO_MANY or r.cardinality = pml::Cardinality::ONE_MANY)]
+	private java.util.List<[rel.roles->at(i.mod(2) + 1).entity.name.toUpperFirst() /]> [rel.roles->at(i.mod(2) + 1).name /]List;
 					[else]
-	private [rel.entities->at(i.mod(2) + 1).name.toUpperFirst() /] [rel.roles->at(i.mod(2) + 1).name /];
+	private [rel.roles->at(i.mod(2) + 1).entity.name.toUpperFirst() /] [rel.roles->at(i.mod(2) + 1).name /];
 					[/if] 
 				[/if]
 			[/if]
@@ -52,41 +56,41 @@ public class [entityType.name.toUpperFirst() /] {
 	[/for]
 
 	[for (rel: RelationshipType | getConcernedRelationshipTypes(entityType, conceptualSchema))]
-		[for (e: EntityType | rel.entities) ]
-			[if (e = entityType and isRelationshipTypeComplex(rel))]
-				[if (rel.cardinalities->at(i) = '0..*')]
-	public java.util.List<[rel.name.toUpperFirst() /]> get[rel.name.toUpperFirst()/]ListAs[rel.roles->at(i).name.toUpperFirst()/]() {
-		return [rel.name/]ListAs[rel.roles->at(i).name.toUpperFirst()/];
+		[for (r: Role | rel.roles) ]
+			[if (r.entity = entityType and isRelationshipTypeComplex(rel))]
+				[if (r.cardinality = pml::Cardinality::ZERO_MANY or r.cardinality = pml::Cardinality::ONE_MANY)]
+	public java.util.List<[rel.name.toUpperFirst() /]> get[rel.name.toUpperFirst()/]ListAs[r.name.toUpperFirst()/]() {
+		return [rel.name/]ListAs[r.name.toUpperFirst()/];
 	}
 
-	public void set[rel.name.toUpperFirst()/]ListAs[rel.roles->at(i).name.toUpperFirst()/](java.util.List<[rel.name.toUpperFirst() /]> [rel.name/]ListAs[rel.roles->at(i).name.toUpperFirst()/]) {
-		this.[rel.name/]ListAs[rel.roles->at(i).name.toUpperFirst()/] = [rel.name/]ListAs[rel.roles->at(i).name.toUpperFirst()/];
+	public void set[rel.name.toUpperFirst()/]ListAs[r.name.toUpperFirst()/](java.util.List<[rel.name.toUpperFirst() /]> [rel.name/]ListAs[r.name.toUpperFirst()/]) {
+		this.[rel.name/]ListAs[r.name.toUpperFirst()/] = [rel.name/]ListAs[r.name.toUpperFirst()/];
 	}
 				[else]
-	public [rel.name.toUpperFirst() /] get[rel.name.toUpperFirst()/]As[rel.roles->at(i).name.toUpperFirst()/]() {
-		return [rel.name/]As[rel.roles->at(i).name.toUpperFirst()/];
+	public [rel.name.toUpperFirst() /] get[rel.name.toUpperFirst()/]As[r.name.toUpperFirst()/]() {
+		return [rel.name/]As[r.name.toUpperFirst()/];
 	}
 
-	public void set[rel.name.toUpperFirst()/]As[rel.roles->at(i).name.toUpperFirst()/]([rel.name.toUpperFirst() /] [rel.name/]As[rel.roles->at(i).name.toUpperFirst()/]) {
-		this.[rel.name/]As[rel.roles->at(i).name.toUpperFirst()/] = [rel.name/]As[rel.roles->at(i).name.toUpperFirst()/];
+	public void set[rel.name.toUpperFirst()/]As[r.name.toUpperFirst()/]([rel.name.toUpperFirst() /] [rel.name/]As[r.name.toUpperFirst()/]) {
+		this.[rel.name/]As[r.name.toUpperFirst()/] = [rel.name/]As[r.name.toUpperFirst()/];
 	}
 				[/if]
 			[else]
-				[if (e = entityType)]
-					[if (rel.cardinalities->at(i) = '0..*')]
-	public java.util.List<[rel.entities->at(i.mod(2) + 1).name.toUpperFirst() /]> get[rel.roles->at(i.mod(2) + 1).name.toUpperFirst() /]List() {
+				[if (r.entity = entityType)]
+					[if (r.cardinality = pml::Cardinality::ZERO_MANY or r.cardinality = pml::Cardinality::ONE_MANY)]
+	public java.util.List<[rel.roles->at(i.mod(2) + 1).entity.name.toUpperFirst() /]> get[rel.roles->at(i.mod(2) + 1).name.toUpperFirst() /]List() {
 		return [rel.roles->at(i.mod(2) + 1).name /]List;
 	}
 
-	public void set[rel.roles->at(i.mod(2) + 1).name.toUpperFirst() /]List(java.util.List<[rel.entities->at(i.mod(2) + 1).name.toUpperFirst() /]> [rel.roles->at(i.mod(2) + 1).name /]List) {
+	public void set[rel.roles->at(i.mod(2) + 1).name.toUpperFirst() /]List(java.util.List<[rel.roles->at(i.mod(2) + 1).entity.name.toUpperFirst() /]> [rel.roles->at(i.mod(2) + 1).name /]List) {
 		this.[rel.roles->at(i.mod(2) + 1).name /]List = [rel.roles->at(i.mod(2) + 1).name /]List;
 	}
 					[else]
-	public [rel.entities->at(i.mod(2) + 1).name.toUpperFirst() /] get[rel.roles->at(i.mod(2) + 1).name.toUpperFirst() /]() {
+	public [rel.roles->at(i.mod(2) + 1).entity.name.toUpperFirst() /] get[rel.roles->at(i.mod(2) + 1).name.toUpperFirst() /]() {
 		return [rel.roles->at(i.mod(2) + 1).name /];
 	}
 
-	public void set[rel.roles->at(i.mod(2) + 1).name.toUpperFirst() /]([rel.entities->at(i.mod(2) + 1).name.toUpperFirst() /] [rel.roles->at(i.mod(2) + 1).name /]) {
+	public void set[rel.roles->at(i.mod(2) + 1).name.toUpperFirst() /]([rel.roles->at(i.mod(2) + 1).entity.name.toUpperFirst() /] [rel.roles->at(i.mod(2) + 1).name /]) {
 		this.[rel.roles->at(i.mod(2) + 1).name /] = [rel.roles->at(i.mod(2) + 1).name /];
 	}
 					[/if] 
