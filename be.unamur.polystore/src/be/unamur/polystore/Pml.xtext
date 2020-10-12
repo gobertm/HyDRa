@@ -68,7 +68,7 @@ Reference:
 
 
 PhysicalField returns PhysicalField:
-	ShortField | EmbeddedObject
+	ShortField | EmbeddedObject | BracketsField
 ;
 
 EmbeddedObject:
@@ -146,7 +146,35 @@ AbstractPhysicalStructure:
 ;
 
 KeyValueSchema:
-	'key' 'value' 'schema' name=ID '{}'
+	'key' 'value' 'schema' name=ID '{'
+		kvpairs+=KeyValuePair
+		('references' '{'references+=Reference*'}')? 
+'}'
+;
+
+KeyValuePair:
+	'kvpairs' name=ID '{'
+		'key' ':' key=Key ','
+		'value' ':' value=Value
+	'}'
+;
+
+Key:
+	 stringParts+=STRING* & fields+=BracketsField*  // Comment intercaller les variables
+;
+
+Value:
+	Object | BracketsField
+;
+
+Object:
+	'{'
+		fields+=PhysicalField (',' fields+=PhysicalField)*
+	'}'
+;
+
+BracketsField:
+	'['name=ID']'
 ;
 
 MappingRules:
