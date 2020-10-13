@@ -3,14 +3,27 @@
  */
 package be.unamur.polystore.scoping;
 
+import org.eclipse.emf.common.util.BasicEList;
+import org.eclipse.emf.common.util.EList;
 import org.eclipse.emf.ecore.EObject;
 import org.eclipse.emf.ecore.EReference;
 import org.eclipse.xtext.EcoreUtil2;
 import org.eclipse.xtext.scoping.IScope;
 import org.eclipse.xtext.scoping.Scopes;
 
+import be.unamur.polystore.pml.AbstractMappingRule;
+import be.unamur.polystore.pml.AbstractPhysicalStructure;
+import be.unamur.polystore.pml.Collection;
+import be.unamur.polystore.pml.ColumnFamily;
+import be.unamur.polystore.pml.Edge;
 import be.unamur.polystore.pml.EntityMappingRule;
+import be.unamur.polystore.pml.Node;
+import be.unamur.polystore.pml.PhysicalField;
 import be.unamur.polystore.pml.PmlPackage;
+import be.unamur.polystore.pml.RoleMappingRule;
+import be.unamur.polystore.pml.ShortField;
+import be.unamur.polystore.pml.Table;
+import be.unamur.polystore.pml.TableColumnDB;
 
 /**
  * This class contains custom scoping description.
@@ -22,16 +35,29 @@ public class PmlScopeProvider extends AbstractPmlScopeProvider {
 
 	@Override
 	public IScope getScope(EObject context, EReference reference) {
-		if (context instanceof EntityMappingRule) {
+		if (context instanceof EntityMappingRule && reference == PmlPackage.Literals.ENTITY_MAPPING_RULE__ATTRIBUTES_CONCEPTUAL) {
 			EntityMappingRule rule = EcoreUtil2.getContainerOfType(context, EntityMappingRule.class);
-			if(reference == PmlPackage.Literals.ENTITY_MAPPING_RULE__ATTRIBUTES_CONCEPTUAL) {
-				return Scopes.scopeFor(rule.getEntityConceptual().getAttributes());
-			}
-//			if(reference == PmlPackage.Literals.MAPPING_RULE__PHYSICAL_FIELDS) {
-//				return Scopes.scopeFor(rule.getPhysicalStructure().getFields());
-//			}
+			return Scopes.scopeFor(rule.getEntityConceptual().getAttributes());
 		}
-
+		if(context instanceof AbstractMappingRule && reference == PmlPackage.Literals.ABSTRACT_MAPPING_RULE__PHYSICAL_FIELDS) {
+				AbstractMappingRule rule = EcoreUtil2.getContainerOfType(context, AbstractMappingRule.class);
+				AbstractPhysicalStructure struct= rule.getPhysicalStructure();
+				if(struct instanceof Table) 
+					return Scopes.scopeFor(((Table) struct).getColumns());
+				if(struct instanceof Collection) 
+					return Scopes.scopeFor(((Collection) struct).getFields());
+				if(struct instanceof Node)
+					return Scopes.scopeFor(((Node) struct).getFields());
+				if(struct instanceof Edge)
+					return Scopes.scopeFor(((Edge)struct).getFields());
+				if(struct instanceof TableColumnDB) {
+					EList<ColumnFamily> columnFamilies = ((TableColumnDB) struct).getColumnfamilies();
+					EList<ShortField> fields = new BasicEList<ShortField>();
+					for(ColumnFamily cf : columnFamilies)
+						fields.addAll(cf.getColumns());
+					return Scopes.scopeFor(fields);
+				}
+			}
 		return super.getScope(context, reference);
 	}
 }

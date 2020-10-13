@@ -14,6 +14,13 @@ conceptual schema cs {
 		content : string
 	}
 	
+	entity type Client{
+		clientnumber : int, // auto increment id. On en a besoin pour l'exemple bitmap key value.
+		lastname : string,
+		firstname : string
+	}
+	
+	
 	relationship type productStock{
 		storage [0-N] : Stock
 		stored_products [1] : Product
@@ -70,6 +77,7 @@ physical schemas {
 			}
 		}
 	}
+	
 	graph schema myGraphSchema {
 		Node Product {
 			_id,
@@ -116,13 +124,21 @@ physical schemas {
 		}
 	}
 	
-	key value schema kvschema {}
-	key value schema fd{}
+	key value schema KVProject {
+		
+		kvpairs KVProjDesc {
+			key : "PROJECT:""dzd"[IDPROJ], // Mais "string"[ID]"ojd" does not work.
+			value : [Description]
+		}
+		
+	}
 }
 
 mapping rules { 
-	  cs.Product(description, id, name) -> myDocSchema.productCollection(myDocSchema.productCollection.Name, myDocSchema.productCollection.Productnumber, myDocSchema.productCollection.Description),
-	  cs.productReview.reviews -> myDocSchema.productCollection(myDocSchema.productCollection.review),
-	  cs.Product(id,name,description) -> myGraphSchema.Product(myGraphSchema.Product._id, myGraphSchema.Product.Name,myGraphSchema.Product.Description)
+	  cs.Product(description, id, name) -> myDocSchema.productCollection(Description,id,Name),
+	  cs.productReview.reviews -> myDocSchema.productCollection(review),
+	  cs.Product(id,name,description) -> myGraphSchema.Product(_id,Name,Description),
+	  cs.productStock.storage -> myGraphSchema.PART_OF(),
+	  cs.Client(clientnumber,lastname) -> myRelSchema.Customer(id,name)
 	  
 	}

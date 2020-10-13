@@ -19,7 +19,7 @@ class PmlParsingTest {
 	ParseHelper<Domainmodel> parseHelper
 	
 	@Test
-	def void loadModel() {
+	def void loadFullModel() {
 		val result = parseHelper.parse('''
 		conceptual schema cs {
 			entity type Product{
@@ -127,6 +127,26 @@ class PmlParsingTest {
 			  cs.Product(id,name,description) -> myGraphSchema.Product(myGraphSchema.Product._id, myGraphSchema.Product.Name,myGraphSchema.Product.Description)
 			  
 			}
+		''')
+		Assertions.assertNotNull(result)
+		val errors = result.eResource.errors
+		Assertions.assertTrue(errors.isEmpty, '''Unexpected errors: «errors.join(", ")»''')
+		val warnings = result.eResource.warnings
+		Assertions.assertTrue(warnings.isEmpty, '''Unexpected warnings: «warnings.join(", ")»''')
+	}
+	
+	@Test
+	def void checkEntity() {
+		val result = parseHelper.parse('''
+			conceptual schema cs {
+						entity type Product{
+							id:int,
+							name:string,
+							description:string
+						}
+				}
+			physical schemas{}
+			mapping rules {}
 		''')
 		Assertions.assertNotNull(result)
 		val errors = result.eResource.errors

@@ -121,7 +121,7 @@ Node:
 
 Edge:
 	'Edge' name=ID '{'
-		sourceNode=[Node] '->' targetNode = [Node] (',' attributes+=ShortField)*
+		sourceNode=[Node] '->' targetNode = [Node] (',' fields+=ShortField)*
 	'}' 	
 ;
 
@@ -142,7 +142,7 @@ Table:
 ;
 
 AbstractPhysicalStructure:
-	Table | Collection | Node | TableColumnDB
+	Table | Collection | Node | TableColumnDB | Edge
 ;
 
 KeyValueSchema:
