@@ -1,0 +1,3774 @@
+DBLUN10
+*SYSTEM
+object_id double
+flag int
+name char[100]
+short_name char[12]
+creation_date char[10]
+semantics_desc desc
+technical_desc desc
+sys_mo rel
+sys_sch rel
+link rel
+user_viewable rel
+viewable_note rel
+go_uo rel
+go_st rel
+act_arg rel
+go_nn_note rel
+*META_OBJECT
+object_id double
+flag int
+name char[100]
+type short
+semantics_desc desc
+mo_mp rel
+concept_mo rel
+*META_PROPERTY
+object_id double
+flag int
+name char[100]
+type short
+funct int
+semantics_desc desc
+*SCHEMA
+object_id double
+flag int
+name char[100]
+short_name char[12]
+version char[16]
+creation_date char[10]
+last_update char[10]
+lock char
+type char
+semantics_desc desc
+technical_desc desc
+trace_on int
+from rel
+to rel
+is_in rel
+sch_do rel
+sch_col rel
+sch_inst rel
+owner_pu rel
+user_viewable rel
+viewable_note rel
+go_uo rel
+go_st rel
+act_arg rel
+go_nn_note rel
+*ENTITY_TYPE
+object_id double
+flag int
+name char[100]
+short_name char[12]
+semantics_desc desc
+technical_desc desc
+owner_att rel
+owner_group rel
+col_do2 rel
+owner_pu rel
+et_role1 rel
+decomp rel
+general rel
+domain rel
+go_uo rel
+go_st rel
+act_arg rel
+go_nn_note rel
+*REL_TYPE
+object_id double
+flag int
+name char[100]
+short_name char[12]
+semantics_desc desc
+technical_desc desc
+owner_att rel
+owner_group rel
+col_do2 rel
+owner_pu rel
+rt_type rel
+go_uo rel
+go_st rel
+act_arg rel
+go_nn_note rel
+*CO_ATTRIBUTE
+object_id double
+flag int
+name char[100]
+short_name char[12]
+semantics_desc desc
+technical_desc desc
+min_rep unsigned int
+max_rep unsigned int
+set_type char
+owner_att rel
+owner_group rel
+col_do2 rel
+domain rel
+at_ro_gr rel
+go_uo rel
+go_st rel
+act_arg rel
+go_nn_note rel
+*SI_ATTRIBUTE
+object_id double
+flag int
+name char[100]
+short_name char[12]
+semantics_desc desc
+technical_desc desc
+min_rep unsigned int
+max_rep unsigned int
+set_type char
+stable char
+recyclable char
+type char
+length unsigned int
+decim short
+owner_group rel
+col_do2 rel
+domain rel
+at_ro_gr
+go_uo rel
+go_st rel
+act_arg rel
+go_nn_note rel
+*ROLE
+object_id double
+flag int
+name char[100]
+min_con unsigned int
+max_con unsigned int
+aggregation char
+semantics_desc desc
+technical_desc desc
+at_ro_gr
+et_role2 rel
+go_uo rel
+go_st rel
+act_arg rel
+go_nn_note rel
+*ET_ROLE
+object_id double
+flag int
+*GROUP
+object_id double
+flag int
+name char[100]
+type char
+funct int
+min_rep unsigned int
+max_rep unsigned int
+semantics_desc desc
+technical_desc desc
+at_ro_gr
+gr_comp rel
+member_gr rel
+go_uo rel
+go_st rel
+act_arg rel
+go_nn_note rel
+*COMPONENT
+object_id double
+flag int
+*MEMBER_CST
+object_id double
+flag int
+mem_role char
+*CONSTRAINT
+object_id double
+flag int
+type char
+mbr_cst rel
+go_uo rel
+*COLLECTION
+object_id double
+flag int
+name char[100]
+short_name char[12]
+semantics_desc desc
+technical_desc desc
+col_do1 rel
+go_uo rel
+go_st rel
+act_arg rel
+go_nn_note rel
+*COL_DO
+object_id double
+flag int
+*CLUSTER
+object_id double
+flag int
+cluster_id char[100]
+type int
+criterion char[30]
+special rel
+go_uo rel
+go_st rel
+act_arg rel
+go_nn_note rel
+*SUB_TYPE
+object_id double
+flag int
+value char[30]
+go_uo rel
+*USER_VIEW
+object_id double
+flag int
+name char[100]
+type int
+zoom int
+reduce int
+xgrid int
+ygrid int
+font_size int
+font_name char[30]
+text_font_size int
+text_font_name char[30]
+markplan int
+uv_uo rel
+*USER_OBJECT
+object_id double
+flag int
+posx int
+posy int
+color int
+*CONNECTION
+object_id double
+flag int
+type char[10]
+seq_nbr int
+*TEXT
+object_id double
+flag int
+name char[100]
+version char[16]
+path char[260]
+creation_date char[10]
+last_update char[10]
+type_of_file char[10]
+num_line int
+lock char
+sem_desc desc
+tech_desc desc
+from rel
+to rel
+is_in rel
+text_inst rel
+line rel
+user_viewable rel
+viewable_note rel
+go_uo rel
+go_st rel
+act_arg rel
+go_nn_note rel
+*LINE
+object_id double
+flag int
+num int
+description desc
+go_uo rel
+*PROD_SET
+object_id double
+flag int
+name char[100]
+version char[16]
+creation_date char[10]
+last_update char[10]
+lock char
+sem_desc desc
+tech_desc desc
+from rel
+to rel
+is_in rel
+contains rel
+set_inst rel
+go_uo rel
+*PROD_SET_ELEM
+object_id double
+flag int
+*PROC_UNIT
+object_id double
+flag int
+name char[100]
+short_name char[12]
+semantics_desc desc
+technical_desc desc
+type char
+mode char
+owner_group rel
+col_do2 rel
+p_decl rel
+p_fct_call rel
+invokes_pu rel
+pu_made_of rel
+cons_pu rel
+go_st rel
+act_arg rel
+go_nn_note rel
+go_uo rel
+*ENVIRONMENT
+object_id double
+flag int
+name char[100]
+type char
+mode char
+semantics_desc desc
+technical_desc desc
+go_nn_note rel
+go_uo rel
+*STATE
+object_id double
+flag int
+name char[100]
+short_name char[12]
+semantics_desc desc
+technical_desc desc
+owner_group rel
+col_do2 rel
+st_env rel
+go_nn_note rel
+go_uo rel
+*ELEMENT
+object_id double
+flag int
+type char
+description desc
+p_made_of rel
+p_part_of rel
+go_nn_note rel
+go_uo rel
+*REL_ELEMENT
+object_id double
+flag int
+name char[100]
+type char
+mode char
+semantics_desc desc
+technical_desc desc
+go_nn_note rel
+go_uo rel
+*P_EXPRESSION
+object_id double
+flag int
+oper int
+constant char[255]
+description desc
+sub_expression rel
+go_uo rel
+*CONSUMPTION
+object_id double
+flag int
+name char[100]
+short_name char[12]
+semantics_desc desc
+technical_desc desc
+owner_group rel
+col_do2 rel
+cons_res rel
+cons_role rel
+cons_pu rel
+go_st rel
+act_arg rel
+go_nn_note rel
+go_uo rel
+*CONS_PU
+object_id double
+flag int
+name char[100]
+min_card int
+max_card int
+semantics_desc desc
+technical_desc desc
+go_nn_note rel
+go_uo rel
+*CONS_RES
+object_id double
+flag int
+name char[100]
+min_card int
+max_card int
+semantics_desc desc
+technical_desc desc
+go_nn_note rel
+go_uo rel
+*CONS_ROLE
+object_id double
+flag int
+name char[100]
+min_card int
+max_card int
+semantics_desc desc
+technical_desc desc
+go_nn_note rel
+go_uo rel
+*RESOURCE
+object_id double
+flag int
+name char[100]
+short_name char[12]
+semantics_desc desc
+technical_desc desc
+type char
+owner_group rel
+col_do2 rel
+cons_res rel
+cp_res rel
+re_gen rel
+re_spec rel
+go_st rel
+act_arg rel
+go_nn_note rel
+go_uo rel
+*RES_ROLE
+object_id double
+flag int
+name char[100]
+short_name char[12]
+semantics_desc desc
+technical_desc desc
+owner_group rel
+col_do2 rel
+cons_role rel
+cp_rol rel
+ro_gen rel
+ro_spec rel
+go_st rel
+act_arg rel
+go_nn_note rel
+go_uo rel
+*RE_ISA
+object_id double
+flag int
+name char[100]
+semantics_desc desc
+technical_desc desc
+go_nn_note rel
+go_uo rel
+*RO_ISA
+object_id double
+flag int
+name char[100]
+semantics_desc desc
+technical_desc desc
+go_nn_note rel
+go_uo rel
+*CAN_PLAY
+object_id double
+flag int
+go_nn_note rel
+go_uo rel
+*DYNAMIC_PROPERTY
+mp_id double
+object_id double
+value text
+*METHODOLOGY
+object_id double
+title char[100]
+version char[16]
+date char[10]
+author char[100]
+help_file char[255]
+semantics_desc desc
+user_viewable rel
+viewable_note rel
+*STATEMENT
+object_id double
+type int
+state char
+glbtrsf trsfscr
+sub_stmt rel
+strategy rel
+condition rel
+stmt_param rel
+pp_inst rel
+ep_inst rel
+cs_inst rel
+*EXPRESSION
+object_id double
+type int
+not char
+weak char
+sub_expression rel
+cond_dec rel
+expr_param rel
+*PARAMETER
+object_id double
+integer int
+string char[255]
+analysis_expr anallist
+type char
+mode char
+usage char
+*PROCESS_TYPE
+object_id double
+name char[100]
+title char[100]
+explain char[100]
+semantics_desc desc
+perform rel
+form_arg rel
+invokes rel
+*TOOLBOX
+object_id double
+name char[100]
+title char[100]
+functions list_int
+semantics_desc desc
+uses rel
+*TEXT_TYPE
+object_id double
+name char[100]
+title char[100]
+weak char
+min_mul int
+max_mul int
+usage char
+semantics_desc desc
+act_arg rel
+ttext_inst rel
+*SCHEMA_TYPE
+object_id double
+name char[100]
+title char[100]
+weak char
+min_mul int
+max_mul int
+usage char
+semantics_desc desc
+act_arg rel
+tschema_inst rel
+*PROD_SET_TYPE
+object_id double
+name char[100]
+title char[100]
+min_mul int
+max_mul int
+usage char
+semantics_desc desc
+actarg rel
+tset_inst rel
+*TEXT_MODEL
+object_id double
+name char[100]
+title char[100]
+semantics_desc desc
+default_ext list_char[3]
+grammar char[255]
+model_expr rel
+specialization rel
+text_conform rel
+*SCHEMA_MODEL
+object_id double
+name char[100]
+title char[100]
+semantics_desc desc
+constraints anallist
+model_expr rel
+specialization rel
+schema_conform rel
+have_concept rel
+*MOD_CONCEPT
+object_id double
+contextual_name char[100]
+funct1 unsigned int
+funct2 unsigned int
+*ENGINEERING_PROCESS
+object_id double
+name char[100]
+start_date char[10]
+start_time char[10]
+end_date char[10]
+end_time char[10]
+in_progress char
+semantics_desc desc
+flag int
+io_proc rel
+made_of rel
+start rel
+user_viewable rel
+viewable_note rel
+go_uo rel
+go_nn_note rel
+*DECISION
+object_id double
+name char[100]
+start_date char[10]
+start_time char[10]
+end_date char[10]
+end_time char[10]
+in_progress char
+yes_no char
+semantics_desc desc
+flag int
+io_proc rel
+go_uo rel
+go_nn_note rel
+*PRIMITIVE_PROCESS
+object_id double
+name char[100]
+start_date char[10]
+start_time char[10]
+end_date char[10]
+end_time char[10]
+in_progress char
+semantics_desc desc
+flag int
+io_proc rel
+go_uo rel
+go_nn_note rel
+*CONTROL_STRUCTURE
+object_id double
+name char[100]
+start_date char[10]
+start_time char[10]
+end_date char[10]
+end_time char[10]
+in_progress char
+golist list_int
+semantics_desc desc
+io_proc rel
+*SCHEMA_INSTANCE
+object_id double
+usage char
+checkpoint char[100]
+flag int
+go_nn_note rel
+*TEXT_INSTANCE
+object_id double
+usage char
+checkpoint char[100]
+flag int
+go_nn_note rel
+*PROD_SET_INSTANCE
+object_id double
+usage char
+checkpoint char[100]
+flag int
+go_nn_note rel
+*NOTE
+object_id double
+flag int
+description desc
+note_nn_note rel
+go_uo rel
+*NN_NOTE
+object_id double
+flag int
+*LOG
+schema double
+length long
+text FILE
+*
+*0
+0
+0
+PROJECT
+
+20201022
+
+
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+-
+272
+218
+181
+144
+107
+-
+63
+-
+1
+-
+-
+-
+-
+-
+-
+*1
+2
+0
+Project
+1
+
+-
+-
+*1
+3
+0
+Schema
+2
+
+22
+23
+-
+-
+*1
+4
+0
+Text
+31
+
+24
+25
+-
+-
+*1
+5
+0
+Product set
+41
+
+26
+-
+-
+*1
+6
+0
+Entity type
+11
+
+28
+27
+-
+-
+*1
+7
+0
+Rel-type
+12
+
+30
+29
+-
+-
+*1
+8
+0
+Atomic attribute
+7
+
+38
+37
+36
+35
+34
+33
+-
+-
+*1
+9
+0
+Compound attribute
+6
+
+40
+39
+-
+-
+*1
+10
+0
+Group
+16
+
+44
+43
+-
+-
+*1
+11
+0
+Role
+14
+
+32
+31
+-
+-
+*1
+12
+0
+Collection
+4
+
+41
+42
+-
+-
+*1
+13
+0
+Processing unit
+40
+
+46
+45
+-
+-
+*1
+14
+0
+Processing unit relation
+45
+
+62
+61
+-
+-
+*1
+15
+0
+Association
+47
+
+54
+53
+-
+-
+*1
+16
+0
+Use case association role
+68
+
+56
+55
+-
+-
+*1
+17
+0
+Actor association role
+66
+
+58
+57
+-
+-
+*1
+18
+0
+Actor
+48
+
+50
+49
+-
+-
+*1
+19
+0
+Actor generalization
+62
+
+52
+51
+-
+-
+*1
+20
+0
+State
+61
+
+59
+60
+-
+-
+*1
+21
+0
+In-out
+43
+
+48
+47
+-
+-
+*2
+23
+0
+Stereotype
+86
+14
+
+*2
+22
+0
+productType
+86
+6
+#VALUES=
+COBOL
+CODASYL
+IMS
+Relational
+SQL
+XML
+C/C++
+Java
+#
+*2
+25
+0
+Stereotype
+86
+14
+
+*2
+24
+0
+productType
+86
+6
+#VALUES=
+COBOL
+CODASYL
+IMS
+Relational
+SQL
+XML
+C/C++
+Java
+#
+*2
+26
+0
+Stereotype
+86
+14
+
+*2
+27
+0
+Stereotype
+86
+14
+
+*2
+28
+0
+MappingOID
+78
+10
+
+*2
+29
+0
+Stereotype
+86
+14
+
+*2
+30
+0
+MappingOID
+78
+10
+
+*2
+33
+0
+Value constraint
+86
+10
+
+*2
+34
+0
+Stereotype
+86
+14
+
+*2
+35
+0
+physType
+86
+2
+
+*2
+36
+0
+physLen
+78
+2
+
+*2
+37
+0
+MappingOID
+78
+10
+
+*2
+38
+0
+Default value
+86
+2
+
+*2
+39
+0
+Stereotype
+86
+14
+
+*2
+40
+0
+MappingOID
+78
+10
+
+*2
+43
+0
+User-constraint
+86
+1
+
+*2
+44
+0
+MappingOID
+78
+10
+
+*2
+31
+0
+Stereotype
+86
+14
+
+*2
+32
+0
+MappingOID
+78
+10
+
+*2
+42
+0
+MappingOID
+78
+10
+
+*2
+41
+0
+Stereotype
+86
+14
+#VALUES=
+Area
+DBD
+SQLSchema
+SubSchema
+TableSpace
+#
+*2
+45
+0
+Stereotype
+86
+14
+
+*2
+46
+0
+MappingOID
+78
+10
+
+*2
+61
+0
+Stereotype
+86
+14
+
+*2
+62
+0
+MappingOID
+78
+10
+
+*2
+53
+0
+Stereotype
+86
+14
+
+*2
+54
+0
+MappingOID
+78
+10
+
+*2
+55
+0
+Stereotype
+86
+14
+
+*2
+56
+0
+MappingOID
+78
+10
+
+*2
+57
+0
+Stereotype
+86
+14
+
+*2
+58
+0
+MappingOID
+78
+10
+
+*2
+49
+0
+Stereotype
+86
+14
+
+*2
+50
+0
+MappingOID
+78
+10
+
+*2
+51
+0
+Stereotype
+86
+14
+
+*2
+52
+0
+MappingOID
+78
+10
+
+*2
+60
+0
+MappingOID
+78
+10
+
+*2
+59
+0
+Stereotype
+86
+14
+#VALUES=
+ET
+RT
+Att
+Coll
+#
+*2
+47
+0
+Stereotype
+86
+14
+
+*2
+48
+0
+MappingOID
+78
+10
+
+*3
+107
+256
+SCHEMA
+
+pojo
+20201022
+20201022
+T
+E
+
+
+0
+-
+-
+-
+122
+126
+120
+124
+118
+-
+-
+108
+110
+150
+-
+-
+109
+-
+141
+-
+117
+116
+115
+-
+-
+-
+141
+-
+*3
+144
+256
+SCHEMA select basiques
+
+dao_conceptuel
+20201022
+20201023
+T
+E
+
+
+0
+-
+-
+-
+159
+163
+157
+161
+155
+-
+-
+145
+147
+151
+-
+-
+146
+-
+178
+-
+154
+153
+152
+-
+-
+-
+178
+-
+*3
+181
+256
+SCHEMA select TA simple
+
+dao_conceptuel-1
+20201022
+20201023
+T
+E
+
+
+0
+-
+-
+-
+196
+200
+194
+198
+192
+-
+-
+182
+184
+-
+-
+183
+-
+215
+-
+191
+190
+189
+-
+-
+-
+215
+-
+*3
+218
+256
+SCHEMA select TA n-aire
+
+dao_conceptuel-1-1
+20201022
+20201023
+F
+E
+
+
+0
+-
+-
+-
+233
+231
+237
+235
+229
+255
+-
+-
+219
+221
+-
+-
+220
+-
+261
+264
+267
+270
+-
+228
+227
+226
+-
+-
+-
+261
+264
+267
+270
+-
+*3
+272
+256
+SCHEMA select TA binaire avec attributs
+
+dao_conceptuel
+20201022
+20201023
+F
+E
+
+
+0
+-
+-
+-
+287
+291
+285
+289
+309
+283
+-
+-
+273
+275
+-
+-
+274
+-
+306
+312
+315
+-
+282
+281
+280
+-
+-
+-
+306
+312
+315
+-
+*4
+124
+0
+Commande
+
+
+
+-
+-
+-
+-
+134
+-
+-
+-
+-
+125
+-
+-
+-
+-
+*4
+126
+0
+Client
+
+
+
+120
+118
+-
+130
+128
+-
+-
+-
+137
+-
+-
+-
+-
+127
+-
+-
+-
+-
+*4
+161
+0
+Commande
+
+
+
+-
+-
+-
+-
+171
+-
+-
+-
+-
+162
+-
+-
+-
+-
+*4
+163
+0
+Client
+
+
+
+157
+155
+-
+167
+165
+-
+-
+-
+174
+-
+-
+-
+-
+164
+-
+-
+-
+-
+*4
+198
+0
+Commande
+
+
+
+-
+-
+-
+-
+208
+-
+-
+-
+-
+199
+-
+-
+-
+-
+*4
+200
+0
+Client
+
+
+
+194
+192
+-
+204
+202
+-
+-
+-
+211
+-
+-
+-
+-
+201
+-
+-
+-
+-
+*4
+235
+0
+Livre
+
+
+
+-
+-
+-
+-
+245
+-
+-
+-
+-
+236
+-
+-
+-
+-
+*4
+237
+0
+Etudiant
+
+
+
+231
+229
+-
+241
+239
+-
+-
+-
+248
+-
+-
+-
+-
+238
+-
+-
+-
+-
+*4
+255
+0
+Projet
+
+
+
+-
+-
+-
+-
+258
+-
+-
+-
+-
+256
+-
+-
+-
+-
+*4
+289
+0
+Commande
+
+
+
+-
+-
+-
+-
+299
+-
+-
+-
+-
+290
+-
+-
+-
+-
+*4
+291
+0
+Client
+
+
+
+285
+283
+-
+295
+293
+-
+-
+-
+302
+-
+-
+-
+-
+292
+-
+-
+-
+-
+*5
+122
+0
+achat
+
+
+
+-
+-
+-
+-
+135
+132
+-
+123
+-
+-
+-
+-
+*5
+159
+0
+achat
+
+
+
+-
+-
+-
+-
+172
+169
+-
+160
+-
+-
+-
+-
+*5
+196
+0
+achat
+
+
+
+-
+-
+-
+-
+209
+206
+-
+197
+-
+-
+-
+-
+*5
+233
+0
+emprunte
+
+
+
+-
+-
+-
+-
+246
+243
+257
+-
+234
+-
+-
+-
+-
+*5
+287
+0
+achat
+
+
+
+309
+-
+-
+-
+-
+300
+297
+-
+288
+-
+-
+-
+-
+*7
+118
+0
+name
+
+
+
+1
+1
+S
+F
+T
+A
+1
+0
+-
+-
+-
+138
+-
+119
+-
+-
+-
+-
+*7
+120
+0
+client_id
+
+
+
+1
+1
+S
+F
+T
+A
+1
+0
+-
+-
+-
+139
+-
+121
+-
+-
+-
+-
+*7
+155
+0
+name
+
+
+
+1
+1
+S
+F
+T
+A
+1
+0
+-
+-
+-
+175
+-
+156
+-
+-
+-
+-
+*7
+157
+0
+client_id
+
+
+
+1
+1
+S
+F
+T
+A
+1
+0
+-
+-
+-
+176
+-
+158
+-
+-
+-
+-
+*7
+192
+0
+name
+
+
+
+1
+1
+S
+F
+T
+A
+1
+0
+-
+-
+-
+212
+-
+193
+-
+-
+-
+-
+*7
+194
+0
+client_id
+
+
+
+1
+1
+S
+F
+T
+A
+1
+0
+-
+-
+-
+213
+-
+195
+-
+-
+-
+-
+*7
+229
+0
+name
+
+
+
+1
+1
+S
+F
+T
+A
+1
+0
+-
+-
+-
+249
+-
+230
+-
+-
+-
+-
+*7
+231
+0
+etud_id
+
+
+
+1
+1
+S
+F
+T
+A
+1
+0
+-
+-
+-
+250
+-
+232
+-
+-
+-
+-
+*7
+283
+0
+name
+
+
+
+1
+1
+S
+F
+T
+A
+1
+0
+-
+-
+-
+303
+-
+284
+-
+-
+-
+-
+*7
+285
+0
+client_id
+
+
+
+1
+1
+S
+F
+T
+A
+1
+0
+-
+-
+-
+304
+-
+286
+-
+-
+-
+-
+*7
+309
+0
+date
+
+
+
+1
+1
+S
+F
+T
+A
+1
+0
+-
+-
+-
+-
+310
+-
+-
+-
+-
+*8
+132
+0
+commande_passée
+1
+1
+ 
+
+
+-
+134
+-
+133
+-
+-
+-
+-
+*8
+135
+0
+acheteur
+0
+N
+ 
+
+
+-
+137
+-
+136
+-
+-
+-
+-
+*8
+169
+0
+commande_passée
+1
+1
+ 
+
+
+-
+171
+-
+170
+-
+-
+-
+-
+*8
+172
+0
+acheteur
+0
+N
+ 
+
+
+-
+174
+-
+173
+-
+-
+-
+-
+*8
+206
+0
+commande_passée
+1
+1
+ 
+
+
+-
+208
+-
+207
+-
+-
+-
+-
+*8
+209
+0
+acheteur
+0
+N
+ 
+
+
+-
+211
+-
+210
+-
+-
+-
+-
+*8
+257
+0
+
+0
+N
+ 
+
+
+-
+258
+-
+259
+-
+-
+-
+-
+*8
+243
+0
+objet_emprunté
+0
+N
+ 
+
+
+-
+245
+-
+244
+-
+-
+-
+-
+*8
+246
+0
+emprunteur
+0
+N
+ 
+
+
+-
+248
+-
+247
+-
+-
+-
+-
+*8
+297
+0
+commande_passée
+1
+1
+ 
+
+
+-
+299
+-
+298
+-
+-
+-
+-
+*8
+300
+0
+acheteur
+0
+N
+ 
+
+
+-
+302
+-
+301
+-
+-
+-
+-
+*9
+134
+0
+*9
+137
+0
+*9
+171
+0
+*9
+174
+0
+*9
+208
+0
+*9
+211
+0
+*9
+245
+0
+*9
+248
+0
+*9
+258
+0
+*9
+299
+0
+*9
+302
+0
+*10
+128
+0
+GRClient
+A
+64
+0
+N
+
+
+-
+138
+-
+-
+129
+-
+-
+-
+-
+*10
+130
+0
+IDClient
+A
+1
+0
+N
+
+
+-
+139
+-
+-
+131
+-
+-
+-
+-
+*10
+165
+0
+GRClient
+A
+64
+0
+N
+
+
+-
+175
+-
+-
+166
+-
+-
+-
+-
+*10
+167
+0
+IDClient
+A
+1
+0
+N
+
+
+-
+176
+-
+-
+168
+-
+-
+-
+-
+*10
+202
+0
+GRClient
+A
+64
+0
+N
+
+
+-
+212
+-
+-
+203
+-
+-
+-
+-
+*10
+204
+0
+IDClient
+A
+1
+0
+N
+
+
+-
+213
+-
+-
+205
+-
+-
+-
+-
+*10
+239
+0
+GRClient
+A
+64
+0
+N
+
+
+-
+249
+-
+-
+240
+-
+-
+-
+-
+*10
+241
+0
+IDClient
+A
+1
+0
+N
+
+
+-
+250
+-
+-
+242
+-
+-
+-
+-
+*10
+293
+0
+GRClient
+A
+64
+0
+N
+
+
+-
+303
+-
+-
+294
+-
+-
+-
+-
+*10
+295
+0
+IDClient
+A
+1
+0
+N
+
+
+-
+304
+-
+-
+296
+-
+-
+-
+-
+*11
+138
+0
+*11
+139
+0
+*11
+175
+0
+*11
+176
+0
+*11
+212
+0
+*11
+213
+0
+*11
+249
+0
+*11
+250
+0
+*11
+303
+0
+*11
+304
+0
+*18
+64
+0
+
+0
+100
+100
+0
+0
+0
+
+0
+
+1
+-
+*18
+69
+0
+
+23
+100
+100
+0
+0
+0
+
+0
+
+1
+70
+116
+153
+180
+190
+227
+281
+-
+*18
+109
+0
+
+23
+100
+100
+0
+0
+0
+
+0
+
+1
+117
+119
+121
+123
+125
+127
+129
+131
+133
+136
+142
+-
+*18
+146
+0
+
+23
+100
+100
+0
+0
+0
+
+0
+
+1
+154
+156
+158
+160
+162
+164
+166
+168
+170
+173
+179
+-
+*18
+183
+0
+
+23
+100
+100
+0
+0
+0
+
+0
+
+1
+191
+193
+195
+197
+199
+201
+203
+205
+207
+210
+216
+-
+*18
+220
+0
+
+23
+100
+100
+0
+0
+0
+
+0
+
+1
+228
+230
+232
+234
+236
+238
+240
+242
+244
+247
+256
+259
+262
+265
+268
+271
+-
+*18
+274
+0
+
+23
+100
+100
+0
+0
+0
+
+0
+
+1
+282
+284
+286
+288
+290
+292
+294
+296
+298
+301
+307
+310
+313
+316
+-
+*18
+1
+0
+
+23
+100
+100
+0
+0
+0
+
+0
+
+1
+115
+152
+189
+226
+280
+-
+*19
+180
+0
+35400
+39400
+0
+*19
+70
+0
+107200
+10000
+0
+*19
+142
+0
+76200
+74000
+0
+*19
+179
+0
+86000
+80200
+0
+*19
+216
+0
+96100
+131400
+0
+*19
+271
+0
+88500
+88600
+0
+*19
+268
+0
+96400
+100600
+0
+*19
+265
+0
+197400
+18000
+0
+*19
+262
+0
+123200
+15900
+0
+*19
+316
+0
+105600
+134700
+0
+*19
+313
+0
+88100
+64000
+0
+*19
+307
+0
+67900
+61000
+0
+*19
+129
+0
+0
+0
+0
+*19
+131
+0
+0
+0
+0
+*19
+166
+0
+0
+0
+0
+*19
+168
+0
+0
+0
+0
+*19
+203
+0
+0
+0
+0
+*19
+205
+0
+0
+0
+0
+*19
+240
+0
+0
+0
+0
+*19
+242
+0
+0
+0
+0
+*19
+294
+0
+0
+0
+0
+*19
+296
+0
+0
+0
+0
+*19
+133
+0
+89983
+24100
+0
+*19
+136
+0
+44686
+24100
+0
+*19
+170
+0
+89983
+24100
+0
+*19
+173
+0
+44686
+24100
+0
+*19
+207
+0
+89983
+24100
+0
+*19
+210
+0
+44686
+24100
+0
+*19
+244
+0
+69982
+25780
+0
+*19
+247
+0
+39619
+25076
+0
+*19
+259
+0
+55103
+37136
+0
+*19
+298
+0
+81583
+12800
+0
+*19
+301
+0
+36286
+12800
+0
+*19
+119
+0
+0
+0
+0
+*19
+121
+0
+0
+0
+0
+*19
+156
+0
+0
+0
+0
+*19
+158
+0
+0
+0
+0
+*19
+193
+0
+0
+0
+0
+*19
+195
+0
+0
+0
+0
+*19
+230
+0
+0
+0
+0
+*19
+232
+0
+0
+0
+0
+*19
+284
+0
+0
+0
+0
+*19
+286
+0
+0
+0
+0
+*19
+310
+0
+0
+0
+0
+*19
+123
+0
+69398
+24100
+0
+*19
+160
+0
+69398
+24100
+0
+*19
+197
+0
+69398
+24100
+0
+*19
+234
+0
+54671
+29559
+0
+*19
+288
+0
+60998
+12800
+0
+*19
+125
+0
+115600
+24100
+0
+*19
+127
+0
+21300
+24100
+0
+*19
+162
+0
+115600
+24100
+0
+*19
+164
+0
+21300
+24100
+0
+*19
+199
+0
+115600
+24100
+0
+*19
+201
+0
+21300
+24100
+0
+*19
+236
+0
+83800
+18800
+0
+*19
+238
+0
+21600
+21800
+0
+*19
+256
+0
+55400
+48500
+0
+*19
+290
+0
+107200
+12800
+0
+*19
+292
+0
+12900
+12800
+0
+*19
+115
+0
+0
+20000
+0
+*19
+116
+0
+35400
+23300
+0
+*19
+117
+0
+32000
+4000
+0
+*19
+152
+0
+0
+40000
+0
+*19
+153
+0
+35400
+53800
+0
+*19
+154
+0
+32000
+4000
+0
+*19
+189
+0
+0
+60000
+0
+*19
+190
+0
+35200
+83300
+0
+*19
+191
+0
+32000
+4000
+0
+*19
+226
+0
+0
+80000
+0
+*19
+227
+0
+193200
+82800
+0
+*19
+228
+0
+32000
+4000
+0
+*19
+280
+0
+0
+40000
+0
+*19
+281
+0
+113700
+83400
+0
+*19
+282
+0
+165100
+5900
+0
+*40
+28
+124
+81
+*40
+28
+126
+79
+*40
+28
+161
+81
+*40
+28
+163
+79
+*40
+28
+198
+81
+*40
+28
+200
+79
+*40
+28
+235
+81
+*40
+28
+237
+79
+*40
+28
+255
+255
+*40
+28
+289
+81
+*40
+28
+291
+79
+*40
+30
+122
+83
+*40
+30
+159
+83
+*40
+30
+196
+83
+*40
+30
+233
+83
+*40
+30
+287
+83
+*40
+37
+118
+96
+*40
+37
+120
+94
+*40
+37
+155
+96
+*40
+37
+157
+94
+*40
+37
+192
+96
+*40
+37
+194
+94
+*40
+37
+229
+96
+*40
+37
+231
+94
+*40
+37
+283
+96
+*40
+37
+285
+94
+*40
+37
+309
+309
+*40
+44
+128
+101
+*40
+44
+130
+98
+*40
+44
+165
+101
+*40
+44
+167
+98
+*40
+44
+202
+101
+*40
+44
+204
+98
+*40
+44
+239
+101
+*40
+44
+241
+98
+*40
+44
+293
+101
+*40
+44
+295
+98
+*40
+32
+132
+86
+*40
+32
+135
+84
+*40
+32
+169
+86
+*40
+32
+172
+84
+*40
+32
+206
+86
+*40
+32
+209
+84
+*40
+32
+257
+257
+*40
+32
+243
+86
+*40
+32
+246
+84
+*40
+32
+297
+86
+*40
+32
+300
+84
+*41
+63
+
+
+20201022
+
+
+
+64
+-
+-
+*42
+66
+13
+0
+-
+-
+67
+-
+-
+-
+-
+-
+-
+*42
+148
+19
+0
+-
+-
+-
+-
+-
+149
+-
+-
+-
+*45
+67
+No_method
+No method
+
+
+63
+-
+-
+-
+*46
+65
+Everything
+Do whatever you want
+14001
+-
+
+66
+-
+*53
+68
+PROJECT
+20201022
+115320
+
+
+T
+
+0
+108
+110
+145
+147
+182
+184
+219
+221
+273
+275
+-
+149
+-
+63
+-
+69
+-
+-
+70
+-
+-
+*55
+149
+Schema copy
+20201022
+150029
+20201022
+150029
+F
+
+0
+150
+151
+-
+180
+-
+-
+*57
+108
+C
+
+0
+-
+*57
+110
+n
+
+0
+-
+*57
+145
+C
+
+0
+-
+*57
+147
+n
+
+0
+-
+*57
+150
+i
+
+0
+-
+*57
+151
+o
+
+0
+-
+*57
+182
+C
+
+0
+-
+*57
+184
+n
+
+0
+-
+*57
+219
+C
+
+0
+-
+*57
+221
+n
+
+0
+-
+*57
+273
+C
+
+0
+-
+*57
+275
+n
+
+0
+-
+*60
+140
+0
+public Client {
+   private Long client_id;
+   private String name;
+   private List<Commande> commandePasseeList;
+    // getters and setters
+}
+
+
+141
+-
+142
+-
+*60
+177
+0
+public abstract ClientService {
+
+   public abstract List<Client> findClientList(Condition<ClientAttributes> condition, Loading loading);
+
+   public Client findClientById(long client_id) {
+      List<Client>list = findClientList(Condition.op(ClientAttributes.client_id, Operator.EQUALS, client_id));
+      if(list.size() > 0)
+         return list.get(0);
+      return null;
+   }
+
+   public List<Client> findClientByName(String name) {
+      return  findClientList(Condition.op(ClientAttributes.name, Operator.EQUALS, name);
+   }
+
+//Max suggère qu'on fasse cela pour tous les attributs
+
+}
+
+
+178
+-
+179
+-
+*60
+214
+0
+  public abstract ClientService {
+  ...
+
+   public abstract List<Client> getAcheteurList(Condition<ClientAttributes> client_condition, 
+                                                                        Condition<CommandeAttributes> commande_condition);
+
+   public List<Client> getAcheteurList(Condition<ClientAttributes> condition) {
+      return getAcheteurList(condition, null);
+   }
+
+   public List<Client> getAcheteurList(Condition<CommandeAttributes> condition) {
+      return getAcheteurList(null, condition); 
+   }
+
+   public Client getAcheteur(Commande commande_passee) {
+      List<Client> list = 
+         getAcheteurList(Condition.op(CommandeAttributes.ncom, Operator.EQUALS, commande_passee.getNcom()));
+      if(list.size() > 0) return list.get(0);
+      return null;
+   }
+}
+
+public abstract CommandeService {
+   ...
+
+   public abstract List<Commande> getCommandePasseeList(Condition<CommmandeAttributes>, 
+                                                                                               Condition<ClientAttributes> condition);
+
+   public List<Commande> getCommandePasseeList(Condition<CommandeAttributes> condition) {
+      return getCommandePasseeList(condition, null);
+   }
+
+   public List<Commande> getCommandePasseeList(Condition<ClientAttributes> condition) {
+      return getCommandePasseeList(null, condition);
+   }
+
+
+   public List<Commande> getCommandePasseeList(Client acheteur)  {
+      return
+         getCommandePasseeList(Condition.op(ClientAttributes.client_id, Operator.EQUALS, acheteur.getClient_id()));
+   }
+}
+
+
+215
+-
+216
+-
+*60
+260
+0
+public class Emprunte {
+   private Etudiant emprunteur;
+   private Livre objet_emprunté;
+   private Projet projet;
+  // getters and setters
+}
+261
+-
+262
+-
+*60
+263
+0
+public Etudiant {
+   private Long etud_id;
+   private String name;
+
+   private List<Emprunte> emprunteListAsEmprunteur;
+
+   // getters and setters
+}
+264
+-
+265
+-
+*60
+266
+0
+public abstract class EtudiantService {
+   ...
+   public abstract List<Etudiant> getEmprunteurList(Condition<EtudiantAttribute> emprunteur_condition, 
+                                                                                Condition<LivreAttribute> objet_empruné_condition, 
+                                                                                Condition<ProjetCondition> projet_condition);
+
+   public List<Etudiant> getEmprunteur(Condition<EtudiantAttribute> cond) {...}
+
+   public List<Etudiant> getEmprunteur(Condition<LivreAttribute> cond) {...}
+
+   public List<Etudiant> getEmprunteur(Condition<ProjetAttribute> cond) {...}
+
+   public List<Etudiant> getEmprunteurList (Livre livre) {
+     return getEmprunteurList(null, Condition.op(LivreAttribute.id, Operator.EQUALS, livre.getId(), null))
+   }
+
+   public List<Etudiant> getEmprunteurList(Projet projet) {
+      return getEmprunteurList(null, null, Condition.op(ProjetAttributes.project_id, Operator.EQUALS, projet.getProjectId());
+   }
+
+}
+267
+-
+268
+-
+*60
+269
+0
+public abstract class EmprunteService {
+   //pas de Condition<EmprunteAttributes> car il n'y a pas d'attributs définis sur Emprunte
+   public abstract List<Emprunte> getEmprunteList(Condition<EtudiantAttributes> emprunteur_condition,
+                                                                                Condition<LivreAttributes> objet_emprunte_condition,
+                                                                                Condition<ProjetAttributes> projet_condition);
+
+   public List<Emprunte> getEmprunteList(Condition<EtudiantAttributes> cond) {...} 
+
+   public List<Emprunte> getEmprunteList(Condition<LivreAttribute> cond) {...} 
+
+   public List<Emprunte> getEmprunteList(Condition<ProjetAttribute> cond) {...} 
+
+   public List<Emprunte> getEmprunteList(Etudiant emprunteur) {...}
+   public List<Emprunte> getEmprunteList(Projet projet) {...}
+   public List<Emprune> getEmprunteList(Livre objet_emprunte) {...}
+}
+270
+-
+271
+-
+*60
+305
+0
+public class Client {
+   private Long client_id;
+   private String name;
+   private List<Achat> achatList;
+    // getters and setters
+}
+
+public class Achat {
+   private Date date;
+   private Client acheteur;
+   private Commande commande_passee;
+   // getters and setters
+}
+
+
+306
+-
+307
+-
+*60
+311
+0
+public abstract class ClientService {
+   public abstract List<Client> getAcheteurList(Condition<ClientAttribute> client_condition,
+                                                                        Condition<AchatAttribute> achat_condition,
+                                                                        Condition<CommandeAttribute> commande_passee_condition);
+
+   public List<Client> getAcheteurList(Condition<ClientAttribute> condition) {...}
+
+   public List<Client> getAcheteurList(Condition<AchatAttribute> condition) {...}
+
+   public List<Client> getAcheteurList(Condition<CommandeAttributes> condition) {...}
+
+   public Client getAcheteur(Commande commande_passee) {
+      List<Client> list = 
+         getAcheteurList(Condition.op(CommandeAttributes.ncom, Operator.EQUALS, commande_passee.getNcom()));
+      if(list.size() > 0) return list.get(0);
+      return null;
+   }
+
+}
+312
+-
+313
+-
+*60
+314
+0
+public abstract class AchatService {
+   public abstract List<Achat> getAchatList(Condition<AchatAttributes> conditions,
+                                                                   Condition<ClientAttributes> acheteur_condition,
+                                                                   Condition<CommandeAttributes> commande_passee_condition);
+
+   public Achat getAchat(Commande commande_passee) {
+      List<Achat> list = getAchatList(null, null, Condition.op(CommandeAttributes.NCOM, Operator.EQUALS, commande_passee.getNcom());
+      if(list.size() > 0) return list.get(0);
+      return null;
+   }
+
+   public List<Achat> getAchatList(Client acheteur) {
+      return getAchatList(null, Condition.op(ClientAttributes.client_id, Operator.EQUALS, acheteur.getClient_id()), null);
+   }
+}
+315
+-
+316
+-
+*62
+107
+21
+*POT "begin-file"
+
+*62
+144
+21
+*POT "begin-file"
+
+*62
+181
+21
+*POT "begin-file"
+
+*62
+218
+21
+*POT "begin-file"
+
+*62
+272
+21
+*POT "begin-file"
+
