@@ -1,0 +1,51 @@
+[comment encoding = UTF-8 /]
+[module util('http://www.unamur.be/polystore/Pml')]
+
+[query public getRolesFromEntityType(entityType: EntityType, conceptualSchema: ConceptualSchema) : Collection(pml::Role) = 
+	conceptualSchema.eAllContents(pml::Role)->select(role: pml::Role | role.entity = entityType)
+/]
+
+[query public getRolesFromEntityTypeInSimpleBinaryRel(entityType: EntityType, conceptualSchema: ConceptualSchema) : Collection(pml::Role) = 
+	conceptualSchema.eAllContents(pml::Role)->select(role: pml::Role | role.entity = entityType 
+	and getRelationShipType(role).roles->size() = 2 
+	and getRelationShipType(role).attributes->size() = 0)
+/]
+
+[query public getRolesFromEntityTypeInBinaryRelWithAttributes(entityType: EntityType, conceptualSchema: ConceptualSchema) : Collection(pml::Role) = 
+	conceptualSchema.eAllContents(pml::Role)->select(role: pml::Role | role.entity = entityType 
+	and getRelationShipType(role).roles->size() = 2 
+	and getRelationShipType(role).attributes->size() > 0)
+/]
+
+[query public getRolesFromEntityTypeInNAireRel (entityType: EntityType, conceptualSchema: ConceptualSchema) : Collection(Role) =
+	conceptualSchema.eAllContents(pml::Role)->select(role: pml::Role | role.entity = entityType 
+	and getRelationShipType(role).roles->size() > 2 )
+/]
+
+[query public getBinaryRelationshipTypesWithAttributes(conceptualSchema: ConceptualSchema) : Collection(pml::RelationshipType) = 
+	conceptualSchema.relationships->select(rel: pml::RelationshipType | rel.roles->size() = 2 and rel.attributes->size() > 0)
+/]
+
+[query public isBinaryWithAttributes(rel: RelationshipType) : Boolean = 
+	rel.roles->size() = 2 and rel.attributes->size() > 0
+/]
+
+[query public isNAire(rel: RelationshipType) : Boolean = 
+	rel.roles->size() > 2
+/]
+
+
+[query public getRelationShipType(role: Role) : RelationshipType = 
+	role.eContainer(pml::RelationshipType)
+/]
+
+[query public getOppositeRoles(role: Role) : Collection(pml::Role) =
+	getRelationShipType(role).roles->select(r: Role | r <> role)
+/]
+
+[query public isMaxOne(role: Role) : Boolean = role.cardinality = pml::Cardinality::ONE or role.cardinality = pml::Cardinality::ZERO_ONE /]
+
+[template public getListOfNullValues(nbOfValues: Integer)][getListOfNullValues(nbOfValues, false)/][/template]
+[template public getListOfNullValues(nbOfValues: Integer, hasPrevious: Boolean)][if (nbOfValues > 0)][if (hasPrevious)], [/if]null[getListOfNullValues(nbOfValues - 1, true)/][/if][/template]
+
+

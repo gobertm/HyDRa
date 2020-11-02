@@ -1,0 +1,198 @@
+[comment encoding = UTF-8 /]
+[module generateGenericClasses('http://www.unamur.be/polystore/Pml')]
+
+[template public generateGenericClasses(conceptualSchema: ConceptualSchema)]
+[generateLoadingClass() /]
+[generateConditions(conceptualSchema) /]
+[/template]
+
+[template public generateLoadingClass()]
+[file ('loading/Loading.java', false, 'UTF-8')]
+package loading;
+public enum Loading {
+	EAGER, LAZY
+}
+[/file]
+[/template]
+
+[template public generateConditions(conceptualSchema : ConceptualSchema)]
+[file ('conditions/Condition.java', false, 'UTF-8')]
+package conditions;
+
+public abstract class Condition<E> {
+
+	public static <E> SimpleCondition<E> simple(E attr, Operator op, Object value) {
+		return new SimpleCondition<E>(attr, op, value);
+	}
+
+	public static <E> AndCondition<E> and(Condition<E> left, Condition<E> right) {
+		return new AndCondition<E>(left, right);
+	}
+	
+	public static <E> OrCondition<E> or(Condition<E> left, Condition<E> right) {
+		return new OrCondition<E>(left, right);
+	}
+
+	public abstract Class<E> eval() throws Exception;
+}
+[/file]
+
+[file ('conditions/AndCondition.java', false, 'UTF-8')]
+package conditions;
+
+public class AndCondition<E> extends Condition<E> {
+
+	private Condition<E> leftCondition;
+	private Condition<E> rightCondition;
+
+	public AndCondition(Condition<E> leftCondition, Condition<E> rightCondition) {
+		setLeftCondition(leftCondition);
+		setRightCondition(rightCondition);
+	}
+
+	public Condition<E> getLeftCondition() {
+		return this.leftCondition;
+	}
+
+	public void setLeftCondition(Condition<E> leftCondition) {
+		this.leftCondition = leftCondition;
+	}
+
+	public Condition<E> getRightCondition() {
+		return this.rightCondition;
+	}
+
+	public void setRightCondition(Condition<E> rightCondition) {
+		this.rightCondition = rightCondition;
+	}
+
+	@Override
+	public Class<E> eval() throws Exception {
+		Class<E> cl1 = leftCondition.eval();
+		Class<E> cl2 = rightCondition.eval();
+
+		if(cl1 != cl2)
+			throw new Exception("This condition is defined on more than one POJO class: " + cl1 + " and " + cl2);
+		return cl1;
+	}	
+}
+[/file]
+
+[file ('conditions/OrCondition.java', false, 'UTF-8')]
+package conditions;
+
+public class OrCondition<E> extends Condition<E> {
+
+	private Condition<E> leftCondition;
+	private Condition<E> rightCondition;
+
+	public OrCondition(Condition<E> leftCondition, Condition<E> rightCondition) {
+		setLeftCondition(leftCondition);
+		setRightCondition(rightCondition);
+	}
+
+	public Condition<E> getLeftCondition() {
+		return this.leftCondition;
+	}
+
+	public void setLeftCondition(Condition<E> leftCondition) {
+		this.leftCondition = leftCondition;
+	}
+
+	public Condition<E> getRightCondition() {
+		return this.rightCondition;
+	}
+
+	public void setRightCondition(Condition<E> rightCondition) {
+		this.rightCondition = rightCondition;
+	}
+
+	@Override
+	public Class<E> eval() throws Exception {
+		Class<E> cl1 = leftCondition.eval();
+		Class<E> cl2 = rightCondition.eval();
+
+		if(cl1 != cl2)
+			throw new Exception("This condition is defined on more than one POJO class: " + cl1 + " and " + cl2);
+		return cl1;
+	}
+}
+[/file]
+
+[file ('conditions/SimpleCondition.java', false, 'UTF-8')]
+package conditions;
+
+public class SimpleCondition<E> extends Condition<E> {
+
+	private E attribute;
+	private Operator operator;
+	private Object value;
+
+	public SimpleCondition(E attribute, Operator operator, Object value) {
+		setAttribute(attribute);
+		setOperator(operator);
+		setValue(value);
+	}
+
+	public E getAttribute() {
+		return this.attribute;
+	}
+
+	public void setAttribute(E attribute) {
+		this.attribute = attribute;
+	}
+
+	public Operator getOperator() {
+		return this.operator;
+	}
+
+	public void setOperator(Operator operator) {
+		this.operator = operator;
+	}
+
+	public Object getValue() {
+		return this.value;
+	}
+
+	public void setValue(Object value) {
+		this.value = value;
+	}
+
+	@Override
+	public Class<E> eval() throws Exception {
+		return (Class<E>) attribute.getClass();
+	}
+}
+[/file]
+
+[file ('conditions/Operator.java', false, 'UTF-8')]
+package conditions;
+
+public enum Operator {
+	EQUALS, NOT_EQUALS, GT, GTE, LT, LTE, CONTAINS, START_WITH, END_WITH
+}
+[/file]
+
+[for (ent: EntityType | conceptualSchema.entities)]
+[file ('conditions/' + ent.name.toUpperFirst() + 'Attribute.java', false, 'UTF-8')]
+package conditions;
+
+public enum [ent.name.toUpperFirst() /]Attribute {
+	[for (attr : Attribute | ent.attributes)][if (i > 1)], [/if][attr.name /][/for]
+}
+[/file]
+[/for]
+
+[for (rel: RelationshipType | conceptualSchema.relationships)]
+[if (rel.attributes->size() > 0)]
+[file ('conditions/' + rel.name.toUpperFirst() + 'Attribute.java', false, 'UTF-8')]
+package conditions;
+
+public enum [rel.name.toUpperFirst() /]Attribute {
+	[for (attr : Attribute | rel.attributes)][if (i > 1)], [/if][attr.name /][/for]
+}
+[/file]
+[/if]
+[/for]
+
+[/template]

@@ -1,0 +1,26 @@
+[comment encoding = UTF-8 /]
+[module generateNAireSelectMethods('http://www.unamur.be/polystore/Pml')]
+[import be::unamur::polystore::acceleo::main::util /]
+
+[template public generateNAireSelectMethods(rel : RelationshipType)]
+public abstract java.util.List<pojo.[rel.name.toUpperFirst()/]> get[rel.name.toUpperFirst()/]List([for (role: Role | rel.roles)][if (i > 1)],[/if]
+	conditions.Condition<conditions.[role.entity.name.toUpperFirst() /]Attribute> [role.name/]_condition[/for][if (rel.attributes->size() > 0)],
+	conditions.Condition<conditions.[rel.name.toUpperFirst() /]Attribute> [rel.name /]_condition
+	[/if]
+);
+
+[for (role: Role | rel.roles)]
+public java.util.List<pojo.[rel.name.toUpperFirst()/]> get[rel.name.toUpperFirst()/]ListBy[role.name.toUpperFirst() /]Condition(
+	conditions.Condition<conditions.[role.entity.name.toUpperFirst()/]Attribute> [role.name/]_condition
+){
+	return get[rel.name.toUpperFirst() /]List([getListOfNullValues(i - 1) /][if(i - 1 > 0)], [/if][role.name/]_condition[getListOfNullValues(rel.roles->size() -  i, true) /][if (rel.attributes->size() > 0)], null[/if]);
+}
+[/for]
+[if (rel.attributes->size() > 0)]
+public java.util.List<pojo.[rel.name.toUpperFirst() /]> get[rel.name.toUpperFirst() /]ListBy[rel.name.toUpperFirst() /]Condition(
+	conditions.Condition<conditions.[rel.name.toUpperFirst()/]Attribute> [rel.name/]_condition
+){
+	return get[rel.name.toUpperFirst() /]List([getListOfNullValues(rel.roles->size()) /], [rel.name/]_condition);
+}
+[/if]
+[/template]

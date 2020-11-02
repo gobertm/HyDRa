@@ -1,0 +1,26 @@
+[comment encoding = UTF-8 /]
+[module generateLevel1RelationshipTypeClasses('http://www.unamur.be/polystore/Pml')]
+[import be::unamur::polystore::acceleo::main::generateRelationshipTypeClass /]
+[import be::unamur::polystore::acceleo::main::util /]
+[import be::unamur::polystore::acceleo::main::level1::select::relationshiptype::generateBinaryWithAttributesSelectMethods /]
+[import be::unamur::polystore::acceleo::main::level1::select::relationshiptype::generateNAireSelectMethods /]
+
+
+[template public generateLevel1RelationshipTypeClass(rel : RelationshipType, conceptualSchema: ConceptualSchema)]
+[if (isRelationshipTypeComplex(rel))]
+[file ('dao/services/' + rel.name.toUpperFirst() + 'Service'.concat('.java'), false, 'UTF-8')]
+package dao.services;
+
+public abstract class [rel.name.toUpperFirst() + 'Service' /] {
+	[if (isBinaryWithAttributes(rel))]
+	[generateBinaryWithAttributesSelectMethods(rel) /]
+	[/if]
+	[if (isNAire(rel))]
+	[generateNAireSelectMethods(rel) /]
+	[/if]
+
+	
+}
+[/file]
+[/if]
+[/template]

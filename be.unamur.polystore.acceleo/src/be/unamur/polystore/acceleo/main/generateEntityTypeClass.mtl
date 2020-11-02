@@ -8,6 +8,7 @@
 	conceptualSchema.relationships->select(rel: RelationshipType | isConcernedByEntity(rel, entityType))
  /]
 
+
 [query public isConcernedByEntity(rel : RelationshipType, ent : EntityType) : Boolean = 
 	(rel.roles-> select(role: Role | role.entity = ent)) -> size() > 0
  /]

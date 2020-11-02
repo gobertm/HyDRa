@@ -18,7 +18,8 @@ conceptual schema cs {
     
     relationship type hasParent{
     	child [1] : Person
-    	parent [0-N] : Person
+    	parent [0-N] : Person,
+    	officialDate : date
     }
     
     relationship type productStock{
@@ -42,8 +43,16 @@ physical schemas {
             }
         }
     }
-    key value schema kvschema {}
-    key value schema fd{}
+   
+   	key value schema KVProject {
+		
+		kvpairs KVProjDesc {
+			key : "PROJECT:""dzd"[IDPROJ], // Mais "string"[ID]"ojd" does not work.
+			value : [Description]
+		}
+		
+	}
+   
 }
 mapping rules {
 }
