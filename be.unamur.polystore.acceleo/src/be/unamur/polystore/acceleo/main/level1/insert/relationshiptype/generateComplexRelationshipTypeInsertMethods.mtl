@@ -1,0 +1,9 @@
+[comment encoding = UTF-8 /]
+[module generateComplexRelationshipTypeInsertMethods('http://www.unamur.be/polystore/Pml')]
+[import be::unamur::polystore::acceleo::main::util /]
+
+[template public generateComplexRelationshipTypeInsertMethods(rel: RelationshipType)]
+public abstract void insert[rel.name.toUpperFirst() /](pojo.[rel.name.toUpperFirst() /] [rel.name /]);
+
+public abstract void insert[rel.name.toUpperFirst() /]AndLinkedItems(pojo.[rel.name.toUpperFirst() /] [rel.name.toLowerFirst() /]);
+[/template]

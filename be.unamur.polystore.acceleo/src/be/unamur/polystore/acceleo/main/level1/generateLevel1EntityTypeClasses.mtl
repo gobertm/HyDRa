@@ -7,6 +7,7 @@
 [import be::unamur::polystore::acceleo::main::level1::select::entitytype::generateBinaryWithAttributesSelectMethods /]
 [import be::unamur::polystore::acceleo::main::level1::select::entitytype::generateNAireSelectMethods/]
 [import be::unamur::polystore::acceleo::main::util /]
+[import be::unamur::polystore::acceleo::main::level1::insert::entitytype::generateSimpleInsertMethods/]
 
 
 [template public generateLevel1EntityTypeClass(entityType : EntityType, conceptualSchema: ConceptualSchema)]
@@ -17,6 +18,7 @@ public abstract class [entityType.name.toUpperFirst() + 'Service' /] {
 
 	[printRoleConfiguration(entityType, conceptualSchema) /]
 	[printSelectMethods(entityType, conceptualSchema) /]
+	[printInsertMethods(entityType, conceptualSchema) /]
 }
 [/file]
 [/template]
@@ -26,6 +28,10 @@ public abstract class [entityType.name.toUpperFirst() + 'Service' /] {
 [generateSimpleBinarySelectMethods(entityType, conceptualSchema) /]
 [generateBinaryWithAttributesSelectMethods(entityType, conceptualSchema) /]
 [generateNAireSelectMethods(entityType, conceptualSchema) /]
+[/template]
+
+[template public printInsertMethods(entityType: EntityType, conceptualSchema: ConceptualSchema)]
+[generateSimpleInsertMethods(entityType, conceptualSchema) /]
 [/template]
 
 [template public printRoleConfiguration(entityType: EntityType, conceptualSchema : ConceptualSchema)]

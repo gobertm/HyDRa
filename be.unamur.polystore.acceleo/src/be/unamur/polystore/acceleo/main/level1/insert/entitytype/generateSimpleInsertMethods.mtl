@@ -1,0 +1,9 @@
+[comment encoding = UTF-8 /]
+[module generateSimpleInsertMethods('http://www.unamur.be/polystore/Pml')]
+[import be::unamur::polystore::acceleo::main::util /]
+
+[template public generateSimpleInsertMethods(entityType: EntityType, conceptualSchema: ConceptualSchema)]
+public abstract void insert[entityType.name.toUpperFirst() /](pojo.[entityType.name.toUpperFirst() /] [entityType.name /]);
+
+public abstract void insert[entityType.name.toUpperFirst() /]AndLinkedItems(pojo.[entityType.name.toUpperFirst() /] [entityType.name.toLowerFirst() /]);
+[/template]
