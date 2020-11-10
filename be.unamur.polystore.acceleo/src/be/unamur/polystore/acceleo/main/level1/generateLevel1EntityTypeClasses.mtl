@@ -8,7 +8,8 @@
 [import be::unamur::polystore::acceleo::main::level1::select::entitytype::generateNAireSelectMethods/]
 [import be::unamur::polystore::acceleo::main::util /]
 [import be::unamur::polystore::acceleo::main::level1::insert::entitytype::generateSimpleInsertMethods/]
-
+[import be::unamur::polystore::acceleo::main::level1::update::entitytype::generateSimpleUpdateMethods/]
+[import be::unamur::polystore::acceleo::main::level1::delete::entitytype::generateSimpleDeleteMethods/]
 
 [template public generateLevel1EntityTypeClass(entityType : EntityType, conceptualSchema: ConceptualSchema)]
 [file ('dao/services/' + entityType.name.toUpperFirst() + 'Service'.concat('.java'), false, 'UTF-8')]
@@ -19,19 +20,29 @@ public abstract class [entityType.name.toUpperFirst() + 'Service' /] {
 	[printRoleConfiguration(entityType, conceptualSchema) /]
 	[printSelectMethods(entityType, conceptualSchema) /]
 	[printInsertMethods(entityType, conceptualSchema) /]
+	[printUpdateMethods(entityType, conceptualSchema) /]
+	[printDeleteMethods(entityType, conceptualSchema) /]
 }
 [/file]
 [/template]
 
 [template public printSelectMethods(entityType: EntityType, conceptualSchema: ConceptualSchema)]
 [generateSimpleSelectMethods(entityType, conceptualSchema) /]
-[generateSimpleBinarySelectMethods(entityType, conceptualSchema) /]
-[generateBinaryWithAttributesSelectMethods(entityType, conceptualSchema) /]
+[comment][generateSimpleBinarySelectMethods(entityType, conceptualSchema) /]
+[generateBinaryWithAttributesSelectMethods(entityType, conceptualSchema) /][/comment]
 [generateNAireSelectMethods(entityType, conceptualSchema) /]
 [/template]
 
 [template public printInsertMethods(entityType: EntityType, conceptualSchema: ConceptualSchema)]
 [generateSimpleInsertMethods(entityType, conceptualSchema) /]
+[/template]
+
+[template public printUpdateMethods(entityType: EntityType, conceptualSchema: ConceptualSchema)]
+[generateSimpleUpdateMethods(entityType, conceptualSchema) /]
+[/template]
+
+[template public printDeleteMethods(entityType: EntityType, conceptualSchema: ConceptualSchema)]
+[generateSimpleDeleteMethods(entityType, conceptualSchema) /]
 [/template]
 
 [template public printRoleConfiguration(entityType: EntityType, conceptualSchema : ConceptualSchema)]

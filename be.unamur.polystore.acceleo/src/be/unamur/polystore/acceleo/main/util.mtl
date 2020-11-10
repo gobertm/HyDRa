@@ -45,6 +45,45 @@
 
 [query public isMaxOne(role: Role) : Boolean = role.cardinality = pml::Cardinality::ONE or role.cardinality = pml::Cardinality::ZERO_ONE /]
 
+[query public getMandatoryRoles(entityType: EntityType, conceptualSchema: ConceptualSchema): Collection(Role) = 
+	conceptualSchema.eAllContents(pml::Role)->select(role: pml::Role | role.entity = entityType and isMandatoryRole(role))
+/]
+
+[query public getMandatoryRoles(rel: RelationshipType) : Collection(Role) =
+	rel.roles -> select(role: Role | isMandatoryRole(role))
+ /]
+
+[query public isMandatoryRole(role: Role): Boolean = role.cardinality = pml::Cardinality::ONE or role.cardinality = pml::Cardinality::ONE_MANY
+/]
+
+[query public getOppositeMandatoryRoles(entityType: EntityType, conceptualSchema: ConceptualSchema): Collection(Role) =
+	conceptualSchema.eAllContents(pml::Role)->select(role: pml::Role | role.entity <> entityType and isMandatoryRole(role) and existsOppositeMandatoryRolesPlayedByGivenEntityType(role, entityType))
+/]
+
+[query private existsOppositeMandatoryRolesPlayedByGivenEntityType(role: Role, entityType: EntityType): Boolean =
+ 	(getOppositeRoles(role)->select(r: Role | r.entity = entityType and isMandatoryRole(r)))->size() > 0
+/]
+
+[query public getRolesOppositeToMandatoryEntityRole(entityType: EntityType, conceptualSchema: ConceptualSchema): Collection(Role) =
+	getOppositeRoles(getMandatoryRoles(entityType, conceptualSchema))
+/]
+
+[query private getOppositeRoles(roles: Collection(Role)): Collection(Role) = 
+	roles->collect(role | getOppositeRoles(role))
+/]
+
+[query public getAttributesFromMandatoryRoles(entityType: EntityType, conceptualSchema: ConceptualSchema): Collection(Attribute) =
+	conceptualSchema.eAllContents(pml::Attribute)->select(attr: Attribute | isRelationMandatorilyPlayedByGivenEntity(entityType, getRelationshipType(attr)))
+/]
+
+[query private isRelationMandatorilyPlayedByGivenEntity(entityType: EntityType, rel: RelationshipType): Boolean =
+	rel.oclIsUndefined() = false and (rel.roles->select(role: Role | role.entity = entityType and isMandatoryRole(role))->size() > 0)
+ /]
+
+[query public getRelationshipType(attr: Attribute): RelationshipType =
+	attr.eContainer(pml::RelationshipType)
+ /]
+
 [template public getListOfNullValues(nbOfValues: Integer)][getListOfNullValues(nbOfValues, false)/][/template]
 [template public getListOfNullValues(nbOfValues: Integer, hasPrevious: Boolean)][if (nbOfValues > 0)][if (hasPrevious)], [/if]null[getListOfNullValues(nbOfValues - 1, true)/][/if][/template]
 

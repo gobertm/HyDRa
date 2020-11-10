@@ -3,7 +3,7 @@
 [import be::unamur::polystore::acceleo::main::util /]
 
 [template public generateNAireSelectMethods(entity: EntityType, conceptualSchema: ConceptualSchema)]
-[for (role: Role | getRolesFromEntityTypeInNAireRel(entity, conceptualSchema))]
+[for (role: Role | getRolesFromEntityType(entity, conceptualSchema))]
 public abstract java.util.List<pojo.[entity.name.toUpperFirst() /]> get[role.name.toUpperFirst() /]ListIn[getRelationShipType(role).name.toUpperFirst() /]([for (role2: Role | getRelationShipType(role).roles)][if (i > 1)],[/if]
 	conditions.Condition<conditions.[role2.entity.name.toUpperFirst() /]Attribute> [role2.name/]_condition[/for][if (getRelationShipType(role).attributes->size() > 0)],
 	conditions.Condition<conditions.[getRelationShipType(role).name.toUpperFirst() /]Attribute> [getRelationShipType(role).name /]_condition
@@ -16,6 +16,16 @@ public java.util.List<pojo.[entity.name.toUpperFirst() /]> get[role.name.toUpper
 ){
 	return get[role.name.toUpperFirst() /]ListIn[getRelationShipType(role).name.toUpperFirst() /]([getListOfNullValues(i - 1) /][if(i - 1 > 0)], [/if][role2.name/]_condition[getListOfNullValues(getRelationShipType(role).roles->size() -  i, true) /][if (getRelationShipType(role).attributes->size() > 0)], null[/if]);
 }
+[if (role2 <> role)]
+
+public [if (isMaxOne(role2) = false)]java.util.List<pojo.[entity.name.toUpperFirst() /]>[else]pojo.[entity.name.toUpperFirst() /][/if] get[role.name.toUpperFirst() /][if (isMaxOne(role2) = false)]List[/if]In[getRelationShipType(role).name.toUpperFirst() /]By[role2.name.toUpperFirst() /](
+	pojo.[role2.entity.name.toUpperFirst()/] [role2.name/]
+){
+	//TODO get id in condition
+	return null;	
+}
+
+[/if]
 [/for]
 [if (getRelationShipType(role).attributes->size() > 0)]
 public java.util.List<pojo.[entity.name.toUpperFirst() /]> get[role.name.toUpperFirst() /]ListIn[getRelationShipType(role).name.toUpperFirst() /]By[getRelationShipType(role).name.toUpperFirst() /]Condition(

@@ -3,9 +3,11 @@
 [import be::unamur::polystore::acceleo::main::generateRelationshipTypeClass /]
 [import be::unamur::polystore::acceleo::main::util /]
 [import be::unamur::polystore::acceleo::main::level1::select::relationshiptype::generateBinaryWithAttributesSelectMethods /]
-[import be::unamur::polystore::acceleo::main::level1::select::relationshiptype::generateNAireSelectMethods /]
-[import be::unamur::polystore::acceleo::main::level1::insert::relationshiptype::generateSimpleInsertMethods /]
+[import be::unamur::polystore::acceleo::main::level1::select::relationshiptype::generateSelectMethods /]
+[import be::unamur::polystore::acceleo::main::level1::insert::relationshiptype::generateInsertMethods /]
 [import be::unamur::polystore::acceleo::main::level1::insert::relationshiptype::generateComplexRelationshipTypeInsertMethods /]
+[import be::unamur::polystore::acceleo::main::level1::update::relationshiptype::generateUpdateMethods /]
+[import be::unamur::polystore::acceleo::main::level1::delete::relationshiptype::generateDeleteMethods /]
 
 [template public generateLevel1RelationshipTypeClass(rel : RelationshipType, conceptualSchema: ConceptualSchema)]
 
@@ -13,17 +15,16 @@
 package dao.services;
 
 public abstract class [rel.name.toUpperFirst() + 'Service' /] {
-	[if (isBinaryWithAttributes(rel))]
+[comment]	[if (isBinaryWithAttributes(rel))]
 	[generateBinaryWithAttributesSelectMethods(rel) /]
 	[/if]
 	[if (isNAire(rel))]
 	[generateNAireSelectMethods(rel) /]
-	[/if]
-	[generateSimpleInsertMethods(rel) /]
-	[if (isRelationshipTypeComplex(rel))]
-	[generateComplexRelationshipTypeInsertMethods(rel) /]
-	[/if]
-	
+	[/if][/comment]
+	[generateSelectMethods(rel) /]
+	[generateInsertMethods(rel) /]
+	[generateUpdateMethods(rel) /]
+	[generateDeleteMethods(rel) /]
 }
 [/file]
 [/template]

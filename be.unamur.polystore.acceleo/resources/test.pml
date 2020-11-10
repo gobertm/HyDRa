@@ -1,9 +1,42 @@
 conceptual schema cs {
+
+	entity type Customer {
+		custId:int,
+		firstName:string,
+		lastName:string,
+		streetName:string,
+		streetNumber:string,
+		city:string,
+		country:string
+	}
+	
+	entity type Order {
+		orderId:int,
+		dateOrder:date
+	}
+	
     entity type Product{
         id:int,
         name:string,
         description:string
     }
+    
+    entity type Student {
+    	studId:int,
+    	name:string
+    }
+    
+    entity type Project {
+    	projId:int,
+    	label:string
+    }
+    
+    entity type Book {
+    	bookId:int,
+    	title:string,
+    	author:string
+    }
+    
     entity type Stock{
        
     }
@@ -29,11 +62,22 @@ conceptual schema cs {
     
     relationship type testrel {
     	aaa [0-N] : Product
-    	bbb [1] : Stock
+    	bbb [0-N] : Stock
     	ccc [0-N] : Test
     	ddd [1] : Test,
     	test : date
     }
+    
+    relationship type Placing{
+		placed_order [1]: Order
+		buyer [0-N]: Customer
+	}
+	
+	relationship type Borrowing{
+		borrower [1]: Student
+		project [0-N]: Project
+		borrowedBook [0-N]: Book 
+	}
 }
 physical schemas {
     document schema myDocSchema{

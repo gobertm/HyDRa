@@ -1,13 +1,16 @@
 [comment encoding = UTF-8 /]
-[module generateSimpleInsertMethods('http://www.unamur.be/polystore/Pml')]
+[module generateInsertMethods('http://www.unamur.be/polystore/Pml')]
 [import be::unamur::polystore::acceleo::main::util /]
 [import be::unamur::polystore::acceleo::main::generateJavaDataType/]
 
-[template public generateSimpleInsertMethods(rel: RelationshipType)]
+[template public generateInsertMethods(rel: RelationshipType)]
+public abstract void insert[rel.name.toUpperFirst() /]AndLinkedItems(pojo.[rel.name.toUpperFirst() /] [rel.name /]);
+
+[if (getMandatoryRoles(rel)->size() = 0)]
 public abstract void attachPersistentItemsBy[rel.name.toUpperFirst() /]([for (role: Role | rel.roles)][if (i > 1)],[/if]
 	pojo.[role.entity.name.toUpperFirst() /] [role.name /][/for]
 	[for (attr: Attribute | rel.attributes)],
 	[generateJavaType(attr.type) /] [attr.name /][/for]
-
 );
+[/if]
 [/template]
