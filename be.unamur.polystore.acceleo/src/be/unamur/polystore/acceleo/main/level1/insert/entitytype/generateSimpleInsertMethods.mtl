@@ -10,7 +10,7 @@ public abstract void insert[entityType.name.toUpperFirst() /](pojo.[entityType.n
 [elseif (getOppositeMandatoryRoles(entityType, conceptualSchema)->size() = 0)]
 public abstract void insert[entityType.name.toUpperFirst() /](
 	pojo.[entityType.name.toUpperFirst() /] [entityType.name.toLowerFirst() /][for (opp: Role | getRolesOppositeToMandatoryEntityRole(entityType, conceptualSchema))],
-	pojo.[opp.entity.name.toUpperFirst() /] [getRelationShipType(opp).name/]_[opp.name/][/for][for (attr: Attribute | getAttributesFromMandatoryRoles(entityType, conceptualSchema))],
+	pojo.[opp.entity.name.toUpperFirst() /] persistent[getRelationShipType(opp).name.toUpperFirst()/][opp.name.toUpperFirst()/][/for][for (attr: Attribute | getAttributesFromMandatoryRoles(entityType, conceptualSchema))],
 	[generateJavaType(attr.type)/] [getRelationshipType(attr).name /]_[attr.name /]
 	[/for]
 );
