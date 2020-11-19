@@ -142,11 +142,11 @@ physical schema {
 			value :[ProfName] (list)  // ou (set)(ordered sets) (hll) HyperLogLogs
 			},
 		kvpairs KVProfProjDesc {
-			key : "PROFESSOR:"[IDKV]":PROJECT:[IDPROJ]:Description",
+			key : "PROFESSOR:"[IDProf]":PROJECT:[IDPROJ]:Description",
 			value : [ProjDesc]
 			}
 		kvpairs KVProfPROJProjName {
-			key : "PROFESSOR:"[IDKV]":PROJECT:[IDPROJ]:ProjName",
+			key : "PROFESSOR:"[IDProf]":PROJECT:[IDPROJ]:ProjName",
 			value : [ProjName]
 			}
 		kvpairs KVProf : {
@@ -159,15 +159,15 @@ physical schema {
 				
 		
 		references {
-			involved_in : (ProjDesc,ProjName)->KVProject.Description, KVProject.Name
+			is_Managed_by : IDProf -> IDKV
 		}
 	}
 
 	key value schema KVProject : myredis {
 		
 		kvpairs KVProjDesc {
-			key : "PROJECT:"[Name]":DESCRIPTION",
-			value : [Description]
+			key : "PROJECT:"[IDPROJ]":DESCRIPTION",
+			value : [Name]+[Description]
 		}
 		
 	}
@@ -229,7 +229,7 @@ physical schema {
 				Productnumber,
 				reviews[0-N]{
 					rate, // = manière abrégée d'écrire rate:[rate]
-					numberofstars:[rate]
+					numberofstars:[rate]+'*'
 					content,
 					comments[0-N]{ //ajouter userid pour compliquer encore
 						comment
@@ -314,9 +314,11 @@ mapping rules {
 	
 	// Groupe Key value
 	Professor(Id,Name) -> KVResearchProjectsSchema(IDKV,ProfName),
-	projectProfessor.activity -> KVResearchProjectsSchema.involved_in, // ! verify
+	projectProfessor.worker -> KVResearchProjectsSchema.is_Managed_by, // Une galère pour trouver ca, mais c'est juste, mais jamais on ne retrouvera pourquoi
 	Project.Id -> KVResearchProjectsSchema(IDPROJ),
 	Project(Description,Name) -> KVProject(Description,Name) ,
+	Project(Description, Name) -> KVProfName(ProjDesc, ProjName)
+
 	
 	Newsletter.Id-> KVNewsletterSchema.IDNEWS,
 	clientNewsletter.subscribers -> KVNewsletterSchema.subscribers,
