@@ -68,7 +68,11 @@ Reference:
 
 
 PhysicalField returns PhysicalField:
-	ShortField | EmbeddedObject | BracketsField
+	ShortField | EmbeddedObject | BracketsField | LongField
+;
+
+LongField:
+	physicalName=ID ':''['variableName=ID']'
 ;
 
 EmbeddedObject:
@@ -173,6 +177,7 @@ Object:
 	'}'
 ;
 
+/*Used for key value */
 BracketsField:
 	'['name=ID']'
 ;
