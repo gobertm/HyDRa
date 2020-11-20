@@ -7,7 +7,7 @@
 
 [template public generateClass(rel : RelationshipType, conceptualSchema: ConceptualSchema)]
 [if (true or isRelationshipTypeComplex(rel))]
-[file ('pojo/' + rel.name.toUpperFirst().concat('.java'), false, 'UTF-8')]
+[file ('src/main/java/pojo/' + rel.name.toUpperFirst().concat('.java'), false, 'UTF-8')]
 package pojo;
 
 public class [rel.name.toUpperFirst() /] {

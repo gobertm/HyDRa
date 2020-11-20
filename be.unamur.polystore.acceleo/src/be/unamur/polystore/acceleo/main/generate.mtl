@@ -5,10 +5,14 @@
 [import be::unamur::polystore::acceleo::main::generateRelationshipTypeClass /]
 [import be::unamur::polystore::acceleo::main::level1::generateLevel1EntityTypeClasses /]
 [import be::unamur::polystore::acceleo::main::level1::generateLevel1RelationshipTypeClasses /]
+[import be::unamur::polystore::acceleo::main::dbconnections::generateDBConnectionClasses /]
+[import be::unamur::polystore::acceleo::main::generatePomFile /]
 
 [template public generateElement(conceptualSchema : ConceptualSchema)]
 [comment @main/]
+[generatePomFile(conceptualSchema) /]
 [generateGenericClasses(conceptualSchema) /]
+[generateDBConnectionClasses(conceptualSchema) /]
 
 [for (entityType: EntityType | conceptualSchema.entities)]
 	[generateClass(entityType, conceptualSchema) /]

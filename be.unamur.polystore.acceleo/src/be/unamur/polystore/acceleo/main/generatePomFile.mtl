@@ -1,0 +1,48 @@
+[comment encoding = UTF-8 /]
+[module generatePomFile('http://www.unamur.be/polystore/Pml')]
+
+[template public generatePomFile(conceptualSchema: ConceptualSchema)]
+
+[file ('pom.xml', false, 'UTF-8')]
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	<groupId>be.unamur.polystore.example</groupId>
+	<artifactId>be.unamur.polystore.example</artifactId>
+	<version>0.0.1-SNAPSHOT</version>
+
+	<dependencies>
+		<!-- https://mvnrepository.com/artifact/mysql/mysql-connector-java -->
+		<dependency>
+			<groupId>mysql</groupId>
+			<artifactId>mysql-connector-java</artifactId>
+			<version>8.0.22</version>
+		</dependency>
+
+		<!-- https://mvnrepository.com/artifact/org.mongodb/mongo-java-driver -->
+		<dependency>
+			<groupId>org.mongodb</groupId>
+			<artifactId>mongo-java-driver</artifactId>
+			<version>3.12.7</version>
+		</dependency>
+
+		<!-- https://mvnrepository.com/artifact/redis.clients/jedis -->
+		<dependency>
+		    <groupId>redis.clients</groupId>
+		    <artifactId>jedis</artifactId>
+		    <version>3.3.0</version>
+		</dependency>
+
+		<!-- https://mvnrepository.com/artifact/com.datastax.oss/java-driver-core -->
+		<dependency>
+		    <groupId>com.datastax.oss</groupId>
+		    <artifactId>java-driver-core</artifactId>
+		    <version>4.9.0</version>
+		</dependency>
+
+	</dependencies>
+</project>
+
+[/file]
+[/template]

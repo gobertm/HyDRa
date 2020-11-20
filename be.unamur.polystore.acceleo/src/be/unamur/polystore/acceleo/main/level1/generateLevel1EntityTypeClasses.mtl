@@ -12,7 +12,7 @@
 [import be::unamur::polystore::acceleo::main::level1::delete::entitytype::generateSimpleDeleteMethods/]
 
 [template public generateLevel1EntityTypeClass(entityType : EntityType, conceptualSchema: ConceptualSchema)]
-[file ('dao/services/' + entityType.name.toUpperFirst() + 'Service'.concat('.java'), false, 'UTF-8')]
+[file ('src/main/java/dao/services/' + entityType.name.toUpperFirst() + 'Service'.concat('.java'), false, 'UTF-8')]
 package dao.services;
 
 public abstract class [entityType.name.toUpperFirst() + 'Service' /] {

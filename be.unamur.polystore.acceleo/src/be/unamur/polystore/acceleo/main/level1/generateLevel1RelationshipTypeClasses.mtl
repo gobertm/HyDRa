@@ -11,7 +11,7 @@
 
 [template public generateLevel1RelationshipTypeClass(rel : RelationshipType, conceptualSchema: ConceptualSchema)]
 
-[file ('dao/services/' + rel.name.toUpperFirst() + 'Service'.concat('.java'), false, 'UTF-8')]
+[file ('src/main/java/dao/services/' + rel.name.toUpperFirst() + 'Service'.concat('.java'), false, 'UTF-8')]
 package dao.services;
 
 public abstract class [rel.name.toUpperFirst() + 'Service' /] {
