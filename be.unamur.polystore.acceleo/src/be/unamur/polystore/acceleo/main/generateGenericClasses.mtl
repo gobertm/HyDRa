@@ -7,7 +7,7 @@
 [/template]
 
 [template public generateLoadingClass()]
-[file ('loading/Loading.java', false, 'UTF-8')]
+[file ('src/main/java/loading/Loading.java', false, 'UTF-8')]
 package loading;
 public enum Loading {
 	EAGER, LAZY
@@ -16,7 +16,7 @@ public enum Loading {
 [/template]
 
 [template public generateConditions(conceptualSchema : ConceptualSchema)]
-[file ('conditions/Condition.java', false, 'UTF-8')]
+[file ('src/main/java/conditions/Condition.java', false, 'UTF-8')]
 package conditions;
 
 public abstract class Condition<E> {
@@ -37,7 +37,7 @@ public abstract class Condition<E> {
 }
 [/file]
 
-[file ('conditions/AndCondition.java', false, 'UTF-8')]
+[file ('src/main/java/conditions/AndCondition.java', false, 'UTF-8')]
 package conditions;
 
 public class AndCondition<E> extends Condition<E> {
@@ -78,7 +78,7 @@ public class AndCondition<E> extends Condition<E> {
 }
 [/file]
 
-[file ('conditions/OrCondition.java', false, 'UTF-8')]
+[file ('src/main/java/conditions/OrCondition.java', false, 'UTF-8')]
 package conditions;
 
 public class OrCondition<E> extends Condition<E> {
@@ -119,7 +119,7 @@ public class OrCondition<E> extends Condition<E> {
 }
 [/file]
 
-[file ('conditions/SimpleCondition.java', false, 'UTF-8')]
+[file ('src/main/java/conditions/SimpleCondition.java', false, 'UTF-8')]
 package conditions;
 
 public class SimpleCondition<E> extends Condition<E> {
@@ -165,7 +165,7 @@ public class SimpleCondition<E> extends Condition<E> {
 }
 [/file]
 
-[file ('conditions/SetClause.java', false, 'UTF-8')]
+[file ('src/main/java/conditions/SetClause.java', false, 'UTF-8')]
 package conditions;
 
 public class SetClause<E> {
@@ -193,7 +193,7 @@ public class SetClause<E> {
 }
 [/file]
 
-[file ('conditions/Operator.java', false, 'UTF-8')]
+[file ('src/main/java/conditions/Operator.java', false, 'UTF-8')]
 package conditions;
 
 public enum Operator {
@@ -202,7 +202,7 @@ public enum Operator {
 [/file]
 
 [for (ent: EntityType | conceptualSchema.entities)]
-[file ('conditions/' + ent.name.toUpperFirst() + 'Attribute.java', false, 'UTF-8')]
+[file ('src/main/java/conditions/' + ent.name.toUpperFirst() + 'Attribute.java', false, 'UTF-8')]
 package conditions;
 
 public enum [ent.name.toUpperFirst() /]Attribute {
@@ -213,7 +213,7 @@ public enum [ent.name.toUpperFirst() /]Attribute {
 
 [for (rel: RelationshipType | conceptualSchema.relationships)]
 [if (rel.attributes->size() > 0)]
-[file ('conditions/' + rel.name.toUpperFirst() + 'Attribute.java', false, 'UTF-8')]
+[file ('src/main/java/conditions/' + rel.name.toUpperFirst() + 'Attribute.java', false, 'UTF-8')]
 package conditions;
 
 public enum [rel.name.toUpperFirst() /]Attribute {

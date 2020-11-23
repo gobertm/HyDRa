@@ -1,0 +1,334 @@
+[comment encoding = UTF-8 /]
+[module generateDBConnectionClasses('http://www.unamur.be/polystore/Pml')]
+
+[template public generateDBConnectionClasses(conceptualSchema: ConceptualSchema)]
+[generateRelationalDBConnectionClasses(conceptualSchema) /]
+[generateDocumentDBConnectionClasses(conceptualSchema) /]
+[generateKeyValueDBConnectionClasses(conceptualSchema) /]
+[generateColumnDBConnectionClasses(conceptualSchema) /]
+[generateGraphDBConnectionClasses(conceptualSchema) /]
+[/template]
+
+[template public generateRelationalDBConnectionClasses(conceptualSchema: ConceptualSchema)]
+[file ('src/main/java/dbconnection/RelationalDBConnection.java', false, 'UTF-8')]
+package dbconnection;
+
+public class RelationalDBConnection {
+	protected String host;
+	protected String port;
+	protected String driverClass;
+	protected String schemaName;
+	protected String userName;
+	protected String userPassword;
+
+	protected String jdbcUrl;
+
+	private java.sql.Connection conn = null;
+
+	public RelationalDBConnection(String host, String port, String schemaName, String userName, String userPassword)
+			throws ClassNotFoundException, java.sql.SQLException {
+		this.host = host;
+		this.port = port;
+		this.schemaName = schemaName;
+		this.userName = userName;
+		this.userPassword = userPassword;
+
+		this.jdbcUrl = "jdbc:mysql://" + this.host + ":" + this.port + "/" + this.schemaName;
+		this.driverClass = "com.mysql.jdbc.Driver";
+
+		Class.forName(this.driverClass);
+		openConnection();
+	}
+
+	public void openConnection() throws java.sql.SQLException {
+		if(this.conn == null)
+			this.conn = java.sql.DriverManager.getConnection(this.jdbcUrl, this.userName, this.userPassword);
+	}
+
+	public void closeConnection() throws java.sql.SQLException {
+		try {
+			if(conn != null)
+				conn.close();
+		} finally {
+			conn = null;
+		}
+	}
+
+	public java.sql.ResultSet select(String query) throws java.sql.SQLException {
+		return select(query, null);
+	}
+
+	public java.sql.ResultSet select(String query, java.util.List<Object> inputs) throws java.sql.SQLException {
+		openConnection();
+		java.sql.PreparedStatement st = null;
+		try {
+			st = conn.prepareStatement(query);
+			int i = 1;
+			if (inputs != null)
+				for (Object input : inputs) {
+					st.setObject(i, input);
+					i++;
+				}
+
+			return st.executeQuery();
+		} catch (java.sql.SQLException e) {
+			if (st != null)
+				st.close();
+			throw e;
+		}
+	}
+
+	public void closeStatement(java.sql.ResultSet r) throws java.sql.SQLException {
+		if (r != null) {
+			java.sql.Statement st = r.getStatement();
+			if (st != null)
+				st.close();
+		}
+	}
+
+	public int insertOrUpdateorDelete(String query, java.util.List<Object> inputs) throws java.sql.SQLException {
+		openConnection();
+		java.sql.PreparedStatement st = null;
+		try {
+			st = conn.prepareStatement(query);
+			int i = 1;
+			if (inputs != null)
+				for (Object input : inputs) {
+					st.setObject(i, input);
+					i++;
+				}
+
+			return st.executeUpdate();
+		} finally {
+			if (st != null)
+				st.close();
+		}
+	}
+
+	public int insertOrUpdateorDelete(String query) throws java.sql.SQLException {
+		return insertOrUpdateorDelete(query, null);
+	}
+
+}
+
+[/file]
+[/template]
+
+[template public generateDocumentDBConnectionClasses(conceptualSchema: ConceptualSchema)]
+[file ('src/main/java/dbconnection/DocumentDBConnection.java', false, 'UTF-8')]
+package dbconnection;
+
+public class DocumentDBConnection {
+	protected String host;
+	protected String port;
+	protected String dbName;
+	protected String userName;
+	protected String userPassword;
+
+	protected String mongoUrl;
+	protected com.mongodb.MongoClient mongoClient = null;
+	protected com.mongodb.client.MongoDatabase db = null;
+
+	public DocumentDBConnection(String host, String port, String dbName, String userName, String userPassword) throws java.sql.SQLException {
+		this.host = host;
+		this.port = port;
+		this.dbName = dbName;
+		this.userName = userName;
+		this.userPassword = userPassword;
+
+		this.mongoUrl = "mongodb://" + userName + ":" + userPassword + "@" + host + ":" + port;
+		openConnection();
+	}
+
+	public void openConnection() throws java.sql.SQLException {
+		if (this.db == null) {
+			com.mongodb.MongoClientURI uri = new com.mongodb.MongoClientURI(mongoUrl);
+			mongoClient = new com.mongodb.MongoClient(uri);
+			db = mongoClient.getDatabase(dbName);
+		}
+	}
+
+	public void closeConnection() {
+		try {
+			if (mongoClient != null)
+				mongoClient.close();
+
+		} finally {
+			this.db = null;
+		}
+	}
+
+}
+[/file]
+[/template]
+
+[template public generateKeyValueDBConnectionClasses(conceptualSchema: ConceptualSchema)]
+[file ('src/main/java/dbconnection/KeyValueDBConnection.java', false, 'UTF-8')]
+package dbconnection;
+
+public class KeyValueDBConnection {
+	
+	protected String host;
+	protected int port;
+	protected String userPassword;
+	
+	protected redis.clients.jedis.Jedis conn = null;
+	
+	public KeyValueDBConnection(String host, int port, String userPassword) {
+		this.host = host;
+		this.port = port;
+		this.userPassword = userPassword;
+		openConnection();
+	}
+	
+	public void openConnection() {
+		if(conn == null) {
+			conn = new redis.clients.jedis.Jedis(host, port);
+			conn.auth(userPassword);//password
+		}
+	}
+
+	public void closeConnection() {
+		if(conn != null) {
+			conn.close();
+		}
+	}
+	
+}
+
+[/file]
+[/template]
+
+[template public generateColumnDBConnectionClasses(conceptualSchema: ConceptualSchema)]
+[file ('src/main/java/dbconnection/ColumnDBConnection.java', false, 'UTF-8')]
+package dbconnection;
+
+public class ColumnDBConnection {
+	protected String host;
+	protected int port;
+	protected String userPassword;
+	protected String userName;
+	protected String keyspaceName;
+
+	private com.datastax.oss.driver.api.core.CqlSession session = null;
+
+	public ColumnDBConnection(String host, int port, String keyspaceName, String userName, String userPassword) {
+		this.host = host;
+		this.port = port;
+		this.userName = userName;
+		this.userPassword = userPassword;
+		this.keyspaceName = keyspaceName;
+		openConnection();
+	}
+
+	public void openConnection() {
+		if (session == null)
+			session = com.datastax.oss.driver.api.core.CqlSession.builder()
+					// make sure you change the path to the secure connect bundle below
+					// .withCloudSecureConnectBundle(Paths.get("/path/to/secure-connect-database_name.zip"))
+					.withAuthCredentials(this.userName, this.userPassword).withKeyspace(this.keyspaceName).build();
+	}
+
+	public void closeConnection() {
+		if (session != null)
+			session.close();
+	}
+	
+
+	public com.datastax.oss.driver.api.core.cql.ResultSet executeQuery(String query, java.util.List<Object> inputs) {
+		openConnection();
+		// ResultSet rs = session.execute("select release_version from system.local");
+		com.datastax.oss.driver.api.core.cql.PreparedStatement prepared = session.prepare(query);
+		com.datastax.oss.driver.api.core.cql.BoundStatement bound;
+		if (inputs == null || inputs.size() == 0)
+			bound = prepared.bind();
+		else
+			bound = prepared.bind(inputs);
+		
+		return session.execute(bound);
+	}
+
+	public com.datastax.oss.driver.api.core.cql.ResultSet select(String query, java.util.List<Object> inputs) {
+		return executeQuery(query, inputs);
+	}
+	
+	public com.datastax.oss.driver.api.core.cql.ResultSet select(String query) {
+		return select(query, null);
+	}
+	
+	public void insertOrUpdateOrDelete(String query, java.util.List<Object> inputs) {
+		executeQuery(query, inputs);
+	}
+	
+	public void insertOrUpdateOrDelete(String query) {
+		insertOrUpdateOrDelete(query, null);
+	}
+}
+
+[/file]
+[/template]
+
+[template public generateGraphDBConnectionClasses(conceptualSchema: ConceptualSchema)]
+[file ('src/main/java/dbconnection/GraphDBConnection.java', false, 'UTF-8')]
+package dbconnection;
+
+public class GraphDBConnection {
+
+	protected String host;
+	protected int port;
+	protected String userName;
+	protected String userPassword;
+	
+	private String neo4jUrl;
+
+	protected org.neo4j.driver.Driver driver;
+	protected org.neo4j.driver.Session session;
+
+	public GraphDBConnection(String host, int port, String userName, String userPassword) {
+		this.host = host;
+		this.port = port;
+		this.userName = userName;
+		this.userPassword = userPassword;
+		
+		// it can exist different ways to connect a Neo4j db (see https://neo4j.com/developer/java/)
+		this.neo4jUrl = "neo4j://" + this.host + ":" + this.port;
+		openConnection();
+	}
+
+	public void openConnection() {
+		if (driver == null) {
+			driver = org.neo4j.driver.GraphDatabase.driver(this.neo4jUrl,
+					org.neo4j.driver.AuthTokens.basic(this.userName, this.userPassword));
+			session = driver.session();
+		}
+	}
+
+	public void closeConnection() {
+		if (driver != null) {
+			session.close();
+			driver.close();
+		}
+	}
+	
+	public org.neo4j.driver.Result select(String cypher) {
+		return select(cypher, new java.util.HashMap<String, Object>());
+	}
+	
+	public org.neo4j.driver.Result select(String cypher, java.util.Map<String,Object> parameters) {
+		openConnection();
+		return session.run(cypher, parameters);
+	}
+	
+	public void insertOrUpdateorDelete(String cypher) {
+		insertOrUpdateorDelete(cypher, new java.util.HashMap<String, Object>());
+	}
+	
+	public void insertOrUpdateorDelete(String cypher, java.util.Map<String,Object> parameters) {
+		openConnection();
+		session.run(cypher, parameters);
+	}
+
+}
+
+[/file]
+[/template]
