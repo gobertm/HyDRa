@@ -71,8 +71,12 @@ PhysicalField returns PhysicalField:
 	ShortField | EmbeddedObject | BracketsField | LongField
 ;
 
+PhysicalRelationalField returns PhysicalField:
+	ShortField | LongField
+;
+
 LongField:
-	physicalName=ID ':''['variableName=ID']'
+	physicalName=ID ':''['name=ID']'
 ;
 
 EmbeddedObject:
@@ -138,7 +142,7 @@ RelationalSchema:
 Table:
 	'table' name=ID '{'
 		'columns' '{'
-			(columns+=ShortField (',' columns+=ShortField)*)?
+			(columns+=PhysicalRelationalField (',' columns+=PhysicalRelationalField)*)?
 			'}'
 		('references' '{'references+=Reference*'}')? 
 		//Identifier and index section
