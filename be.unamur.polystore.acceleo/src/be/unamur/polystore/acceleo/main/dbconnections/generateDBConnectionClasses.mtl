@@ -269,4 +269,66 @@ public class ColumnDBConnection {
 [/template]
 
 [template public generateGraphDBConnectionClasses(conceptualSchema: ConceptualSchema)]
+[file ('src/main/java/dbconnection/GraphDBConnection.java', false, 'UTF-8')]
+package dbconnection;
+
+public class GraphDBConnection {
+
+	protected String host;
+	protected int port;
+	protected String userName;
+	protected String userPassword;
+	
+	private String neo4jUrl;
+
+	protected org.neo4j.driver.Driver driver;
+	protected org.neo4j.driver.Session session;
+
+	public GraphDBConnection(String host, int port, String userName, String userPassword) {
+		this.host = host;
+		this.port = port;
+		this.userName = userName;
+		this.userPassword = userPassword;
+		
+		// it can exist different ways to connect a Neo4j db (see https://neo4j.com/developer/java/)
+		this.neo4jUrl = "neo4j://" + this.host + ":" + this.port;
+		openConnection();
+	}
+
+	public void openConnection() {
+		if (driver == null) {
+			driver = org.neo4j.driver.GraphDatabase.driver(this.neo4jUrl,
+					org.neo4j.driver.AuthTokens.basic(this.userName, this.userPassword));
+			session = driver.session();
+		}
+	}
+
+	public void closeConnection() {
+		if (driver != null) {
+			session.close();
+			driver.close();
+		}
+	}
+	
+	public org.neo4j.driver.Result select(String cypher) {
+		return select(cypher, new java.util.HashMap<String, Object>());
+	}
+	
+	public org.neo4j.driver.Result select(String cypher, java.util.Map<String,Object> parameters) {
+		openConnection();
+		return session.run(cypher, parameters);
+	}
+	
+	public void insertOrUpdateorDelete(String cypher) {
+		insertOrUpdateorDelete(cypher, new java.util.HashMap<String, Object>());
+	}
+	
+	public void insertOrUpdateorDelete(String cypher, java.util.Map<String,Object> parameters) {
+		openConnection();
+		session.run(cypher, parameters);
+	}
+
+}
+
+[/file]
 [/template]

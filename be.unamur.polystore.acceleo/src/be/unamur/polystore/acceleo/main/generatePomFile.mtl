@@ -41,6 +41,13 @@
 		    <version>4.9.0</version>
 		</dependency>
 
+		<!-- https://mvnrepository.com/artifact/org.neo4j.driver/neo4j-java-driver -->
+		<dependency>
+		    <groupId>org.neo4j.driver</groupId>
+		    <artifactId>neo4j-java-driver</artifactId>
+		    <version>4.2.0</version>
+		</dependency>
+
 	</dependencies>
 </project>
 
