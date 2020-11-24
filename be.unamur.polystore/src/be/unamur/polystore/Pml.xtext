@@ -219,8 +219,6 @@ enum DatabaseType :
 	MARIADB = 'mariadb' | SQLITE = 'sqlite' | REDIS ='redis' | CASSANDRA = 'cassandra' | HBASE = 'hbase' | MONGODB = 'mongodb' | NEO4J = 'neo4j'
 ;
 
-
-/*A modifier car host est obligé d'etre au début et port est obligé d'etre à la fin */
 Database :
 	dbType=DatabaseType name=ID '{'
 		(('host'':'host=STRING)  & ('port'':'port= INT) & ('dbname'':'databaseName=STRING)? & ('login'':'login=STRING)? & ('password'':'password=STRING)?)
