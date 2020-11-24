@@ -10,7 +10,6 @@
 [import be::unamur::polystore::acceleo::main::level1::delete::relationshiptype::generateDeleteMethods /]
 
 [template public generateLevel1RelationshipTypeClass(rel : RelationshipType, conceptualSchema: ConceptualSchema)]
-
 [file ('src/main/java/dao/services/' + rel.name.toUpperFirst() + 'Service'.concat('.java'), false, 'UTF-8')]
 package dao.services;
 
@@ -21,10 +20,10 @@ public abstract class [rel.name.toUpperFirst() + 'Service' /] {
 	[if (isNAire(rel))]
 	[generateNAireSelectMethods(rel) /]
 	[/if][/comment]
-	[generateSelectMethods(rel) /]
-	[generateInsertMethods(rel) /]
-	[generateUpdateMethods(rel) /]
-	[generateDeleteMethods(rel) /]
+	[generateSelectMethods(rel, false) /]
+	[generateInsertMethods(rel, false) /]
+	[generateUpdateMethods(rel, false) /]
+	[generateDeleteMethods(rel, false) /]
 }
 [/file]
 [/template]

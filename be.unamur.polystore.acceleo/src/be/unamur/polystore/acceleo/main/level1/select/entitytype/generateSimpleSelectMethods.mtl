@@ -1,12 +1,16 @@
 [comment encoding = UTF-8 /]
 [module generateSimpleSelectMethods('http://www.unamur.be/polystore/Pml')]
 [import be::unamur::polystore::acceleo::main::generateJavaDataType /]
-[template public generateSimpleSelectMethods(entityType: EntityType, conceptualSchema: ConceptualSchema)]
-public abstract java.util.List<pojo.[entityType.name.toUpperFirst() /]> get[entityType.name.toUpperFirst() /]List(conditions.Condition<conditions.[entityType.name.toUpperFirst() /]Attribute> condition);
+[import be::unamur::polystore::acceleo::main::mappingrules::util /]
+[import be::unamur::polystore::acceleo::main::level2::select::entitytype::generateSimpleSelectMethodsImpl /]
+
+[template public generateSimpleSelectMethods(entityType: EntityType, conceptualSchema: ConceptualSchema, override: Boolean)]
+public [if (override = false)]abstract [/if]java.util.List<pojo.[entityType.name.toUpperFirst() /]> get[entityType.name.toUpperFirst() /]List(conditions.Condition<conditions.[entityType.name.toUpperFirst() /]Attribute> condition)[if (override = false)];[else][generateSimpleSelectMethodsImpl(entityType, conceptualSchema) /][/if]
 
 // TODO get based on id(s). Ex:public Client getClientById(Long id)
 
 [for (attr: Attribute | entityType.attributes)]
+// [getMappedPhysicalFields(attr, conceptualSchema.eContainer(pml::Domainmodel).mappingRules->first()) /]
 public java.util.List<pojo.[entityType.name.toUpperFirst() /]> get[entityType.name.toUpperFirst() /]ListBy[attr.name.toUpperFirst()/]([generateJavaType(attr.type)/] [attr.name /]) {
 	return get[entityType.name.toUpperFirst() /]List(conditions.Condition.simple(conditions.[entityType.name.toUpperFirst() /]Attribute.[attr.name /], conditions.Operator.EQUALS, [attr.name /]));
 }

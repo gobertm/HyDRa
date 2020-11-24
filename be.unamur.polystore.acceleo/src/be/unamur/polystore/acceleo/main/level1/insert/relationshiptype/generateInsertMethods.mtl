@@ -2,15 +2,16 @@
 [module generateInsertMethods('http://www.unamur.be/polystore/Pml')]
 [import be::unamur::polystore::acceleo::main::util /]
 [import be::unamur::polystore::acceleo::main::generateJavaDataType/]
+[import be::unamur::polystore::acceleo::main::level2::insert::relationshiptype::generateInsertMethodsImpl /]
 
-[template public generateInsertMethods(rel: RelationshipType)]
-public abstract void insert[rel.name.toUpperFirst() /]AndLinkedItems(pojo.[rel.name.toUpperFirst() /] [rel.name /]);
+[template public generateInsertMethods(rel: RelationshipType, override: Boolean)]
+public [if  (override = false)]abstract [/if]void insert[rel.name.toUpperFirst() /]AndLinkedItems(pojo.[rel.name.toUpperFirst() /] [rel.name /])[if  (override = false)];[else][implMethod1(rel) /][/if]
 
 [if (getMandatoryRoles(rel)->size() = 0)]
-public abstract void attachPersistentItemsBy[rel.name.toUpperFirst() /]([for (role: Role | rel.roles)][if (i > 1)],[/if]
+public [if  (override = false)]abstract [/if]void attachPersistentItemsBy[rel.name.toUpperFirst() /]([for (role: Role | rel.roles)][if (i > 1)],[/if]
 	pojo.[role.entity.name.toUpperFirst() /] [role.name /][/for]
 	[for (attr: Attribute | rel.attributes)],
 	[generateJavaType(attr.type) /] [attr.name /][/for]
-);
+)[if  (override = false)];[else][implMethod2(rel) /][/if]
 [/if]
 [/template]
