@@ -61,7 +61,7 @@ physical schemas {
 		}
 	}
 	
-	relational schema myRelSchema : myMariaDB{
+	relational schema myRelSchema : myMariaDB, mysqlite {
 		table Customer {
 			columns {
 				id,
@@ -151,6 +151,11 @@ databases{
 		dbname : "db1"
 		login : "user1"
 		password : "pass1"
+	}
+	
+	sqlite mysqlite {
+		host: "sqlite.unamur.be"
+		port: 8090
 	}
 }
 	

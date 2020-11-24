@@ -48,7 +48,7 @@ AbstractPhysicalSchema:
 ;
 
 DocumentSchema:
-	'document' 'schema' name=ID (':' database=[Database])?'{'
+	'document' 'schema' name=ID (':' databases+=[Database] (','databases+=[Database])*)?'{'
 	(collections+=Collection)*
 '}'
 ;
@@ -91,7 +91,7 @@ ShortField :
 
 
 ColumnSchema:
-	'column' 'schema' name=ID (':' database=[Database])? '{'
+	'column' 'schema' name=ID (':' databases+=[Database] (','databases+=[Database])*)? '{'
 		tables+=(TableColumnDB)* ('references' '{'references+=Reference*'}' )?
 	'}'
 ;
@@ -116,7 +116,7 @@ Rowkey:
 
 
 GraphSchema:
-	'graph' 'schema' name=ID (':' database=[Database])?'{'
+	'graph' 'schema' name=ID (':' databases+=[Database] (','databases+=[Database])*)?'{'
 		(nodes+=Node)* (edges+=Edge)* ('references' '{'references+=Reference*'}' )?
 	'}'
 ;
@@ -134,7 +134,7 @@ Edge:
 ;
 
 RelationalSchema:
-	'relational' 'schema' name=ID (':' database=[Database])?'{'
+	'relational' 'schema' name=ID (':' databases+=[Database] (','databases+=[Database])*)?'{'
 		tables+=Table*
 	'}'
 ;
@@ -154,7 +154,7 @@ AbstractPhysicalStructure:
 ;
 
 KeyValueSchema:
-	'key' 'value' 'schema' name=ID (':' database=[Database])?'{'
+	'key' 'value' 'schema' name=ID (':' databases+=[Database] (','databases+=[Database])*)?'{'
 		kvpairs+=KeyValuePair
 		('references' '{'references+=Reference*'}')? 
 '}'
