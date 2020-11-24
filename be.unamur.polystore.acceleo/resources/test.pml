@@ -1,94 +1,132 @@
 conceptual schema cs {
-
-	entity type Customer {
-		custId:int,
-		firstName:string,
-		lastName:string,
-		streetName:string,
-		streetNumber:string,
-		city:string,
-		country:string
+	entity type Product{
+		id:int,
+		name:string,
+		description:string
+	}
+	entity type Stock{
+		localisation : string
 	}
 	
-	entity type Order {
-		orderId:int,
-		dateOrder:date
+	entity type Review {
+		id : string,
+		rating : int,
+		content : string
 	}
 	
-    entity type Product{
-        id:int,
-        name:string,
-        description:string
-    }
-    
-    entity type Student {
-    	studId:int,
-    	name:string
-    }
-    
-    entity type Project {
-    	projId:int,
-    	label:string
-    }
-    
-    entity type Book {
-    	bookId:int,
-    	title:string,
-    	author:string
-    }
-    
-    entity type Stock{
-       
-    }
-    
-    entity type Test{
-    
-    }
-    
-    entity type Person{
-    
-    }
-    
-    relationship type hasParent{
-    	child [1] : Person
-    	parent [0-N] : Person,
-    	officialDate : date
-    }
-    
-    relationship type productStock{
-        storage [0-N] : Stock
-        stored_products [1] : Product
-    }
-    
-    relationship type testrel {
-    	aaa [0-N] : Product
-    	bbb [0-N] : Stock
-    	ccc [0-N] : Test
-    	ddd [1] : Test,
-    	test : date
-    }
-    
-    relationship type Placing{
-		placed_order [1]: Order
-		buyer [0-N]: Customer
+	entity type Client{
+		clientnumber : int, // auto increment id. On en a besoin pour l'exemple bitmap key value.
+		lastname : string,
+		firstname : string
 	}
 	
-	relationship type Borrowing{
-		borrower [1]: Student
-		project [0-N]: Project
-		borrowedBook [0-N]: Book 
+	
+	relationship type productStock{
+		storage [0-N] : Stock
+		stored_products [1] : Product
+	}
+	relationship type productReview{
+	reviews[1]: Review,
+	product[0-N] : Product,
+	review_date : date
 	}
 }
 physical schemas {
-    document schema myDocSchema{
-        collection myCollection{
-            fields {
-           		firstname
-            }
-        }
-    }
-   
-   	key value schema KVProject {
+	document schema myDocSchema : mymongo{
+		collection productCollection{
+			fields { 
+				id,
+				Name,
+				Description,
+				Productnumber,
+				review[0-N]{
+					rate,
+					numberofstars:[rate],
+					cv numberofstarts:[rate]+"*",
+					content,
+					comments[0-N]{
+						comment
+					}
+				}
+			}
+		}
+		collection StockCollection{
+			fields{
+				_id,
+				localisation,
+				products[0-N]
+			}
+			references{
+				stores : myDocSchema.StockCollection.products -> myDocSchema.productCollection.id
+			}
+		}
+	}
+	
+	relational schema myRelSchema : myMariaDB, mysqlite {
+		table Customer {
+			columns {
+				id,
+				fullname:[lastname]
+			}
+		}
+		table Order {
+			columns{ 
+				id,
+				cust_id
+			}	
+			references {
+				 bought_by : cust_id -> myRelSchema.Customer.id
+			}
+		}
+	}
+	
+	graph schema myGraphSchema {
+		Node Product {
+			_id,
+			Name,
+			Description,
+			StockID
+		}
+		
+		Node Category {
+			_Id,
+			CategoryName
+		}
+		
+		Edge PART_OF {
+			Product -> Category,
+			quantity // whatever attribute
+		}
+		
+		references {
+			stored_in : Product.StockID -> myDocSchema.StockCollection._id
+
+		}
+	}
+	
+	column schema colSchema {
+		
+		table Client {
+			rowkey{
+				clientnumber
+			}
+			
+			columnfamilies {
+				personnal {
+					name,
+					firstname,
+					lastname
+					}
+				address{
+					street,
+					number,
+					zipcode
+				}
+			}
+		}
+	}
+	
+	key value schema KVProject {
 		
 		kvpairs KVProjDesc {
 			key : "PROJECT:""dzd"[IDPROJ], // Mais "string"[ID]"ojd" does not work.
@@ -96,8 +134,34 @@ physical schemas {
 		}
 		
 	}
-   
 }
-mapping rules {
-	cs.Customer(firstName) -> myDocSchema.myCollection(firstname)
+
+mapping rules { 
+	  cs.Product(description, id, name) -> myDocSchema.productCollection(Description,id,Name),
+	  cs.productReview.reviews -> myDocSchema.productCollection(review),
+	  cs.Product(id,name,description) -> myGraphSchema.Product(_id,Name,Description),
+	  cs.productStock.storage -> myGraphSchema.PART_OF(),
+	  cs.Client(clientnumber,lastname) -> myRelSchema.Customer(id,lastname)
+	  
+	}
+	
+databases{
+	mariadb myMariaDB {
+		host : "192.168.1.9"
+		port : 3396
+		dbname : "db1"
+		login : "user1"
+		password : "pass1"
+	}
+	
+	sqlite mysqlite {
+		host: "sqlite.unamur.be"
+		port: 8090
+	}
+	
+	mongodb mymongo {
+		host: "mongo.unamur.be"
+		port: 8091
+	}
 }
+	

@@ -5,3 +5,8 @@
 	= invoke('be.unamur.polystore.acceleo.main.services.MappingRuleService', 'getMappedPhysicalFields(be.unamur.polystore.pml.Attribute, be.unamur.polystore.pml.MappingRules)', Sequence{arg0, arg1})
 /]
 
+[query public getConcernedDatabases(ent : EntityType, model: Domainmodel) : Set(Database) 
+= invoke('be.unamur.polystore.acceleo.main.services.MappingRuleService', 'getConcernedDatabases(be.unamur.polystore.pml.EntityType, be.unamur.polystore.pml.Domainmodel)', Sequence{ent, model}) /]
+
+[query public getConcernedDatabases(attr : Attribute, model: Domainmodel) : Set(Database) 
+= invoke('be.unamur.polystore.acceleo.main.services.MappingRuleService', 'getConcernedDatabases(be.unamur.polystore.pml.Attribute, be.unamur.polystore.pml.Domainmodel)', Sequence{attr, model}) /]
