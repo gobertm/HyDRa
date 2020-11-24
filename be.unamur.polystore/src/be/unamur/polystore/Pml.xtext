@@ -3,7 +3,7 @@ grammar be.unamur.polystore.Pml with org.eclipse.xtext.common.Terminals
 generate pml "http://www.unamur.be/polystore/Pml"
 
 Domainmodel:
-    conceptualSchema=ConceptualSchema & physicalSchema=AbstractPhysicalSchema & mappingRules= MappingRules & databases = Databases
+    conceptualSchema=ConceptualSchema & physicalSchema=PhysicalSchemas & mappingRules= MappingRules & databases = Databases
     
 ;
 
@@ -41,10 +41,15 @@ QualifiedName:
     ID ('.' ID)*
 ;
 
-AbstractPhysicalSchema:
-	{AbstractPhysicalSchema} 'physical' 'schemas' '{' 
-		(kvschemas+=KeyValueSchema* & documentschemas+= DocumentSchema* & relationalschemas+=RelationalSchema* & graphschemas+= GraphSchema* & columnschemas += ColumnSchema*)
+PhysicalSchemas:
+	 {PhysicalSchemas} 'physical' 'schemas' '{' 
+		physicalSchemas+=AbstractPhysicalSchema*
 	'}'
+;
+
+AbstractPhysicalSchema:
+//	(kvschemas+=KeyValueSchema* & documentschemas+= DocumentSchema* & relationalschemas+=RelationalSchema* & graphschemas+= GraphSchema* & columnschemas += ColumnSchema*)
+	KeyValueSchema | DocumentSchema | RelationalSchema | GraphSchema | ColumnSchema
 ;
 
 DocumentSchema:
