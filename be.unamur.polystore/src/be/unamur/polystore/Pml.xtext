@@ -3,7 +3,7 @@ grammar be.unamur.polystore.Pml with org.eclipse.xtext.common.Terminals
 generate pml "http://www.unamur.be/polystore/Pml"
 
 Domainmodel:
-    conceptualSchema=ConceptualSchema & physicalSchema=AbstractPhysicalSchema & mappingRules+= MappingRules
+    conceptualSchema=ConceptualSchema & physicalSchema=AbstractPhysicalSchema & mappingRules= MappingRules & databases = Databases
     
 ;
 
@@ -48,7 +48,7 @@ AbstractPhysicalSchema:
 ;
 
 DocumentSchema:
-	'document' 'schema' name=ID '{'
+	'document' 'schema' name=ID (':' database=[Database])?'{'
 	(collections+=Collection)*
 '}'
 ;
@@ -68,7 +68,15 @@ Reference:
 
 
 PhysicalField returns PhysicalField:
-	ShortField | EmbeddedObject | BracketsField
+	ShortField | EmbeddedObject | BracketsField | LongField
+;
+
+PhysicalRelationalField returns PhysicalField:
+	ShortField | LongField
+;
+
+LongField:
+	physicalName=ID ':''['name=ID']'
 ;
 
 EmbeddedObject:
@@ -83,7 +91,7 @@ ShortField :
 
 
 ColumnSchema:
-	'column' 'schema' name=ID '{'
+	'column' 'schema' name=ID (':' database=[Database])? '{'
 		tables+=(TableColumnDB)* ('references' '{'references+=Reference*'}' )?
 	'}'
 ;
@@ -108,7 +116,7 @@ Rowkey:
 
 
 GraphSchema:
-	'graph' 'schema' name=ID '{'
+	'graph' 'schema' name=ID (':' database=[Database])?'{'
 		(nodes+=Node)* (edges+=Edge)* ('references' '{'references+=Reference*'}' )?
 	'}'
 ;
@@ -126,7 +134,7 @@ Edge:
 ;
 
 RelationalSchema:
-	'relational' 'schema' name=ID '{'
+	'relational' 'schema' name=ID (':' database=[Database])?'{'
 		tables+=Table*
 	'}'
 ;
@@ -134,7 +142,7 @@ RelationalSchema:
 Table:
 	'table' name=ID '{'
 		'columns' '{'
-			(columns+=ShortField (',' columns+=ShortField)*)?
+			(columns+=PhysicalRelationalField (',' columns+=PhysicalRelationalField)*)?
 			'}'
 		('references' '{'references+=Reference*'}')? 
 		//Identifier and index section
@@ -146,7 +154,7 @@ AbstractPhysicalStructure:
 ;
 
 KeyValueSchema:
-	'key' 'value' 'schema' name=ID '{'
+	'key' 'value' 'schema' name=ID (':' database=[Database])?'{'
 		kvpairs+=KeyValuePair
 		('references' '{'references+=Reference*'}')? 
 '}'
@@ -173,6 +181,7 @@ Object:
 	'}'
 ;
 
+/*Used for key value */
 BracketsField:
 	'['name=ID']'
 ;
@@ -198,6 +207,24 @@ EntityMappingRule:
 	(entityConceptual=[EntityType|QualifiedName]'('(attributesConceptual+=[Attribute|QualifiedName] (','attributesConceptual+=[Attribute|QualifiedName])*)?')'
 	'->'
 	 physicalStructure=[AbstractPhysicalStructure|QualifiedName]'('(physicalFields+=[PhysicalField|QualifiedName] (','physicalFields+=[PhysicalField|QualifiedName])*)?')')
+;
+
+Databases :
+	{Databases} 'databases' '{'
+		(databases+=Database)*
+	'}'
+;
+
+enum DatabaseType :
+	MARIADB = 'mariadb' | SQLITE = 'sqlite' | REDIS ='redis' | CASSANDRA = 'cassandra' | HBASE = 'hbase' | MONGODB = 'mongodb' | NEO4J = 'neo4j'
+;
+
+
+/*A modifier car host est obligé d'etre au début et port est obligé d'etre à la fin */
+Database :
+	dbType=DatabaseType name=ID '{'
+		(('host'':'host=STRING)  & ('port'':'port= INT) & ('dbname'':'databaseName=STRING)? & ('login'':'login=STRING)? & ('password'':'password=STRING)?)
+	'}'
 ;
 
 DataType returns DataType:

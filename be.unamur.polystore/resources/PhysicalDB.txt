@@ -1,14 +1,14 @@
 // Database information
 databases{
 	mariadb myMariaDB {
-		host : 192.168.1.9,
-		dbname : db1,
-		...
+		host : "192.168.1.9"
+		port : 3396
+		dbname : "db1"
+		login : "user1"
+		password : "pass1"
 	}
 	
 	sqlite SQLITE {
-		host : 192.168.1.4
-		dbname : db2,
 		...
 	}
 	redis myRedis{...}

@@ -41,6 +41,7 @@ physical schemas {
 				Productnumber,
 				review[0-N]{
 					rate,
+					numberofstars:[rate],
 					content,
 					comments[0-N]{
 						comment
@@ -60,11 +61,11 @@ physical schemas {
 		}
 	}
 	
-	relational schema myRelSchema {
+	relational schema myRelSchema : myMariaDB{
 		table Customer {
 			columns {
 				id,
-				name
+				fullname:[lastname]
 			}
 		}
 		table Order {
@@ -139,6 +140,17 @@ mapping rules {
 	  cs.productReview.reviews -> myDocSchema.productCollection(review),
 	  cs.Product(id,name,description) -> myGraphSchema.Product(_id,Name,Description),
 	  cs.productStock.storage -> myGraphSchema.PART_OF(),
-	  cs.Client(clientnumber,lastname) -> myRelSchema.Customer(id,name)
+	  cs.Client(clientnumber,lastname) -> myRelSchema.Customer(id,lastname)
 	  
 	}
+	
+databases{
+	mariadb myMariaDB {
+		host : "192.168.1.9"
+		port : 3396
+		dbname : "db1"
+		login : "user1"
+		password : "pass1"
+	}
+}
+	
