@@ -68,7 +68,7 @@ Reference:
 
 
 PhysicalField returns PhysicalField:
-	ShortField | EmbeddedObject | BracketsField | LongField
+	ShortField | EmbeddedObject | BracketsField | LongField | ComplexVariable
 ;
 
 PhysicalRelationalField returns PhysicalField:
@@ -119,6 +119,15 @@ GraphSchema:
 	'graph' 'schema' name=ID (':' databases+=[Database] (','databases+=[Database])*)?'{'
 		(nodes+=Node)* (edges+=Edge)* ('references' '{'references+=Reference*'}' )?
 	'}'
+;
+
+/* Faire un validator qui vérifie que ces Bracketsfields existent déjà */
+TerminalExpression:
+	{TerminalExpression} STRING | BracketsField
+;
+
+ComplexVariable :
+	( 'cv' name = ID ':' left=TerminalExpression ('+' right+=TerminalExpression)*)
 ;
 
 Node:

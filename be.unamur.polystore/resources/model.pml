@@ -42,6 +42,7 @@ physical schemas {
 				review[0-N]{
 					rate,
 					numberofstars:[rate],
+					cv numberofstarts:[rate]+"*",
 					content,
 					comments[0-N]{
 						comment
