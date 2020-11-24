@@ -83,7 +83,7 @@ physical schemas {
     document schema myDocSchema{
         collection myCollection{
             fields {
-           
+           		firstname
             }
         }
     }
@@ -99,4 +99,5 @@ physical schemas {
    
 }
 mapping rules {
+	cs.Customer(firstName) -> myDocSchema.myCollection(firstname)
 }

@@ -1,0 +1,7 @@
+[comment encoding = Cp1252 /]
+[module util('http://www.unamur.be/polystore/Pml')/]
+
+[query public getMappedPhysicalFields(arg0 : Attribute, arg1 : MappingRules) : Collection(PhysicalField)
+	= invoke('be.unamur.polystore.acceleo.main.services.MappingRuleService', 'getMappedPhysicalFields(be.unamur.polystore.pml.Attribute, be.unamur.polystore.pml.MappingRules)', Sequence{arg0, arg1})
+/]
+

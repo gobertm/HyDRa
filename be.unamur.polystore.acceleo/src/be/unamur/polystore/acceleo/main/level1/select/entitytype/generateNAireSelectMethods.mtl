@@ -1,14 +1,15 @@
 [comment encoding = UTF-8 /]
 [module generateNAireSelectMethods('http://www.unamur.be/polystore/Pml')]
 [import be::unamur::polystore::acceleo::main::util /]
+[import be::unamur::polystore::acceleo::main::level2::select::entitytype::generateNAireSelectMethodsImpl /]
 
-[template public generateNAireSelectMethods(entity: EntityType, conceptualSchema: ConceptualSchema)]
+[template public generateNAireSelectMethods(entity: EntityType, conceptualSchema: ConceptualSchema, override: Boolean)]
 [for (role: Role | getRolesFromEntityType(entity, conceptualSchema))]
-public abstract java.util.List<pojo.[entity.name.toUpperFirst() /]> get[role.name.toUpperFirst() /]ListIn[getRelationShipType(role).name.toUpperFirst() /]([for (role2: Role | getRelationShipType(role).roles)][if (i > 1)],[/if]
+public [if (override = false)]abstract [/if]java.util.List<pojo.[entity.name.toUpperFirst() /]> get[role.name.toUpperFirst() /]ListIn[getRelationShipType(role).name.toUpperFirst() /]([for (role2: Role | getRelationShipType(role).roles)][if (i > 1)],[/if]
 	conditions.Condition<conditions.[role2.entity.name.toUpperFirst() /]Attribute> [role2.name/]_condition[/for][if (getRelationShipType(role).attributes->size() > 0)],
 	conditions.Condition<conditions.[getRelationShipType(role).name.toUpperFirst() /]Attribute> [getRelationShipType(role).name /]_condition
 	[/if]
-);
+)[if (override = false)];[else][generateNAireSelectMethodsImpl(entity, conceptualSchema) /][/if]
 
 [for (role2: Role | getRelationShipType(role).roles)]
 public java.util.List<pojo.[entity.name.toUpperFirst() /]> get[role.name.toUpperFirst() /]ListIn[getRelationShipType(role).name.toUpperFirst() /]By[role2.name.toUpperFirst() /]Condition(

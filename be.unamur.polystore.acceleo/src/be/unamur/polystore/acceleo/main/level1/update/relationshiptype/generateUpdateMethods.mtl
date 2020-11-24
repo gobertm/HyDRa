@@ -2,14 +2,15 @@
 [module generateUpdateMethods('http://www.unamur.be/polystore/Pml')]
 
 [import be::unamur::polystore::acceleo::main::util /]
+[import be::unamur::polystore::acceleo::main::level2::update::relationshiptype::generateSimpleUpdateMethodsImpl/]
 
-[template public generateUpdateMethods(rel: RelationshipType) ]
+[template public generateUpdateMethods(rel: RelationshipType, override: Boolean) ]
 [if (rel.attributes->size() > 0)]
-public abstract void update[rel.name.toUpperFirst()/]List([for (role: Role | rel.roles)][if (i > 1)],[/if]
+public [if (override = false)]abstract [/if]void update[rel.name.toUpperFirst()/]List([for (role: Role | rel.roles)][if (i > 1)],[/if]
 	conditions.Condition<conditions.[role.entity.name.toUpperFirst() /]Attribute> [role.name/]_condition[/for][if (rel.attributes->size() > 0)],
 	conditions.Condition<conditions.[rel.name.toUpperFirst() /]Attribute> [rel.name /]_condition[/if],
 	conditions.SetClause<conditions.[rel.name.toUpperFirst() /]Attribute> set
-);
+)[if (override = false)];[else][implMethod1(rel) /][/if]
 
 [for (role: Role | rel.roles)]
 public void update[rel.name.toUpperFirst()/]ListBy[role.name.toUpperFirst() /]Condition(

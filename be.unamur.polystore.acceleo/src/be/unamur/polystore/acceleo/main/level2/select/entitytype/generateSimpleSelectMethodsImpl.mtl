@@ -1,0 +1,8 @@
+[comment encoding = UTF-8 /]
+[module generateSimpleSelectMethodsImpl('http://www.unamur.be/polystore/Pml')]
+
+
+[template public generateSimpleSelectMethodsImpl(entityType: EntityType, conceptualSchema: ConceptualSchema)]{
+	//TODO
+	return null;
+}[/template]

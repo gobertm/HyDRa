@@ -1,0 +1,19 @@
+[comment encoding = UTF-8 /]
+[module generateLevel2EntityTypeClass('http://www.unamur.be/polystore/Pml')]
+
+[import be::unamur::polystore::acceleo::main::level1::generateLevel1EntityTypeClasses /]
+
+
+[template public generateLevel2EntityTypeClass(entityType : EntityType, conceptualSchema: ConceptualSchema)]
+[file ('src/main/java/dao/impl/' + entityType.name.toUpperFirst() + 'ServiceImpl'.concat('.java'), false, 'UTF-8')]
+package dao.impl;
+
+public class [entityType.name.toUpperFirst() + 'ServiceImpl' /] extends dao.services.[entityType.name.toUpperFirst() + 'Service' /] {
+
+	[printSelectMethods(entityType, conceptualSchema, true) /]
+	[printInsertMethods(entityType, conceptualSchema, true) /]
+	[printUpdateMethods(entityType, conceptualSchema, true) /]
+	[printDeleteMethods(entityType, conceptualSchema, true) /]
+}
+[/file]
+[/template]

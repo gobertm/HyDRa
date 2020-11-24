@@ -1,0 +1,11 @@
+[comment encoding = UTF-8 /]
+[module generateInsertMethodsImpl('http://www.unamur.be/polystore/Pml')]
+
+
+[template public implMethod1(rel: RelationshipType)]{
+	//TODO
+}[/template]
+
+[template public implMethod2(rel: RelationshipType)]{
+	//TODO
+}[/template]

@@ -1,9 +1,15 @@
 [comment encoding = UTF-8 /]
 [module generateRelationshipTypeClass('http://www.unamur.be/polystore/Pml')]
 [import be::unamur::polystore::acceleo::main::generateJavaDataType /]
+[import be::unamur::polystore::acceleo::main::level1::generateLevel1RelationshipTypeClasses /]
+[import be::unamur::polystore::acceleo::main::level2::generateLevel2RelationshipTypeClass /]
 
  [query public isRelationshipTypeComplex(rel : RelationshipType) : Boolean = rel.attributes->size() > 0 or rel.roles->size() > 2 /]
 
+[template public generateAllLevelsRelationshipTypeClass(rel: RelationshipType, conceptualSchema: ConceptualSchema)]
+[generateLevel1RelationshipTypeClass(rel, conceptualSchema) /]
+[generateLevel2RelationshipTypeClass(rel, conceptualSchema) /]
+[/template]
 
 [template public generateClass(rel : RelationshipType, conceptualSchema: ConceptualSchema)]
 [if (true or isRelationshipTypeComplex(rel))]

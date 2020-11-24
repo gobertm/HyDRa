@@ -16,12 +16,12 @@
 
 [for (entityType: EntityType | conceptualSchema.entities)]
 	[generateClass(entityType, conceptualSchema) /]
-	[generateLevel1EntityTypeClass(entityType, conceptualSchema) /]
+	[generateAllLevelsEntityTypeClass(entityType, conceptualSchema) /]
 [/for]
 
 [for (rel: RelationshipType | conceptualSchema.relationships)]
 	[ generateClass(rel, conceptualSchema)/]
-	[ generateLevel1RelationshipTypeClass(rel, conceptualSchema) /]
+	[ generateAllLevelsRelationshipTypeClass(rel, conceptualSchema) /]
 [/for]
 
 [/template]
