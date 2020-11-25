@@ -195,11 +195,12 @@ KeyValuePair:
 ;
 
 Key:
-	 stringParts+=STRING* & fields+=BracketsField*  // Comment intercaller les variables
+//	 stringParts+=STRING* & fields+=BracketsField*  // Comment intercaller les variables
+	left=TerminalExpression ('+' right+=TerminalExpression)*
 ;
 
 Value:
-	Object | BracketsField
+	Object | BracketsField | ComplexField
 ;
 
 Object:

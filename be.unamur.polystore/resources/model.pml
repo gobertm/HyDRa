@@ -140,7 +140,7 @@ physical schemas {
 	key value schema KVProject {
 		
 		kvpairs KVProjDesc {
-			key : "PROJECT:""dzd"[IDPROJ], // Mais "string"[ID]"ojd" does not work.
+			key : "PROJECT:"+"dzd"+[IDPROJ]+"stringwhatevever"+[field],
 			value : [Description]
 		}
 		
