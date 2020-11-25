@@ -73,15 +73,23 @@ Reference:
 
 
 PhysicalField returns PhysicalField:
-	ShortField | EmbeddedObject | BracketsField | LongField | ComplexVariable
+	ShortField | EmbeddedObject | BracketsField | LongField | ComplexField
 ;
 
-PhysicalRelationalField returns PhysicalField:
-	ShortField | LongField
+LimitedPhysicalField returns PhysicalField:
+	ShortField | LongField | ComplexField
+;
+
+ShortField :
+	name=ID
 ;
 
 LongField:
 	physicalName=ID ':''['name=ID']'
+;
+
+BracketsField:
+	'['name=ID']'
 ;
 
 EmbeddedObject:
@@ -90,9 +98,15 @@ EmbeddedObject:
 	'}')?
 ;
 
-ShortField :
-	name=ID
+ComplexField :
+	( 'cv' physicalName = ID ':' left=TerminalExpression ('+' right+=TerminalExpression)*)
 ;
+
+TerminalExpression:
+	{TerminalExpression} STRING | BracketsField
+;
+
+
 
 
 ColumnSchema:
@@ -109,9 +123,10 @@ TableColumnDB:
 
 ColumnFamily:
 	name=ID '{'
-		columns+=ShortField (','columns+= ShortField)*
+		columns+=LimitedPhysicalField (','columns+= LimitedPhysicalField)*
 	'}'
 ;
+
 
 Rowkey:
 	{Rowkey} 'rowkey' '{'
@@ -126,15 +141,6 @@ GraphSchema:
 	'}'
 ;
 
-/* Faire un validator qui vérifie que ces Bracketsfields existent déjà */
-TerminalExpression:
-	{TerminalExpression} STRING | BracketsField
-;
-
-ComplexVariable :
-	( 'cv' name = ID ':' left=TerminalExpression ('+' right+=TerminalExpression)*)
-;
-
 Node:
 	'Node' name=ID '{'
 		fields+=PhysicalField (','fields+=PhysicalField)*
@@ -143,7 +149,7 @@ Node:
 
 Edge:
 	'Edge' name=ID '{'
-		sourceNode=[Node] '->' targetNode = [Node] (',' fields+=ShortField)*
+		sourceNode=[Node] '->' targetNode = [Node] (',' fields+=PhysicalField)*
 	'}' 	
 ;
 
@@ -156,7 +162,7 @@ RelationalSchema:
 Table:
 	'table' name=ID '{'
 		'columns' '{'
-			(columns+=PhysicalRelationalField (',' columns+=PhysicalRelationalField)*)?
+			(columns+=LimitedPhysicalField (',' columns+=LimitedPhysicalField)*)?
 			'}'
 		('references' '{'references+=Reference*'}')? 
 		//Identifier and index section
@@ -164,7 +170,7 @@ Table:
 ;
 
 AbstractPhysicalStructure:
-	Table | Collection | Node | TableColumnDB | Edge
+	Table | Collection | EmbeddedObject | TableColumnDB | Node | Edge
 ;
 
 KeyValueSchema:
@@ -195,10 +201,6 @@ Object:
 	'}'
 ;
 
-/*Used for key value */
-BracketsField:
-	'['name=ID']'
-;
 
 MappingRules:
 	{MappingRules} 'mapping' 'rules' '{'

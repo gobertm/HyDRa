@@ -13,9 +13,12 @@ import org.eclipse.xtext.scoping.Scopes;
 
 import be.unamur.polystore.pml.AbstractMappingRule;
 import be.unamur.polystore.pml.AbstractPhysicalStructure;
+import be.unamur.polystore.pml.BracketsField;
 import be.unamur.polystore.pml.Collection;
 import be.unamur.polystore.pml.ColumnFamily;
+import be.unamur.polystore.pml.ComplexField;
 import be.unamur.polystore.pml.Edge;
+import be.unamur.polystore.pml.EmbeddedObject;
 import be.unamur.polystore.pml.EntityMappingRule;
 import be.unamur.polystore.pml.Node;
 import be.unamur.polystore.pml.PhysicalField;
@@ -24,6 +27,7 @@ import be.unamur.polystore.pml.RoleMappingRule;
 import be.unamur.polystore.pml.ShortField;
 import be.unamur.polystore.pml.Table;
 import be.unamur.polystore.pml.TableColumnDB;
+import be.unamur.polystore.pml.TerminalExpression;
 
 /**
  * This class contains custom scoping description.
@@ -42,22 +46,42 @@ public class PmlScopeProvider extends AbstractPmlScopeProvider {
 		if(context instanceof AbstractMappingRule && reference == PmlPackage.Literals.ABSTRACT_MAPPING_RULE__PHYSICAL_FIELDS) {
 				AbstractMappingRule rule = EcoreUtil2.getContainerOfType(context, AbstractMappingRule.class);
 				AbstractPhysicalStructure struct= rule.getPhysicalStructure();
+				EList<PhysicalField> fields = new BasicEList<PhysicalField>();
 				if(struct instanceof Table) 
-					return Scopes.scopeFor(((Table) struct).getColumns());
+					fields=((Table) struct).getColumns();
 				if(struct instanceof Collection) 
-					return Scopes.scopeFor(((Collection) struct).getFields());
+					fields=((Collection) struct).getFields();
+				if(struct instanceof EmbeddedObject)
+					fields=((EmbeddedObject) struct).getFields();
 				if(struct instanceof Node)
-					return Scopes.scopeFor(((Node) struct).getFields());
+					fields= ((Node) struct).getFields();
 				if(struct instanceof Edge)
-					return Scopes.scopeFor(((Edge)struct).getFields());
+					fields= ((Edge)struct).getFields();
 				if(struct instanceof TableColumnDB) {
 					EList<ColumnFamily> columnFamilies = ((TableColumnDB) struct).getColumnfamilies();
-					EList<ShortField> fields = new BasicEList<ShortField>();
 					for(ColumnFamily cf : columnFamilies)
 						fields.addAll(cf.getColumns());
-					return Scopes.scopeFor(fields);
 				}
+				EList<PhysicalField> fieldsInComplex = new BasicEList<PhysicalField>();
+				for(PhysicalField f : fields) {
+					if(f instanceof ComplexField)
+						fieldsInComplex.addAll(getFieldsFromComplexField((ComplexField)f));
+				}
+				fields.addAll(fieldsInComplex);
+				return Scopes.scopeFor(fields);
 			}
 		return super.getScope(context, reference);
+	}
+	
+	public EList<PhysicalField> getFieldsFromComplexField(ComplexField complexField){
+		EList<PhysicalField> fieldsInComplex = new BasicEList<PhysicalField>();
+		if (complexField.getLeft() instanceof BracketsField)
+			fieldsInComplex.add((BracketsField)complexField.getLeft());
+		for(TerminalExpression terminal : complexField.getRight()) {
+			if(terminal instanceof BracketsField)
+				fieldsInComplex.add((BracketsField)terminal);
+		}
+		return fieldsInComplex;
+		
 	}
 }
