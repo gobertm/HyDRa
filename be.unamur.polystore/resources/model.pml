@@ -3,6 +3,10 @@ conceptual schema cs {
 		id:int,
 		name:string,
 		description:string
+		
+		identifier{
+			id
+		}
 	}
 	entity type Stock{
 		localisation : string
@@ -18,6 +22,15 @@ conceptual schema cs {
 		clientnumber : int, // auto increment id. On en a besoin pour l'exemple bitmap key value.
 		lastname : string,
 		firstname : string
+		
+		identifier{
+			clientnumber
+		}
+		
+		identifier{
+			firstname,
+			lastname
+		}
 	}
 	
 	
@@ -42,7 +55,7 @@ physical schemas {
 				review[0-N]{
 					rate,
 					numberofstars:[rate],
-					cv numberofstarts:[rate]+"*",
+					cv ratingstring :[rate2]+"*",
 					content,
 					comments[0-N]{
 						comment
@@ -113,9 +126,7 @@ physical schemas {
 			
 			columnfamilies {
 				personnal {
-					name,
-					firstname,
-					lastname
+					cv name:[firstname]+"_"+[lastname]
 					}
 				address{
 					street,
@@ -140,8 +151,11 @@ mapping rules {
 	  cs.Product(description, id, name) -> myDocSchema.productCollection(Description,id,Name),
 	  cs.productReview.reviews -> myDocSchema.productCollection(review),
 	  cs.Product(id,name,description) -> myGraphSchema.Product(_id,Name,Description),
+	  cs.Review(rating,content) -> myDocSchema.productCollection.review(rate,content),
+	  cs.Review(rating) -> myDocSchema.productCollection.review(rate2),
 	  cs.productStock.storage -> myGraphSchema.PART_OF(),
-	  cs.Client(clientnumber,lastname) -> myRelSchema.Customer(id,lastname)
+	  cs.Client(clientnumber,lastname) -> myRelSchema.Customer(id,lastname),
+	  cs.Client(lastname,firstname) -> colSchema.Client(lastname,firstname)
 	  
 	}
 	

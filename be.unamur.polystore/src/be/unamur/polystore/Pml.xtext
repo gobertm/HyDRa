@@ -16,7 +16,14 @@ ConceptualSchema :
 EntityType returns EntityType:
 	'entity' 'type' name=ID '{'
 		(attributes+=Attribute (','attributes+=Attribute)*)?
+		(identifier+=Identifier)*
 		'}'
+;
+
+Identifier:
+	'identifier' '{'
+		attributes+=[Attribute](',' attributes +=[Attribute])*
+	'}'
 ;
  
 RelationshipType:
