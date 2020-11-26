@@ -16,10 +16,10 @@ import be.unamur.polystore.pml.AbstractPhysicalStructure;
 import be.unamur.polystore.pml.BracketsField;
 import be.unamur.polystore.pml.Collection;
 import be.unamur.polystore.pml.ColumnFamily;
-import be.unamur.polystore.pml.ComplexField;
 import be.unamur.polystore.pml.Edge;
 import be.unamur.polystore.pml.EmbeddedObject;
 import be.unamur.polystore.pml.EntityMappingRule;
+import be.unamur.polystore.pml.LongField;
 import be.unamur.polystore.pml.Node;
 import be.unamur.polystore.pml.PhysicalField;
 import be.unamur.polystore.pml.PmlPackage;
@@ -64,8 +64,8 @@ public class PmlScopeProvider extends AbstractPmlScopeProvider {
 				}
 				EList<PhysicalField> fieldsInComplex = new BasicEList<PhysicalField>();
 				for(PhysicalField f : fields) {
-					if(f instanceof ComplexField)
-						fieldsInComplex.addAll(getFieldsFromComplexField((ComplexField)f));
+					if(f instanceof LongField)
+						fieldsInComplex.addAll(getFieldsFromComplexField((LongField)f));
 				}
 				fields.addAll(fieldsInComplex);
 				return Scopes.scopeFor(fields);
@@ -73,11 +73,9 @@ public class PmlScopeProvider extends AbstractPmlScopeProvider {
 		return super.getScope(context, reference);
 	}
 	
-	public EList<PhysicalField> getFieldsFromComplexField(ComplexField complexField){
+	public EList<PhysicalField> getFieldsFromComplexField(LongField complexField){
 		EList<PhysicalField> fieldsInComplex = new BasicEList<PhysicalField>();
-		if (complexField.getLeft() instanceof BracketsField)
-			fieldsInComplex.add((BracketsField)complexField.getLeft());
-		for(TerminalExpression terminal : complexField.getRight()) {
+		for(TerminalExpression terminal : complexField.getPattern()) {
 			if(terminal instanceof BracketsField)
 				fieldsInComplex.add((BracketsField)terminal);
 		}

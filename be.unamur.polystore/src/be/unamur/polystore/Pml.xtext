@@ -80,11 +80,11 @@ Reference:
 
 
 PhysicalField returns PhysicalField:
-	ShortField | EmbeddedObject | BracketsField | LongField | ComplexField
+	ShortField | EmbeddedObject | BracketsField | LongField
 ;
 
 LimitedPhysicalField returns PhysicalField:
-	ShortField | LongField | ComplexField
+	ShortField | LongField 
 ;
 
 ShortField :
@@ -92,7 +92,7 @@ ShortField :
 ;
 
 LongField:
-	physicalName=ID ':''['name=ID']'
+	physicalName=ID ':'pattern+=TerminalExpression*
 ;
 
 BracketsField:
@@ -105,9 +105,9 @@ EmbeddedObject:
 	'}')?
 ;
 
-ComplexField :
-	( 'cv' physicalName = ID ':' left=TerminalExpression ('+' right+=TerminalExpression)*)
-;
+//ComplexField :
+//	( 'cv' physicalName = ID ':' left=TerminalExpression ('+' right+=TerminalExpression)*)
+//;
 
 TerminalExpression:
 	{TerminalExpression} STRING | BracketsField
@@ -200,7 +200,7 @@ Key:
 ;
 
 Value:
-	Object | BracketsField | ComplexField
+	Object | BracketsField 
 ;
 
 Object:
