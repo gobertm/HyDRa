@@ -23,3 +23,11 @@
 
 [query public getPhysicalName(field : PhysicalField): String
 = invoke('be.unamur.polystore.acceleo.main.services.MappingRuleService', 'getPhysicalName(be.unamur.polystore.pml.PhysicalField)', Sequence{field}) /]
+
+
+[query public getSQLPreparedValue(attr: Attribute, field : LongField): String
+= invoke('be.unamur.polystore.acceleo.main.services.MappingRuleService', 'getSQLPreparedValue(be.unamur.polystore.pml.Attribute, be.unamur.polystore.pml.LongField)', Sequence{attr, field}) /]
+
+[query public getSQLPatternValue(): String
+= invoke('be.unamur.polystore.acceleo.main.services.MappingRuleService', 'getSQLPatternValue()', Sequence{}) /]
+

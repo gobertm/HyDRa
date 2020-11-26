@@ -13,6 +13,8 @@ import org.eclipse.ocl.ecore.util.OCLEcoreUtil;
 import be.unamur.polystore.pml.*;
 
 public class MappingRuleService {
+	private static final String SQL_PATTERN_VALUE = "$VAR$";
+	
 	public static java.util.Collection<PhysicalField> getMappedPhysicalFields(Attribute attr, MappingRules rules) {
 		List<PhysicalField> res = new ArrayList<PhysicalField>();
 		for (AbstractMappingRule rule : rules.getMappingRules()) {
@@ -135,12 +137,22 @@ public class MappingRuleService {
 			LongField longField = (LongField) field;
 			return longField.getPhysicalName();
 		}
-		
-		if(field instanceof ComplexField) {
-			ComplexField complexField = (ComplexField) field;
-			return complexField.getPhysicalName();
-		}
 		return null;
+	}
+	
+	public static String getSQLPreparedValue(Attribute attr, PhysicalField field) {
+		
+		
+		if(field instanceof LongField) {
+			LongField longField = (LongField) field;
+			
+		}
+		
+		return getSQLPatternValue();
+	}
+	
+	public static String getSQLPatternValue() {
+		return SQL_PATTERN_VALUE;
 	}
 	
 }

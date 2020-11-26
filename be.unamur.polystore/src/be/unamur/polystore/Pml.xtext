@@ -169,7 +169,7 @@ RelationalSchema:
 Table:
 	'table' name=ID '{'
 		'columns' '{'
-			(columns+=LimitedPhysicalField (',' columns+=LimitedPhysicalField)*)?
+			(columns+=LimitedPhysicalField (',' columns+=LimitedPhysicalField)*)
 			'}'
 		('references' '{'references+=Reference*'}')? 
 		//Identifier and index section

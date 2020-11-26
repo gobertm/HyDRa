@@ -45,7 +45,7 @@ conceptual schema cs {
 	}
 }
 physical schemas {
-	document schema myDocSchema : mymongo{
+	document schema myDocSchema{
 		collection productCollection{
 			fields { 
 				id,
@@ -55,7 +55,7 @@ physical schemas {
 				review[0-N]{
 					rate,
 					numberofstars:[rate],
-					cv ratingstring :[rate2]+"*",
+					ratingstring :[rate2]"*",
 					content,
 					comments[0-N]{
 						comment
@@ -79,7 +79,10 @@ physical schemas {
 		table Customer {
 			columns {
 				id,
-				fullname:[lastname]
+				name: [firstname]" "[lastname],
+				fullname2: [lastname]" "[id],
+				fullname:[lastname],
+				fullname3: [lastname]"OK"
 			}
 		}
 		table Order {
@@ -126,7 +129,7 @@ physical schemas {
 			
 			columnfamilies {
 				personnal {
-					cv name:[firstname]+"_"+[lastname]
+					name:[first]"_"[last]
 					}
 				address{
 					street,
@@ -154,8 +157,8 @@ mapping rules {
 	  cs.Review(rating,content) -> myDocSchema.productCollection.review(rate,content),
 	  cs.Review(rating) -> myDocSchema.productCollection.review(rate2),
 	  cs.productStock.storage -> myGraphSchema.PART_OF(),
-	  cs.Client(clientnumber,lastname) -> myRelSchema.Customer(id,lastname),
-	  cs.Client(lastname,firstname) -> colSchema.Client(lastname,firstname)
+	  cs.Client(clientnumber,lastname,firstname) -> myRelSchema.Customer(id,lastname,firstname),
+	  cs.Client(lastname,firstname) -> colSchema.Client(first,last)
 	  
 	}
 	
@@ -171,11 +174,6 @@ databases{
 	sqlite mysqlite {
 		host: "sqlite.unamur.be"
 		port: 8090
-	}
-	
-	mongodb mymongo {
-		host: "mongo.unamur.be"
-		port: 8091
 	}
 }
 	
