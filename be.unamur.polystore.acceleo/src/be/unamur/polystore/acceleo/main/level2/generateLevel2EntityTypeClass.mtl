@@ -8,7 +8,12 @@
 [file ('src/main/java/dao/impl/' + entityType.name.toUpperFirst() + 'ServiceImpl'.concat('.java'), false, 'UTF-8')]
 package dao.impl;
 
-public class [entityType.name.toUpperFirst() + 'ServiceImpl' /] extends dao.services.[entityType.name.toUpperFirst() + 'Service' /] {
+import java.util.List;
+import pojo.[entityType.name.toUpperFirst() /];
+import conditions.*;
+import dao.services.[entityType.name.toUpperFirst() + 'Service' /];
+
+public class [entityType.name.toUpperFirst() + 'ServiceImpl' /] extends [entityType.name.toUpperFirst() + 'Service' /] {
 
 	[printSelectMethods(entityType, conceptualSchema, true) /]
 	[printInsertMethods(entityType, conceptualSchema, true) /]

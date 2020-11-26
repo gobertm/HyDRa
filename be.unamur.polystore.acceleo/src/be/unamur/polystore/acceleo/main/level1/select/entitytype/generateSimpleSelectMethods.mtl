@@ -7,8 +7,11 @@
 [template public generateSimpleSelectMethods(entityType: EntityType, conceptualSchema: ConceptualSchema, override: Boolean)]
 public [if (override = false)]abstract [/if]java.util.List<pojo.[entityType.name.toUpperFirst() /]> get[entityType.name.toUpperFirst() /]List(conditions.Condition<conditions.[entityType.name.toUpperFirst() /]Attribute> condition)[if (override = false)];[else][generateSimpleSelectMethodsImpl(entityType, conceptualSchema) /][/if]
 
-[for (db: Database | getConcernedDatabases(entityType, entityType.ancestors(Domainmodel)->first()))]
-public [if (override = false)]abstract [/if]java.util.List<pojo.[entityType.name.toUpperFirst() /]> get[entityType.name.toUpperFirst() /]ListIn[db.name.toUpperFirst() /](conditions.Condition<conditions.[entityType.name.toUpperFirst() /]Attribute> condition)[if (override = false)];[else][generateSimpleSelectMethodsImpl(entityType, conceptualSchema) /][/if]
+[for (struct: AbstractPhysicalStructure | getConcernedPhysicalStructures(entityType, entityType.ancestors(Domainmodel)->first()))]
+[for (db: Database | getConcernedDatabases(struct, entityType.ancestors(Domainmodel)->first()))]
+public [if (override = false)]abstract [/if]java.util.List<pojo.[entityType.name.toUpperFirst() /]> get[entityType.name.toUpperFirst() /]ListIn[struct.name/]From[db.name.toUpperFirst() /](conditions.Condition<conditions.[entityType.name.toUpperFirst() /]Attribute> condition)[if (override = false)];[else][generateSimpleSelectFromGivenDatabase(entityType, struct, db) /][/if]
+
+[/for]
 [/for]
 
 // TODO get based on id(s). Ex:public Client getClientById(Long id)

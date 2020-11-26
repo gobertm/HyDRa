@@ -10,3 +10,16 @@
 
 [query public getConcernedDatabases(attr : Attribute, model: Domainmodel) : Set(Database) 
 = invoke('be.unamur.polystore.acceleo.main.services.MappingRuleService', 'getConcernedDatabases(be.unamur.polystore.pml.Attribute, be.unamur.polystore.pml.Domainmodel)', Sequence{attr, model}) /]
+
+
+[query public getConcernedPhysicalStructures(ent : EntityType, model: Domainmodel) : Set(AbstractPhysicalStructure) 
+= invoke('be.unamur.polystore.acceleo.main.services.MappingRuleService', 'getConcernedPhysicalStructures(be.unamur.polystore.pml.EntityType, be.unamur.polystore.pml.Domainmodel)', Sequence{ent, model}) /]
+
+[query public getConcernedDatabases(struct : AbstractPhysicalStructure, model: Domainmodel) : Set(Database) 
+= invoke('be.unamur.polystore.acceleo.main.services.MappingRuleService', 'getConcernedDatabases(be.unamur.polystore.pml.AbstractPhysicalStructure, be.unamur.polystore.pml.Domainmodel)', Sequence{struct, model}) /]
+
+[query public getMappedPhysicalField(attr : Attribute, db: Database, rules: MappingRules) : PhysicalField 
+= invoke('be.unamur.polystore.acceleo.main.services.MappingRuleService', 'getMappedPhysicalField(be.unamur.polystore.pml.Attribute, be.unamur.polystore.pml.Database, be.unamur.polystore.pml.MappingRules)', Sequence{attr, db, rules}) /]
+
+[query public getPhysicalName(field : PhysicalField): String
+= invoke('be.unamur.polystore.acceleo.main.services.MappingRuleService', 'getPhysicalName(be.unamur.polystore.pml.PhysicalField)', Sequence{field}) /]

@@ -1,5 +1,6 @@
 [comment encoding = UTF-8 /]
 [module generateSimpleSelectMethodsImpl('http://www.unamur.be/polystore/Pml')]
+[import be::unamur::polystore::acceleo::main::mappingrules::util /]
 
 [comment get{E}List({E)AttributeCondition /]
 
@@ -7,3 +8,45 @@
 	//TODO
 	return null;
 }[/template]
+
+
+[comment List<Customer> getCustomerListInCustomerFromMyMariabDB(Condition) /]
+
+[template public generateSimpleSelectFromGivenDatabase(ent : EntityType, struct: AbstractPhysicalStructure, db : Database)]{
+[if (db.dbType = pml::DatabaseType::MARIADB or db.dbType = pml::DatabaseType::SQLITE)]
+[generateSimpleSQLSelectFromGivenDatabase(ent, struct, db) /]
+[/if]	
+	return null;
+}[/template]
+
+[template public generateSimpleSQLSelectFromGivenDatabase(ent : EntityType, struct: AbstractPhysicalStructure, db : Database)]{
+[comment  select * from Client where (...) /]
+	String sql = "select * from [struct.name/]";
+	if(condition != null) {
+		String where = null;
+		if(condition instanceof SimpleCondition) {
+			[ent.name /]Attribute attr = ((SimpleCondition<[ent.name /]Attribute>) condition).getAttribute();
+			[for (attr : Attribute | ent.attributes)]
+			if(attr == [ent.name.toUpperFirst() /]Attribute.[attr.name /] ) {
+				where = "where [getPhysicalName(getMappedPhysicalField(attr, db, ent.ancestors(Domainmodel)->first().mappingRules))/] ";
+			}
+			[/for]
+		}
+
+		if(condition instanceof AndCondition) {
+
+		}
+
+		if(condition instanceof OrCondition) {
+
+		}
+
+		if(where != null)
+			sql += " " + where + ";";
+		
+	}
+
+	return null;
+	
+}[/template]
+
