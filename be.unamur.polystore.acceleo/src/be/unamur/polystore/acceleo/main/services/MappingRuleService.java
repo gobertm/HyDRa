@@ -17,7 +17,7 @@ import be.unamur.polystore.scoping.PmlScopeProvider;
 
 public class MappingRuleService {
 	private static final String SQL_PATTERN_VALUE = "@VAR@";
-	private static final String SQL_PATTERN_LIKE_SYMBOL = "@OTHERVAR@";
+	private static final String SQL_PATTERN_OTHER_VALUE = "@OTHERVAR@";
 
 	public static java.util.Collection<PhysicalField> getMappedPhysicalFields(Attribute attr, MappingRules rules) {
 		List<PhysicalField> res = new ArrayList<PhysicalField>();
@@ -28,8 +28,8 @@ public class MappingRuleService {
 					Attribute a = er.getAttributesConceptual().get(i);
 					if (a == attr) {
 						PhysicalField pf = er.getPhysicalFields().get(i);
-						
-						//PhysicalField origin = getOriginalPhysicalField(pf);
+
+						// PhysicalField origin = getOriginalPhysicalField(pf);
 						res.add(pf);
 					}
 				}
@@ -61,7 +61,7 @@ public class MappingRuleService {
 		}
 		return res;
 	}
-	
+
 	public static Set<Database> getConcernedDatabases(AbstractPhysicalStructure struct, Domainmodel domain) {
 
 		Set<Database> res = new HashSet<Database>();
@@ -152,11 +152,11 @@ public class MappingRuleService {
 
 		if (field instanceof BracketsField) {
 			EObject anc = getFirstAncestor(LongField.class, field);
-			if(anc != null) {
+			if (anc != null) {
 				LongField lf = (LongField) anc;
 				return lf.getPhysicalName();
 			}
-			
+
 			BracketsField bracketsField = (BracketsField) field;
 			return bracketsField.getName();
 		}
@@ -173,23 +173,24 @@ public class MappingRuleService {
 		return null;
 	}
 
-	public static String getSQLPreparedValue(Attribute attr, BracketsField field, LongField parent, boolean escapeSQLReservedChar) {
+	public static String getSQLPreparedValue(Attribute attr, PhysicalField field, LongField parent,
+			boolean escapeSQLReservedChar) {
 
-		if (parent instanceof LongField) {
+		if (parent instanceof LongField && field instanceof BracketsField) {
 			String column = "";
-			for(TerminalExpression expr : parent.getPattern()) {
-				if(expr instanceof BracketsField) {
+			BracketsField br = (BracketsField) field;
+			for (TerminalExpression expr : parent.getPattern()) {
+				if (expr instanceof BracketsField) {
 					BracketsField f = (BracketsField) expr;
-					if(f.getName().equals(field.getName()))
+					if (f.getName().equals(br.getName()))
 						column += getSQLPatternValue();
 					else
-						column += SQL_PATTERN_LIKE_SYMBOL;
+						column += getSQLPatternLikeSymbol();
 				} else {
-					//STRING
+					// STRING
 					column += (escapeSQLReservedChar) ? escapeReservedChar(expr.getLiteral()) : expr.getLiteral();
 				}
-				
-			
+
 			}
 			return "\"" + column + "\"";
 
@@ -197,26 +198,26 @@ public class MappingRuleService {
 
 		return getSQLPatternValue();
 	}
-	
+
 	private static String escapeReservedChar(String str) {
-		if(str == null)
+		if (str == null)
 			return null;
-		//TODO complete the list of reserved sql char
+		// TODO complete the list of reserved sql char
 		return str.replaceAll("_", "\\\\\\\\_").replaceAll("%", "\\\\\\\\%");
-		
+
 	}
 
 	public static void main(String[] args) {
 		String str = "a_b_%";
 		System.out.println(escapeReservedChar(str));
 	}
-	
+
 	public static String getSQLPatternValue() {
 		return SQL_PATTERN_VALUE;
 	}
-	
+
 	public static String getSQLPatternLikeSymbol() {
-		return SQL_PATTERN_LIKE_SYMBOL;
+		return SQL_PATTERN_OTHER_VALUE;
 	}
-	
+
 }

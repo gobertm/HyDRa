@@ -21,7 +21,8 @@ conceptual schema cs {
 	entity type Client{
 		clientnumber : int, // auto increment id. On en a besoin pour l'exemple bitmap key value.
 		lastname : string,
-		firstname : string
+		firstname : string,
+		age: int
 		
 		identifier{
 			clientnumber
@@ -78,7 +79,8 @@ physical schemas {
 	relational schema myRelSchema : myMariaDB, mysqlite {
 		table Customer {
 			columns {
-				name:[first]"%"[first]"Bonjour"[last]
+				fullName:[firstName]" "[lastName],
+				age:[age]" years old"
 			}
 		}
 		table Order {
@@ -150,7 +152,7 @@ mapping rules {
 	  cs.Review(rating,content) -> myDocSchema.productCollection.review(rate,content),
 	  cs.Review(rating) -> myDocSchema.productCollection.review(rate2),
 	  cs.productStock.storage -> myGraphSchema.PART_OF(),
-	  cs.Client(lastname,firstname) -> myRelSchema.Customer(last, first),
+	  cs.Client(lastname,firstname,age) -> myRelSchema.Customer(lastName, firstName,age),
 	  cs.Client(lastname,firstname) -> colSchema.Client(last,first)
 	  
 	}

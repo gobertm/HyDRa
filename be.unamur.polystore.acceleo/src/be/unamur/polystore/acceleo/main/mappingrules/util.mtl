@@ -25,8 +25,8 @@
 = invoke('be.unamur.polystore.acceleo.main.services.MappingRuleService', 'getPhysicalName(be.unamur.polystore.pml.PhysicalField)', Sequence{field}) /]
 
 
-[query public getSQLPreparedValue(attr: Attribute, field: BracketsField, parent : LongField, escapeSQLReservedChar :  Boolean): String
-= invoke('be.unamur.polystore.acceleo.main.services.MappingRuleService', 'getSQLPreparedValue(be.unamur.polystore.pml.Attribute, be.unamur.polystore.pml.BracketsField, be.unamur.polystore.pml.LongField, boolean)', Sequence{attr, field, parent, escapeSQLReservedChar}) /]
+[query public getSQLPreparedValue(attr: Attribute, field: PhysicalField, parent : LongField, escapeSQLReservedChar :  Boolean): String
+= invoke('be.unamur.polystore.acceleo.main.services.MappingRuleService', 'getSQLPreparedValue(be.unamur.polystore.pml.Attribute, be.unamur.polystore.pml.PhysicalField, be.unamur.polystore.pml.LongField, boolean)', Sequence{attr, field, parent, escapeSQLReservedChar}) /]
 
 [query public getSQLPatternValue(): String
 = invoke('be.unamur.polystore.acceleo.main.services.MappingRuleService', 'getSQLPatternValue()', Sequence{}) /]
