@@ -78,11 +78,7 @@ physical schemas {
 	relational schema myRelSchema : myMariaDB, mysqlite {
 		table Customer {
 			columns {
-				id,
-				name: [firstname]" "[lastname],
-				fullname2: [lastname]" "[id],
-				fullname:[lastname],
-				fullname3: [lastname]"OK"
+				name:[first]
 			}
 		}
 		table Order {
@@ -90,9 +86,6 @@ physical schemas {
 				id,
 				cust_id
 			}	
-			references {
-				 bought_by : cust_id -> myRelSchema.Customer.id
-			}
 		}
 	}
 	
@@ -157,8 +150,8 @@ mapping rules {
 	  cs.Review(rating,content) -> myDocSchema.productCollection.review(rate,content),
 	  cs.Review(rating) -> myDocSchema.productCollection.review(rate2),
 	  cs.productStock.storage -> myGraphSchema.PART_OF(),
-	  cs.Client(clientnumber,lastname,firstname) -> myRelSchema.Customer(id,lastname,firstname),
-	  cs.Client(lastname,firstname) -> colSchema.Client(first,last)
+	  cs.Client(lastname,firstname) -> myRelSchema.Customer(last,first),
+	  cs.Client(lastname,firstname) -> colSchema.Client(last,first)
 	  
 	}
 	

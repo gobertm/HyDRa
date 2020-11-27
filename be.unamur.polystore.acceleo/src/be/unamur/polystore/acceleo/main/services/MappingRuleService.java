@@ -5,16 +5,19 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import org.eclipse.emf.common.util.EList;
+import org.eclipse.emf.common.util.TreeIterator;
 import org.eclipse.emf.ecore.EClass;
 import org.eclipse.emf.ecore.EObject;
 import org.eclipse.emf.ecore.util.EcoreUtil;
 import org.eclipse.ocl.ecore.util.OCLEcoreUtil;
 
 import be.unamur.polystore.pml.*;
+import be.unamur.polystore.scoping.PmlScopeProvider;
 
 public class MappingRuleService {
 	private static final String SQL_PATTERN_VALUE = "$VAR$";
-	
+
 	public static java.util.Collection<PhysicalField> getMappedPhysicalFields(Attribute attr, MappingRules rules) {
 		List<PhysicalField> res = new ArrayList<PhysicalField>();
 		for (AbstractMappingRule rule : rules.getMappingRules()) {
@@ -22,13 +25,31 @@ public class MappingRuleService {
 				EntityMappingRule er = (EntityMappingRule) rule;
 				for (int i = 0; i < er.getAttributesConceptual().size(); i++) {
 					Attribute a = er.getAttributesConceptual().get(i);
+					if(a != null)
+					System.out.println(a.getName());
 					if (a == attr) {
-						res.add(er.getPhysicalFields().get(i));
+						PhysicalField pf = er.getPhysicalFields().get(i);
+						
+						//PhysicalField origin = getOriginalPhysicalField(pf);
+						res.add(pf);
 					}
 				}
 			}
 		}
 		return res;
+	}
+
+	private static PhysicalField getOriginalPhysicalField(PhysicalField field) {
+		if(field == null)
+			return null;
+		
+		AbstractPhysicalStructure struct = getPhysicalStructure(field);
+		List<EObject> list = getDescendents(PhysicalField.class, field);
+		for(EObject o : list)
+			if(o == field)
+				return (PhysicalField) o;
+		return null;
+		
 	}
 
 	public static Set<Database> getConcernedDatabases(Attribute attr, Domainmodel domain) {
@@ -41,20 +62,28 @@ public class MappingRuleService {
 		}
 		return res;
 	}
-	
+
 	public static Set<AbstractPhysicalStructure> getConcernedPhysicalStructures(EntityType ent, Domainmodel domain) {
 		Set<AbstractPhysicalStructure> res = new HashSet<AbstractPhysicalStructure>();
 		for (Attribute attr : ent.getAttributes()) {
 			java.util.Collection<PhysicalField> fields = getMappedPhysicalFields(attr, domain.getMappingRules());
 			for (PhysicalField field : fields) {
 				AbstractPhysicalStructure struct = getPhysicalStructure(field);
-				res.add(struct);
+				if (struct != null)
+					res.add(struct);
 			}
 		}
 		return res;
 	}
 	
+	public static String print(Domainmodel domain) {
+		EList<AbstractPhysicalSchema> list = domain.getPhysicalSchema().getPhysicalSchemas();
+		System.out.println(list);
+		return "ok";
+	}
+
 	public static Set<Database> getConcernedDatabases(AbstractPhysicalStructure struct, Domainmodel domain) {
+
 		Set<Database> res = new HashSet<Database>();
 		AbstractPhysicalSchema schema = (AbstractPhysicalSchema) getFirstAncestor(AbstractPhysicalSchema.class, struct);
 		res.addAll(getAttachedDatabases(schema));
@@ -81,16 +110,17 @@ public class MappingRuleService {
 		}
 		return res;
 	}
-	
+
 	public static PhysicalField getMappedPhysicalField(Attribute attr, Database db, MappingRules rules) {
 		List<PhysicalField> fields = (List<PhysicalField>) getMappedPhysicalFields(attr, rules);
-		for(PhysicalField field: fields) {
+		for (PhysicalField field : fields) {
 			AbstractPhysicalSchema schema = getPhysicalSchema(field);
+			System.out.println("ok:" + schema);
 			List<Database> dbs = getAttachedDatabases(schema);
-			if(dbs.contains(db))
+			if (dbs.contains(db))
 				return field;
 		}
-		
+
 		return null;
 	}
 
@@ -100,7 +130,7 @@ public class MappingRuleService {
 			return null;
 		return (AbstractPhysicalSchema) res;
 	}
-	
+
 	private static AbstractPhysicalStructure getPhysicalStructure(EObject obj) {
 		EObject res = getFirstAncestor(AbstractPhysicalStructure.class, obj);
 		if (res == null)
@@ -117,40 +147,58 @@ public class MappingRuleService {
 		return getFirstAncestor(cl, obj.eContainer());
 	}
 
+	private static List<EObject> getDescendents(final Class cl, EObject obj) {
+		List<EObject> res = new ArrayList<EObject>();
+		if (obj != null) {
+			if (cl.isAssignableFrom(obj.getClass()))
+				res.add(obj);
+			TreeIterator<EObject> it = obj.eAllContents();
+			while (it.hasNext()) {
+				EObject o = it.next();
+				if (o != null) {
+					if (cl.isAssignableFrom(o.getClass()))
+						res.add(o);
+				}
+			}
+		}
+
+		return res;
+	}
+
 	public static String getPhysicalName(PhysicalField field) {
-		if(field instanceof ShortField) {
+		if (field instanceof ShortField) {
 			ShortField shortField = (ShortField) field;
 			return shortField.getName();
 		}
-		
-		if(field instanceof BracketsField) {
+
+		if (field instanceof BracketsField) {
 			BracketsField bracketsField = (BracketsField) field;
 			return bracketsField.getName();
 		}
-		
-		if(field instanceof EmbeddedObject) {
+
+		if (field instanceof EmbeddedObject) {
 			EmbeddedObject embeddedField = (EmbeddedObject) field;
 			return embeddedField.getName();
 		}
-		
-		if(field instanceof LongField) {
+
+		if (field instanceof LongField) {
 			LongField longField = (LongField) field;
 			return longField.getPhysicalName();
 		}
 		return null;
 	}
-	
+
 	public static String getSQLPreparedValue(Attribute attr, PhysicalField field) {
-		
-		
-		if(field instanceof LongField) {
+
+		if (field instanceof LongField) {
 			LongField longField = (LongField) field;
-			
+			return SQL_PATTERN_VALUE;
+
 		}
-		
+
 		return getSQLPatternValue();
 	}
-	
+
 	public static String getSQLPatternValue() {
 		return SQL_PATTERN_VALUE;
 	}

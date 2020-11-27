@@ -8,8 +8,13 @@
 [import be::unamur::polystore::acceleo::main::dbconnections::generateDBConnectionClasses /]
 [import be::unamur::polystore::acceleo::main::generatePomFile /]
 
+[import be::unamur::polystore::acceleo::main::mappingrules::util]
+
 [template public generateElement(conceptualSchema : ConceptualSchema)]
 [comment @main/]
+
+[comment][disableParsingMode() /][/comment]
+
 [generatePomFile(conceptualSchema) /]
 [generateGenericClasses(conceptualSchema) /]
 [generateDBConnectionClasses(conceptualSchema) /]
@@ -23,5 +28,5 @@
 	[ generateClass(rel, conceptualSchema)/]
 	[ generateAllLevelsRelationshipTypeClass(rel, conceptualSchema) /]
 [/for]
-
+[print(conceptualSchema.ancestors(Domainmodel)->first()) /]
 [/template]

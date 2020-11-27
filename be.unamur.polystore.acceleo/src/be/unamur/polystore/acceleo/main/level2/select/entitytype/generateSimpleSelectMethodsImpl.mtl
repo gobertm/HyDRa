@@ -30,11 +30,8 @@
 			Object value = ((SimpleCondition<[ent.name /]Attribute>) condition).getValue();
 			[for (attr : Attribute | ent.attributes)]
 			[let field : PhysicalField = getMappedPhysicalField(attr, db, ent.ancestors(Domainmodel)->first().mappingRules)]
+			[if (field <> null)]
 			if(attr == [ent.name.toUpperFirst() /]Attribute.[attr.name /] ) {
-				[field.oclIsKindOf(LongField) /]
-				[field.oclIsTypeOf(LongField) /]
-				[field.oclIsTypeOf(TerminalExpression)/]
-				[field.ancestors()->first()/]
 				[if (field.ancestors(LongField) -> size() = 0)]
 				Object preparedValue = value;
 				[else]
@@ -44,6 +41,7 @@
 				
 				where = "where [getPhysicalName(field)/] " + op.getSQLOperator() + " ?";
 			}
+			[/if]
 			[/let]
 			
 			

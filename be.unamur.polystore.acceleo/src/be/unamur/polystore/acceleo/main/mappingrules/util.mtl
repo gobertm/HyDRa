@@ -31,3 +31,8 @@
 [query public getSQLPatternValue(): String
 = invoke('be.unamur.polystore.acceleo.main.services.MappingRuleService', 'getSQLPatternValue()', Sequence{}) /]
 
+[query public print(model: Domainmodel): String
+= invoke('be.unamur.polystore.acceleo.main.services.MappingRuleService', 'print(be.unamur.polystore.pml.Domainmodel)', Sequence{model}) /]
+
+
+
