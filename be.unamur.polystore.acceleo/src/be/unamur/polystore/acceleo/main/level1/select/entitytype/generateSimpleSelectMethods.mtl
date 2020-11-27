@@ -5,10 +5,11 @@
 [import be::unamur::polystore::acceleo::main::level2::select::entitytype::generateSimpleSelectMethodsImpl /]
 
 [template public generateSimpleSelectMethods(entityType: EntityType, conceptualSchema: ConceptualSchema, override: Boolean)]
+
 public [if (override = false)]abstract [/if]java.util.List<pojo.[entityType.name.toUpperFirst() /]> get[entityType.name.toUpperFirst() /]List(conditions.Condition<conditions.[entityType.name.toUpperFirst() /]Attribute> condition)[if (override = false)];[else][generateSimpleSelectMethodsImpl(entityType, conceptualSchema) /][/if]
-tests[getConcernedPhysicalStructures(entityType, entityType.ancestors(Domainmodel)->first())->size()/]
 [for (struct: AbstractPhysicalStructure | getConcernedPhysicalStructures(entityType, entityType.ancestors(Domainmodel)->first()))]
 [for (db: Database | getConcernedDatabases(struct, entityType.ancestors(Domainmodel)->first()))]
+[if (override = true)][generateGetSQLWhereClauseMethod(entityType, struct, db)/][/if]
 public [if (override = false)]abstract [/if]java.util.List<pojo.[entityType.name.toUpperFirst() /]> get[entityType.name.toUpperFirst() /]ListIn[struct.name/]From[db.name.toUpperFirst() /](conditions.Condition<conditions.[entityType.name.toUpperFirst() /]Attribute> condition)[if (override = false)];[else][generateSimpleSelectFromGivenDatabase(entityType, struct, db) /][/if]
 
 [/for]

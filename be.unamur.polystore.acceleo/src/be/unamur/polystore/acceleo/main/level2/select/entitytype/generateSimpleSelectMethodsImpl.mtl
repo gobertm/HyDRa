@@ -19,46 +19,106 @@
 	return null;
 }[/template]
 
-[template public generateSimpleSQLSelectFromGivenDatabase(ent : EntityType, struct: AbstractPhysicalStructure, db : Database)]
-[comment  select * from Client where (...) /]
-	String sql = "select * from [struct.name/]";
+[template public generateGetSQLWhereClauseMethod(ent : EntityType, struct: AbstractPhysicalStructure, db : Database)]
+private static Pair<String, List<String>> getSQLWhereClauseIn[db.name /]DB(Condition<[ent.name.toUpperFirst() /]Attribute> condition) {
+	String where = null;	
+	List<String> preparedValues = new java.util.ArrayList<String>();
 	if(condition != null) {
-		String where = null;
+		
 		if(condition instanceof SimpleCondition) {
 			[ent.name /]Attribute attr = ((SimpleCondition<[ent.name /]Attribute>) condition).getAttribute();
 			Operator op = ((SimpleCondition<[ent.name /]Attribute>) condition).getOperator();
 			Object value = ((SimpleCondition<[ent.name /]Attribute>) condition).getValue();
-			[for (attr : Attribute | ent.attributes)]
-			[let field : PhysicalField = getMappedPhysicalField(attr, db, ent.ancestors(Domainmodel)->first().mappingRules)]
-			[if (field <> null)]
-			if(attr == [ent.name.toUpperFirst() /]Attribute.[attr.name /] ) {
-				[if (field.ancestors(LongField) -> size() = 0)]
-				Object preparedValue = value;
-				[else]
-				Object preparedValue = [getSQLPreparedValue(attr, field.ancestors(LongField) -> first().oclAsType(LongField)) /];
-				preparedValue = preparedValue.replaceAll([getSQLPatternValue() /], value);	
+			if(value != null) {
+				[for (attr : Attribute | ent.attributes)]
+				[let field : PhysicalField = getMappedPhysicalField(attr, db, ent.ancestors(Domainmodel)->first().mappingRules)][if (field <> null)]
+				if(attr == [ent.name.toUpperFirst() /]Attribute.[attr.name /] ) {
+					String valueString = Util.transformSQLValue(value);
+					[if (field.ancestors(LongField) -> size() = 0)]
+					String preparedValue = valueString;
+					[else]
+					String preparedValue = [getSQLPreparedValue(attr, field.oclAsType(BracketsField), field.ancestors(LongField) -> first().oclAsType(LongField), false) /];
+					[/if]
+					
+					String sqlOp = op.getSQLOperator();
+					if(op == Operator.EQUALS && valueString != null && preparedValue.contains("[getSQLPatternLikeSymbol() /]")) {
+						sqlOp = "LIKE";
+						preparedValue = [getSQLPreparedValue(attr, field.oclAsType(BracketsField), field.ancestors(LongField) -> first().oclAsType(LongField), true) /];
+					} else {
+						if(op == Operator.NOT_EQUALS && valueString != null && preparedValue.contains("[getSQLPatternLikeSymbol() /]")) {
+							sqlOp = "NOT LIKE";
+							preparedValue = [getSQLPreparedValue(attr, field.oclAsType(BracketsField), field.ancestors(LongField) -> first().oclAsType(LongField), true) /];
+						}
+					}
+	
+					if(op == Operator.CONTAINS && valueString != null) {
+						preparedValue = [getSQLPreparedValue(attr, field.oclAsType(BracketsField), field.ancestors(LongField) -> first().oclAsType(LongField), true) /];
+						preparedValue = preparedValue.replaceAll("[getSQLPatternValue() /]", "%[getSQLPatternValue() /]%");
+					}
+	
+					preparedValue = preparedValue.replaceAll("[getSQLPatternValue() /]", valueString).replaceAll("[getSQLPatternLikeSymbol() /]", "%");;
+	
+					where = "[getPhysicalName(field)/] " + sqlOp + " ?";
+					preparedValues.add(preparedValue);
+				}
 				[/if]
-				
-				where = "where [getPhysicalName(field)/] " + op.getSQLOperator() + " ?";
+				[/let]
+				[/for]
 			}
-			[/if]
-			[/let]
-			
-			
-			[/for]
 		}
 
 		if(condition instanceof AndCondition) {
-
+			Pair<String, List<String>> pairLeft = getSQLWhereClauseIn[db.name /]DB(((AndCondition) condition).getLeftCondition());
+			Pair<String, List<String>> pairRight = getSQLWhereClauseIn[db.name /]DB(((AndCondition) condition).getRightCondition());
+			String whereLeft = pairLeft.getKey();
+			String whereRight = pairRight.getKey();
+			List<String> leftValues = pairLeft.getValue();
+			List<String> rightValues = pairRight.getValue();
+			if(whereLeft != null || whereRight != null) {
+				if(whereLeft == null)
+					where = whereRight;
+				if(whereRight == null)
+					where = whereLeft;
+				where = "(" + whereLeft + " AND " + whereRight + ")";
+				preparedValues.addAll(leftValues);
+				preparedValues.addAll(rightValues);
+			}
 		}
 
 		if(condition instanceof OrCondition) {
-
+			Pair<String, List<String>> pairLeft = getSQLWhereClauseIn[db.name /]DB(((OrCondition) condition).getLeftCondition());
+			Pair<String, List<String>> pairRight = getSQLWhereClauseIn[db.name /]DB(((OrCondition) condition).getRightCondition());
+			String whereLeft = pairLeft.getKey();
+			String whereRight = pairRight.getKey();
+			List<String> leftValues = pairLeft.getValue();
+			List<String> rightValues = pairRight.getValue();
+			if(whereLeft != null || whereRight != null) {
+				if(whereLeft == null)
+					where = whereRight;
+				if(whereRight == null)
+					where = whereLeft;
+				where = "(" + whereLeft + " OR " + whereRight + ")";
+				preparedValues.addAll(leftValues);
+				preparedValues.addAll(rightValues);
+			}
 		}
 
-		if(where != null)
-			sql += " " + where + ";";
-		
 	}
+
+	return new ImmutablePair<String, List<String>>(where, preparedValues);
+}
+[/template]
+
+[template public generateSimpleSQLSelectFromGivenDatabase(ent : EntityType, struct: AbstractPhysicalStructure, db : Database)]
+[comment  select * from Client where (...) /]
+	String sql = "SELECT * FROM [struct.name/]";
+	Pair<String, List<String>> whereClause = getSQLWhereClauseIn[db.name /]DB(condition);
+	String where = whereClause.getKey();
+	List<String> preparedValues = whereClause.getValue();
+	if(where != null)
+		sql += " WHERE " + where;
+	System.out.println(sql);
+	preparedValues.forEach(System.out::println);
+	//System.out.println(preparedValues);
 [/template]
 

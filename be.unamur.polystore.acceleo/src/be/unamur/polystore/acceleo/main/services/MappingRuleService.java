@@ -16,7 +16,8 @@ import be.unamur.polystore.pml.*;
 import be.unamur.polystore.scoping.PmlScopeProvider;
 
 public class MappingRuleService {
-	private static final String SQL_PATTERN_VALUE = "$VAR$";
+	private static final String SQL_PATTERN_VALUE = "@VAR@";
+	private static final String SQL_PATTERN_LIKE_SYMBOL = "@OTHERVAR@";
 
 	public static java.util.Collection<PhysicalField> getMappedPhysicalFields(Attribute attr, MappingRules rules) {
 		List<PhysicalField> res = new ArrayList<PhysicalField>();
@@ -25,8 +26,6 @@ public class MappingRuleService {
 				EntityMappingRule er = (EntityMappingRule) rule;
 				for (int i = 0; i < er.getAttributesConceptual().size(); i++) {
 					Attribute a = er.getAttributesConceptual().get(i);
-					if(a != null)
-					System.out.println(a.getName());
 					if (a == attr) {
 						PhysicalField pf = er.getPhysicalFields().get(i);
 						
@@ -37,19 +36,6 @@ public class MappingRuleService {
 			}
 		}
 		return res;
-	}
-
-	private static PhysicalField getOriginalPhysicalField(PhysicalField field) {
-		if(field == null)
-			return null;
-		
-		AbstractPhysicalStructure struct = getPhysicalStructure(field);
-		List<EObject> list = getDescendents(PhysicalField.class, field);
-		for(EObject o : list)
-			if(o == field)
-				return (PhysicalField) o;
-		return null;
-		
 	}
 
 	public static Set<Database> getConcernedDatabases(Attribute attr, Domainmodel domain) {
@@ -76,12 +62,6 @@ public class MappingRuleService {
 		return res;
 	}
 	
-	public static String print(Domainmodel domain) {
-		EList<AbstractPhysicalSchema> list = domain.getPhysicalSchema().getPhysicalSchemas();
-		System.out.println(list);
-		return "ok";
-	}
-
 	public static Set<Database> getConcernedDatabases(AbstractPhysicalStructure struct, Domainmodel domain) {
 
 		Set<Database> res = new HashSet<Database>();
@@ -115,7 +95,6 @@ public class MappingRuleService {
 		List<PhysicalField> fields = (List<PhysicalField>) getMappedPhysicalFields(attr, rules);
 		for (PhysicalField field : fields) {
 			AbstractPhysicalSchema schema = getPhysicalSchema(field);
-			System.out.println("ok:" + schema);
 			List<Database> dbs = getAttachedDatabases(schema);
 			if (dbs.contains(db))
 				return field;
@@ -172,6 +151,12 @@ public class MappingRuleService {
 		}
 
 		if (field instanceof BracketsField) {
+			EObject anc = getFirstAncestor(LongField.class, field);
+			if(anc != null) {
+				LongField lf = (LongField) anc;
+				return lf.getPhysicalName();
+			}
+			
 			BracketsField bracketsField = (BracketsField) field;
 			return bracketsField.getName();
 		}
@@ -188,19 +173,50 @@ public class MappingRuleService {
 		return null;
 	}
 
-	public static String getSQLPreparedValue(Attribute attr, PhysicalField field) {
+	public static String getSQLPreparedValue(Attribute attr, BracketsField field, LongField parent, boolean escapeSQLReservedChar) {
 
-		if (field instanceof LongField) {
-			LongField longField = (LongField) field;
-			return SQL_PATTERN_VALUE;
+		if (parent instanceof LongField) {
+			String column = "";
+			for(TerminalExpression expr : parent.getPattern()) {
+				if(expr instanceof BracketsField) {
+					BracketsField f = (BracketsField) expr;
+					if(f.getName().equals(field.getName()))
+						column += getSQLPatternValue();
+					else
+						column += SQL_PATTERN_LIKE_SYMBOL;
+				} else {
+					//STRING
+					column += (escapeSQLReservedChar) ? escapeReservedChar(expr.getLiteral()) : expr.getLiteral();
+				}
+				
+			
+			}
+			return "\"" + column + "\"";
 
 		}
 
 		return getSQLPatternValue();
 	}
+	
+	private static String escapeReservedChar(String str) {
+		if(str == null)
+			return null;
+		//TODO complete the list of reserved sql char
+		return str.replaceAll("_", "\\\\\\\\_").replaceAll("%", "\\\\\\\\%");
+		
+	}
 
+	public static void main(String[] args) {
+		String str = "a_b_%";
+		System.out.println(escapeReservedChar(str));
+	}
+	
 	public static String getSQLPatternValue() {
 		return SQL_PATTERN_VALUE;
+	}
+	
+	public static String getSQLPatternLikeSymbol() {
+		return SQL_PATTERN_LIKE_SYMBOL;
 	}
 	
 }

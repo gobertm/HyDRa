@@ -28,5 +28,4 @@
 	[ generateClass(rel, conceptualSchema)/]
 	[ generateAllLevelsRelationshipTypeClass(rel, conceptualSchema) /]
 [/for]
-[print(conceptualSchema.ancestors(Domainmodel)->first()) /]
 [/template]

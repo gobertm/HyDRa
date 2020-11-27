@@ -110,7 +110,7 @@ EmbeddedObject:
 //;
 
 TerminalExpression:
-	{TerminalExpression} STRING | BracketsField
+	{TerminalExpression} literal=STRING | BracketsField
 ;
 
 

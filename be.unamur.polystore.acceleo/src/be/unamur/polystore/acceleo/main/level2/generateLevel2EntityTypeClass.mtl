@@ -12,6 +12,9 @@ import java.util.List;
 import pojo.[entityType.name.toUpperFirst() /];
 import conditions.*;
 import dao.services.[entityType.name.toUpperFirst() + 'Service' /];
+import util.Util;
+import org.apache.commons.lang3.tuple.ImmutablePair;
+import org.apache.commons.lang3.tuple.Pair;
 
 public class [entityType.name.toUpperFirst() + 'ServiceImpl' /] extends [entityType.name.toUpperFirst() + 'Service' /] {
 

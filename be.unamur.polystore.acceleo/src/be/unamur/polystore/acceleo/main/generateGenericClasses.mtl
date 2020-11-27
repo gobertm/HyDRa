@@ -2,8 +2,28 @@
 [module generateGenericClasses('http://www.unamur.be/polystore/Pml')]
 
 [template public generateGenericClasses(conceptualSchema: ConceptualSchema)]
+[generateUtilClass() /]
 [generateLoadingClass() /]
 [generateConditions(conceptualSchema) /]
+[/template]
+
+
+[template public generateUtilClass()]
+[file ('src/main/java/util/Util.java', false, 'UTF-8')]
+package util;
+
+public class Util {
+	
+	public static String transformSQLValue(Object o) {
+		if(o == null)
+			return null;
+
+		//TODO comportement different en fct des types de donnees
+		return o.toString();
+	}
+
+}
+[/file]
 [/template]
 
 [template public generateLoadingClass()]
@@ -197,7 +217,7 @@ public class SetClause<E> {
 package conditions;
 
 public enum Operator {
-	EQUALS, NOT_EQUALS, GT, GTE, LT, LTE, CONTAINS, START_WITH, END_WITH;
+	EQUALS, NOT_EQUALS, GT, GTE, LT, LTE, CONTAINS/**, START_WITH, END_WITH**/;
 	
 	public String getSQLOperator() {
 		if(this == EQUALS)
@@ -214,10 +234,10 @@ public enum Operator {
 			return "<=";
 		if(this == CONTAINS)
 			return "LIKE";
-		if(this == START_WITH)
+		/**if(this == START_WITH)
 			return "LIKE";
 		if(this == END_WITH)
-			return "LIKE";
+			return "LIKE";**/
 		
 		return null;
 	}
