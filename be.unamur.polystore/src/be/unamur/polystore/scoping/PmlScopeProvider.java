@@ -44,42 +44,43 @@ public class PmlScopeProvider extends AbstractPmlScopeProvider {
 			return Scopes.scopeFor(rule.getEntityConceptual().getAttributes());
 		}
 		if(context instanceof AbstractMappingRule && reference == PmlPackage.Literals.ABSTRACT_MAPPING_RULE__PHYSICAL_FIELDS) {
-				AbstractMappingRule rule = EcoreUtil2.getContainerOfType(context, AbstractMappingRule.class);
-				AbstractPhysicalStructure struct= rule.getPhysicalStructure();
-				EList<PhysicalField> fields = new BasicEList<PhysicalField>();
-				if(struct instanceof Table) 
-					fields=((Table) struct).getColumns();
-				if(struct instanceof Collection) 
-					fields=((Collection) struct).getFields();
-				if(struct instanceof EmbeddedObject)
-					fields=((EmbeddedObject) struct).getFields();
-				if(struct instanceof Node)
-					fields= ((Node) struct).getFields();
-				if(struct instanceof Edge)
-					fields= ((Edge)struct).getFields();
-				if(struct instanceof TableColumnDB) {
-					EList<ColumnFamily> columnFamilies = ((TableColumnDB) struct).getColumnfamilies();
-					for(ColumnFamily cf : columnFamilies)
-						fields.addAll(cf.getColumns());
-				}
-				EList<PhysicalField> fieldsInComplex = new BasicEList<PhysicalField>();
-				for(PhysicalField f : fields) {
-					if(f instanceof LongField)
-						fieldsInComplex.addAll(getFieldsFromComplexField((LongField)f));
-				}
-				fields.addAll(fieldsInComplex);
-				return Scopes.scopeFor(fields);
+			AbstractMappingRule rule = EcoreUtil2.getContainerOfType(context, AbstractMappingRule.class);
+			AbstractPhysicalStructure struct= rule.getPhysicalStructure();
+			EList<PhysicalField> fields = new BasicEList<PhysicalField>();
+			if(struct instanceof Table) 
+				fields=((Table) struct).getColumns();
+			if(struct instanceof Collection) 
+				fields=((Collection) struct).getFields();
+			if(struct instanceof EmbeddedObject)
+				fields=((EmbeddedObject) struct).getFields();
+			if(struct instanceof Node)
+				fields= ((Node) struct).getFields();
+			if(struct instanceof Edge)
+				fields= ((Edge)struct).getFields();
+			if(struct instanceof TableColumnDB) {
+				EList<ColumnFamily> columnFamilies = ((TableColumnDB) struct).getColumnfamilies();
+				for(ColumnFamily cf : columnFamilies)
+					fields.addAll(cf.getColumns());
 			}
+			EList<PhysicalField> fieldsInComplex;
+			fieldsInComplex= getFieldsFromLongField(fields);
+			IScope scope = Scopes.scopeFor(fields);
+			//fields.addAll(fieldsInComplex);
+			return Scopes.scopeFor(fieldsInComplex,scope);
+		}
 		return super.getScope(context, reference);
 	}
-	
-	public EList<PhysicalField> getFieldsFromComplexField(LongField complexField){
+
+	public EList<PhysicalField> getFieldsFromLongField(EList<PhysicalField> fields){
 		EList<PhysicalField> fieldsInComplex = new BasicEList<PhysicalField>();
-		for(TerminalExpression terminal : complexField.getPattern()) {
-			if(terminal instanceof BracketsField)
-				fieldsInComplex.add((BracketsField)terminal);
+		for(PhysicalField field : fields) {
+			if(field instanceof LongField){
+				for(TerminalExpression terminal : ((LongField)field).getPattern()) {
+					if(terminal instanceof BracketsField)
+						fieldsInComplex.add((BracketsField)terminal);
+				}
+			}
 		}
 		return fieldsInComplex;
-		
 	}
 }
