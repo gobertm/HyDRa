@@ -15,12 +15,13 @@
 [template public generateSimpleSelectFromGivenDatabase(ent : EntityType, struct: AbstractPhysicalStructure, db : Database)]{
 [if (db.dbType = pml::DatabaseType::MARIADB or db.dbType = pml::DatabaseType::SQLITE)]
 [generateSimpleSQLSelectFromGivenDatabase(ent, struct, db) /]
+[else]return null;
 [/if]	
-	return null;
+	
 }[/template]
 
 [template public generateGetSQLWhereClauseMethod(ent : EntityType, struct: AbstractPhysicalStructure, db : Database)]
-private static Pair<String, List<String>> getSQLWhereClauseIn[db.name /]DB(Condition<[ent.name.toUpperFirst() /]Attribute> condition) {
+private static Pair<String, List<String>> getSQLWhereClauseIn[struct.name.toUpperFirst()/]From[db.name.toUpperFirst() /](Condition<[ent.name.toUpperFirst() /]Attribute> condition) {
 	String where = null;	
 	List<String> preparedValues = new java.util.ArrayList<String>();
 	if(condition != null) {
@@ -75,8 +76,8 @@ private static Pair<String, List<String>> getSQLWhereClauseIn[db.name /]DB(Condi
 		}
 
 		if(condition instanceof AndCondition) {
-			Pair<String, List<String>> pairLeft = getSQLWhereClauseIn[db.name /]DB(((AndCondition) condition).getLeftCondition());
-			Pair<String, List<String>> pairRight = getSQLWhereClauseIn[db.name /]DB(((AndCondition) condition).getRightCondition());
+			Pair<String, List<String>> pairLeft = getSQLWhereClauseIn[struct.name.toUpperFirst() /]From[db.name.toUpperFirst() /](((AndCondition) condition).getLeftCondition());
+			Pair<String, List<String>> pairRight = getSQLWhereClauseIn[struct.name.toUpperFirst() /]From[db.name.toUpperFirst() /](((AndCondition) condition).getRightCondition());
 			String whereLeft = pairLeft.getKey();
 			String whereRight = pairRight.getKey();
 			List<String> leftValues = pairLeft.getValue();
@@ -95,8 +96,8 @@ private static Pair<String, List<String>> getSQLWhereClauseIn[db.name /]DB(Condi
 		}
 
 		if(condition instanceof OrCondition) {
-			Pair<String, List<String>> pairLeft = getSQLWhereClauseIn[db.name /]DB(((OrCondition) condition).getLeftCondition());
-			Pair<String, List<String>> pairRight = getSQLWhereClauseIn[db.name /]DB(((OrCondition) condition).getRightCondition());
+			Pair<String, List<String>> pairLeft = getSQLWhereClauseIn[struct.name.toUpperFirst() /]From[db.name.toUpperFirst() /](((OrCondition) condition).getLeftCondition());
+			Pair<String, List<String>> pairRight = getSQLWhereClauseIn[struct.name.toUpperFirst() /]From[db.name.toUpperFirst() /](((OrCondition) condition).getRightCondition());
 			String whereLeft = pairLeft.getKey();
 			String whereRight = pairRight.getKey();
 			List<String> leftValues = pairLeft.getValue();
@@ -123,13 +124,28 @@ private static Pair<String, List<String>> getSQLWhereClauseIn[db.name /]DB(Condi
 [template public generateSimpleSQLSelectFromGivenDatabase(ent : EntityType, struct: AbstractPhysicalStructure, db : Database)]
 [comment  select * from Client where (...) /]
 	String sql = "SELECT * FROM [struct.name/]";
-	Pair<String, List<String>> whereClause = getSQLWhereClauseIn[db.name /]DB(condition);
+	Pair<String, List<String>> whereClause = getSQLWhereClauseIn[struct.name.toUpperFirst()/]From[db.name.toUpperFirst() /](condition);
 	String where = whereClause.getKey();
 	List<String> preparedValues = whereClause.getValue();
-	if(where != null)
-		sql += " WHERE " + where;
-	System.out.println(sql);
-	preparedValues.forEach(System.out::println);
-	//System.out.println(preparedValues);
+	for(String preparedValue : preparedValues) {
+		where = where.replaceFirst("\\?", "'" + Util.escapeQuote(preparedValue) + "'");
+	}
+	
+	Dataset<Row> d = dbconnection.SparkConnectionMgr.getDataset("[db.name /]", "[struct.name/]");
+	if(where != null) {
+		d = d.where(where);
+	}
+
+	Dataset<[ent.name.toUpperFirst() /]> res = d.map((MapFunction<Row, [ent.name.toUpperFirst() /]>) r -> {
+				[ent.name.toUpperFirst() /] [ent.name.toLowerFirst() /]_res = new [ent.name.toUpperFirst() /]();
+
+				[for (attr : Attribute | ent.attributes)]
+				[/for]
+
+				return [ent.name.toLowerFirst() /]_res;
+			}, Encoders.bean([ent.name.toUpperFirst() /].class));
+
+
+	return d;
 [/template]
 

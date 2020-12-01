@@ -28,6 +28,12 @@ public class Util {
 		return v.replaceAll("_", "\\\\\\\\_").replaceAll("%", "\\\\\\\\%");
 	}
 
+	public static String escapeQuote(String s) {
+		if(s == null)
+			return null;
+		return s.replaceAll("'", "\\\\\\\\'");
+	}
+
 }
 [/file]
 [/template]

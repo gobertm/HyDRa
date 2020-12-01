@@ -15,6 +15,11 @@ import dao.services.[entityType.name.toUpperFirst() + 'Service' /];
 import util.Util;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
+import org.apache.spark.sql.Dataset;
+import org.apache.spark.sql.Encoders;
+import org.apache.spark.sql.Row;
+import org.apache.spark.api.java.function.MapFunction;
+
 
 public class [entityType.name.toUpperFirst() + 'ServiceImpl' /] extends [entityType.name.toUpperFirst() + 'Service' /] {
 

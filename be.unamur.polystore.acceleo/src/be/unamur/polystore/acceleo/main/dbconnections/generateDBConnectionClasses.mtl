@@ -2,11 +2,46 @@
 [module generateDBConnectionClasses('http://www.unamur.be/polystore/Pml')]
 
 [template public generateDBConnectionClasses(conceptualSchema: ConceptualSchema)]
+[generateSparkConnectionMgr(conceptualSchema) /]
 [generateRelationalDBConnectionClasses(conceptualSchema) /]
 [generateDocumentDBConnectionClasses(conceptualSchema) /]
 [generateKeyValueDBConnectionClasses(conceptualSchema) /]
 [generateColumnDBConnectionClasses(conceptualSchema) /]
 [generateGraphDBConnectionClasses(conceptualSchema) /]
+[/template]
+
+[template public generateSparkConnectionMgr(conceptualSchema: ConceptualSchema)]
+[file ('src/main/java/dbconnection/SparkConnectionMgr.java', false, 'UTF-8')]
+package dbconnection;
+
+import org.apache.spark.sql.DataFrameReader;
+import org.apache.spark.sql.Dataset;
+import org.apache.spark.sql.Row;
+import org.apache.spark.sql.SparkSession;
+
+public class SparkConnectionMgr {
+	private static SparkSession spark;
+	static {
+		spark = SparkSession.builder().appName("Java Spark SQL basic example")
+			.config("spark.master", "local")
+			.config("spark.some.config.option", "some-value").getOrCreate();
+		spark.sparkContext().setLogLevel("ERROR");
+	}
+	
+	public static Dataset<Row> getDataset(String dbName, String physicalStrucName) {
+		DataFrameReader dfr = spark.sqlContext()
+	    .read()
+	    .format("jdbc")
+	    .option("url", "jdbc:mysql://127.0.0.1:3306/" + dbName)
+	    .option("user", "root")
+	    .option("password", "admin");
+		
+		Dataset<Row> d = dfr.option("dbtable", physicalStrucName).load();
+		return d;
+	}
+
+}
+[/file]
 [/template]
 
 [template public generateRelationalDBConnectionClasses(conceptualSchema: ConceptualSchema)]
