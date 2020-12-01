@@ -91,13 +91,17 @@ public class MappingRuleService {
 		return res;
 	}
 
-	public static PhysicalField getMappedPhysicalField(Attribute attr, Database db, MappingRules rules) {
+	public static PhysicalField getMappedPhysicalField(Attribute attr, AbstractPhysicalStructure struct, Database db,
+			MappingRules rules) {
 		List<PhysicalField> fields = (List<PhysicalField>) getMappedPhysicalFields(attr, rules);
 		for (PhysicalField field : fields) {
-			AbstractPhysicalSchema schema = getPhysicalSchema(field);
-			List<Database> dbs = getAttachedDatabases(schema);
-			if (dbs.contains(db))
-				return field;
+			AbstractPhysicalStructure struct2 = getPhysicalStructure(field);
+			if (struct == struct2) {
+				AbstractPhysicalSchema schema = getPhysicalSchema(field);
+				List<Database> dbs = getAttachedDatabases(schema);
+				if (dbs.contains(db))
+					return field;
+			}
 		}
 
 		return null;

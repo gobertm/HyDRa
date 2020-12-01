@@ -32,7 +32,7 @@ private static Pair<String, List<String>> getSQLWhereClauseIn[struct.name.toUppe
 			Object value = ((SimpleCondition<[ent.name /]Attribute>) condition).getValue();
 			if(value != null) {
 				[for (attr : Attribute | ent.attributes)]
-				[let field : PhysicalField = getMappedPhysicalField(attr, db, ent.ancestors(Domainmodel)->first().mappingRules)][if (field <> null)]
+				[let field : PhysicalField = getMappedPhysicalField(attr, struct, db, ent.ancestors(Domainmodel)->first().mappingRules)][if (field <> null)]
 				if(attr == [ent.name.toUpperFirst() /]Attribute.[attr.name /] ) {
 					String valueString = Util.transformSQLValue(value);
 					String sqlOp = op.getSQLOperator();
