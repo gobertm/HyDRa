@@ -1,0 +1,39 @@
+version: "3"
+
+services:
+  redisdb:
+    image: redis:latest
+    ports: 
+      - 6363:6379
+
+  mongodb:
+    image: mongo:latest
+    ports: 
+      - 27000:27017
+
+  mysql:
+    image: mysql:latest
+    ports: 
+      - 3307:3306
+    environment:
+      - MYSQL_ROOT_PASSWORD=mysql
+    volumes:
+      - ./databases:/docker-entrypoint-initdb.d/:ro
+
+  neo4jdb:
+    image: neo4j:latest
+    ports:
+      - 7474:7474
+      - 7687:7687
+    environment:
+      - NEO4J_AUTH=neo4j/myneo4j
+
+  initdb:
+    image: initdb:latest
+    command: ["-redishost","redisdb","-mongohost","mongodb","-mongoport","27017","-neohost","neo4jdb","-neoport","7687","-neouser","neo4j","-neopwd","myneo4j"]
+    depends_on:
+      - redisdb
+      - mongodb
+      - mysql
+      - neo4jdb
+  
