@@ -1,0 +1,18 @@
+[comment encoding = UTF-8 /]
+[module generateTestClass('http://www.unamur.be/polystore/Pml')]
+
+
+[template public generateTestClass(entityType : EntityType, conceptualSchema: ConceptualSchema)]
+[file ('src/test/java/' + entityType.name.toUpperFirst().concat('ServiceTest.java') ,false, 'UTF-8')/]
+
+package test;
+import dao.impl.ClientServiceImpl.java
+
+public class [entityType.name.toUpperFirst() /]ServiceTest {
+
+	@Test
+	
+
+}
+
+[/template]
