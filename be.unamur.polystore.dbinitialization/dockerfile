@@ -1,0 +1,5 @@
+FROM java:9
+
+WORKDIR /
+ADD dbinitialization-1.0-SNAPSHOT-jar-with-dependencies.jar dbinitialization-1.0-SNAPSHOT-jar-with-dependencies.jar
+ENTRYPOINT ["java", "-jar", "dbinitialization-1.0-SNAPSHOT-jar-with-dependencies.jar"]
