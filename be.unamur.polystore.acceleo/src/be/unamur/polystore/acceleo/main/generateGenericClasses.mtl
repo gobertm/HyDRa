@@ -22,7 +22,7 @@ public class Util {
 		return o.toString();
 	}
 
-	public static String escapeSQLReservedChar(String v) {
+	public static String escapeReservedCharSQL(String v) {
 		if(v == null)
 			return null;
 		return v.replaceAll("_", "\\\\\\\\_").replaceAll("%", "\\\\\\\\%");

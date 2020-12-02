@@ -87,4 +87,12 @@
 [template public getListOfNullValues(nbOfValues: Integer)][getListOfNullValues(nbOfValues, false)/][/template]
 [template public getListOfNullValues(nbOfValues: Integer, hasPrevious: Boolean)][if (nbOfValues > 0)][if (hasPrevious)], [/if]null[getListOfNullValues(nbOfValues - 1, true)/][/if][/template]
 
+[query public getJavaRegexFromLongField(field : LongField) : String = 
+	invoke('be.unamur.polystore.acceleo.main.services.Util', 'getJavaRegexFromLongField(be.unamur.polystore.pml.LongField)', Sequence{field})
+ /]
+
+[query public getPositionInLongField(field : PhysicalField, parent : LongField) : String = 
+	invoke('be.unamur.polystore.acceleo.main.services.Util', 'getPositionInLongField(be.unamur.polystore.pml.PhysicalField, be.unamur.polystore.pml.LongField)', Sequence{field, parent})
+ /]
+
 
