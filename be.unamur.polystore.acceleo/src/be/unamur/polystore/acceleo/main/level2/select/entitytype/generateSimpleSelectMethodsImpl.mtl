@@ -1,6 +1,8 @@
 [comment encoding = UTF-8 /]
 [module generateSimpleSelectMethodsImpl('http://www.unamur.be/polystore/Pml')]
 [import be::unamur::polystore::acceleo::main::mappingrules::util /]
+[import be::unamur::polystore::acceleo::main::generateJavaDataType /]
+[import be::unamur::polystore::acceleo::main::util /]
 
 [comment get{E}List({E)AttributeCondition /]
 
@@ -39,7 +41,7 @@ private static Pair<String, List<String>> getSQLWhereClauseIn[struct.name.toUppe
 					[if (field.ancestors(LongField) -> size() = 0)]
 					String preparedValue = valueString;
 					if(op == Operator.CONTAINS && valueString != null) {
-						preparedValue = "%" + Util.escapeSQLReservedChar(valueString)  + "%";
+						preparedValue = "%" + Util.escapeReservedCharSQL(valueString)  + "%";
 					}
 					[else]
 					String preparedValue = [getSQLPreparedValue(attr, field, field.ancestors(LongField) -> first().oclAsType(LongField), false) /];
@@ -62,7 +64,7 @@ private static Pair<String, List<String>> getSQLWhereClauseIn[struct.name.toUppe
 					}
 					
 					if(like_op)
-						valueString = Util.escapeSQLReservedChar(valueString);
+						valueString = Util.escapeReservedCharSQL(valueString);
 					preparedValue = preparedValue.replaceAll("[getSQLPatternValue() /]", valueString).replaceAll("[getSQLPatternLikeSymbol() /]", "%");
 					[/if]
 					
@@ -140,6 +142,31 @@ private static Pair<String, List<String>> getSQLWhereClauseIn[struct.name.toUppe
 				[ent.name.toUpperFirst() /] [ent.name.toLowerFirst() /]_res = new [ent.name.toUpperFirst() /]();
 
 				[for (attr : Attribute | ent.attributes)]
+				[let field : PhysicalField = getMappedPhysicalField(attr, struct, db, ent.ancestors(Domainmodel)->first().mappingRules)][if (field <> null)]
+				[if (field.ancestors(LongField) -> size() = 0)]
+				[comment shortField or bracketfield/]
+				[generateJavaType(attr.type)/] [attr.name.toLowerFirst()/] = r.getAs("[attr.name /]");
+				[else]
+				[comment LongField /]
+				String regex = "[getJavaRegexFromLongField(field.ancestors(LongField) -> first().oclAsType(LongField)) /]";
+				Integer groupIndex = [getPositionInLongField(field, field.ancestors(LongField) -> first().oclAsType(LongField))/]
+				if(groupIndex == null) {
+					throw new Exception("Cannot retrieve value for " + [ent.name /][attr.name /] + "attribute stored in db [db.name/]. Probably due to an ambiguous regex.");
+				}
+				String value = r.getAs("[field.ancestors(LongField) -> first().oclAsType(LongField).physicalName /]");
+				Pattern p = Pattern.compile(regex);
+				Matcher m = p.matcher(value);
+				boolean matches = m.find();
+				String [attr.name.toLowerFirst()/] = null;
+				if(matches) {
+					[attr.name.toLowerFirst()/] = m.group(groupIndex.intValue());
+				} else {
+					throw new Exception("Cannot retrieve value for " + [ent.name /][attr.name /] + "attribute stored in db [db.name/]. Probably due to an ambiguous regex.");
+				}
+				[/if]
+				[ent.name.toLowerFirst() /]_res.set[attr.name.toUpperFirst()/]([attr.name.toLowerFirst()/]);
+				[/if]
+				[/let]
 				[/for]
 
 				return [ent.name.toLowerFirst() /]_res;
@@ -148,4 +175,6 @@ private static Pair<String, List<String>> getSQLWhereClauseIn[struct.name.toUppe
 
 	return d;
 [/template]
+
+
 
