@@ -20,6 +20,7 @@
 			<version>8.0.22</version>
 		</dependency>
 
+		[comment]
 		<!-- https://mvnrepository.com/artifact/org.mongodb/mongo-java-driver -->
 		<dependency>
 			<groupId>org.mongodb</groupId>
@@ -34,13 +35,6 @@
 		    <version>3.3.0</version>
 		</dependency>
 
-		<!-- https://mvnrepository.com/artifact/com.datastax.oss/java-driver-core -->
-		<dependency>
-		    <groupId>com.datastax.oss</groupId>
-		    <artifactId>java-driver-core</artifactId>
-		    <version>4.9.0</version>
-		</dependency>
-
 		<!-- https://mvnrepository.com/artifact/org.neo4j.driver/neo4j-java-driver -->
 		<dependency>
 		    <groupId>org.neo4j.driver</groupId>
@@ -48,6 +42,13 @@
 		    <version>4.2.0</version>
 		</dependency>
 
+		<!-- https://mvnrepository.com/artifact/com.datastax.oss/java-driver-core -->
+		<dependency>
+		    <groupId>com.datastax.oss</groupId>
+		    <artifactId>java-driver-core</artifactId>
+		    <version>4.9.0</version>
+		</dependency>
+		[/comment]
 		<!-- https://mvnrepository.com/artifact/org.apache.spark/spark-core -->
 		<dependency>
 			<groupId>org.apache.spark</groupId>

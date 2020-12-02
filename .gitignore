@@ -8,3 +8,4 @@ generated
 test-bin
 .classpath
 .idea
+be.unamur.polystore.dbinitialization/.project
