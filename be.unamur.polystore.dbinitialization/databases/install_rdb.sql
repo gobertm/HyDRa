@@ -1,5 +1,5 @@
-create database mydb;
-use mydb;
+-- create database mydb;
+-- use mydb;
 
 create table mydb.CreditCard (
 	id char(36) not null unique,
