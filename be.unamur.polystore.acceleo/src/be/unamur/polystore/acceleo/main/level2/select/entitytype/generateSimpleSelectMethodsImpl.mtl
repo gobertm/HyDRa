@@ -7,8 +7,69 @@
 [comment get{E}List({E)AttributeCondition /]
 
 [template public generateSimpleSelectMethodsImpl(entityType: EntityType, conceptualSchema: ConceptualSchema)]{
-	//TODO
-	return null;
+	List<Dataset<[entityType.name.toUpperFirst() /]>> datasets = new ArrayList<Dataset<[entityType.name.toUpperFirst() /]>>();
+	Dataset<[entityType.name.toUpperFirst()/]> d = null;
+	[for (struct: AbstractPhysicalStructure | getConcernedPhysicalStructures(entityType, entityType.ancestors(Domainmodel)->first()))]
+	[for (db: Database | getConcernedDatabases(struct, entityType.ancestors(Domainmodel)->first()))]
+	d = get[entityType.name.toUpperFirst() /]ListIn[struct.name/]From[db.name.toUpperFirst() /](condition);
+	if(d != null)
+		datasets.add(d);
+	[/for]
+	[/for]
+	
+	if(datasets.size() == 0)
+		return null;
+
+	d = datasets.get(0);
+	if(datasets.size() == 1)
+		return d;
+
+	
+	[if (entityType.identifier.oclIsUndefined() = false and entityType.identifier.attributes-> size() > 0)]
+	List<String> idFields = new ArrayList<String>();
+	[for (attr : Attribute | entityType.identifier.attributes)]
+	idFields.add("[attr.name /]");
+	[/for]
+	scala.collection.Seq<String> seq = scala.collection.JavaConverters.asScalaIteratorConverter(idFields.iterator()).asScala().toSeq();
+	Dataset<Row> res = d.join(datasets.get(1)
+[for (attr : Attribute | entityType.attributes)][if (entityType.identifier.attributes->includes(attr) = false)]
+						.withColumnRenamed("[attr.name.toLowerFirst() /]", "[attr.name.toLowerFirst() /]_1")
+[/if][/for]						, seq, "fullouter");
+	for(int i = 2; i < datasets.size(); i++) {
+		res = res.join(datasets.get(i)
+[for (attr : Attribute | entityType.attributes)][if (entityType.identifier.attributes->includes(attr) = false)]
+						.withColumnRenamed("[attr.name.toLowerFirst() /]", "[attr.name.toLowerFirst() /]_" + i)
+[/if][/for]						, seq, "fullouter");
+	} 
+	d = res.map((MapFunction<Row, [entityType.name.toUpperFirst() /]>) r -> {
+			[entityType.name.toUpperFirst() /] [entityType.name.toLowerFirst() /]_res = new [entityType.name.toUpperFirst() /]();
+			[for (attr : Attribute | entityType.attributes)]
+			
+			// attribute '[entityType.name.toUpperFirst() /].[attr.name.toLowerFirst() /]'
+			[generateJavaType(attr.type) /] firstNotNull_[attr.name /] = r.getAs("[attr.name.toLowerFirst() /]");
+			[if (entityType.identifier.attributes->includes(attr) = false)]
+			for (int i = 1; i < datasets.size(); i++) {
+				[generateJavaType(attr.type) /] [attr.name.toLowerFirst() /]2 = r.getAs("[attr.name.toLowerFirst() /]_" + i);
+				if (firstNotNull_[attr.name /] != null && [attr.name.toLowerFirst() /]2 != null && !firstNotNull_[attr.name/].equals([attr.name.toLowerFirst() /]2)) {
+					// TODO logger
+					System.out.println("data consistency problem: duplicate values for attribute : '[entityType.name.toUpperFirst() /].[attr.name.toLowerFirst() /]' ==> " + firstNotNull_[attr.name /] + " and " + [attr.name.toLowerFirst() /]2);
+				}
+				if (firstNotNull_[attr.name /] == null && [attr.name.toLowerFirst() /]2 != null) {
+					firstNotNull_[attr.name /] = [attr.name.toLowerFirst() /]2;
+				}
+			}
+			[/if]
+			[entityType.name.toLowerFirst() /]_res.set[attr.name.toUpperFirst() /](firstNotNull_[attr.name /]);
+			[/for]
+			return [entityType.name.toLowerFirst() /]_res;
+		}, Encoders.bean([entityType.name.toUpperFirst() /].class));
+	return d;
+	[else]
+	for(int i = 1; i < datasets.size(); i++)
+		d = d.union(datasets.get(i));
+	return d;
+	[/if]
+	
 }[/template]
 
 
@@ -125,7 +186,6 @@ private static Pair<String, List<String>> getSQLWhereClauseIn[struct.name.toUppe
 
 [template public generateSimpleSQLSelectFromGivenDatabase(ent : EntityType, struct: AbstractPhysicalStructure, db : Database)]
 [comment  select * from Client where (...) /]
-	String sql = "SELECT * FROM [struct.name/]";
 	Pair<String, List<String>> whereClause = getSQLWhereClauseIn[struct.name.toUpperFirst()/]From[db.name.toUpperFirst() /](condition);
 	String where = whereClause.getKey();
 	List<String> preparedValues = whereClause.getValue();
@@ -140,31 +200,39 @@ private static Pair<String, List<String>> getSQLWhereClauseIn[struct.name.toUppe
 
 	Dataset<[ent.name.toUpperFirst() /]> res = d.map((MapFunction<Row, [ent.name.toUpperFirst() /]>) r -> {
 				[ent.name.toUpperFirst() /] [ent.name.toLowerFirst() /]_res = new [ent.name.toUpperFirst() /]();
-
+				Integer groupIndex = null;
+				String regex = null;
+				String value = null;
+				Pattern p = null;
+				Matcher m = null;
+				boolean matches = false;
 				[for (attr : Attribute | ent.attributes)]
 				[let field : PhysicalField = getMappedPhysicalField(attr, struct, db, ent.ancestors(Domainmodel)->first().mappingRules)][if (field <> null)]
+				
+				// attribute [ '[' /][ent.name.toUpperFirst() /].[attr.name.toUpperFirst() /][ ']' /]
 				[if (field.ancestors(LongField) -> size() = 0)]
 				[comment shortField or bracketfield/]
 				[generateJavaType(attr.type)/] [attr.name.toLowerFirst()/] = r.getAs("[attr.name /]");
+				[ent.name.toLowerFirst() /]_res.set[attr.name.toUpperFirst()/]([attr.name.toLowerFirst()/]);
 				[else]
 				[comment LongField /]
-				String regex = "[getJavaRegexFromLongField(field.ancestors(LongField) -> first().oclAsType(LongField)) /]";
-				Integer groupIndex = [getPositionInLongField(field, field.ancestors(LongField) -> first().oclAsType(LongField))/]
+				regex = "[getJavaRegexFromLongField(field.ancestors(LongField) -> first().oclAsType(LongField)) /]";
+				groupIndex = [getPositionInLongField(field, field.ancestors(LongField) -> first().oclAsType(LongField))/];
 				if(groupIndex == null) {
-					throw new Exception("Cannot retrieve value for " + [ent.name /][attr.name /] + "attribute stored in db [db.name/]. Probably due to an ambiguous regex.");
+					throw new Exception("Cannot retrieve value for [ent.name /][attr.name /] attribute stored in db [db.name/]. Probably due to an ambiguous regex.");
 				}
-				String value = r.getAs("[field.ancestors(LongField) -> first().oclAsType(LongField).physicalName /]");
-				Pattern p = Pattern.compile(regex);
-				Matcher m = p.matcher(value);
-				boolean matches = m.find();
+				value = r.getAs("[field.ancestors(LongField) -> first().oclAsType(LongField).physicalName /]");
+				p = Pattern.compile(regex);
+				m = p.matcher(value);
+				matches = m.find();
 				String [attr.name.toLowerFirst()/] = null;
 				if(matches) {
 					[attr.name.toLowerFirst()/] = m.group(groupIndex.intValue());
 				} else {
-					throw new Exception("Cannot retrieve value for " + [ent.name /][attr.name /] + "attribute stored in db [db.name/]. Probably due to an ambiguous regex.");
+					throw new Exception("Cannot retrieve value for [ent.name /][attr.name /] attribute stored in db [db.name/]. Probably due to an ambiguous regex.");
 				}
+				[ent.name.toLowerFirst() /]_res.set[attr.name.toUpperFirst()/]([generateParsingFunctionJavaType(attr.type, attr.name.toLowerFirst())/]);
 				[/if]
-				[ent.name.toLowerFirst() /]_res.set[attr.name.toUpperFirst()/]([attr.name.toLowerFirst()/]);
 				[/if]
 				[/let]
 				[/for]
@@ -173,7 +241,7 @@ private static Pair<String, List<String>> getSQLWhereClauseIn[struct.name.toUppe
 			}, Encoders.bean([ent.name.toUpperFirst() /].class));
 
 
-	return d;
+	return res;
 [/template]
 
 

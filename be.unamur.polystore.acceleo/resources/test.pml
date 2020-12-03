@@ -28,10 +28,6 @@ conceptual schema cs {
 			clientnumber
 		}
 		
-		identifier{
-			firstname,
-			lastname
-		}
 	}
 	
 	
@@ -79,7 +75,8 @@ physical schemas {
 	relational schema myRelSchema : myMariaDB, mysqlite {
 		table Customer {
 			columns {
-				fullName:[firstName]" "[lastName],
+				clientnumber,
+				fullname:[firstName]" "[lastName],
 				age:[age]" years old"
 			}
 		}
@@ -152,7 +149,7 @@ mapping rules {
 	  cs.Review(rating,content) -> myDocSchema.productCollection.review(rate,content),
 	  cs.Review(rating) -> myDocSchema.productCollection.review(rate2),
 	  cs.productStock.storage -> myGraphSchema.PART_OF(),
-	  cs.Client(lastname,firstname,age) -> myRelSchema.Customer(lastName, firstName,age),
+	  cs.Client(lastname,firstname,age, clientnumber) -> myRelSchema.Customer(lastName, firstName,age, clientnumber),
 	  cs.Client(lastname,firstname) -> colSchema.Client(last,first)
 	  
 	}

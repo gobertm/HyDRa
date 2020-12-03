@@ -21,33 +21,34 @@ public class Util {
 				res += "(" + literal + ")";
 			}
 		}
-		
+
 		return res;
 	}
 
 	private static String escapeReservedCharsInJavaRegex(String literal) {
 		if (literal == null)
 			return null;
-		return literal.replaceAll("\\$", "\\\\\\$").replaceAll("\\(", "\\\\\\(").replaceAll("\\)", "\\\\\\)"); // TODO
+		return literal/** .replaceAll("\s", "\\\\s") **/
+				.replaceAll("\\$", "\\\\\\$")
+				.replaceAll("\\(", "\\\\\\(")
+				.replaceAll("\\)", "\\\\\\)"); // TODO
 	}
-	
+
 	public static String getPositionInLongField(PhysicalField field, LongField parent) {
 		if (field instanceof BracketsField) {
 			BracketsField b = (BracketsField) field;
 			int index = 1;
-			for(TerminalExpression expr : parent.getPattern()) {
-				if(expr instanceof BracketsField) {
+			for (TerminalExpression expr : parent.getPattern()) {
+				if (expr instanceof BracketsField) {
 					BracketsField b2 = (BracketsField) expr;
-					if(b.getName().equals(b2.getName()))
+					if (b.getName().equals(b2.getName()))
 						return "" + index;
-					
-					index++;
 				}
+				index++;
 			}
 		}
-		
+
 		return null;
 	}
-	
-	
+
 }

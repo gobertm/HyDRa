@@ -17,6 +17,11 @@ package dao.services;
 
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
+import pojo.[entityType.name.toUpperFirst() /];
+import java.util.List;
+import java.util.ArrayList;
+import org.apache.spark.api.java.function.MapFunction;
+import org.apache.spark.sql.Encoders;
 
 public abstract class [entityType.name.toUpperFirst() + 'Service' /] {
 

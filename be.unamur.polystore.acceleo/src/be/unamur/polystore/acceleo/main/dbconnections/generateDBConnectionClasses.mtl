@@ -3,11 +3,11 @@
 
 [template public generateDBConnectionClasses(conceptualSchema: ConceptualSchema)]
 [generateSparkConnectionMgr(conceptualSchema) /]
-[generateRelationalDBConnectionClasses(conceptualSchema) /]
+[comment][generateRelationalDBConnectionClasses(conceptualSchema) /]
 [generateDocumentDBConnectionClasses(conceptualSchema) /]
 [generateKeyValueDBConnectionClasses(conceptualSchema) /]
 [generateColumnDBConnectionClasses(conceptualSchema) /]
-[generateGraphDBConnectionClasses(conceptualSchema) /]
+[generateGraphDBConnectionClasses(conceptualSchema) /][/comment]
 [/template]
 
 [template public generateSparkConnectionMgr(conceptualSchema: ConceptualSchema)]
