@@ -24,11 +24,11 @@ public class TestJDBCSpark {
                 .option("password", "mysql");
         System.out.println("before t1: " + new Date());
         Dataset<Row> d1 = dfr.option("dbtable", "User").load();
-        d1 = d1.where("id = technicaluserid124");
+        d1 = d1.where("id = 'technicaluserid124'");
         d1.show();
         System.out.println("before t2: " + new Date());
         Dataset<Row> d2 = dfr.option("dbtable", "CreditCard").load();
-        d2 = d2.where("id = technicaluserid124");
+        d2 = d2.where("userid = 'technicaluserid124'");
         Iterator<Row> it = d2.toLocalIterator();
 
         if (it.hasNext()) {

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <module org.jetbrains.idea.maven.project.MavenProjectsManager.isMavenModule="true" type="JAVA_MODULE" version="4">
-  <component name="NewModuleRootManager" LANGUAGE_LEVEL="JDK_13">
+  <component name="NewModuleRootManager" LANGUAGE_LEVEL="JDK_1_9">
     <output url="file://$MODULE_DIR$/target/classes" />
     <output-test url="file://$MODULE_DIR$/target/test-classes" />
     <content url="file://$MODULE_DIR$">
@@ -9,16 +9,16 @@
       <sourceFolder url="file://$MODULE_DIR$/src/test/java" isTestSource="true" />
       <excludeFolder url="file://$MODULE_DIR$/target" />
     </content>
-    <orderEntry type="inheritedJdk" />
+    <orderEntry type="jdk" jdkName="13" jdkType="JavaSDK" />
     <orderEntry type="sourceFolder" forTests="false" />
-    <orderEntry type="library" name="Maven: org.apache.spark:spark-core_2.12:3.0.1" level="project" />
+    <orderEntry type="library" name="Maven: mysql:mysql-connector-java:8.0.22" level="project" />
+    <orderEntry type="library" name="Maven: com.google.protobuf:protobuf-java:3.11.4" level="project" />
     <orderEntry type="library" name="Maven: redis.clients:jedis:3.1.0" level="project" />
     <orderEntry type="library" name="Maven: org.slf4j:slf4j-api:1.7.25" level="project" />
     <orderEntry type="library" name="Maven: org.apache.commons:commons-pool2:2.6.2" level="project" />
     <orderEntry type="library" name="Maven: org.mongodb:mongodb-driver-sync:3.12.0" level="project" />
     <orderEntry type="library" name="Maven: org.mongodb:bson:3.12.0" level="project" />
     <orderEntry type="library" name="Maven: org.mongodb:mongodb-driver-core:3.12.0" level="project" />
-    <orderEntry type="library" name="Maven: org.neo4j:neo4j-jdbc-driver:4.0.0" level="project" />
     <orderEntry type="library" name="Maven: org.neo4j:neo4j-kernel:4.1.0" level="project" />
     <orderEntry type="library" name="Maven: org.neo4j:annotations:4.1.0" level="project" />
     <orderEntry type="library" name="Maven: org.neo4j:neo4j-native:4.1.0" level="project" />
@@ -144,6 +144,7 @@
     <orderEntry type="library" name="Maven: javax.xml.bind:jaxb-api:2.3.0" level="project" />
     <orderEntry type="library" name="Maven: org.neo4j.driver:neo4j-java-driver:4.1.0" level="project" />
     <orderEntry type="library" name="Maven: org.reactivestreams:reactive-streams:1.0.3" level="project" />
+    <orderEntry type="library" name="Maven: org.apache.spark:spark-core_2.12:3.0.1" level="project" />
     <orderEntry type="library" name="Maven: com.thoughtworks.paranamer:paranamer:2.8" level="project" />
     <orderEntry type="library" name="Maven: org.apache.avro:avro:1.8.2" level="project" />
     <orderEntry type="library" name="Maven: org.codehaus.jackson:jackson-core-asl:1.9.13" level="project" />
@@ -275,7 +276,6 @@
     <orderEntry type="library" name="Maven: com.google.flatbuffers:flatbuffers-java:1.9.0" level="project" />
     <orderEntry type="library" name="Maven: org.apache.orc:orc-core:1.5.10" level="project" />
     <orderEntry type="library" name="Maven: org.apache.orc:orc-shims:1.5.10" level="project" />
-    <orderEntry type="library" name="Maven: com.google.protobuf:protobuf-java:2.5.0" level="project" />
     <orderEntry type="library" name="Maven: commons-lang:commons-lang:2.6" level="project" />
     <orderEntry type="library" name="Maven: io.airlift:aircompressor:0.10" level="project" />
     <orderEntry type="library" name="Maven: org.threeten:threeten-extra:1.5.0" level="project" />

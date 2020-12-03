@@ -9,6 +9,12 @@
     <version>1.0-SNAPSHOT</version>
 
     <dependencies>
+        <!-- https://mvnrepository.com/artifact/mysql/mysql-connector-java -->
+        <dependency>
+            <groupId>mysql</groupId>
+            <artifactId>mysql-connector-java</artifactId>
+            <version>8.0.22</version>
+        </dependency>
         <dependency>
             <groupId>redis.clients</groupId>
             <artifactId>jedis</artifactId>
@@ -21,11 +27,13 @@
             <artifactId>mongodb-driver-sync</artifactId>
             <version>3.12.0</version>
         </dependency>
-        <dependency>
-            <groupId>org.neo4j</groupId>
-            <artifactId>neo4j-jdbc-driver</artifactId>
-            <version>4.0.0</version>
-        </dependency>
+
+<!--       !!!!!!!!!!!!! Cette dépendance fait foirer le lancement de Spark!-->
+<!--        <dependency>-->
+<!--            <groupId>org.neo4j</groupId>-->
+<!--            <artifactId>neo4j-jdbc-driver</artifactId>-->
+<!--            <version>4.0.0</version>-->
+<!--        </dependency>-->
         <!-- https://mvnrepository.com/artifact/org.neo4j/neo4j-kernel -->
         <dependency>
             <groupId>org.neo4j</groupId>
