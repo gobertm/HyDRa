@@ -7,6 +7,7 @@ import com.mongodb.client.MongoClients;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
 import org.apache.commons.lang3.RandomStringUtils;
+import org.apache.commons.lang3.RandomUtils;
 import org.bson.Document;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -44,17 +45,28 @@ public class MongoDataInit implements DataInit{
         for (int i = 0; i < numberofdata; i++) {
             List<Document> listReviews = new ArrayList<Document>();
             for (int j = 0; j < r.ints(0, 5).findFirst().getAsInt(); j++) {
+                List<Document> listComment = new ArrayList<>();
+                for (int k = 0; k < r.ints(0, 10).findFirst().getAsInt(); k++) {
+                    Document comment = new Document("comment", RandomStringUtils.randomAlphabetic(10))
+                            .append("number",k);
+                    listComment.add(comment);
+                }
                 int usernumber = r.ints(0,100).findFirst().getAsInt();
                 Document review = new Document("user_ref", "user" + usernumber)
                         .append("user_name", "UserName" + usernumber)
                         .append("rating", r.ints(0, 5).findFirst().getAsInt())
                         .append("title", "Review Title " + RandomStringUtils.randomAlphabetic(10))
-                        .append("description", RandomStringUtils.randomAlphabetic(60));
+                        .append("description", RandomStringUtils.randomAlphabetic(60))
+                        .append("comments",listComment);
                 listReviews.add(review);
             }
-            Document doc = new Document("product_ref", "product"+i)
-                    .append("name", "productName"+i)
-                    .append("reviews", listReviews);
+            Document product = new Document("productDescription", "This product" +RandomStringUtils.randomAlphabetic(10))
+                    .append("price", RandomUtils.nextInt());
+            Document doc = new Document("product_ref", "product" + i)
+                    .append("name", "productName" + i)
+                    .append("reviews", listReviews)
+                    .append("product", product);
+
             documentsProductReviews.add(doc);
         }
         collection.insertMany(documentsProductReviews);
