@@ -59,24 +59,26 @@ public class MongoDataInit implements DataInit{
                     listComment.add(comment);
                 }
                 int usernumber = r.ints(0,100).findFirst().getAsInt();
-                Document review = new Document("user_ref", "user" + usernumber)
-                        .append("user_name", "UserName" + usernumber)
-                        .append("rating", r.ints(0, 5).findFirst().getAsInt())
+                int rating = r.ints(0, 5).findFirst().getAsInt();
+                Document review = new Document()
+                        .append("userid", "user" + usernumber)
+//                        .append("user_name", "UserName" + usernumber)
+                        .append("numberofstars", rating)
+                        .append("ratingstring", rating+"*")
                         .append("title", "Review Title " + RandomStringUtils.randomAlphabetic(10))
-                        .append("description", RandomStringUtils.randomAlphabetic(60))
+                        .append("content", RandomStringUtils.randomAlphabetic(60))
                         .append("comments",listComment);
                 listReviews.add(review);
             }
             Document category = new Document("category_name",RandomStringUtils.randomAlphabetic(6))
                     .append("category_description", RandomStringUtils.randomAlphabetic(15));
 
-            Document product = new Document("productDescription", "This product" +RandomStringUtils.randomAlphabetic(10))
-                    .append("price", RandomUtils.nextInt())
-                    .append("category", category);
             Document doc = new Document("product_ref", "product" + i)
+                    .append("productDescription", "This product "+RandomStringUtils.randomAlphabetic(10))
+                    .append("price", RandomUtils.nextInt())
                     .append("name", "productName" + i)
-                    .append("reviews", listReviews)
-                    .append("product", product);
+                    .append("category", category)
+                    .append("reviews", listReviews);
 
             documentsProductReviews.add(doc);
         }
