@@ -33,7 +33,14 @@ public class MongoDataInit implements DataInit{
         this.numberofdata = numberofdata;
     }
 
-
+    public static void main(String args[]){
+        String mongohost = "localhost";
+        String mongodbname = "evol-db-hybrid";
+        int mongoport = 27000;
+      int nbdataobj = 100;
+        MongoDataInit mongoDataInit = new MongoDataInit(mongodbname, mongohost, mongoport, nbdataobj);
+        mongoDataInit.persistData();
+    }
     public void persistData() {
         Random r = new Random();
         if (mongoClient == null) {
@@ -60,8 +67,12 @@ public class MongoDataInit implements DataInit{
                         .append("comments",listComment);
                 listReviews.add(review);
             }
+            Document category = new Document("category_name",RandomStringUtils.randomAlphabetic(6))
+                    .append("category_description", RandomStringUtils.randomAlphabetic(15));
+
             Document product = new Document("productDescription", "This product" +RandomStringUtils.randomAlphabetic(10))
-                    .append("price", RandomUtils.nextInt());
+                    .append("price", RandomUtils.nextInt())
+                    .append("category", category);
             Document doc = new Document("product_ref", "product" + i)
                     .append("name", "productName" + i)
                     .append("reviews", listReviews)
