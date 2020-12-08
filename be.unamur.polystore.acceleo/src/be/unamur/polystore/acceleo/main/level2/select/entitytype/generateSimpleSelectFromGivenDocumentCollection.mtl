@@ -30,8 +30,7 @@ private static String getBSONMatchQueryIn[struct.name.toUpperFirst()/]From[db.na
 				[let field : PhysicalField = getMappedPhysicalField(attr, struct, db, ent.ancestors(Domainmodel)->first().mappingRules)][if (field <> null)]
 				if(attr == [ent.name.toUpperFirst() /]Attribute.[attr.name /] ) {
 				[let ancestorsList : Sequence(EmbeddedObject) = field.ancestors(EmbeddedObject)]
-				[if (ancestorsList->size() = 0)]
-				[comment level-1 field => could be either ShortField or LongField /]
+				
 				[if (field.ancestors(LongField) -> size() > 0)]
 				String preparedValue = [getPreparedValue(attr, field, field.ancestors(LongField) -> first().oclAsType(LongField), false, false) /];
 				boolean like_op = false;
@@ -66,7 +65,7 @@ private static String getBSONMatchQueryIn[struct.name.toUpperFirst()/]From[db.na
 
 				String mongoOp = (like_op) ? "$regex" : op.getMongoDBOperator();
 				//if not_like = true then we need to complement/negate the given regex
-				res = "{[getPhysicalName(field)/]: {" + (!not_like ? (mongoOp + ": " + preparedValue) : ("$not: {" + mongoOp + ": " + preparedValue + "}")) + "}}";
+				res = "[getPhysicalName(field)/]: {" + (!not_like ? (mongoOp + ": " + preparedValue) : ("$not: {" + mongoOp + ": " + preparedValue + "}")) + "}";
 				[else]
 					String mongoOp = op.getMongoDBOperator();
 					String preparedValue = valueString;
@@ -75,12 +74,22 @@ private static String getBSONMatchQueryIn[struct.name.toUpperFirst()/]From[db.na
 					} else {
 						preparedValue = Util.getDelimitedMongoValue(value.getClass(), preparedValue);
 					}
-					res = "{[(field.oclAsType(ShortField)).name /]: {" + mongoOp + ": " + preparedValue + "}}";
+					res = "[(field.oclAsType(ShortField)).name /]: {" + mongoOp + ": " + preparedValue + "}";
 				[/if]
-				[else]
-				[comment level-n field, with n > 1 /]
 
+				[if (ancestorsList->size() > 0)]
+				[comment level-n field, with n > 1 /]
+				[for (ancestor : EmbeddedObject | ancestorsList)]
+				[if (ancestor.cardinality = pml::Cardinality::ONE or ancestor.cardinality = pml::Cardinality::ZERO_ONE)]
+				[comment complex field /]
+				res = "[ancestor.name /]." + res;
+				[else]
+				[comment array field /]
+				res = "[ancestor.name /] : {$elemMatch : {" + res + "}}";
 				[/if]
+				[/for]
+				[/if]
+				res = "{" + res + "}";
 				[/let]
 				}
 				[/if]

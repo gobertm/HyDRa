@@ -90,7 +90,7 @@ physical schemas {
 }
 	
 mapping rules{
-	cs.Product(id,description,name,price) -> myDocSchema.productCollection(product_ref,productDescription/*,name,price*/), // Commenter pour tester les EmbeddedObject Acceleo..
+	cs.Product(id,description/*,name,price*/) -> myDocSchema.productCollection(product_ref,productDescription/*,name,price*/), // Commenter pour tester les EmbeddedObject Acceleo..
 	cs.productReview.reviews -> myDocSchema.productCollection.reviews(),
 	cs.Product(name,price) -> myDocSchema.productCollection.reviews.product_attributes(name,price),
 	cs.Review(content,rating) -> myDocSchema.productCollection.reviews(content,rate),
