@@ -258,8 +258,6 @@ DataType returns DataType:
 	BigintType | 
 	StringType | 
 	TextType | 
-	PointType | 
-	PolygonType | 
 	BoolType | 
 	FloatType | 
 	BlobType | 
@@ -285,16 +283,6 @@ StringType returns StringType:
 TextType returns TextType:
 	{TextType}
 	'text'
-	;
-
-PointType returns PointType:
-	{PointType}
-	'point'
-	;
-
-PolygonType returns PolygonType:
-	{PolygonType}
-	'polygon'
 	;
 
 BoolType returns BoolType:

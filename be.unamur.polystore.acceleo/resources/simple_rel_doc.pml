@@ -56,9 +56,11 @@ physical schemas {
 				id,
 				product_ref,
 				productDescription,
-				price: [price],
-				name,
+				productprice, // A renommer 'price'
+				productname, // A renommer en 'name' quand test sur EmbeddedObject done
 				reviews[0-N]{
+					name,
+					price : [price]"$",
 					userid,
 					numberofstars:[rate],
 					ratingstring :[rate2]"*",
@@ -85,8 +87,9 @@ physical schemas {
 }
 	
 mapping rules{
-	cs.Product(id,description,name,price) -> myDocSchema.productCollection(product_ref,productDescription,name,price),
+	cs.Product(id,description,name,price) -> myDocSchema.productCollection(product_ref,productDescription/*,name,price*/), // Commenter pour tester les EmbeddedObject Acceleo..
 	cs.productReview.reviews -> myDocSchema.productCollection.reviews(),
+	cs.Product(name,price) -> myDocSchema.productCollection.reviews(name,price),
 	cs.Review(content,rating) -> myDocSchema.productCollection.reviews(content,rate),
 	cs.Review(rating) -> myDocSchema.productCollection.reviews(rate2),
 	cs.commentReview.comments -> myDocSchema.productCollection.reviews.comments(),
