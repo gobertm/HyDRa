@@ -68,7 +68,7 @@ DocumentSchema:
 Collection:
 	'collection' name=ID '{'
 		 'fields' '{'
-		(fields+=PhysicalField (',' fields+=PhysicalField)*)?
+		(fields+=LimitedPhysicalFieldDoc (',' fields+=LimitedPhysicalFieldDoc)*)?
 	'}'
 		('references' '{'references+=Reference*'}' )?
 	'}'
@@ -85,6 +85,10 @@ PhysicalField returns PhysicalField:
 
 LimitedPhysicalField returns PhysicalField:
 	ShortField | LongField 
+;
+
+LimitedPhysicalFieldDoc returns PhysicalField:
+	ShortField | LongField | EmbeddedObject 
 ;
 
 ShortField :
