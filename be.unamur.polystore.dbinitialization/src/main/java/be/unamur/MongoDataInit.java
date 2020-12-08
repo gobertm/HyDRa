@@ -39,7 +39,8 @@ public class MongoDataInit implements DataInit{
         int mongoport = 27000;
       int nbdataobj = 100;
         MongoDataInit mongoDataInit = new MongoDataInit(mongodbname, mongohost, mongoport, nbdataobj);
-        mongoDataInit.persistData();
+//        mongoDataInit.persistData();
+        mongoDataInit.persistDataTest();
     }
     public void persistData() {
         Random r = new Random();
@@ -77,6 +78,56 @@ public class MongoDataInit implements DataInit{
                     .append("productDescription", "This product "+RandomStringUtils.randomAlphabetic(10))
                     .append("price", RandomUtils.nextInt()+"$")
                     .append("name", "productName" + i)
+                    .append("category", category)
+                    .append("reviews", listReviews);
+
+            documentsProductReviews.add(doc);
+        }
+        collection.insertMany(documentsProductReviews);
+        logger.info("Generated and persisted [{}] documents in MongoDB [{},{}]",numberofdata,databasename,host);
+
+    }
+
+    public void persistDataTest() {
+        Random r = new Random();
+        if (mongoClient == null) {
+            initConnection();
+        }
+
+        MongoCollection<Document> collection = mongoDatabase.getCollection("product_reviews");
+        List<Document> documentsProductReviews = new ArrayList<Document>();
+        for (int i = 0; i < numberofdata; i++) {
+            int price = RandomUtils.nextInt();
+            List<Document> listReviews = new ArrayList<Document>();
+            for (int j = 0; j < r.ints(0, 5).findFirst().getAsInt(); j++) {
+                List<Document> listComment = new ArrayList<>();
+                for (int k = 0; k < r.ints(0, 10).findFirst().getAsInt(); k++) {
+                    Document comment = new Document("comment", RandomStringUtils.randomAlphabetic(10))
+                            .append("number",k);
+                    listComment.add(comment);
+                }
+                int usernumber = r.ints(0,100).findFirst().getAsInt();
+                int rating = r.ints(0, 5).findFirst().getAsInt();
+                Document productAtt = new Document()
+                        .append("name", "productName" + i)
+                        .append("price", price + "$");
+
+                Document review = new Document()
+                        .append("product_attributes", productAtt)
+                        .append("userid", "user" + usernumber)
+//                        .append("user_name", "UserName" + usernumber)
+                        .append("numberofstars", rating)
+                        .append("ratingstring", rating+"*")
+                        .append("title", "Review Title " + RandomStringUtils.randomAlphabetic(10))
+                        .append("content", RandomStringUtils.randomAlphabetic(60))
+                        .append("comments",listComment);
+                listReviews.add(review);
+            }
+            Document category = new Document("category_name",RandomStringUtils.randomAlphabetic(6))
+                    .append("category_description", RandomStringUtils.randomAlphabetic(15));
+
+            Document doc = new Document("product_ref", "product" + i)
+                    .append("productDescription", "This product "+RandomStringUtils.randomAlphabetic(10))
                     .append("category", category)
                     .append("reviews", listReviews);
 
