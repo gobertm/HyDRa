@@ -7,6 +7,90 @@
 [comment get{E}List({E)AttributeCondition /]
 
 [template public generateSimpleSelectFromGivenDocumentCollection(ent : EntityType, struct: AbstractPhysicalStructure, db : Database)]
+String bsonQuery = getBSONMatchQueryIn[struct.name.toUpperFirst()/]From[db.name.toUpperFirst() /](condition);
+if(bsonQuery != null) {
+} else {
+
+}
+
 return null;
+[/template]
+
+[template public generateBSONMatchQueryMethod(ent : EntityType, struct: AbstractPhysicalStructure, db : Database)]
+private static String getBSONMatchQueryIn[struct.name.toUpperFirst()/]From[db.name.toUpperFirst() /](Condition<[ent.name.toUpperFirst() /]Attribute> condition) {	
+	String res = null;	
+	if(condition != null) {
+		if(condition instanceof SimpleCondition) {
+			[ent.name /]Attribute attr = ((SimpleCondition<[ent.name /]Attribute>) condition).getAttribute();
+			Operator op = ((SimpleCondition<[ent.name /]Attribute>) condition).getOperator();
+			Object value = ((SimpleCondition<[ent.name /]Attribute>) condition).getValue();
+			if(value != null) {
+				String valueString = Util.transformBSONValue(value);
+				[for (attr : Attribute | ent.attributes)]
+				[let field : PhysicalField = getMappedPhysicalField(attr, struct, db, ent.ancestors(Domainmodel)->first().mappingRules)][if (field <> null)]
+				if(attr == [ent.name.toUpperFirst() /]Attribute.[attr.name /] ) {
+				[let ancestorsList : Sequence(EmbeddedObject) = field.ancestors(EmbeddedObject)]
+				[if (ancestorsList->size() = 0)]
+				[comment level-1 field => could be either ShortField or LongField /]
+				[if (field.ancestors(LongField) -> size() > 0)]
+				String preparedValue = [getPreparedValue(attr, field, field.ancestors(LongField) -> first().oclAsType(LongField), false, false) /];
+				boolean like_op = false;
+				boolean not_like = false; 
+				if(op == Operator.EQUALS && valueString != null && preparedValue.contains("[getPatternOtherValue() /]")) {
+					//ex: @@VAR@@' '@@OTHERVAR@@"=> more than one vars in LongField: we shall use regex
+					like_op = true;
+					preparedValue = [getPreparedValue(attr, field, field.ancestors(LongField) -> first().oclAsType(LongField), false, true) /];
+				} else {
+					if(op == Operator.NOT_EQUALS && valueString != null && preparedValue.contains("[getPatternOtherValue() /]")) {
+						//ex: @@VAR@@' '@@OTHERVAR@@"=> more than one vars in LongField: we shall use regex
+						not_like = true;
+						like_op = true;
+						preparedValue = [getPreparedValue(attr, field, field.ancestors(LongField) -> first().oclAsType(LongField), false, true) /];
+					}
+				}
+				if(op == Operator.CONTAINS && valueString != null) {
+					like_op = true;
+					preparedValue = [getPreparedValue(attr, field, field.ancestors(LongField) -> first().oclAsType(LongField), false, true) /];
+					preparedValue = preparedValue.replaceAll("[getPatternValue() /]", ".*[getPatternValue() /].*");
+				}
+					
+				if(like_op)
+					valueString = Util.escapeReservedRegexMongo(valueString);
+				preparedValue = preparedValue.replaceAll("[getPatternValue() /]", valueString).replaceAll("[getPatternOtherValue() /]", ".*");
+				
+				if(valueString.equals(preparedValue)) // 5 <=> 5, the preparedValue is the same type as the original value
+					preparedValue = Util.getDelimitedMongoValue(value.getClass(), preparedValue);
+				else // 5 => 5*, the preparedValue became a string
+					preparedValue = Util.getDelimitedMongoValue(String.class, preparedValue);
+					
+
+				String mongoOp = (like_op) ? "$regex" : op.getMongoDBOperator();
+				//if not_like = true then we need to complement/negate the given regex
+				res = "{[getPhysicalName(field)/]: {" + (!not_like ? (mongoOp + ": " + preparedValue) : ("$not: {" + mongoOp + ": " + preparedValue + "}")) + "}}";
+				[else]
+					String mongoOp = op.getMongoDBOperator();
+					String preparedValue = valueString;
+					if(op == Operator.CONTAINS && valueString != null) {
+						preparedValue = "'.*" + Util.escapeReservedRegexMongo(valueString)  + ".*'";
+					} else {
+						preparedValue = Util.getDelimitedMongoValue(value.getClass(), preparedValue);
+					}
+					res = "{[(field.oclAsType(ShortField)).name /]: {" + mongoOp + ": " + preparedValue + "}}";
+				[/if]
+				[else]
+				[comment level-n field, with n > 1 /]
+
+				[/if]
+				[/let]
+				}
+				[/if]
+				[/let]
+				[/for]
+			}
+		}
+	}
+
+	return res;
+}
 [/template]
 

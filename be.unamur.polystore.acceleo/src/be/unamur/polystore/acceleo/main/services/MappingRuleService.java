@@ -16,8 +16,8 @@ import be.unamur.polystore.pml.*;
 import be.unamur.polystore.scoping.PmlScopeProvider;
 
 public class MappingRuleService {
-	private static final String SQL_PATTERN_VALUE = "@VAR@";
-	private static final String SQL_PATTERN_OTHER_VALUE = "@OTHERVAR@";
+	private static final String PATTERN_VALUE = "@VAR@";
+	private static final String PATTERN_OTHER_VALUE = "@OTHERVAR@";
 
 	public static java.util.Collection<PhysicalField> getMappedPhysicalFields(Attribute attr, MappingRules rules) {
 		List<PhysicalField> res = new ArrayList<PhysicalField>();
@@ -177,8 +177,8 @@ public class MappingRuleService {
 		return null;
 	}
 
-	public static String getSQLPreparedValue(Attribute attr, PhysicalField field, LongField parent,
-			boolean escapeSQLReservedChar) {
+	public static String getPreparedValue(Attribute attr, PhysicalField field, LongField parent,
+			boolean escapeSQLReservedChar, boolean escapeMongoReservedChar) {
 
 		if (parent instanceof LongField && field instanceof BracketsField) {
 			String column = "";
@@ -187,12 +187,14 @@ public class MappingRuleService {
 				if (expr instanceof BracketsField) {
 					BracketsField f = (BracketsField) expr;
 					if (f.getName().equals(br.getName()))
-						column += getSQLPatternValue();
+						column += getPatternValue();
 					else
-						column += getSQLPatternLikeSymbol();
+						column += getPatternOtherValue();
 				} else {
 					// STRING
-					column += (escapeSQLReservedChar) ? escapeReservedChar(expr.getLiteral()) : expr.getLiteral();
+					column += (escapeSQLReservedChar)
+							? escapeReservedChar(escapeSQLReservedChar, escapeMongoReservedChar, expr.getLiteral())
+							: expr.getLiteral();
 				}
 
 			}
@@ -200,28 +202,37 @@ public class MappingRuleService {
 
 		}
 
-		return getSQLPatternValue();
+		return getPatternValue();
 	}
 
-	private static String escapeReservedChar(String str) {
+	private static String escapeReservedChar(boolean sql, boolean mongo, String str) {
 		if (str == null)
 			return null;
-		// TODO complete the list of reserved sql char
-		return str.replaceAll("_", "\\\\\\\\_").replaceAll("%", "\\\\\\\\%");
+		if (sql) {
+			// TODO complete the list of reserved sql char
+			str = str.replaceAll("_", "\\\\\\\\_").replaceAll("%", "\\\\\\\\%");
+		}
+		
+		if(mongo) {
+			//TODO complete the list of reserved char in perl regex
+			str = str.replaceAll("\\*", "\\\\\\\\*").replaceAll("\\^", "\\\\\\\\^");
+		}
+		
+		return str;
 
 	}
 
-	public static void main(String[] args) {
-		String str = "a_b_%";
-		System.out.println(escapeReservedChar(str));
+//	public static void main(String[] args) {
+//		String str = "a_b_%";
+//		System.out.println(escapeReservedChar(str));
+//	}
+
+	public static String getPatternValue() {
+		return PATTERN_VALUE;
 	}
 
-	public static String getSQLPatternValue() {
-		return SQL_PATTERN_VALUE;
-	}
-
-	public static String getSQLPatternLikeSymbol() {
-		return SQL_PATTERN_OTHER_VALUE;
+	public static String getPatternOtherValue() {
+		return PATTERN_OTHER_VALUE;
 	}
 
 }
