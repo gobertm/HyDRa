@@ -42,7 +42,7 @@ conceptual schema cs {
 	}
 }
 physical schemas {
-	document schema myDocSchema{
+	document schema myDocSchema : mymongo{
 		collection productCollection{
 			fields { 
 				id,
@@ -166,6 +166,11 @@ databases{
 	sqlite mysqlite {
 		host: "sqlite.unamur.be"
 		port: 8090
+	}
+	
+	mongodb mymongo {
+		host: "127.0.0.1"
+		port: 17000
 	}
 }
 	

@@ -3,13 +3,15 @@
 [import be::unamur::polystore::acceleo::main::generateJavaDataType /]
 [import be::unamur::polystore::acceleo::main::mappingrules::util /]
 [import be::unamur::polystore::acceleo::main::level2::select::entitytype::generateSimpleSelectMethodsImpl /]
+[import be::unamur::polystore::acceleo::main::level2::select::entitytype::generateSimpleSelectFromGivenRelationalTable /]
+
 
 [template public generateSimpleSelectMethods(entityType: EntityType, conceptualSchema: ConceptualSchema, override: Boolean)]
 
 [if (override = false)]public Dataset<[entityType.name.toUpperFirst() /]> get[entityType.name.toUpperFirst() /]List(conditions.Condition<conditions.[entityType.name.toUpperFirst() /]Attribute> condition)[generateSimpleSelectMethodsImpl(entityType, conceptualSchema) /][/if]
 [for (struct: AbstractPhysicalStructure | getConcernedPhysicalStructures(entityType, entityType.ancestors(Domainmodel)->first()))]
 [for (db: Database | getConcernedDatabases(struct, entityType.ancestors(Domainmodel)->first()))]
-[if (override = true)][generateGetSQLWhereClauseMethod(entityType, struct, db)/][/if]
+[if (override = true and (db.dbType = pml::DatabaseType::MARIADB or db.dbType = pml::DatabaseType::SQLITE))][generateGetSQLWhereClauseMethod(entityType, struct, db)/][/if]
 public [if (override = false)]abstract [/if]Dataset<[entityType.name.toUpperFirst()/]> get[entityType.name.toUpperFirst() /]ListIn[struct.name/]From[db.name.toUpperFirst() /](conditions.Condition<conditions.[entityType.name.toUpperFirst() /]Attribute> condition)[if (override = false)];[else][generateSimpleSelectFromGivenDatabase(entityType, struct, db) /][/if]
 
 [/for]
