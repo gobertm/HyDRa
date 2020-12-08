@@ -56,7 +56,7 @@ physical schemas {
 				id,
 				product_ref,
 				productDescription,
-				price,
+				price: [price],
 				name,
 				reviews[0-N]{
 					userid,

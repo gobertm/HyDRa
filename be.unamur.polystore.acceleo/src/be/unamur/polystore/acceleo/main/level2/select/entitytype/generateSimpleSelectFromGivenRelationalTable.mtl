@@ -88,28 +88,31 @@ private static Pair<String, List<String>> getSQLWhereClauseIn[struct.name.toUppe
 						preparedValue = "%" + Util.escapeReservedCharSQL(valueString)  + "%";
 					}
 					[else]
-					String preparedValue = [getSQLPreparedValue(attr, field, field.ancestors(LongField) -> first().oclAsType(LongField), false) /];
+					[comment no needs to escape if we do not need to use regex /]
+					String preparedValue = [getPreparedValue(attr, field, field.ancestors(LongField) -> first().oclAsType(LongField), false, false) /];
 					Boolean like_op = false;
-					if(op == Operator.EQUALS && valueString != null && preparedValue.contains("[getSQLPatternLikeSymbol() /]")) {
+					if(op == Operator.EQUALS && valueString != null && preparedValue.contains("[getPatternOtherValue() /]")) {
+						//ex: @@VAR@@' '@@OTHERVAR@@"=> more than one vars in LongField: we shall use regex
 						like_op = true;
 						sqlOp = "LIKE";
-						preparedValue = [getSQLPreparedValue(attr, field, field.ancestors(LongField) -> first().oclAsType(LongField), true) /];
+						preparedValue = [getPreparedValue(attr, field, field.ancestors(LongField) -> first().oclAsType(LongField), true, false) /];
 					} else {
-						if(op == Operator.NOT_EQUALS && valueString != null && preparedValue.contains("[getSQLPatternLikeSymbol() /]")) {
+						if(op == Operator.NOT_EQUALS && valueString != null && preparedValue.contains("[getPatternOtherValue() /]")) {
+							//ex: @@VAR@@' '@@OTHERVAR@@"=> more than one vars in LongField: we shall use regex
 							sqlOp = "NOT LIKE";
 							like_op = true;
-							preparedValue = [getSQLPreparedValue(attr, field, field.ancestors(LongField) -> first().oclAsType(LongField), true) /];
+							preparedValue = [getPreparedValue(attr, field, field.ancestors(LongField) -> first().oclAsType(LongField), true, false) /];
 						}
 					}
 					if(op == Operator.CONTAINS && valueString != null) {
 						like_op = true;
-						preparedValue = [getSQLPreparedValue(attr, field, field.ancestors(LongField) -> first().oclAsType(LongField), true) /];
-						preparedValue = preparedValue.replaceAll("[getSQLPatternValue() /]", "%[getSQLPatternValue() /]%");
+						preparedValue = [getPreparedValue(attr, field, field.ancestors(LongField) -> first().oclAsType(LongField), true, false) /];
+						preparedValue = preparedValue.replaceAll("[getPatternValue() /]", "%[getPatternValue() /]%");
 					}
 					
 					if(like_op)
 						valueString = Util.escapeReservedCharSQL(valueString);
-					preparedValue = preparedValue.replaceAll("[getSQLPatternValue() /]", valueString).replaceAll("[getSQLPatternLikeSymbol() /]", "%");
+					preparedValue = preparedValue.replaceAll("[getPatternValue() /]", valueString).replaceAll("[getPatternOtherValue() /]", "%");
 					[/if]
 					
 					where = "[getPhysicalName(field)/] " + sqlOp + " ?";

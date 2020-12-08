@@ -25,14 +25,14 @@
 = invoke('be.unamur.polystore.acceleo.main.services.MappingRuleService', 'getPhysicalName(be.unamur.polystore.pml.PhysicalField)', Sequence{field}) /]
 
 
-[query public getSQLPreparedValue(attr: Attribute, field: PhysicalField, parent : LongField, escapeSQLReservedChar :  Boolean): String
-= invoke('be.unamur.polystore.acceleo.main.services.MappingRuleService', 'getSQLPreparedValue(be.unamur.polystore.pml.Attribute, be.unamur.polystore.pml.PhysicalField, be.unamur.polystore.pml.LongField, boolean)', Sequence{attr, field, parent, escapeSQLReservedChar}) /]
+[query public getPreparedValue(attr: Attribute, field: PhysicalField, parent : LongField, escapeSQLReservedChar :  Boolean, escapeMongoReservedChar :  Boolean): String
+= invoke('be.unamur.polystore.acceleo.main.services.MappingRuleService', 'getPreparedValue(be.unamur.polystore.pml.Attribute, be.unamur.polystore.pml.PhysicalField, be.unamur.polystore.pml.LongField, boolean, boolean)', Sequence{attr, field, parent, escapeSQLReservedChar, escapeMongoReservedChar}) /]
 
-[query public getSQLPatternValue(): String
-= invoke('be.unamur.polystore.acceleo.main.services.MappingRuleService', 'getSQLPatternValue()', Sequence{}) /]
+[query public getPatternValue(): String
+= invoke('be.unamur.polystore.acceleo.main.services.MappingRuleService', 'getPatternValue()', Sequence{}) /]
 
-[query public getSQLPatternLikeSymbol(): String
-= invoke('be.unamur.polystore.acceleo.main.services.MappingRuleService', 'getSQLPatternLikeSymbol()', Sequence{}) /]
+[query public getPatternOtherValue(): String
+= invoke('be.unamur.polystore.acceleo.main.services.MappingRuleService', 'getPatternOtherValue()', Sequence{}) /]
 
 
 
