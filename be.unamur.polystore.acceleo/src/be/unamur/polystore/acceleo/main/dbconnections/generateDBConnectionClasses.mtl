@@ -27,6 +27,16 @@ public class SparkConnectionMgr {
 			.config("spark.some.config.option", "some-value").getOrCreate();
 		spark.sparkContext().setLogLevel("ERROR");
 	}
+
+	public static SparkSession getSparkSessionForMongoDB(String dbName, String collectionName) {
+		return SparkSession.builder()
+            .master("local")
+            .appName("MongoSparkConnectorIntro")
+            .config("spark.mongodb.input.uri", "mongodb://127.0.0.1:27000/" + dbName + "." + collectionName)
+            .config("spark.mongodb.output.uri", "mongodb://127.0.0.1:27000/" + dbName + "." + collectionName)
+            .getOrCreate();
+	}
+	
 	
 	public static Dataset<Row> getDataset(String dbName, String physicalStrucName) {
 		DataFrameReader dfr = spark.sqlContext()

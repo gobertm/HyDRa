@@ -48,7 +48,7 @@ public class Util {
 		if(v == null)
 			return null;
 		//TODO https://perldoc.perl.org/perlre
-		return v.replaceAll("\\*", "\\\\\\\\*").replaceAll("\\^", "\\\\\\\\^");
+		return v.replaceAll("\\*", "\\\\\\\\*").replaceAll("\\^", "\\\\\\\\^").replaceAll("\\$", "\\\\\\\\\\$");
 	}
 
 	public static String escapeQuote(String s) {

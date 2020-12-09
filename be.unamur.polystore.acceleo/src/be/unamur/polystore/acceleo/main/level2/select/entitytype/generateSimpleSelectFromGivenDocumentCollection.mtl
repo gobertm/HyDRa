@@ -9,6 +9,11 @@
 [template public generateSimpleSelectFromGivenDocumentCollection(ent : EntityType, struct: AbstractPhysicalStructure, db : Database)]
 String bsonQuery = getBSONMatchQueryIn[struct.name.toUpperFirst()/]From[db.name.toUpperFirst() /](condition);
 if(bsonQuery != null) {
+	bsonQuery = "{$match: {" + bsonQuery + "}}";
+	SparkSession session = SparkConnectionMgr.getSparkSessionForMongoDB(null, null);
+			JavaSparkContext jsc = new JavaSparkContext(session.sparkContext());
+			MongoSpark.load(jsc).withPipeline(singletonList(Document.parse(bsonQuery))).toDF();
+	jsc.close();
 } else {
 
 }
@@ -65,7 +70,7 @@ private static String getBSONMatchQueryIn[struct.name.toUpperFirst()/]From[db.na
 
 				String mongoOp = (like_op) ? "$regex" : op.getMongoDBOperator();
 				//if not_like = true then we need to complement/negate the given regex
-				res = "[getPhysicalName(field)/]: {" + (!not_like ? (mongoOp + ": " + preparedValue) : ("$not: {" + mongoOp + ": " + preparedValue + "}")) + "}";
+				res = "[getPhysicalName(field)/]': {" + (!not_like ? (mongoOp + ": " + preparedValue) : ("$not: {" + mongoOp + ": " + preparedValue + "}")) + "}";
 				[else]
 					String mongoOp = op.getMongoDBOperator();
 					String preparedValue = valueString;
@@ -74,22 +79,16 @@ private static String getBSONMatchQueryIn[struct.name.toUpperFirst()/]From[db.na
 					} else {
 						preparedValue = Util.getDelimitedMongoValue(value.getClass(), preparedValue);
 					}
-					res = "[(field.oclAsType(ShortField)).name /]: {" + mongoOp + ": " + preparedValue + "}";
+					res = "[(field.oclAsType(ShortField)).name /]': {" + mongoOp + ": " + preparedValue + "}";
 				[/if]
 
 				[if (ancestorsList->size() > 0)]
 				[comment level-n field, with n > 1 /]
 				[for (ancestor : EmbeddedObject | ancestorsList)]
-				[if (ancestor.cardinality = pml::Cardinality::ONE or ancestor.cardinality = pml::Cardinality::ZERO_ONE)]
-				[comment complex field /]
-				res = "[ancestor.name /]." + res;
-				[else]
-				[comment array field /]
-				res = "[ancestor.name /] : {$elemMatch : {" + res + "}}";
-				[/if]
+					res = "[ancestor.name /]." + res;
 				[/for]
 				[/if]
-				res = "{" + res + "}";
+				res = "'" + res;
 				[/let]
 				}
 				[/if]
@@ -97,6 +96,34 @@ private static String getBSONMatchQueryIn[struct.name.toUpperFirst()/]From[db.na
 				[/for]
 			}
 		}
+
+		if(condition instanceof AndCondition) {
+			String bsonLeft = getBSONMatchQueryIn[struct.name.toUpperFirst()/]From[db.name.toUpperFirst() /](((AndCondition)condition).getLeftCondition());
+			String bsonRight = getBSONMatchQueryIn[struct.name.toUpperFirst()/]From[db.name.toUpperFirst() /](((AndCondition)condition).getRightCondition());			
+			if(bsonLeft == null && bsonRight == null)
+				return null;
+			if(bsonLeft == null)
+				return bsonRight;
+			if(bsonRight == null)
+				return bsonLeft;
+			res = " $and: [ '[' /] {" + bsonLeft + "}, {" + bsonRight + "}[ ']' /] ";
+		}
+
+		if(condition instanceof OrCondition) {
+			String bsonLeft = getBSONMatchQueryIn[struct.name.toUpperFirst()/]From[db.name.toUpperFirst() /](((OrCondition)condition).getLeftCondition());
+			String bsonRight = getBSONMatchQueryIn[struct.name.toUpperFirst()/]From[db.name.toUpperFirst() /](((OrCondition)condition).getRightCondition());			
+			if(bsonLeft == null && bsonRight == null)
+				return null;
+			if(bsonLeft == null)
+				return bsonRight;
+			if(bsonRight == null)
+				return bsonLeft;
+			res = " $or: [ '[' /] {" + bsonLeft + "}, {" + bsonRight + "}[ ']' /] ";	
+		}
+
+		
+
+		
 	}
 
 	return res;

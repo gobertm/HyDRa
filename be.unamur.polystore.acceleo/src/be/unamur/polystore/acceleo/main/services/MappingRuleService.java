@@ -54,7 +54,7 @@ public class MappingRuleService {
 		for (Attribute attr : ent.getAttributes()) {
 			java.util.Collection<PhysicalField> fields = getMappedPhysicalFields(attr, domain.getMappingRules());
 			for (PhysicalField field : fields) {
-				AbstractPhysicalStructure struct = getPhysicalStructure(field);
+				AbstractPhysicalStructure struct = getPhysicalStructureNotEmbeddedObject(field);
 				if (struct != null)
 					res.add(struct);
 			}
@@ -95,7 +95,7 @@ public class MappingRuleService {
 			MappingRules rules) {
 		List<PhysicalField> fields = (List<PhysicalField>) getMappedPhysicalFields(attr, rules);
 		for (PhysicalField field : fields) {
-			AbstractPhysicalStructure struct2 = getPhysicalStructure(field);
+			AbstractPhysicalStructure struct2 = getPhysicalStructureNotEmbeddedObject(field);
 			if (struct == struct2) {
 				AbstractPhysicalSchema schema = getPhysicalSchema(field);
 				List<Database> dbs = getAttachedDatabases(schema);
@@ -114,11 +114,20 @@ public class MappingRuleService {
 		return (AbstractPhysicalSchema) res;
 	}
 
-	private static AbstractPhysicalStructure getPhysicalStructure(EObject obj) {
-		EObject res = getFirstAncestor(AbstractPhysicalStructure.class, obj);
-		if (res == null)
+//	private static AbstractPhysicalStructure getPhysicalStructure(EObject obj) {
+//		EObject res = getFirstAncestor(AbstractPhysicalStructure.class, obj);
+//		if (res == null)
+//			return null;
+//		return (AbstractPhysicalStructure) res;
+//	}
+
+	private static AbstractPhysicalStructure getPhysicalStructureNotEmbeddedObject(EObject obj) {
+		if (obj == null)
 			return null;
-		return (AbstractPhysicalStructure) res;
+		if (AbstractPhysicalStructure.class.isAssignableFrom(obj.getClass())
+				&& !EmbeddedObject.class.isAssignableFrom(obj.getClass()))
+			return (AbstractPhysicalStructure) obj;
+		return getPhysicalStructureNotEmbeddedObject(obj.eContainer());
 	}
 
 	private static EObject getFirstAncestor(final Class cl, EObject obj) {
@@ -192,9 +201,7 @@ public class MappingRuleService {
 						column += getPatternOtherValue();
 				} else {
 					// STRING
-					column += (escapeSQLReservedChar)
-							? escapeReservedChar(escapeSQLReservedChar, escapeMongoReservedChar, expr.getLiteral())
-							: expr.getLiteral();
+					column += escapeReservedChar(escapeSQLReservedChar, escapeMongoReservedChar, expr.getLiteral());
 				}
 
 			}
@@ -212,14 +219,20 @@ public class MappingRuleService {
 			// TODO complete the list of reserved sql char
 			str = str.replaceAll("_", "\\\\\\\\_").replaceAll("%", "\\\\\\\\%");
 		}
-		
-		if(mongo) {
-			//TODO complete the list of reserved char in perl regex
-			str = str.replaceAll("\\*", "\\\\\\\\*").replaceAll("\\^", "\\\\\\\\^");
+
+		if (mongo) {
+			// TODO complete the list of reserved char in perl regex
+			str = str.replaceAll("\\*", "\\\\\\\\*");
+			str = str.replaceAll("\\^", "\\\\\\\\^");
+			str = str.replaceAll("\\$", "\\\\\\\\\\$");
 		}
-		
+
 		return str;
 
+	}
+	
+	public static void main(String[] args) {
+		System.out.println(escapeReservedChar(false, true, "$*^"));
 	}
 
 //	public static void main(String[] args) {

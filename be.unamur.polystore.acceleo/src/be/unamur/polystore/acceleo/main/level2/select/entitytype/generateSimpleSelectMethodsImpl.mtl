@@ -6,20 +6,19 @@
 [import be::unamur::polystore::acceleo::main::level2::select::entitytype::generateSimpleSelectFromGivenRelationalTable /]
 [import be::unamur::polystore::acceleo::main::level2::select::entitytype::generateSimpleSelectFromGivenDocumentCollection /]
 
-
-
-
 [comment get{E}List({E)AttributeCondition /]
 
 [template public generateSimpleSelectMethodsImpl(entityType: EntityType, conceptualSchema: ConceptualSchema)]{
 	List<Dataset<[entityType.name.toUpperFirst() /]>> datasets = new ArrayList<Dataset<[entityType.name.toUpperFirst() /]>>();
 	Dataset<[entityType.name.toUpperFirst()/]> d = null;
 	[for (struct: AbstractPhysicalStructure | getConcernedPhysicalStructures(entityType, entityType.ancestors(Domainmodel)->first()))]
+	[if (struct.oclIsTypeOf(pml::EmbeddedObject) = false)]
 	[for (db: Database | getConcernedDatabases(struct, entityType.ancestors(Domainmodel)->first()))]
 	d = get[entityType.name.toUpperFirst() /]ListIn[struct.name/]From[db.name.toUpperFirst() /](condition);
 	if(d != null)
 		datasets.add(d);
 	[/for]
+	[/if]
 	[/for]
 	
 	if(datasets.size() == 0)
