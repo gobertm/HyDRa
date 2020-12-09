@@ -180,12 +180,8 @@ Table:
 	'}'
 ;
 
-AbstractMappedPhysicalStructure: // Used for mapping rules
+AbstractPhysicalStructure:
 	Table | Collection | EmbeddedObject | TableColumnDB | Node | Edge
-;
-
-AbstractPhysicalStructure: // Used only for Acceleo code generation 
-	Table | Collection | TableColumnDB | Node | Edge
 ;
 
 KeyValueSchema:
@@ -232,13 +228,13 @@ AbstractMappingRule:
 RoleMappingRule:
 	roleConceptual=[Role|QualifiedName]
 	'->'
-	 physicalStructure=[AbstractMappedPhysicalStructure|QualifiedName]'('(physicalFields+=[PhysicalField|QualifiedName] (','physicalFields+=[PhysicalField|QualifiedName])*)?')'
+	 physicalStructure=[AbstractPhysicalStructure|QualifiedName]'('(physicalFields+=[PhysicalField|QualifiedName] (','physicalFields+=[PhysicalField|QualifiedName])*)?')'
 ;
 
 EntityMappingRule:
 	(entityConceptual=[EntityType|QualifiedName]'('(attributesConceptual+=[Attribute|QualifiedName] (','attributesConceptual+=[Attribute|QualifiedName])*)?')'
 	'->'
-	 physicalStructure=[AbstractMappedPhysicalStructure|QualifiedName]'('(physicalFields+=[PhysicalField|QualifiedName] (','physicalFields+=[PhysicalField|QualifiedName])*)?')')
+	 physicalStructure=[AbstractPhysicalStructure|QualifiedName]'('(physicalFields+=[PhysicalField|QualifiedName] (','physicalFields+=[PhysicalField|QualifiedName])*)?')')
 ;
 
 Databases :

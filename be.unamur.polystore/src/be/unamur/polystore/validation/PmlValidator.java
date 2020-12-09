@@ -40,7 +40,7 @@ public class PmlValidator extends AbstractPmlValidator {
 	@Check void checkCapitalLettersForEdge(Edge edge) {
 		for(char c : edge.getName().toCharArray()) {
 			if(!Character.isUpperCase(c) && Character.isAlphabetic(c))
-				warning("Edges name should be full capital letters", PmlPackage.Literals.ABSTRACT_MAPPED_PHYSICAL_STRUCTURE__NAME,INVALID_NAME);
+				warning("Edges name should be full capital letters", PmlPackage.Literals.ABSTRACT_PHYSICAL_STRUCTURE__NAME,INVALID_NAME);
 		}
 	}
 	
