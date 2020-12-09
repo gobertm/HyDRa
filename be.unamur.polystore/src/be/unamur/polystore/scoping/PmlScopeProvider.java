@@ -12,7 +12,7 @@ import org.eclipse.xtext.scoping.IScope;
 import org.eclipse.xtext.scoping.Scopes;
 
 import be.unamur.polystore.pml.AbstractMappingRule;
-import be.unamur.polystore.pml.AbstractPhysicalStructure;
+import be.unamur.polystore.pml.AbstractMappedPhysicalStructure;
 import be.unamur.polystore.pml.BracketsField;
 import be.unamur.polystore.pml.Collection;
 import be.unamur.polystore.pml.ColumnFamily;
@@ -45,7 +45,7 @@ public class PmlScopeProvider extends AbstractPmlScopeProvider {
 		}
 		if(context instanceof AbstractMappingRule && reference == PmlPackage.Literals.ABSTRACT_MAPPING_RULE__PHYSICAL_FIELDS) {
 			AbstractMappingRule rule = EcoreUtil2.getContainerOfType(context, AbstractMappingRule.class);
-			AbstractPhysicalStructure struct= rule.getPhysicalStructure();
+			AbstractMappedPhysicalStructure struct= rule.getPhysicalStructure();
 			EList<PhysicalField> fields = new BasicEList<PhysicalField>();
 			if(struct instanceof Table) 
 				fields=((Table) struct).getColumns();
