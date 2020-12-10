@@ -35,7 +35,7 @@ public class MongoDataInit implements DataInit{
 
     public static void main(String args[]){
         String mongohost = "localhost";
-        String mongodbname = "evol-db-hybrid";
+        String mongodbname = "mymongo";
         int mongoport = 27000;
       int nbdataobj = 100;
         MongoDataInit mongoDataInit = new MongoDataInit(mongodbname, mongohost, mongoport, nbdataobj);
