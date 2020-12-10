@@ -51,7 +51,7 @@ conceptual schema cs {
 }
 physical schemas {
 	document schema myDocSchema : mymongo{
-		collection productCollection{
+		collection product_reviews{
 			fields { 
 				id,
 				product_ref,
@@ -90,13 +90,13 @@ physical schemas {
 }
 	
 mapping rules{
-	cs.Product(id,description/*,name,price*/) -> myDocSchema.productCollection(product_ref,productDescription/*,name,price*/), // Commenter pour tester les EmbeddedObject Acceleo..
-	cs.productReview.reviews -> myDocSchema.productCollection.reviews(),
-	cs.Product(name,price) -> myDocSchema.productCollection.reviews.product_attributes(name,price),
-	cs.Review(content,rating) -> myDocSchema.productCollection.reviews(content,rate),
-	cs.Review(rating) -> myDocSchema.productCollection.reviews(rate2),
-	cs.commentReview.comments -> myDocSchema.productCollection.reviews.comments(),
-	cs.Comment(comment) -> myDocSchema.productCollection.reviews.comments(comment),
+	cs.Product(id,description/*,name,price*/) -> myDocSchema.product_reviews(product_ref,productDescription/*,name,price*/), // Commenter pour tester les EmbeddedObject Acceleo..
+	cs.productReview.reviews -> myDocSchema.product_reviews.reviews(),
+	cs.Product(name,price) -> myDocSchema.product_reviews.reviews.product_attributes(name,price),
+	cs.Review(content,rating) -> myDocSchema.product_reviews.reviews(content,rate),
+	cs.Review(rating) -> myDocSchema.product_reviews.reviews(rate2),
+	cs.commentReview.comments -> myDocSchema.product_reviews.reviews.comments(),
+	cs.Comment(comment) -> myDocSchema.product_reviews.reviews.comments(comment),
 	cs.Client(lastname,firstname,age, clientnumber) -> myRelSchema.Customer(lastName, firstName,age, clientnumber)
 }
 

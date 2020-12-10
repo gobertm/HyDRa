@@ -14,7 +14,7 @@
 	[for (struct: AbstractPhysicalStructure | getConcernedPhysicalStructures(entityType, entityType.ancestors(Domainmodel)->first()))]
 	[if (struct.oclIsTypeOf(pml::EmbeddedObject) = false)]
 	[for (db: Database | getConcernedDatabases(struct, entityType.ancestors(Domainmodel)->first()))]
-	d = get[entityType.name.toUpperFirst() /]ListIn[struct.name/]From[db.name.toUpperFirst() /](condition);
+	d = get[entityType.name.toUpperFirst() /]ListIn[struct.name.toUpperFirst()/]From[db.name.toUpperFirst() /](condition);
 	if(d != null)
 		datasets.add(d);
 	[/for]
@@ -66,7 +66,7 @@
 			[entityType.name.toLowerFirst() /]_res.set[attr.name.toUpperFirst() /](firstNotNull_[attr.name /]);
 			[/for]
 			return [entityType.name.toLowerFirst() /]_res;
-		}, Encoders.bean([entityType.name.toUpperFirst() /].class));
+		}, Encoders.kryo([entityType.name.toUpperFirst() /].class));
 	return d;
 	[else]
 	for(int i = 1; i < datasets.size(); i++)

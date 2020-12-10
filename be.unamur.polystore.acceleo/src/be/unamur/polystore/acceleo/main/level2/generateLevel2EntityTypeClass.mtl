@@ -26,6 +26,8 @@ import org.apache.spark.api.java.JavaSparkContext;
 import com.mongodb.spark.MongoSpark;
 import org.bson.Document;
 import static java.util.Collections.singletonList;
+import dbconnection.SparkConnectionMgr;
+import scala.collection.mutable.WrappedArray;
 
 public class [entityType.name.toUpperFirst() + 'ServiceImpl' /] extends [entityType.name.toUpperFirst() + 'Service' /] {
 
