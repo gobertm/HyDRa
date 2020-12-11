@@ -22,53 +22,28 @@
 				Pattern p = null;
 				Matcher m = null;
 				boolean matches = false;
-				Row r2 = null;
+				Row nestedRow = null;
 				WrappedArray array = null;
 				boolean stop;
 
 				[for (attr : Attribute | ent.attributes)]
 				[let field : PhysicalField = getMappedPhysicalField(attr, struct, db, ent.ancestors(Domainmodel)->first().mappingRules)][if (field <> null)]
 				[let ancestorsList : Sequence(EmbeddedObject) = field.ancestors(EmbeddedObject)]
-				[if (ancestorsList->size() = 0)]
+				
 				// attribute [ '[' /][ent.name.toUpperFirst() /].[attr.name.toUpperFirst() /][ ']' /]
-				[if (field.ancestors(LongField) -> size() = 0)]
-				[comment shortField or bracketfield/]
-				[generateJavaType(attr.type)/] [attr.name.toLowerFirst()/] = r.getAs("[getPhysicalName(field) /]");
-				[ent.name.toLowerFirst() /]_res.set[attr.name.toUpperFirst()/]([attr.name.toLowerFirst()/]);
-				[else]
-				[comment LongField /]
-				regex = "[getJavaRegexFromLongField(field.ancestors(LongField) -> first().oclAsType(LongField)) /]";
-				groupIndex = [getPositionInLongField(field, field.ancestors(LongField) -> first().oclAsType(LongField))/];
-				if(groupIndex == null) {
-					throw new Exception("Cannot retrieve value for [ent.name /][attr.name /] attribute stored in db [db.name/]. Probably due to an ambiguous regex.");
-				}
-				value = r.getAs("[field.ancestors(LongField) -> first().oclAsType(LongField).physicalName /]");
-				p = Pattern.compile(regex);
-				m = p.matcher(value);
-				matches = m.find();
-				String [attr.name.toLowerFirst()/] = null;
-				if(matches) {
-					[attr.name.toLowerFirst()/] = m.group(groupIndex.intValue());
-				} else {
-					throw new Exception("Cannot retrieve value for [ent.name /][attr.name /] attribute stored in db [db.name/]. Probably due to an ambiguous regex.");
-				}
-				[ent.name.toLowerFirst() /]_res.set[attr.name.toUpperFirst()/]([generateParsingFunctionJavaType(attr.type, attr.name.toLowerFirst())/]);
-				[/if]
-				[else]
-
-				// attribute [ '[' /][ent.name.toUpperFirst() /].[attr.name.toUpperFirst() /][ ']' /]
+				nestedRow =  r;
+				stop = false;
+				[if (ancestorsList->size() > 0)]
 				[comment EmbeddedObject as ancestor /]
-				r2 = r;
-				stop = false; [comment /]
 				[for (anc : EmbeddedObject | ancestorsList->reverse())]
 				[if (anc.cardinality = pml::Cardinality::ONE or anc.cardinality = pml::Cardinality::ZERO_ONE)]
 				[comment simple row /]
 				if(!stop)
-					r2 = (Row) r2.getAs("[getPhysicalName(anc)/]");
+					nestedRow = (Row) nestedRow.getAs("[getPhysicalName(anc)/]");
 				[else]
 				[comment array /]
 				if(!stop) {
-					array = (WrappedArray) r2.getAs("[getPhysicalName(anc)/]");
+					array = (WrappedArray) nestedRow.getAs("[getPhysicalName(anc)/]");
 					if(array.size() > 0) {
 						/**
 						We only retrieve the first document from the array.
@@ -76,18 +51,43 @@
 						but the second document contains not null data, the consequence will be that
 						the conceptual attribute will be affected to value null 
 						(while it could have been affected to non-null value contained in the second one)
+						TODO Perhaps we could consider the FIRST NOT-NULL document, 
+						but it would complicate the ACCELEO algorithm
 						**/
-						r2 = (Row) array.apply(0);
+						nestedRow = (Row) array.apply(0);
 					}
 					else
 						stop = true;
 				}
 				[/if]
 				[/for]
-				
-				r2.getAs("[getPhysicalName(field) /]");
-				
 				[/if]
+				
+				if(!stop) {
+					[if (field.ancestors(LongField) -> size() = 0)]
+					[comment shortField or bracketfield/]
+					[generateJavaType(attr.type)/] [attr.name.toLowerFirst()/] = nestedRow.getAs("[getPhysicalName(field) /]");
+					[ent.name.toLowerFirst() /]_res.set[attr.name.toUpperFirst()/]([attr.name.toLowerFirst()/]);
+					[else]
+					[comment LongField /]
+					regex = "[getJavaRegexFromLongField(field.ancestors(LongField) -> first().oclAsType(LongField)) /]";
+					groupIndex = [getPositionInLongField(field, field.ancestors(LongField) -> first().oclAsType(LongField))/];
+					if(groupIndex == null) {
+						throw new Exception("Cannot retrieve value for [ent.name /][attr.name /] attribute stored in db [db.name/]. Probably due to an ambiguous regex.");
+					}
+					value = nestedRow.getAs("[field.ancestors(LongField) -> first().oclAsType(LongField).physicalName /]");
+					p = Pattern.compile(regex);
+					m = p.matcher(value);
+					matches = m.find();
+					String [attr.name.toLowerFirst()/] = null;
+					if(matches) {
+						[attr.name.toLowerFirst()/] = m.group(groupIndex.intValue());
+					} else {
+						throw new Exception("Cannot retrieve value for [ent.name /][attr.name /] attribute stored in db [db.name/]. Probably due to an ambiguous regex.");
+					}
+					[ent.name.toLowerFirst() /]_res.set[attr.name.toUpperFirst()/]([generateParsingFunctionJavaType(attr.type, attr.name.toLowerFirst())/]);
+					[/if]
+				}
 				[/let]
 				[/if]
 				[/let]

@@ -29,7 +29,7 @@ public class Util {
 		if (literal == null)
 			return null;
 		return literal/** .replaceAll("\s", "\\\\s") **/
-				.replaceAll("\\$", "\\\\\\$")
+				.replaceAll("\\$", "\\\\\\\\\\$")
 				.replaceAll("\\(", "\\\\\\(")
 				.replaceAll("\\)", "\\\\\\)"); // TODO
 	}
