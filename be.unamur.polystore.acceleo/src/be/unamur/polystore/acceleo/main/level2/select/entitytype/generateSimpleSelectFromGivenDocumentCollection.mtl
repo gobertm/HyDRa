@@ -7,18 +7,97 @@
 [comment get{E}List({E)AttributeCondition /]
 
 [template public generateSimpleSelectFromGivenDocumentCollection(ent : EntityType, struct: AbstractPhysicalStructure, db : Database)]
-String bsonQuery = getBSONMatchQueryIn[struct.name.toUpperFirst()/]From[db.name.toUpperFirst() /](condition);
-if(bsonQuery != null) {
-	bsonQuery = "{$match: {" + bsonQuery + "}}";
-	SparkSession session = SparkConnectionMgr.getSparkSessionForMongoDB(null, null);
-			JavaSparkContext jsc = new JavaSparkContext(session.sparkContext());
-			MongoSpark.load(jsc).withPipeline(singletonList(Document.parse(bsonQuery))).toDF();
-	jsc.close();
-} else {
+	String bsonQuery = getBSONMatchQueryIn[struct.name.toUpperFirst()/]From[db.name.toUpperFirst() /](condition);
+	if(bsonQuery != null) {
+		bsonQuery = "{$match: {" + bsonQuery + "}}";	
+	} 
+	
+	Dataset<Row> dataset = SparkConnectionMgr.getSparkSessionForMongoDB("[db.name /]", "[struct.name /]", bsonQuery);
+	dataset.printSchema();
+	Dataset<[ent.name.toUpperFirst() /]> res = dataset.map((MapFunction<Row, [ent.name.toUpperFirst() /]>) r -> {
+				[ent.name.toUpperFirst() /] [ent.name.toLowerFirst() /]_res = new [ent.name.toUpperFirst() /]();
+				Integer groupIndex = null;
+				String regex = null;
+				String value = null;
+				Pattern p = null;
+				Matcher m = null;
+				boolean matches = false;
+				Row nestedRow = null;
+				WrappedArray array = null;
+				boolean stop;
 
-}
+				[for (attr : Attribute | ent.attributes)]
+				[let field : PhysicalField = getMappedPhysicalField(attr, struct, db, ent.ancestors(Domainmodel)->first().mappingRules)][if (field <> null)]
+				[let ancestorsList : Sequence(EmbeddedObject) = field.ancestors(EmbeddedObject)]
+				
+				// attribute [ '[' /][ent.name.toUpperFirst() /].[attr.name.toUpperFirst() /][ ']' /]
+				nestedRow =  r;
+				stop = false;
+				[if (ancestorsList->size() > 0)]
+				[comment EmbeddedObject as ancestor /]
+				[for (anc : EmbeddedObject | ancestorsList->reverse())]
+				[if (anc.cardinality = pml::Cardinality::ONE or anc.cardinality = pml::Cardinality::ZERO_ONE)]
+				[comment simple row /]
+				if(!stop)
+					nestedRow = (Row) nestedRow.getAs("[getPhysicalName(anc)/]");
+				[else]
+				[comment array /]
+				if(!stop) {
+					array = (WrappedArray) nestedRow.getAs("[getPhysicalName(anc)/]");
+					if(array.size() > 0) {
+						/**
+						We only retrieve the first document from the array.
+						Unfortunately, in the case where the first document contains only null data,
+						but the second document contains not null data, the consequence will be that
+						the conceptual attribute will be affected to value null 
+						(while it could have been affected to non-null value contained in the second one)
+						TODO Perhaps we could consider the FIRST NOT-NULL document, 
+						but it would complicate the ACCELEO algorithm
+						**/
+						nestedRow = (Row) array.apply(0);
+					}
+					else
+						stop = true;
+				}
+				[/if]
+				[/for]
+				[/if]
+				
+				if(!stop) {
+					[if (field.ancestors(LongField) -> size() = 0)]
+					[comment shortField or bracketfield/]
+					[generateJavaType(attr.type)/] [attr.name.toLowerFirst()/] = nestedRow.getAs("[getPhysicalName(field) /]");
+					[ent.name.toLowerFirst() /]_res.set[attr.name.toUpperFirst()/]([attr.name.toLowerFirst()/]);
+					[else]
+					[comment LongField /]
+					regex = "[getJavaRegexFromLongField(field.ancestors(LongField) -> first().oclAsType(LongField)) /]";
+					groupIndex = [getPositionInLongField(field, field.ancestors(LongField) -> first().oclAsType(LongField))/];
+					if(groupIndex == null) {
+						throw new Exception("Cannot retrieve value for [ent.name /][attr.name /] attribute stored in db [db.name/]. Probably due to an ambiguous regex.");
+					}
+					value = nestedRow.getAs("[field.ancestors(LongField) -> first().oclAsType(LongField).physicalName /]");
+					p = Pattern.compile(regex);
+					m = p.matcher(value);
+					matches = m.find();
+					String [attr.name.toLowerFirst()/] = null;
+					if(matches) {
+						[attr.name.toLowerFirst()/] = m.group(groupIndex.intValue());
+					} else {
+						throw new Exception("Cannot retrieve value for [ent.name /][attr.name /] attribute stored in db [db.name/]. Probably due to an ambiguous regex.");
+					}
+					[ent.name.toLowerFirst() /]_res.set[attr.name.toUpperFirst()/]([generateParsingFunctionJavaType(attr.type, attr.name.toLowerFirst())/]);
+					[/if]
+				}
+				[/let]
+				[/if]
+				[/let]
+				[/for]
+				
+				return [ent.name.toLowerFirst() /]_res;
+			}, Encoders.kryo([ent.name.toUpperFirst() /].class));
 
-return null;
+
+	return res;
 [/template]
 
 [template public generateBSONMatchQueryMethod(ent : EntityType, struct: AbstractPhysicalStructure, db : Database)]
@@ -79,7 +158,7 @@ private static String getBSONMatchQueryIn[struct.name.toUpperFirst()/]From[db.na
 					} else {
 						preparedValue = Util.getDelimitedMongoValue(value.getClass(), preparedValue);
 					}
-					res = "[(field.oclAsType(ShortField)).name /]': {" + mongoOp + ": " + preparedValue + "}";
+					res = "[getPhysicalName(field) /]': {" + mongoOp + ": " + preparedValue + "}";
 				[/if]
 
 				[if (ancestorsList->size() > 0)]

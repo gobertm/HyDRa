@@ -1,6 +1,6 @@
 conceptual schema cs {
 	entity type Product{
-		id:int,
+		id:string,
 		name:string,
 		price:float,
 		description:string,
@@ -49,7 +49,7 @@ conceptual schema cs {
 }
 physical schemas {
 	document schema myDocSchema : mymongo{
-		collection productCollection{
+		collection product_reviews{
 			fields { 
 				id,
 				product_ref,
