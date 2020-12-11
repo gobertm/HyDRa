@@ -3,8 +3,10 @@ conceptual schema cs {
 		id:int,
 		name:string,
 		price:float,
-		description:string
-		
+		description:string,
+		cat_name : string,
+		cat_description: string
+
 		identifier{
 			id
 		}
@@ -28,10 +30,6 @@ conceptual schema cs {
 		content : string
 	}
 	
-	entity type Category {
-		name : string,
-		description : string
-	}
 	
 	entity type Comment {
 		comment : string,
@@ -73,7 +71,9 @@ physical schemas {
 						comment,
 						number
 					}
-				}
+				},
+				category_name,
+				category_description
 			}
 		}
 	}
@@ -90,7 +90,7 @@ physical schemas {
 }
 	
 mapping rules{
-	cs.Product(id,description/*,name,price*/) -> myDocSchema.productCollection(product_ref,productDescription/*,name,price*/), // Commenter pour tester les EmbeddedObject Acceleo..
+	cs.Product(id,description/*,name,price*/,cat_name, cat_description) -> myDocSchema.productCollection(product_ref,productDescription/*,name,price*/, category_name, category_description ), // Commenter pour tester les EmbeddedObject Acceleo..
 	cs.productReview.reviews -> myDocSchema.productCollection.reviews(),
 	cs.Product(name,price) -> myDocSchema.productCollection.reviews.product_attributes(name,price),
 	cs.Review(content,rating) -> myDocSchema.productCollection.reviews(content,rate),

@@ -35,7 +35,7 @@ public class MongoDataInit implements DataInit{
 
     public static void main(String args[]){
         String mongohost = "localhost";
-        String mongodbname = "evol-db-hybrid";
+        String mongodbname = "mymongo";
         int mongoport = 27000;
       int nbdataobj = 100;
         MongoDataInit mongoDataInit = new MongoDataInit(mongodbname, mongohost, mongoport, nbdataobj);
@@ -111,9 +111,18 @@ public class MongoDataInit implements DataInit{
                 Document productAtt = new Document()
                         .append("name", "productName" + i)
                         .append("price", price + "$");
+                List<Document> fakeLevel = new ArrayList<>();
+                Document fakeAtt = new Document()
+                        .append("fakeatt","XXX")
+                        .append("product_attributes", productAtt);
+                Document fakeAtt2 = new Document()
+                        .append("fakeatt", "XXX");
+                fakeLevel.add(fakeAtt);
+                fakeLevel.add(fakeAtt2);
+
 
                 Document review = new Document()
-                        .append("product_attributes", productAtt)
+                        .append("fake_nested", fakeLevel)
                         .append("userid", "user" + usernumber)
 //                        .append("user_name", "UserName" + usernumber)
                         .append("numberofstars", rating)

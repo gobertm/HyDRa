@@ -31,7 +31,7 @@ public class MainCLI {
         int nbdataobj = 100;
         String redishost = "localhost";
         String mongohost = "localhost";
-        String mongodbname = "evol-db-hybrid";
+        String mongodbname = "mymongo";
         String neohost = "localhost";
         String neouser = "neo4j";
         String neopwd = "myneo4j";
