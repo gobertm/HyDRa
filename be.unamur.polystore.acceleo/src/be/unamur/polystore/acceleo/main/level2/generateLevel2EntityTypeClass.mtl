@@ -29,6 +29,7 @@ import static java.util.Collections.singletonList;
 import dbconnection.SparkConnectionMgr;
 import scala.collection.mutable.WrappedArray;
 import org.apache.spark.api.java.function.FlatMapFunction;
+import java.util.ArrayList;
 
 public class [entityType.name.toUpperFirst() + 'ServiceImpl' /] extends [entityType.name.toUpperFirst() + 'Service' /] {
 

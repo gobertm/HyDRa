@@ -18,11 +18,19 @@
 
 	Dataset<[ent.name.toUpperFirst() /]> res = dataset.flatMap((FlatMapFunction<Row, [ent.name.toUpperFirst() /]>) r -> {
 			List<[ent.name.toUpperFirst() /]> list_res = new ArrayList<[ent.name.toUpperFirst() /]>();
+			Integer groupIndex = null;
+			String regex = null;
+			String value = null;
+			Pattern p = null;
+			Matcher m = null;
+			boolean matches = false;
+			Row nestedRow = null;
+
 			boolean addedInList = false;
 			Row r1 = r;
 			[ent.name.toUpperFirst() /] [ent.name.toLowerFirst() /]1 = new [ent.name.toUpperFirst() /]();
 
-			[generateFlatMapBody(struct, ent, 1)/]
+			[generateFlatMapBody(struct, ent, db, 1)/]
 			
 			return list_res.iterator();
 
@@ -226,16 +234,61 @@ private static String getBSONMatchQueryIn[struct.name.toUpperFirst()/]From[db.na
 }
 [/template]
 
-[template private generateFlatMapBody(arg : OclAny, ent : EntityType, level : Integer)]
+[template private generateFlatMapBody(arg : OclAny, ent : EntityType, db : Database, level : Integer)]
 boolean toAdd[level /]  = false;
 WrappedArray array[level /]  = null;
 [for (child : PhysicalField | getChildrenNonArrayPhysicalFields(arg))]
 [let mappedAttrList : Collection(Attribute) = getMappedAttributes(child, ent, ent.ancestors(Domainmodel)->first().mappingRules)]
 [if (mappedAttrList->size() > 0)]
 [for (attr : Attribute | mappedAttrList)]
-//TODO appel function  => attr, child
-[ent.name.toLowerFirst() /][level/].set[attr.name.toUpperFirst() /](value);
-toAdd[level/] = true;
+
+Row nestedRow = ...
+
+[let ancestorsList : Sequence(EmbeddedObject) = field.ancestors(EmbeddedObject)]
+				
+nestedRow =  r[level /];
+[comment EmbeddedObject as ancestor /]
+[for (anc : EmbeddedObject | ancestorsList->reverse())]
+[if (anc.cardinality = pml::Cardinality::ONE or anc.cardinality = pml::Cardinality::ZERO_ONE)]
+[comment simple row /]
+nestedRow = (Row) nestedRow.getAs("[getPhysicalName(anc)/]");
+[/if]
+[/for]
+[/let]
+
+[if (child.ancestors(LongField) -> size() = 0)]
+[comment shortField or bracketfield/]
+[ent.name.toLowerFirst() /][level/].set[attr.name.toUpperFirst() /](([generateJavaType(attr.type)/]) nestedRow.getAs("[getPhysicalName(child) /]"));
+toAdd[level/] = true;					
+[else]
+[comment LongField /]
+regex = "[getJavaRegexFromLongField(child.ancestors(LongField) -> first().oclAsType(LongField)) /]";
+groupIndex = [getPositionInLongField(child, child.ancestors(LongField) -> first().oclAsType(LongField))/];
+if(groupIndex == null) {
+	throw new Exception("Cannot retrieve value for [ent.name /][attr.name /] attribute stored in db [db.name/]. Probably due to an ambiguous regex.");
+}
+value = nestedRow.getAs("[child.ancestors(LongField) -> first().oclAsType(LongField).physicalName /]");
+p = Pattern.compile(regex);
+m = p.matcher(value);
+matches = m.find();
+if(matches) {
+	String [attr.name.toLowerFirst()/] = m.group(groupIndex.intValue());
+	[ent.name.toLowerFirst() /][level/].set[attr.name.toUpperFirst()/]([generateParsingFunctionJavaType(attr.type, attr.name.toLowerFirst())/]);
+	toAdd[level/] = true;
+} else {
+	throw new Exception("Cannot retrieve value for [ent.name /][attr.name /] attribute stored in db [db.name/]. Probably due to an ambiguous regex.");
+}
+[/if]
+
+
+
+
+
+
+
+
+
+
 [/for]
 [/if]
 [/let]
@@ -247,7 +300,7 @@ array[level /] = r[level /].getAs("[getPhysicalName(child)/]");
 for (int i[level + 1/] = 0; i[level + 1/] < array[level /].size(); i[level + 1/]++){
 	Row r[level + 1 /] = (Row) array[level /].apply(i[level + 1/]);
 	[ent.name.toUpperFirst() /] [ent.name.toLowerFirst() /][level + 1/] = [ent.name.toLowerFirst() /][level/].clone();
-	[generateFlatMapBody(child, ent, level + 1)/]
+	[generateFlatMapBody(child, ent, db, level + 1)/]
 }
 
 if(toAdd[level /]) {
