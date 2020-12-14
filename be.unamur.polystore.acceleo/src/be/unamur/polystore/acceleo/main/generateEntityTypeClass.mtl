@@ -27,7 +27,7 @@ package pojo;
 
 import java.io.Serializable;
 
-public class [entityType.name.toUpperFirst() /] implements Serializable {
+public class [entityType.name.toUpperFirst() /] implements Serializable, Cloneable{
 
 	[for (attr: Attribute | entityType.attributes)]
 	private [generateJavaType(attr.type) /] [attr.name /];
@@ -53,8 +53,19 @@ public class [entityType.name.toUpperFirst() /] implements Serializable {
 		[/for]
 	[/for]
 
+	[comment Empty Constructor /]
+	
 	public [entityType.name.toUpperFirst() /]() {}
 
+	[comment clone function /]
+	@Override
+    protected Object clone() throws CloneNotSupportedException {
+        return super.clone();
+    }
+	
+
+	[comment Getter & Setter for attributes /]
+	
 	[for (attr: Attribute | entityType.attributes)]
 	public [generateJavaType(attr.type) /] get[attr.name.toUpperFirst() /]() {
 		return [attr.name /];
@@ -64,6 +75,9 @@ public class [entityType.name.toUpperFirst() /] implements Serializable {
 		this.[attr.name /] = [attr.name /];
 	}
 	[/for]
+
+	[comment Getter & Setter for relationships types /]
+	
 
 	[for (rel: RelationshipType | getConcernedRelationshipTypes(entityType, conceptualSchema))]
 		[for (r: Role | rel.roles) ]
