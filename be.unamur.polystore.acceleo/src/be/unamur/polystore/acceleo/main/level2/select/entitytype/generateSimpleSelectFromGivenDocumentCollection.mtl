@@ -14,7 +14,24 @@
 	
 	Dataset<Row> dataset = SparkConnectionMgr.getSparkSessionForMongoDB("[db.name /]", "[struct.name /]", bsonQuery);
 	dataset.printSchema();
-	Dataset<[ent.name.toUpperFirst() /]> res = dataset.map((MapFunction<Row, [ent.name.toUpperFirst() /]>) r -> {
+
+
+	Dataset<[ent.name.toUpperFirst() /]> res = dataset.flatMap((FlatMapFunction<Row, [ent.name.toUpperFirst() /]>) r -> {
+			List<[ent.name.toUpperFirst() /]> list_res = new ArrayList<[ent.name.toUpperFirst() /]>();
+			boolean addedInList = false;
+			Row r1 = r;
+			[ent.name.toUpperFirst() /] [ent.name.toLowerFirst() /]1 = new [ent.name.toUpperFirst() /]();
+
+			[generateFlatMapBody(struct, ent, 1)/]
+			
+			return list_res.iterator();
+
+	}, Encoders.kryo([ent.name.toUpperFirst() /].class));
+
+
+
+
+	res = dataset.map((MapFunction<Row, [ent.name.toUpperFirst() /]>) r -> {
 				[ent.name.toUpperFirst() /] [ent.name.toLowerFirst() /]_res = new [ent.name.toUpperFirst() /]();
 				Integer groupIndex = null;
 				String regex = null;
@@ -208,4 +225,60 @@ private static String getBSONMatchQueryIn[struct.name.toUpperFirst()/]From[db.na
 	return res;
 }
 [/template]
+
+[template private generateFlatMapBody(arg : OclAny, ent : EntityType, level : Integer)]
+boolean toAdd[level /]  = false;
+WrappedArray array[level /]  = null;
+[for (child : PhysicalField | getChildrenNonArrayPhysicalFields(arg))]
+[let mappedAttrList : Collection(Attribute) = getMappedAttributes(child, ent, ent.ancestors(Domainmodel)->first().mappingRules)]
+[if (mappedAttrList->size() > 0)]
+[for (attr : Attribute | mappedAttrList)]
+//TODO appel function  => attr, child
+[ent.name.toLowerFirst() /][level/].set[attr.name.toUpperFirst() /](value);
+toAdd[level/] = true;
+[/for]
+[/if]
+[/let]
+[/for]
+[let children : Collection(EmbeddedObject) = getChildrenArrayPhysicalFieldsHavingDescendantMappedToGivenEntityType(arg, ent, ent.ancestors(Domainmodel)->first().mappingRules)]
+[if (children->size() > 0)]
+[for (child : EmbeddedObject | children)]
+array[level /] = r[level /].getAs("[getPhysicalName(child)/]");
+for (int i[level + 1/] = 0; i[level + 1/] < array[level /].size(); i[level + 1/]++){
+	Row r[level + 1 /] = (Row) array[level /].apply(i[level + 1/]);
+	[ent.name.toUpperFirst() /] [ent.name.toLowerFirst() /][level + 1/] = [ent.name.toLowerFirst() /][level/].clone();
+	[generateFlatMapBody(child, ent, level + 1)/]
+}
+
+if(toAdd[level /]) {
+	list_res.add(product[level /]);
+	addedInList = true;
+} 
+[if (level > 1)]if(addedInList)
+	toAdd[level - 1 /] = false;[/if]
+
+[/for]
+[else]
+if(toAdd[level /]) {
+	list_res.add(product[level /]);
+	addedInList = true;
+} 
+[if (level > 1)]if(addedInList)
+	toAdd[level - 1 /] = false;[/if]
+[/if]
+[/let]
+[/template]
+
+[query private getChildrenNonArrayPhysicalFields(arg : OclAny) : Collection(PhysicalField) =  
+	invoke('be.unamur.polystore.acceleo.main.services.Util', 'getChildrenNonArrayPhysicalFields(java.lang.Object)', Sequence{arg})
+/]
+
+[query private getMappedAttributes(field: PhysicalField, ent: EntityType, rules: MappingRules) : Collection(Attribute) =  
+	invoke('be.unamur.polystore.acceleo.main.services.Util', 'getMappedAttributes(be.unamur.polystore.pml.PhysicalField, be.unamur.polystore.pml.EntityType, be.unamur.polystore.pml.MappingRules)', Sequence{field, ent, rules})
+/]
+
+[query private getChildrenArrayPhysicalFieldsHavingDescendantMappedToGivenEntityType(arg : OclAny, ent: EntityType, rules: MappingRules) : Collection(EmbeddedObject) =  
+	invoke('be.unamur.polystore.acceleo.main.services.Util', 'getChildrenArrayPhysicalFieldsHavingDescendantMappedToGivenEntityType(java.lang.Object, be.unamur.polystore.pml.EntityType, be.unamur.polystore.pml.MappingRules)', Sequence{arg, ent, rules})
+/]
+
 
