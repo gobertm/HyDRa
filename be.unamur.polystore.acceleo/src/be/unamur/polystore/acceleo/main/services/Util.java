@@ -21,6 +21,7 @@ import be.unamur.polystore.pml.EntityType;
 import be.unamur.polystore.pml.LongField;
 import be.unamur.polystore.pml.MappingRules;
 import be.unamur.polystore.pml.PhysicalField;
+import be.unamur.polystore.pml.ShortField;
 import be.unamur.polystore.pml.TerminalExpression;
 
 public class Util {
@@ -47,7 +48,7 @@ public class Util {
 		if (literal == null)
 			return null;
 		return literal/** .replaceAll("\s", "\\\\s") **/
-				.replaceAll("\\$", "\\\\\\\\\\$").replaceAll("\\(", "\\\\\\(").replaceAll("\\)", "\\\\\\)"); // TODO
+				.replaceAll("\\*", "\\\\\\\\*").replaceAll("\\$", "\\\\\\\\\\$").replaceAll("\\(", "\\\\\\(").replaceAll("\\)", "\\\\\\)"); // TODO
 	}
 
 	public static String getPositionInLongField(PhysicalField field, LongField parent) {
@@ -79,19 +80,31 @@ public class Util {
 		} else if (arg instanceof EmbeddedObject) {
 			EmbeddedObject emb = (EmbeddedObject) arg;
 			list = emb.getFields();
+		} else if (arg instanceof LongField) {
+			LongField lf = (LongField) arg;
+			list = new ArrayList<PhysicalField>();
+			for (TerminalExpression expr : lf.getPattern())
+				if (expr instanceof PhysicalField)
+					list.add((PhysicalField) expr);
+
 		}
 
 		if (list != null)
 			for (PhysicalField field : list) {
-				if (!(field instanceof EmbeddedObject))
-					res.add(field);
-				else {
+				if (field instanceof EmbeddedObject) {
 					EmbeddedObject o = (EmbeddedObject) field;
 					if (o.getCardinality() == Cardinality.ONE || o.getCardinality() == Cardinality.ZERO_ONE) {
 						res.addAll(getChildrenNonArrayPhysicalFields(o));
 					}
-
+				} else {
+					if (field instanceof LongField) {
+						res.addAll(getChildrenNonArrayPhysicalFields(field));
+					} else {
+						// shortField or bracketField
+						res.add(field);
+					}
 				}
+
 			}
 
 		return res;
@@ -103,8 +116,8 @@ public class Util {
 		Set<Attribute> res = new HashSet<Attribute>();
 
 		if (field instanceof EmbeddedObject) {
-				for(PhysicalField pf : ((EmbeddedObject) field).getFields())
-					res.addAll(getMappedAttributes(pf, ent, rules));
+			for (PhysicalField pf : ((EmbeddedObject) field).getFields())
+				res.addAll(getMappedAttributes(pf, ent, rules));
 		} else if (rules != null)
 			for (AbstractMappingRule rule : rules.getMappingRules()) {
 				if (rule instanceof EntityMappingRule) {
@@ -144,12 +157,24 @@ public class Util {
 				if (field instanceof EmbeddedObject) {
 					if (((EmbeddedObject) field).getCardinality() == Cardinality.ONE_MANY
 							|| ((EmbeddedObject) field).getCardinality() == Cardinality.ZERO_MANY) {
-							java.util.Collection<Attribute> mappedAttributes = getMappedAttributes(field, ent, rules);
-							if(mappedAttributes.size() > 0)
-								res.add((EmbeddedObject) field);
+						java.util.Collection<Attribute> mappedAttributes = getMappedAttributes(field, ent, rules);
+						if (mappedAttributes.size() > 0)
+							res.add((EmbeddedObject) field);
 					}
 				}
 			}
+
+		return res;
+	}
+
+	public static java.util.Collection<EmbeddedObject> getSequenceOfNonArrayEmbeddedObjects(EObject field) {
+		List<EmbeddedObject> res = new ArrayList<EmbeddedObject>();
+		if (field != null) {
+			if (field instanceof EmbeddedObject && (((EmbeddedObject) field).getCardinality() == Cardinality.ONE
+					|| ((EmbeddedObject) field).getCardinality() == Cardinality.ZERO_ONE))
+				res.add((EmbeddedObject) field);
+			res.addAll(getSequenceOfNonArrayEmbeddedObjects(field.eContainer()));
+		}
 
 		return res;
 	}

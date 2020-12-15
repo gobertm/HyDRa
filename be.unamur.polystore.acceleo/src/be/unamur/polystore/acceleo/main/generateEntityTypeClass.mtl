@@ -59,7 +59,7 @@ public class [entityType.name.toUpperFirst() /] implements Serializable, Cloneab
 
 	[comment clone function /]
 	@Override
-    protected Object clone() throws CloneNotSupportedException {
+    public Object clone() throws CloneNotSupportedException {
         return super.clone();
     }
 	

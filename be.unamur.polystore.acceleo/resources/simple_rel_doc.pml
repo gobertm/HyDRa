@@ -61,7 +61,7 @@ physical schemas {
 						fakeAtt,
 						product_attributes [1] {
 							name,
-							price : [price]"$"						
+							price : [prices]"$"						
 							}
 					},
 					userid,
@@ -74,8 +74,10 @@ physical schemas {
 						number
 					}
 				},
-				category_name,
-				category_description
+				category [1] {
+					category_name,
+					category_description
+				}
 			}
 		}
 	}
@@ -92,9 +94,10 @@ physical schemas {
 }
 	
 mapping rules{
-	cs.Product(id,description/*,name,price*/,cat_name, cat_description) -> myDocSchema.product_reviews(product_ref,productDescription/*,name,price*/, category_name, category_description ), // Commenter pour tester les EmbeddedObject Acceleo..
+	cs.Product(id,description/*,name,price*/) -> myDocSchema.product_reviews(product_ref,productDescription/*,name,price*/), // Commenter pour tester les EmbeddedObject Acceleo..
+	cs.Product(cat_name, cat_description) -> myDocSchema.product_reviews.category(category_name, category_description ),
 	cs.productReview.reviews -> myDocSchema.product_reviews.reviews(),
-	cs.Product(name,price) -> myDocSchema.product_reviews.reviews.fake_nested.product_attributes(name,price),
+	cs.Product(name,price) -> myDocSchema.product_reviews.reviews.fake_nested.product_attributes(name,prices),
 	cs.Review(content,rating) -> myDocSchema.product_reviews.reviews(content,rate),
 	cs.Review(rating) -> myDocSchema.product_reviews.reviews(rate2),
 	cs.commentReview.comments -> myDocSchema.product_reviews.reviews.comments(),
