@@ -36,7 +36,6 @@
 
 	}, Encoders.kryo([ent.name.toUpperFirst() /].class));
 
-
 	return res;
 [/template]
 
@@ -211,7 +210,8 @@ if(array[level /]!= null) {
 }
 
 if(toAdd[level /]) {
-	list_res.add([ent.name.toLowerFirst() /][level /]);
+	[if (level > 1)]if(condition.evaluate([ent.name.toLowerFirst() /][level /]))[/if]
+		list_res.add([ent.name.toLowerFirst() /][level /]);
 	addedInList = true;
 } 
 [if (level > 1)]if(addedInList)
@@ -220,6 +220,7 @@ if(toAdd[level /]) {
 [/for]
 [else]
 if(toAdd[level /]) {
+	[if (level > 1)]if(condition.evaluate([ent.name.toLowerFirst() /][level /]))[/if]
 	list_res.add([ent.name.toLowerFirst() /][level /]);
 	addedInList = true;
 } 

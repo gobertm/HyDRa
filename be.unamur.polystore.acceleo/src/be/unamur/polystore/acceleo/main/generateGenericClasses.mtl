@@ -1,6 +1,8 @@
 [comment encoding = UTF-8 /]
 [module generateGenericClasses('http://www.unamur.be/polystore/Pml')]
 
+[import be::unamur::polystore::acceleo::main::generateJavaDataType /]
+
 [template public generateGenericClasses(conceptualSchema: ConceptualSchema)]
 [generateUtilClass() /]
 [generateLoadingClass() /]
@@ -86,7 +88,10 @@ public enum Loading {
 [file ('src/main/java/conditions/Condition.java', false, 'UTF-8')]
 package conditions;
 
-public abstract class Condition<E> {
+import pojo.IPojo;
+import java.io.Serializable;
+
+public abstract class Condition<E> implements Serializable {
 
 	public static <E> SimpleCondition<E> simple(E attr, Operator op, Object value) {
 		return new SimpleCondition<E>(attr, op, value);
@@ -101,11 +106,15 @@ public abstract class Condition<E> {
 	}
 
 	public abstract Class<E> eval() throws Exception;
+
+	public abstract boolean evaluate(IPojo obj);
 }
 [/file]
 
 [file ('src/main/java/conditions/AndCondition.java', false, 'UTF-8')]
 package conditions;
+
+import pojo.IPojo;
 
 public class AndCondition<E> extends Condition<E> {
 
@@ -142,11 +151,23 @@ public class AndCondition<E> extends Condition<E> {
 			throw new Exception("This condition is defined on more than one POJO class: " + cl1 + " and " + cl2);
 		return cl1;
 	}	
+
+	@Override
+	public boolean evaluate(IPojo o) {
+		boolean res = true;
+		if(getLeftCondition() != null)
+			res = getLeftCondition().evaluate(o);
+		if(getRightCondition() != null)
+			res = res && getRightCondition().evaluate(o);
+		return res;
+	}
 }
 [/file]
 
 [file ('src/main/java/conditions/OrCondition.java', false, 'UTF-8')]
 package conditions;
+
+import pojo.IPojo;
 
 public class OrCondition<E> extends Condition<E> {
 
@@ -183,11 +204,25 @@ public class OrCondition<E> extends Condition<E> {
 			throw new Exception("This condition is defined on more than one POJO class: " + cl1 + " and " + cl2);
 		return cl1;
 	}
+
+	@Override
+	public boolean evaluate(IPojo o) {
+		if(getLeftCondition() == null && getRightCondition() == null)
+			return true;
+		boolean res = false;
+		if(getLeftCondition() != null)
+			res = getLeftCondition().evaluate(o);
+		if(getRightCondition() != null)
+			res = res || getRightCondition().evaluate(o);
+		return res;
+	}
 }
 [/file]
 
 [file ('src/main/java/conditions/SimpleCondition.java', false, 'UTF-8')]
 package conditions;
+
+import pojo.*;
 
 public class SimpleCondition<E> extends Condition<E> {
 
@@ -227,8 +262,66 @@ public class SimpleCondition<E> extends Condition<E> {
 
 	@Override
 	public Class<E> eval() throws Exception {
+		if(getOperator() == null)
+			throw new Exception("You cannot specify a NULL operator in a simple condition");
+		if(getValue() == null && operator != Operator.EQUALS && operator != Operator.NOT_EQUALS)
+			throw new Exception("You cannot specify a NULL value with this operator");
+
 		return (Class<E>) attribute.getClass();
 	}
+
+	@Override
+	public boolean evaluate(IPojo obj) {
+		[for (ent : EntityType | conceptualSchema.entities)]
+		if(obj instanceof [ent.name.toUpperFirst() /])
+			return evaluate[ent.name.toUpperFirst() /](([ent.name.toUpperFirst() /]) obj);
+		[/for]
+		[for (rel : RelationshipType | conceptualSchema.relationships)][if (rel.attributes->size() > 0)]
+		if(obj instanceof [rel.name.toUpperFirst() /])
+			return evaluate[rel.name.toUpperFirst() /](([rel.name.toUpperFirst() /]) obj);
+		[/if][/for]
+		return true;
+	}
+
+
+	[for (ent : EntityType | conceptualSchema.entities)]
+	private boolean evaluate[ent.name.toUpperFirst() /]([ent.name.toUpperFirst() /] obj) {
+		if(obj == null)
+			return false;
+		if(this.operator == null)
+			return true;
+
+		[ent.name.toUpperFirst() /]Attribute attr = ([ent.name.toUpperFirst() /]Attribute) this.attribute;
+		Object objectValue = null;
+
+		[for (attr : Attribute | ent.attributes)]
+		if(attr == [ent.name.toUpperFirst() /]Attribute.[attr.name /])
+			objectValue = obj.get[attr.name.toUpperFirst() /]();
+		[/for]
+
+		return operator.evaluate(objectValue, this.getValue());
+	}
+	[/for]
+	[for (rel : RelationshipType | conceptualSchema.relationships)][if (rel.attributes->size() > 0)]
+		private boolean evaluate[rel.name.toUpperFirst() /]([rel.name.toUpperFirst() /] obj) {
+		if(obj == null)
+			return false;
+		if(this.operator == null)
+			return true;
+
+		[rel.name.toUpperFirst() /]Attribute attr = ([rel.name.toUpperFirst() /]Attribute) this.attribute;
+		Object objectValue = null;
+
+		[for (attr : Attribute | rel.attributes)]
+		if(attr == [rel.name.toUpperFirst() /]Attribute.[attr.name /])
+			objectValue = obj.get[attr.name.toUpperFirst() /]();
+		[/for]
+
+		return operator.evaluate(objectValue, this.getValue());
+	}
+	[/if][/for]
+
+	
 }
 [/file]
 
@@ -266,6 +359,41 @@ package conditions;
 public enum Operator {
 	EQUALS, NOT_EQUALS, GT, GTE, LT, LTE, CONTAINS/**, START_WITH, END_WITH**/;
 	
+	public boolean evaluate(Object objectValue, Object testValue) {
+			if(this == Operator.EQUALS) {
+				if(testValue == null && objectValue!= null)
+					return false;
+				if(testValue != null && objectValue == null)
+					return false;	
+				return testValue.equals(objectValue);
+			}
+			if(this == Operator.NOT_EQUALS) {
+				if(testValue == null && objectValue!= null)
+					return true;
+				if(testValue != null && objectValue == null)
+					return true;	
+				return !testValue.equals(objectValue);
+			}
+			if(this == Operator.GT) {
+				return ((Comparable) testValue).compareTo(objectValue) < 0;
+			}
+			if(this == Operator.GTE) {
+				return ((Comparable) testValue).compareTo(objectValue) <= 0;
+			}
+			if(this == Operator.LT) {
+				return ((Comparable) testValue).compareTo(objectValue) > 0;
+			}
+			if(this == Operator.LTE)
+				return ((Comparable) testValue).compareTo(objectValue) >= 0;
+			if(this == Operator.CONTAINS) {
+				if(objectValue == null)
+					return false;
+				return objectValue.toString().contains(testValue.toString());
+			}
+			
+			return false;
+	}
+
 	public String getSQLOperator() {
 		if(this == EQUALS)
 			return "=";

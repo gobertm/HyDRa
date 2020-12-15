@@ -18,7 +18,7 @@
 [generatePomFile(conceptualSchema) /]
 [generateGenericClasses(conceptualSchema) /]
 [generateDBConnectionClasses(conceptualSchema) /]
-
+[generateIPojo() /]
 [for (entityType: EntityType | conceptualSchema.entities)]
 	[generateClass(entityType, conceptualSchema) /]
 	[generateAllLevelsEntityTypeClass(entityType, conceptualSchema) /]
@@ -28,4 +28,12 @@
 	[ generateClass(rel, conceptualSchema)/]
 	[ generateAllLevelsRelationshipTypeClass(rel, conceptualSchema) /]
 [/for]
+[/template]
+
+[template private generateIPojo()]
+[file ('src/main/java/pojo/IPojo.java', false, 'UTF-8')]
+package pojo;
+
+public interface IPojo {}
+[/file]
 [/template]

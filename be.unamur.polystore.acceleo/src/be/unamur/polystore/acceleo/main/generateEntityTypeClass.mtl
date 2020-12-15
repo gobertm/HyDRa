@@ -27,7 +27,7 @@ package pojo;
 
 import java.io.Serializable;
 
-public class [entityType.name.toUpperFirst() /] implements Serializable, Cloneable{
+public class [entityType.name.toUpperFirst() /] implements Serializable, Cloneable, IPojo{
 
 	[for (attr: Attribute | entityType.attributes)]
 	private [generateJavaType(attr.type) /] [attr.name /];
