@@ -1,0 +1,92 @@
+conceptual schema cs {
+	entity type Product{
+		id:int,
+		name:string,
+		price:float,
+		description:string,
+		cat_name : string,
+		cat_description: string
+
+		identifier{
+			id
+		}
+	} 
+	
+	entity type Review {
+		rating : int,
+		content : string
+	}
+	
+	
+	relationship type productReview{
+	reviews[1]: Review,
+	product[0-N] : Product
+	}
+	
+}
+physical schemas {
+	document schema myDocSchema : mymongo{
+		collection productCollection{
+			fields { 
+				product_ref,
+				productDescription,
+				price,
+				name,
+				reviews[0-N]{
+					numberofstars:[rate],
+					ratingstring :[rate2]"*",
+					content
+				}
+			}
+		}
+	}
+	
+	document schema categorySchema : mymongo2 {
+			collection categoryCollection {
+				fields {
+					categoryname,
+					categorydesc,
+					products[0-N]{
+						id
+					}
+				}
+			}
+		
+	}
+	
+	relational schema myRelSchema : mymysql {
+		table ProductCatalogTable {
+			columns {
+				product_id,
+				europrice : [price]"€",
+				description,
+				categoryname
+			}
+		}
+	}
+}
+	
+mapping rules{
+	cs.Product(id,description,price,name) -> myDocSchema.productCollection(product_ref,productDescription,price,name),
+	cs.Product(id) -> categorySchema.categoryCollection.products(id),
+	cs.Review(content,rating,rating) ->myDocSchema.productCollection.reviews(content,rate,rate2),
+	cs.Product(id,price,description,cat_name) -> myRelSchema.ProductCatalogTable(product_id,price,description,categoryname)
+}
+
+databases {
+	
+	sqlite mymysql {
+		host: "localhost"
+		port: 3307
+	}
+	
+	mongodb mymongo {
+		host : "localhost"
+		port:27000
+	}
+	
+	mongodb mymongo2 {
+		host:"locahost"
+		port: 27100
+			}
+}
