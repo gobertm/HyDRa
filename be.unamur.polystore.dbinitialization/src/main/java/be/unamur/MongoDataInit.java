@@ -78,7 +78,7 @@ public class MongoDataInit implements DataInit{
 
                 Document product = new Document("product_ref", "product" + i)
                         .append("productDescription", RandomStringUtils.randomAlphabetic(10))
-                        .append("price", RandomUtils.nextInt())
+                        .append("price", RandomUtils.nextFloat())
                         .append("name", "productName" + i)
                         .append("reviews", listReviews);
 

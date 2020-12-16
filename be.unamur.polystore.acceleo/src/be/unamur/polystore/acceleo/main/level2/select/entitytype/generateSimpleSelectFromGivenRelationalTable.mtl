@@ -60,7 +60,7 @@
 				[/for]
 
 				return [ent.name.toLowerFirst() /]_res;
-			}, Encoders.kryo([ent.name.toUpperFirst() /].class));
+			}, Encoders.bean([ent.name.toUpperFirst() /].class));
 
 
 	return res;

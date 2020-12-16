@@ -425,7 +425,7 @@ public enum Operator {
 		if(this == GT)
 			return "$gt";
 		if(this == GTE)
-			return "gte";
+			return "$gte";
 		if(this == LT)
 			return "$lt";
 		if(this == LTE)

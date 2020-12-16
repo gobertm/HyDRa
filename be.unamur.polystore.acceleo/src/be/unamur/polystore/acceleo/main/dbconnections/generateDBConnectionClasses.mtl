@@ -16,6 +16,9 @@ package dbconnection;
 
 import static java.util.Collections.singletonList;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import org.apache.spark.api.java.JavaSparkContext;
 import org.apache.spark.sql.DataFrameReader;
 import org.apache.spark.sql.Dataset;
@@ -24,30 +27,71 @@ import org.apache.spark.sql.SparkSession;
 import org.bson.Document;
 
 import com.mongodb.spark.MongoSpark;
+import com.mongodb.spark.config.ReadConfig;
 
 public class SparkConnectionMgr {
+	private static Map<String, DBCredentials> dbPorts = new HashMap<String, DBCredentials>();
+	private static SparkSession session = null;
+
+	private static class DBCredentials {
+
+		protected DBCredentials(String dbName, String url, String port, String userName, String userPwd) {
+			this.dbName = dbName;
+			this.url = url;
+			this.port = port;
+			this.userName = userName;
+			this.userPwd = userPwd;
+		}
+
+		protected String dbName;
+		protected String url;
+		protected String port;
+		protected String userName;
+		protected String userPwd;
+	}
+
+	static {
+		[for (db : Database | conceptualSchema.ancestors(Domainmodel)->first().databases.databases)]
+			dbPorts.put("[db.name /]", new DBCredentials("[db.name /]", "[db.host /]", "[db.port /]", "[db.login /]", "[db.password /]"));
+		[/for]
+	}
+
+		private static SparkSession getSession() {
+		if (session == null) {
+			session = SparkSession.builder().appName("Polystore").config("spark.master", "local")
+					.config("spark.some.config.option", "some-value")
+					.config("spark.mongodb.input.uri", "mongodb://127.0.0.1:1/fakedb.fakecollection")
+//			.config("spark.mongodb.output.uri", "mongodb://127.0.0.1:1/mymongo.productCollection")
+					.getOrCreate();
+			session.sparkContext().setLogLevel("ERROR");
+		}
+		return session;
+	}
 
 	public static Dataset<Row> getSparkSessionForMongoDB(String dbName, String collectionName, String bsonQuery) {
-		SparkSession spark = SparkSession.builder().appName("Polystore")
-				.config("spark.master", "local")
-				.config("spark.mongodb.input.uri", "mongodb://127.0.0.1:27000/" + dbName + "." + collectionName)
-				.config("spark.mongodb.output.uri", "mongodb://127.0.0.1:27000/" + dbName + "." + collectionName)
-				.getOrCreate();
-		
-		JavaSparkContext jsc = new JavaSparkContext(spark.sparkContext());
-		Dataset<Row> res = (bsonQuery != null) ? 
-							MongoSpark.load(jsc).withPipeline(singletonList(Document.parse(bsonQuery))).toDF() : 
-							MongoSpark.load(jsc).toDF();
+		JavaSparkContext jsc = new JavaSparkContext(getSession().sparkContext());
+
+		// https://docs.mongodb.com/manual/core/read-preference/#replica-set-read-preference-modes
+		Map<String, String> readOverrides = new HashMap<String, String>();
+		DBCredentials credentials = dbPorts.get(dbName);
+		readOverrides.put("uri", "mongodb://" + credentials.url + ":" + credentials.port);
+		readOverrides.put("database", dbName);
+		readOverrides.put("collection", collectionName);
+		readOverrides.put("readPreference.name", "primaryPreferred");
+		ReadConfig readConfig = ReadConfig.create(jsc).withOptions(readOverrides);
+
+		Dataset<Row> res = (bsonQuery != null)
+				? MongoSpark.load(jsc, readConfig).withPipeline(singletonList(Document.parse(bsonQuery))).toDF()
+				: MongoSpark.load(jsc, readConfig).toDF();
 		return res;
+
 	}
 
 	public static Dataset<Row> getDataset(String dbName, String physicalStrucName) {
-		SparkSession spark = SparkSession.builder().appName("Polystore")
-				.config("spark.master", "local").config("spark.some.config.option", "some-value").getOrCreate();
-		spark.sparkContext().setLogLevel("ERROR");
-		DataFrameReader dfr = spark.sqlContext().read().format("jdbc")
-				.option("url", "jdbc:mysql://127.0.0.1:3306/" + dbName).option("user", "root")
-				.option("password", "admin");
+		DBCredentials credentials = dbPorts.get(dbName);
+		DataFrameReader dfr = getSession().sqlContext().read().format("jdbc")
+				.option("url", "jdbc:mysql://" + credentials.url + ":" + credentials.port + "/" + dbName)
+				.option("user", credentials.userName).option("password", credentials.userPwd);
 
 		Dataset<Row> d = dfr.option("dbtable", physicalStrucName).load();
 		return d;

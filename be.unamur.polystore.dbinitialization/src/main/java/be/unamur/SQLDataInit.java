@@ -27,7 +27,7 @@ public class SQLDataInit {
     public void initData(int numberofrecords) throws SQLException {
         Statement stmt=connection.createStatement();
         for (int i = 100; i < numberofrecords; i++) {
-            stmt.execute("insert into ProductCatalogTable(product_id,europrice, description, categoryname) VALUES ('product" + i + "'," + RandomUtils.nextInt() + ",'desc','"+ RandomStringUtils.random(2,65,70,true,false)+"')");
+            stmt.execute("insert into ProductCatalogTable(product_id,europrice, description, categoryname) VALUES ('product" + i + "','" + RandomUtils.nextInt() + "€','desc','"+ RandomStringUtils.random(2,65,70,true,false)+"')");
         }
     }
 
@@ -35,14 +35,14 @@ public class SQLDataInit {
     public static void main(String args[]) throws SQLException {
         SQLDataInit sqlinit = new SQLDataInit("localhost","3307","mydb","root","password");
         sqlinit.createConnection();
-//        sqlinit.initStructure();
-        sqlinit.initData(100);
+        sqlinit.initStructure();
+        sqlinit.initData(200);
         sqlinit.getConnection().close();
     }
 
     private void initStructure() throws SQLException {
         Statement stmt=connection.createStatement();
-        stmt.execute("create table ProductCatalogTable (" +
+        stmt.execute("create table IF NOT EXISTS ProductCatalogTable (" +
                 "product_id char(36)," +
                 "europrice char(36)," +
                 "description char(50)," +

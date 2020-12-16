@@ -83,38 +83,38 @@ public class [entityType.name.toUpperFirst() /] implements Serializable, Cloneab
 		[for (r: Role | rel.roles) ]
 			[if (r.entity = entityType and isRelationshipTypeComplex(rel))]
 				[if (r.cardinality = pml::Cardinality::ZERO_MANY or r.cardinality = pml::Cardinality::ONE_MANY)]
-	public java.util.List<[rel.name.toUpperFirst() /]> get[rel.name.toUpperFirst()/]ListAs[r.name.toUpperFirst()/]() {
+	public java.util.List<[rel.name.toUpperFirst() /]> _get[rel.name.toUpperFirst()/]ListAs[r.name.toUpperFirst()/]() {
 		return [rel.name/]ListAs[r.name.toUpperFirst()/];
 	}
 
-	public void set[rel.name.toUpperFirst()/]ListAs[r.name.toUpperFirst()/](java.util.List<[rel.name.toUpperFirst() /]> [rel.name/]ListAs[r.name.toUpperFirst()/]) {
+	public void _set[rel.name.toUpperFirst()/]ListAs[r.name.toUpperFirst()/](java.util.List<[rel.name.toUpperFirst() /]> [rel.name/]ListAs[r.name.toUpperFirst()/]) {
 		this.[rel.name/]ListAs[r.name.toUpperFirst()/] = [rel.name/]ListAs[r.name.toUpperFirst()/];
 	}
 				[else]
-	public [rel.name.toUpperFirst() /] get[rel.name.toUpperFirst()/]As[r.name.toUpperFirst()/]() {
+	public [rel.name.toUpperFirst() /] _get[rel.name.toUpperFirst()/]As[r.name.toUpperFirst()/]() {
 		return [rel.name/]As[r.name.toUpperFirst()/];
 	}
 
-	public void set[rel.name.toUpperFirst()/]As[r.name.toUpperFirst()/]([rel.name.toUpperFirst() /] [rel.name/]As[r.name.toUpperFirst()/]) {
+	public void _set[rel.name.toUpperFirst()/]As[r.name.toUpperFirst()/]([rel.name.toUpperFirst() /] [rel.name/]As[r.name.toUpperFirst()/]) {
 		this.[rel.name/]As[r.name.toUpperFirst()/] = [rel.name/]As[r.name.toUpperFirst()/];
 	}
 				[/if]
 			[else]
 				[if (r.entity = entityType)]
 					[if (r.cardinality = pml::Cardinality::ZERO_MANY or r.cardinality = pml::Cardinality::ONE_MANY)]
-	public java.util.List<[rel.roles->at(i.mod(2) + 1).entity.name.toUpperFirst() /]> get[rel.roles->at(i.mod(2) + 1).name.toUpperFirst() /]List() {
+	public java.util.List<[rel.roles->at(i.mod(2) + 1).entity.name.toUpperFirst() /]> _get[rel.roles->at(i.mod(2) + 1).name.toUpperFirst() /]List() {
 		return [rel.roles->at(i.mod(2) + 1).name /]List;
 	}
 
-	public void set[rel.roles->at(i.mod(2) + 1).name.toUpperFirst() /]List(java.util.List<[rel.roles->at(i.mod(2) + 1).entity.name.toUpperFirst() /]> [rel.roles->at(i.mod(2) + 1).name /]List) {
+	public void _set[rel.roles->at(i.mod(2) + 1).name.toUpperFirst() /]List(java.util.List<[rel.roles->at(i.mod(2) + 1).entity.name.toUpperFirst() /]> [rel.roles->at(i.mod(2) + 1).name /]List) {
 		this.[rel.roles->at(i.mod(2) + 1).name /]List = [rel.roles->at(i.mod(2) + 1).name /]List;
 	}
 					[else]
-	public [rel.roles->at(i.mod(2) + 1).entity.name.toUpperFirst() /] get[rel.roles->at(i.mod(2) + 1).name.toUpperFirst() /]() {
+	public [rel.roles->at(i.mod(2) + 1).entity.name.toUpperFirst() /] _get[rel.roles->at(i.mod(2) + 1).name.toUpperFirst() /]() {
 		return [rel.roles->at(i.mod(2) + 1).name /];
 	}
 
-	public void set[rel.roles->at(i.mod(2) + 1).name.toUpperFirst() /]([rel.roles->at(i.mod(2) + 1).entity.name.toUpperFirst() /] [rel.roles->at(i.mod(2) + 1).name /]) {
+	public void _set[rel.roles->at(i.mod(2) + 1).name.toUpperFirst() /]([rel.roles->at(i.mod(2) + 1).entity.name.toUpperFirst() /] [rel.roles->at(i.mod(2) + 1).name /]) {
 		this.[rel.roles->at(i.mod(2) + 1).name /] = [rel.roles->at(i.mod(2) + 1).name /];
 	}
 					[/if] 
