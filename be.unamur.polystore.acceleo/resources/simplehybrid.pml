@@ -1,6 +1,6 @@
 conceptual schema cs {
 	entity type Product{
-		id:int,
+		id:string,
 		name:string,
 		price:float,
 		description:string,
@@ -54,11 +54,11 @@ physical schemas {
 		
 	}
 	
-	relational schema myRelSchema : mymysql {
+	relational schema myRelSchema : mydb {
 		table ProductCatalogTable {
 			columns {
 				product_id,
-				europrice : [price]"â‚¬",
+				europrice : [price]"€",
 				description,
 				categoryname
 			}
@@ -75,9 +75,11 @@ mapping rules{
 
 databases {
 	
-	sqlite mymysql {
+	sqlite mydb {
 		host: "localhost"
 		port: 3307
+		login: "root"
+		password: "password"
 	}
 	
 	mongodb mymongo {
@@ -86,7 +88,7 @@ databases {
 	}
 	
 	mongodb mymongo2 {
-		host:"locahost"
+		host:"localhost"
 		port: 27100
 			}
 }

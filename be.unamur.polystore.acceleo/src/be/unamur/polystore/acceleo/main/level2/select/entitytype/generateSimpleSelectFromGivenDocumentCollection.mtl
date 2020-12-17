@@ -13,8 +13,6 @@
 	} 
 	
 	Dataset<Row> dataset = SparkConnectionMgr.getSparkSessionForMongoDB("[db.name /]", "[struct.name /]", bsonQuery);
-	dataset.printSchema();
-
 
 	Dataset<[ent.name.toUpperFirst() /]> res = dataset.flatMap((FlatMapFunction<Row, [ent.name.toUpperFirst() /]>) r -> {
 			List<[ent.name.toUpperFirst() /]> list_res = new ArrayList<[ent.name.toUpperFirst() /]>();
@@ -34,7 +32,7 @@
 			
 			return list_res.iterator();
 
-	}, Encoders.kryo([ent.name.toUpperFirst() /].class));
+	}, Encoders.bean([ent.name.toUpperFirst() /].class));
 
 	return res;
 [/template]
@@ -210,7 +208,7 @@ if(array[level /]!= null) {
 }
 
 if(toAdd[level /]) {
-	[if (level > 1)]if(condition.evaluate([ent.name.toLowerFirst() /][level /]))[/if]
+	[if (level > 1)]if(condition == null || condition.evaluate([ent.name.toLowerFirst() /][level /]))[/if]
 		list_res.add([ent.name.toLowerFirst() /][level /]);
 	addedInList = true;
 } 
@@ -220,7 +218,7 @@ if(toAdd[level /]) {
 [/for]
 [else]
 if(toAdd[level /]) {
-	[if (level > 1)]if(condition.evaluate([ent.name.toLowerFirst() /][level /]))[/if]
+	[if (level > 1)]if(condition ==null || condition.evaluate([ent.name.toLowerFirst() /][level /]))[/if]
 	list_res.add([ent.name.toLowerFirst() /][level /]);
 	addedInList = true;
 } 

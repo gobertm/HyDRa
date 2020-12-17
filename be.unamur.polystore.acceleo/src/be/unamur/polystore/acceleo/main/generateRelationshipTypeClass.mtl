@@ -28,11 +28,11 @@ public class [rel.name.toUpperFirst() /] implements IPojo {
 	public [rel.name.toUpperFirst() /]() {}
 
 [for (role: Role | rel.roles)]
-	public [role.entity.name.toUpperFirst()/] get[role.name.toUpperFirst()/]() {
+	public [role.entity.name.toUpperFirst()/] _get[role.name.toUpperFirst()/]() {
 		return [role.name/];
 	}	
 
-	public void set[role.name.toUpperFirst()/]([role.entity.name.toUpperFirst()/] [role.name/]) {
+	public void _set[role.name.toUpperFirst()/]([role.entity.name.toUpperFirst()/] [role.name/]) {
 		this.[role.name/] = [role.name/];
 	}
 	

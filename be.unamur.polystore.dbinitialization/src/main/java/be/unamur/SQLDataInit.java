@@ -36,8 +36,8 @@ public class SQLDataInit {
     public static void main(String args[]) throws SQLException {
         SQLDataInit sqlinit = new SQLDataInit("localhost","3307","mydb","root","password");
         sqlinit.createConnection();
-//        sqlinit.initStructure();
-        sqlinit.initData(100);
+        sqlinit.initStructure();
+        sqlinit.initData(200);
         sqlinit.getConnection().close();
     }
 
