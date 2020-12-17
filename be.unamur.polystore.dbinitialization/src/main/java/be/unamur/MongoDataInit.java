@@ -9,11 +9,10 @@ import com.mongodb.client.MongoDatabase;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.lang3.RandomUtils;
 import org.bson.Document;
-import org.neo4j.cypher.internal.frontend.phases.Do;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.print.Doc;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -25,6 +24,7 @@ public class MongoDataInit implements DataInit{
     private MongoDatabase mongoDatabase;
     private final String databasename;
     private final String host;
+    private SQLDataInit sqlDB;
     private final int port;
     private final int numberofdata;
 
@@ -35,28 +35,37 @@ public class MongoDataInit implements DataInit{
         this.numberofdata = numberofdata;
     }
 
-    public static void main(String args[]){
+    public static void main(String args[]) throws SQLException {
         String mongohost = "localhost";
         String mongodbname = "mymongo";
         int mongoport = 27000;
-        int nbdataobj = 100;
+        int nbdataobj = 30;
         MongoDataInit mongoDataInit = new MongoDataInit(mongodbname, mongohost, mongoport, nbdataobj);
+        SQLDataInit sqlinit = new SQLDataInit("localhost","3307","mydb","root","password");
+        sqlinit.createConnection();
+        sqlinit.initStructure();
+        sqlinit.initData(nbdataobj);
+        mongoDataInit.setSqlDB(sqlinit);
+
 //        mongoDataInit.persistData();
 //        mongoDataInit.persistDataTest();
-        mongoDataInit.persistDataSimpleHybrid(1);
+        mongoDataInit.persistDataSimpleHybridPmlModel(1,true);
 
         //Second mongo db init data
         mongohost = "localhost";
         mongodbname = "mymongo2";
         mongoport = 27100;
-        nbdataobj = 100;
         mongoDataInit = new MongoDataInit(mongodbname, mongohost, mongoport, nbdataobj);
-        mongoDataInit.persistDataSimpleHybrid(2);
+        mongoDataInit.setSqlDB(sqlinit);
+        mongoDataInit.persistDataSimpleHybridPmlModel(2,true);
 
 
     }
 
-    public void persistDataSimpleHybrid(int mongoinstance) {
+    public void persistDataSimpleHybridPmlModel(int mongoinstance, boolean sqlUpdate) {
+        String productref=null;
+        float price;
+        String productDesc;
         Random r = new Random();
         if (mongoClient == null) {
             initConnection();
@@ -65,6 +74,15 @@ public class MongoDataInit implements DataInit{
             MongoCollection<Document> productCollection = mongoDatabase.getCollection("productCollection");
             List<Document> documentsProductReviews = new ArrayList<Document>();
             for (int i = 0; i < numberofdata; i++) {
+                price = RandomUtils.nextFloat();
+                productref = "product" + i;
+                productDesc = RandomStringUtils.randomAlphabetic(10);
+                Document product = new Document()
+                        .append("product_ref", productref)
+                        .append("productDescription", productDesc)
+                        .append("price", price)
+                        .append("name", "productName" + i);
+
                 List<Document> listReviews = new ArrayList<Document>();
                 for (int j = 0; j < r.ints(0, 5).findFirst().getAsInt(); j++) {
                     int usernumber = r.ints(0,100).findFirst().getAsInt();
@@ -75,14 +93,13 @@ public class MongoDataInit implements DataInit{
                             .append("content", RandomStringUtils.randomAlphabetic(60));
                     listReviews.add(review);
                 }
-
-                Document product = new Document("product_ref", "product" + i)
-                        .append("productDescription", RandomStringUtils.randomAlphabetic(10))
-                        .append("price", RandomUtils.nextInt())
-                        .append("name", "productName" + i)
-                        .append("reviews", listReviews);
+                product.append("reviews", listReviews);
 
                 documentsProductReviews.add(product);
+                if(sqlUpdate){
+                    logger.info("Update product record [{}] in SQL database ", productref);
+                    sqlDB.update("update ProductCatalogTable SET description='"+productDesc+"', europrice='"+price+"€' where product_id ='"+productref+"'");
+                }
             }
             productCollection.insertMany(documentsProductReviews);
             logger.info("Generated and persisted [{}] documents in MongoDB [{},{}]",numberofdata,databasename,host);
@@ -90,18 +107,47 @@ public class MongoDataInit implements DataInit{
         if (mongoinstance == 2) {
             MongoCollection<Document> categorycollection = mongoDatabase.getCollection("categoryCollection");
             List<Document> categoryDocsList = new ArrayList<>();
+            List<Document> productCatA = new ArrayList<>();
+            List<Document> productCatB = new ArrayList<>();
+            List<Document> productCatC = new ArrayList<>();
+            String categoryName=null;
             for (int i = 0; i < numberofdata; i++) {
-                List<Document> productsList = new ArrayList<>();
-                for (int p = 0; p<r.ints(1, 5).findFirst().getAsInt(); p++) {
-                    Document product = new Document()
-                            .append("id", "product" + r.ints(0, 100).findFirst().getAsInt());
-                    productsList.add(product);
+                productref = "product"+i;
+                Document product = new Document()
+                        .append("id", productref);
+                switch (i % 3) {
+                    case 0 :
+                        categoryName="A";
+                        productCatA.add(product);
+                        break;
+                    case 1 :
+                        categoryName="B";
+                        productCatB.add(product);
+                        break;
+                    case 2 :
+                        categoryName="C";
+                        productCatC.add(product);
+                        break;
                 }
-                Document category = new Document()
-                        .append("categoryname",RandomStringUtils.random(2,65,70,true,false))
-                        .append("products",productsList);
-                categoryDocsList.add(category);
+
+                if(sqlUpdate) {
+                    logger.info("Update product record [{}] in SQL database ", productref);
+                    sqlDB.update("update ProductCatalogTable SET categoryname ='"+categoryName+"' where product_id ='"+productref+"' ");
+                }
             }
+            Document categoryA = new Document()
+                    .append("categoryname", "A")
+                    .append("products", productCatA);
+            categoryDocsList.add(categoryA);
+            Document categoryB = new Document()
+                    .append("categoryname", "B")
+                    .append("products", productCatB);
+            categoryDocsList.add(categoryB);
+            Document categoryC = new Document()
+                    .append("categoryname", "C")
+                    .append("products", productCatC);
+            categoryDocsList.add(categoryC);
+
             categorycollection.insertMany(categoryDocsList);
             logger.info("Generated and persisted [{}] documents in MongoDB [{},{}]",numberofdata,databasename,host);
         }
@@ -223,5 +269,13 @@ public class MongoDataInit implements DataInit{
                         .build());
 
         mongoDatabase = mongoClient.getDatabase(databasename);
+    }
+
+    public SQLDataInit getSqlDB() {
+        return sqlDB;
+    }
+
+    public void setSqlDB(SQLDataInit sqlDB) {
+        this.sqlDB = sqlDB;
     }
 }

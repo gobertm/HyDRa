@@ -26,9 +26,10 @@ public class SQLDataInit {
 
     public void initData(int numberofrecords) throws SQLException {
         Statement stmt=connection.createStatement();
-        for (int i = 100; i < numberofrecords; i++) {
+        for (int i = 0; i < numberofrecords; i++) {
             stmt.execute("insert into ProductCatalogTable(product_id,europrice, description, categoryname) VALUES ('product" + i + "'," + RandomUtils.nextInt() + ",'desc','"+ RandomStringUtils.random(2,65,70,true,false)+"')");
         }
+        logger.info("Data [{}] rows inserted in table" + numberofrecords);
     }
 
 
@@ -40,9 +41,9 @@ public class SQLDataInit {
         sqlinit.getConnection().close();
     }
 
-    private void initStructure() throws SQLException {
+    public void initStructure() throws SQLException {
         Statement stmt=connection.createStatement();
-        stmt.execute("create table ProductCatalogTable (" +
+        stmt.execute("create table IF NOT EXISTS ProductCatalogTable (" +
                 "product_id char(36)," +
                 "europrice char(36)," +
                 "description char(50)," +
@@ -50,12 +51,12 @@ public class SQLDataInit {
         logger.info("Structure tables in database created");
     }
 
-    private void createConnection() {
-            try {
-                connection = DriverManager.getConnection("jdbc:mysql://" + localhost + ":" + port + "/" + databasename, login, password);
-            } catch (SQLException e) {
-                e.printStackTrace();
-            }
+    public void createConnection() {
+        try {
+            connection = DriverManager.getConnection("jdbc:mysql://" + localhost + ":" + port + "/" + databasename, login, password);
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
     }
 
     public Connection getConnection() {
@@ -64,5 +65,15 @@ public class SQLDataInit {
 
     public void setConnection(Connection connection) {
         this.connection = connection;
+    }
+
+    public void update(String updateQuery) {
+        Statement stmt= null;
+        try {
+            stmt = connection.createStatement();
+            stmt.execute(updateQuery);
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
     }
 }
