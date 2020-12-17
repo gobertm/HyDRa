@@ -7,7 +7,7 @@
 [comment get{E}List({E)AttributeCondition /]
 
 [template public generateSimpleSelectFromGivenDocumentCollection(ent : EntityType, struct: AbstractPhysicalStructure, db : Database)]
-	String bsonQuery = getBSONMatchQueryIn[struct.name.toUpperFirst()/]From[db.name.toUpperFirst() /](condition);
+	String bsonQuery = getBSONMatchQueryIn[struct.name.toUpperFirst()/]From[db.name.toUpperFirst() /](condition, refilterFlag);
 	if(bsonQuery != null) {
 		bsonQuery = "{$match: {" + bsonQuery + "}}";	
 	} 
@@ -38,7 +38,7 @@
 [/template]
 
 [template public generateBSONMatchQueryMethod(ent : EntityType, struct: AbstractPhysicalStructure, db : Database)]
-private static String getBSONMatchQueryIn[struct.name.toUpperFirst()/]From[db.name.toUpperFirst() /](Condition<[ent.name.toUpperFirst() /]Attribute> condition) {	
+private static String getBSONMatchQueryIn[struct.name.toUpperFirst()/]From[db.name.toUpperFirst() /](Condition<[ent.name.toUpperFirst() /]Attribute> condition, MutableBoolean refilterFlag) {	
 	String res = null;	
 	if(condition != null) {
 		if(condition instanceof SimpleCondition) {
@@ -47,9 +47,12 @@ private static String getBSONMatchQueryIn[struct.name.toUpperFirst()/]From[db.na
 			Object value = ((SimpleCondition<[ent.name /]Attribute>) condition).getValue();
 			if(value != null) {
 				String valueString = Util.transformBSONValue(value);
+				boolean isConditionAttrEncountered = false;
+
 				[for (attr : Attribute | ent.attributes)]
 				[let field : PhysicalField = getMappedPhysicalField(attr, struct, db, ent.ancestors(Domainmodel)->first().mappingRules)][if (field <> null)]
 				if(attr == [ent.name.toUpperFirst() /]Attribute.[attr.name /] ) {
+					isConditionAttrEncountered = true;
 				[let ancestorsList : Sequence(EmbeddedObject) = field.ancestors(EmbeddedObject)]
 				
 				[if (field.ancestors(LongField) -> size() > 0)]
@@ -110,12 +113,17 @@ private static String getBSONMatchQueryIn[struct.name.toUpperFirst()/]From[db.na
 				[/if]
 				[/let]
 				[/for]
+				if(!isConditionAttrEncountered) {
+					refilterFlag.setValue(true);
+					res = "$expr: {$eq:[ '[' /]1,1[ ']' /]}";
+				}
+				
 			}
 		}
 
 		if(condition instanceof AndCondition) {
-			String bsonLeft = getBSONMatchQueryIn[struct.name.toUpperFirst()/]From[db.name.toUpperFirst() /](((AndCondition)condition).getLeftCondition());
-			String bsonRight = getBSONMatchQueryIn[struct.name.toUpperFirst()/]From[db.name.toUpperFirst() /](((AndCondition)condition).getRightCondition());			
+			String bsonLeft = getBSONMatchQueryIn[struct.name.toUpperFirst()/]From[db.name.toUpperFirst() /](((AndCondition)condition).getLeftCondition(), refilterFlag);
+			String bsonRight = getBSONMatchQueryIn[struct.name.toUpperFirst()/]From[db.name.toUpperFirst() /](((AndCondition)condition).getRightCondition(), refilterFlag);			
 			if(bsonLeft == null && bsonRight == null)
 				return null;
 			if(bsonLeft == null)
@@ -126,8 +134,8 @@ private static String getBSONMatchQueryIn[struct.name.toUpperFirst()/]From[db.na
 		}
 
 		if(condition instanceof OrCondition) {
-			String bsonLeft = getBSONMatchQueryIn[struct.name.toUpperFirst()/]From[db.name.toUpperFirst() /](((OrCondition)condition).getLeftCondition());
-			String bsonRight = getBSONMatchQueryIn[struct.name.toUpperFirst()/]From[db.name.toUpperFirst() /](((OrCondition)condition).getRightCondition());			
+			String bsonLeft = getBSONMatchQueryIn[struct.name.toUpperFirst()/]From[db.name.toUpperFirst() /](((OrCondition)condition).getLeftCondition(), refilterFlag);
+			String bsonRight = getBSONMatchQueryIn[struct.name.toUpperFirst()/]From[db.name.toUpperFirst() /](((OrCondition)condition).getRightCondition(), refilterFlag);			
 			if(bsonLeft == null && bsonRight == null)
 				return null;
 			if(bsonLeft == null)

@@ -8,7 +8,7 @@
 
 [template public generateSimpleSelectFromGivenRelationalTable(ent : EntityType, struct: AbstractPhysicalStructure, db : Database)]
 [comment  select * from Client where (...) /]
-	Pair<String, List<String>> whereClause = getSQLWhereClauseIn[struct.name.toUpperFirst()/]From[db.name.toUpperFirst() /](condition);
+	Pair<String, List<String>> whereClause = getSQLWhereClauseIn[struct.name.toUpperFirst()/]From[db.name.toUpperFirst() /](condition, refilterFlag);
 	String where = whereClause.getKey();
 	List<String> preparedValues = whereClause.getValue();
 	for(String preparedValue : preparedValues) {
@@ -67,7 +67,7 @@
 [/template]
 
 [template public generateGetSQLWhereClauseMethod(ent : EntityType, struct: AbstractPhysicalStructure, db : Database)]
-private static Pair<String, List<String>> getSQLWhereClauseIn[struct.name.toUpperFirst()/]From[db.name.toUpperFirst() /](Condition<[ent.name.toUpperFirst() /]Attribute> condition) {
+private static Pair<String, List<String>> getSQLWhereClauseIn[struct.name.toUpperFirst()/]From[db.name.toUpperFirst() /](Condition<[ent.name.toUpperFirst() /]Attribute> condition, MutableBoolean refilterFlag) {
 	String where = null;	
 	List<String> preparedValues = new java.util.ArrayList<String>();
 	if(condition != null) {
@@ -77,9 +77,11 @@ private static Pair<String, List<String>> getSQLWhereClauseIn[struct.name.toUppe
 			Operator op = ((SimpleCondition<[ent.name /]Attribute>) condition).getOperator();
 			Object value = ((SimpleCondition<[ent.name /]Attribute>) condition).getValue();
 			if(value != null) {
+				boolean isConditionAttrEncountered = false;
 				[for (attr : Attribute | ent.attributes)]
 				[let field : PhysicalField = getMappedPhysicalField(attr, struct, db, ent.ancestors(Domainmodel)->first().mappingRules)][if (field <> null)]
 				if(attr == [ent.name.toUpperFirst() /]Attribute.[attr.name /] ) {
+					isConditionAttrEncountered = true;
 					String valueString = Util.transformSQLValue(value);
 					String sqlOp = op.getSQLOperator();
 					[if (field.ancestors(LongField) -> size() = 0)]
@@ -121,12 +123,16 @@ private static Pair<String, List<String>> getSQLWhereClauseIn[struct.name.toUppe
 				[/if]
 				[/let]
 				[/for]
+				if(!isConditionAttrEncountered) {
+					refilterFlag.setValue(true);
+					where = "1 = 1";
+				}
 			}
 		}
 
 		if(condition instanceof AndCondition) {
-			Pair<String, List<String>> pairLeft = getSQLWhereClauseIn[struct.name.toUpperFirst() /]From[db.name.toUpperFirst() /](((AndCondition) condition).getLeftCondition());
-			Pair<String, List<String>> pairRight = getSQLWhereClauseIn[struct.name.toUpperFirst() /]From[db.name.toUpperFirst() /](((AndCondition) condition).getRightCondition());
+			Pair<String, List<String>> pairLeft = getSQLWhereClauseIn[struct.name.toUpperFirst() /]From[db.name.toUpperFirst() /](((AndCondition) condition).getLeftCondition(), refilterFlag);
+			Pair<String, List<String>> pairRight = getSQLWhereClauseIn[struct.name.toUpperFirst() /]From[db.name.toUpperFirst() /](((AndCondition) condition).getRightCondition(), refilterFlag);
 			String whereLeft = pairLeft.getKey();
 			String whereRight = pairRight.getKey();
 			List<String> leftValues = pairLeft.getValue();
@@ -145,8 +151,8 @@ private static Pair<String, List<String>> getSQLWhereClauseIn[struct.name.toUppe
 		}
 
 		if(condition instanceof OrCondition) {
-			Pair<String, List<String>> pairLeft = getSQLWhereClauseIn[struct.name.toUpperFirst() /]From[db.name.toUpperFirst() /](((OrCondition) condition).getLeftCondition());
-			Pair<String, List<String>> pairRight = getSQLWhereClauseIn[struct.name.toUpperFirst() /]From[db.name.toUpperFirst() /](((OrCondition) condition).getRightCondition());
+			Pair<String, List<String>> pairLeft = getSQLWhereClauseIn[struct.name.toUpperFirst() /]From[db.name.toUpperFirst() /](((OrCondition) condition).getLeftCondition(), refilterFlag);
+			Pair<String, List<String>> pairRight = getSQLWhereClauseIn[struct.name.toUpperFirst() /]From[db.name.toUpperFirst() /](((OrCondition) condition).getRightCondition(), refilterFlag);
 			String whereLeft = pairLeft.getKey();
 			String whereRight = pairRight.getKey();
 			List<String> leftValues = pairLeft.getValue();
