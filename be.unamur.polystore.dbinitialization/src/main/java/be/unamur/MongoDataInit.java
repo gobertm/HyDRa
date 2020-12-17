@@ -64,7 +64,7 @@ public class MongoDataInit implements DataInit{
 
     public void persistDataSimpleHybridPmlModel(int mongoinstance, boolean sqlUpdate) {
         String productref=null;
-        float price;
+        int price;
         String productDesc;
         Random r = new Random();
         if (mongoClient == null) {
@@ -74,7 +74,7 @@ public class MongoDataInit implements DataInit{
             MongoCollection<Document> productCollection = mongoDatabase.getCollection("productCollection");
             List<Document> documentsProductReviews = new ArrayList<Document>();
             for (int i = 0; i < numberofdata; i++) {
-                price = RandomUtils.nextFloat();
+                price = r.ints(0, 4).findFirst().getAsInt();
                 productref = "product" + i;
                 productDesc = RandomStringUtils.randomAlphabetic(10);
                 Document product = new Document()
