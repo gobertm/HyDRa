@@ -45,7 +45,6 @@ physical schemas {
 			collection categoryCollection {
 				fields {
 					categoryname,
-					categorydesc,
 					products[0-N]{
 						id
 					}
@@ -58,7 +57,7 @@ physical schemas {
 		table ProductCatalogTable {
 			columns {
 				product_id,
-				europrice : [price]"€",
+				europrice : [price]"â‚¬",
 				description,
 				categoryname
 			}
@@ -69,6 +68,7 @@ physical schemas {
 mapping rules{
 	cs.Product(id,description,price,name) -> myDocSchema.productCollection(product_ref,productDescription,price,name),
 	cs.Product(id) -> categorySchema.categoryCollection.products(id),
+	cs.Product(cat_name) -> categorySchema.categoryCollection(categoryname),
 	cs.Review(content,rating,rating) ->myDocSchema.productCollection.reviews(content,rate,rate2),
 	cs.Product(id,price,description,cat_name) -> myRelSchema.ProductCatalogTable(product_id,price,description,categoryname)
 }

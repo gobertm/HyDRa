@@ -17,6 +17,14 @@
 	d = get[entityType.name.toUpperFirst() /]ListIn[struct.name.toUpperFirst()/]From[db.name.toUpperFirst() /](condition);
 	if(d != null)
 		datasets.add(d);
+	//TODO merge duplicates
+	/**	d = d.groupBy("id")
+				.agg(org.apache.spark.sql.functions.collect_list(org.apache.spark.sql.functions.struct("id", "cat_name")).as("list")).map((MapFunction<Row, Product>) r -> {
+					WrappedArray list = r.getAs("list");
+					System.out.println(r.getAs("id") + ":" + list.size() + ":" + list.apply(0).getClass());
+					return new Product();
+		
+			}, Encoders.bean(Product.class)); **/
 	[/for]
 	[/if]
 	[/for]
@@ -56,7 +64,7 @@
 				[generateJavaType(attr.type) /] [attr.name.toLowerFirst() /]2 = r.getAs("[attr.name.toLowerFirst() /]_" + i);
 				if (firstNotNull_[attr.name /] != null && [attr.name.toLowerFirst() /]2 != null && !firstNotNull_[attr.name/].equals([attr.name.toLowerFirst() /]2)) {
 					// TODO logger
-					System.out.println("data consistency problem: duplicate values for attribute : '[entityType.name.toUpperFirst() /].[attr.name.toLowerFirst() /]' ==> " + firstNotNull_[attr.name /] + " and " + [attr.name.toLowerFirst() /]2);
+					logger.warn("data consistency problem: duplicate values for attribute : '[entityType.name.toUpperFirst() /].[attr.name.toLowerFirst() /]' ==> " + firstNotNull_[attr.name /] + " and " + [attr.name.toLowerFirst() /]2);
 				}
 				if (firstNotNull_[attr.name /] == null && [attr.name.toLowerFirst() /]2 != null) {
 					firstNotNull_[attr.name /] = [attr.name.toLowerFirst() /]2;

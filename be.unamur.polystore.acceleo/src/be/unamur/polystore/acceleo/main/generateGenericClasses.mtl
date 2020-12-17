@@ -2,11 +2,14 @@
 [module generateGenericClasses('http://www.unamur.be/polystore/Pml')]
 
 [import be::unamur::polystore::acceleo::main::generateJavaDataType /]
+[import be::unamur::polystore::acceleo::main::generatePomFile /]
 
 [template public generateGenericClasses(conceptualSchema: ConceptualSchema)]
 [generateUtilClass() /]
 [generateLoadingClass() /]
 [generateConditions(conceptualSchema) /]
+[generateLog4JConfFile() /]
+[generatePomFile(conceptualSchema) /]
 [/template]
 
 
@@ -18,7 +21,7 @@ public class Util {
 	
 	/**
 	Les prochaines methodes transformXXXValue ont pour but de transformer 
-	l'object de la condition dans un format String conforme à la techno cible
+	l'object de la condition dans un format String conforme ï¿½ la techno cible
 	ex: un boolean doit-il etre traduit en true ou 1?
 	ex2: une date, comment la formatter? etc.
 	Cela dependra du type de la valeur ainsi que du backend cible
@@ -468,3 +471,46 @@ public enum [rel.name.toUpperFirst() /]Attribute {
 [/for]
 
 [/template]
+
+[template private generateLog4JConfFile()]
+[file ('src/main/resources/log4j.xml', false, 'UTF-8')]
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE log4j:configuration SYSTEM "log4j.dtd">
+<log4j:configuration debug="true">
+
+	<appender name="console"
+		class="org.apache.log4j.ConsoleAppender">
+		<layout class="org.apache.log4j.PatternLayout">
+			<param name="ConversionPattern"
+				value="%d{yyyy-MM-dd HH:mm:ss} %-5p %c{1}:%L - %m%n" />
+		</layout>
+	</appender>
+
+	<logger name="org.apache.spark">
+        <level value="error" />
+    </logger>
+    <logger name="org.spark-project">
+        <level value="error" />
+    </logger>
+    <logger name="org.apache.hadoop">
+        <level value="error" />
+    </logger>
+    <logger name="io.netty">
+        <level value="error" />
+    </logger>
+    <logger name="org.apache.zookeeper">
+        <level value="error" />
+    </logger>
+   <logger name="org">
+        <level value="error" />
+    </logger>
+	
+	<root>
+		<level value="DEBUG" />
+		<appender-ref ref="console" />
+	</root>
+
+</log4j:configuration>
+[/file]
+[/template]
+

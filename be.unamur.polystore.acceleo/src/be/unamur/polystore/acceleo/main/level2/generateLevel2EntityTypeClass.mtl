@@ -2,6 +2,7 @@
 [module generateLevel2EntityTypeClass('http://www.unamur.be/polystore/Pml')]
 
 [import be::unamur::polystore::acceleo::main::level1::generateLevel1EntityTypeClasses /]
+[import be::unamur::polystore::acceleo::main::util /]
 
 
 [template public generateLevel2EntityTypeClass(entityType : EntityType, conceptualSchema: ConceptualSchema)]
@@ -32,7 +33,7 @@ import org.apache.spark.api.java.function.FlatMapFunction;
 import java.util.ArrayList;
 
 public class [entityType.name.toUpperFirst() + 'ServiceImpl' /] extends [entityType.name.toUpperFirst() + 'Service' /] {
-
+	[instantiateLogger(entityType.name.toUpperFirst() + 'ServiceImpl') /]
 	[printSelectMethods(entityType, conceptualSchema, true) /]
 	[printInsertMethods(entityType, conceptualSchema, true) /]
 	[printUpdateMethods(entityType, conceptualSchema, true) /]

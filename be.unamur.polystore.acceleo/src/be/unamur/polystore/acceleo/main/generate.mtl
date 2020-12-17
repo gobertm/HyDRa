@@ -15,7 +15,6 @@
 
 [comment][disableParsingMode() /][/comment]
 
-[generatePomFile(conceptualSchema) /]
 [generateGenericClasses(conceptualSchema) /]
 [generateDBConnectionClasses(conceptualSchema) /]
 [generateIPojo() /]

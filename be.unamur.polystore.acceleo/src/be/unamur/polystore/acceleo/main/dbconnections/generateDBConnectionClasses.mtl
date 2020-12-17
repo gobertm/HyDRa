@@ -63,7 +63,7 @@ public class SparkConnectionMgr {
 					.config("spark.mongodb.input.uri", "mongodb://127.0.0.1:1/fakedb.fakecollection")
 //			.config("spark.mongodb.output.uri", "mongodb://127.0.0.1:1/mymongo.productCollection")
 					.getOrCreate();
-			session.sparkContext().setLogLevel("ERROR");
+			// session.sparkContext().setLogLevel("ERROR");
 		}
 		return session;
 	}

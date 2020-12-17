@@ -24,7 +24,7 @@ import org.apache.spark.api.java.function.MapFunction;
 import org.apache.spark.sql.Encoders;
 
 public abstract class [entityType.name.toUpperFirst() + 'Service' /] {
-
+	[instantiateLogger(entityType.name.toUpperFirst() + 'Service') /]
 	[printRoleConfiguration(entityType, conceptualSchema) /]
 	[printSelectMethods(entityType, conceptualSchema, false) /]
 	[printInsertMethods(entityType, conceptualSchema, false) /]
