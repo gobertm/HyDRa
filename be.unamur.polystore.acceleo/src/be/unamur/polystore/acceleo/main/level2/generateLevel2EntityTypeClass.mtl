@@ -30,7 +30,9 @@ import static java.util.Collections.singletonList;
 import dbconnection.SparkConnectionMgr;
 import scala.collection.mutable.WrappedArray;
 import org.apache.spark.api.java.function.FlatMapFunction;
+import org.apache.spark.api.java.function.FilterFunction;
 import java.util.ArrayList;
+import org.apache.commons.lang.mutable.MutableBoolean;
 
 public class [entityType.name.toUpperFirst() + 'ServiceImpl' /] extends [entityType.name.toUpperFirst() + 'Service' /] {
 	[instantiateLogger(entityType.name.toUpperFirst() + 'ServiceImpl') /]
