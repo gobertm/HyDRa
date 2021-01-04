@@ -19,6 +19,13 @@ public class MappingRuleService {
 	private static final String PATTERN_VALUE = "@VAR@";
 	private static final String PATTERN_OTHER_VALUE = "@OTHERVAR@";
 
+	
+	/**
+	 * Gives a collection of corresponding mapped Physical Field in the pml model of the given attribute, reading the EntityMappingRule rules.
+	 * @param attr the conceptual attribute we look for 
+	 * @param rules The mapping rules in pml Model
+	 * @return A collection of Physical Field
+	 */
 	public static java.util.Collection<PhysicalField> getMappedPhysicalFields(Attribute attr, MappingRules rules) {
 		List<PhysicalField> res = new ArrayList<PhysicalField>();
 		for (AbstractMappingRule rule : rules.getMappingRules()) {
@@ -38,6 +45,38 @@ public class MappingRuleService {
 		return res;
 	}
 
+	/**
+	 * Given a specific conceptual attribute and a structure AbstractPhysicalStructure and a Database. Returns the first mapped PhysicalField found.
+	 * @param attr
+	 * @param struct
+	 * @param db
+	 * @param rules
+	 * @return
+	 */
+	public static PhysicalField getMappedPhysicalField(Attribute attr, AbstractPhysicalStructure struct, Database db,
+			MappingRules rules) {
+		List<PhysicalField> fields = (List<PhysicalField>) getMappedPhysicalFields(attr, rules);
+		for (PhysicalField field : fields) {
+			AbstractPhysicalStructure struct2 = getPhysicalStructureNotEmbeddedObject(field);
+			if (struct == struct2) {
+				AbstractPhysicalSchema schema = getPhysicalSchema(field);
+				List<Database> dbs = getAttachedDatabases(schema);
+				if (dbs.contains(db))
+					return field;
+			}
+		}
+		
+		return null;
+	}
+	
+	
+	/**
+	 * Returns a Set of Database (PML domain object) that contains the mapped Physiucal Fields of the given conceptual attribute
+	 * Note : Uses @method getMappedPhysicalFields(Attribute a, MappingRules rules),  getPhysicalSchema(field) , getAttachedDatabases(schema);
+	 * @param attr The conceputal attribute 
+	 * @param domain
+	 * @return A Set of Database 
+	 */
 	public static Set<Database> getConcernedDatabases(Attribute attr, Domainmodel domain) {
 		Set<Database> res = new HashSet<Database>();
 		java.util.Collection<PhysicalField> fields = getMappedPhysicalFields(attr, domain.getMappingRules());
@@ -49,6 +88,13 @@ public class MappingRuleService {
 		return res;
 	}
 
+	/**
+	 * Given an EntityType , returns a Set of all the mapped PhysicalStructure , except the EmbeddedObject type.
+	 * Note : uses getMappedPhysicalFields, getPhysicalStructureNotEmbeddedObject
+	 * @param ent
+	 * @param domain
+	 * @return
+	 */
 	public static Set<AbstractPhysicalStructure> getConcernedPhysicalStructures(EntityType ent, Domainmodel domain) {
 		Set<AbstractPhysicalStructure> res = new HashSet<AbstractPhysicalStructure>();
 		for (Attribute attr : ent.getAttributes()) {
@@ -62,6 +108,12 @@ public class MappingRuleService {
 		return res;
 	}
 
+	/**
+	 * Given an AbstractPhysicalStructure, retrieves its schema and returns the mapped databases using a call to the getAttachedDatabase(schema)
+	 * @param struct
+	 * @param domain
+	 * @return
+	 */
 	public static Set<Database> getConcernedDatabases(AbstractPhysicalStructure struct, Domainmodel domain) {
 
 		Set<Database> res = new HashSet<Database>();
@@ -70,6 +122,13 @@ public class MappingRuleService {
 		return res;
 	}
 
+	/**
+	 * Gets the Databases based onn EntityType. 
+	 *  	Goes through the mapped PhysicalField of this entity, gets its AbstractPhysicalSchema and returns the Database using getAttachedDatabases
+	 * @param ent
+	 * @param domain
+	 * @return
+	 */
 	public static Set<Database> getConcernedDatabases(EntityType ent, Domainmodel domain) {
 		Set<Database> res = new HashSet<Database>();
 		for (Attribute attr : ent.getAttributes()) {
@@ -83,6 +142,11 @@ public class MappingRuleService {
 		return res;
 	}
 
+	/**
+	 * Returns the Databases of an AbstractPhysicalShcema
+	 * @param schema
+	 * @return
+	 */
 	private static List<Database> getAttachedDatabases(AbstractPhysicalSchema schema) {
 		List<Database> res = new ArrayList<Database>();
 		if (schema != null) {
@@ -91,21 +155,6 @@ public class MappingRuleService {
 		return res;
 	}
 
-	public static PhysicalField getMappedPhysicalField(Attribute attr, AbstractPhysicalStructure struct, Database db,
-			MappingRules rules) {
-		List<PhysicalField> fields = (List<PhysicalField>) getMappedPhysicalFields(attr, rules);
-		for (PhysicalField field : fields) {
-			AbstractPhysicalStructure struct2 = getPhysicalStructureNotEmbeddedObject(field);
-			if (struct == struct2) {
-				AbstractPhysicalSchema schema = getPhysicalSchema(field);
-				List<Database> dbs = getAttachedDatabases(schema);
-				if (dbs.contains(db))
-					return field;
-			}
-		}
-
-		return null;
-	}
 
 	private static AbstractPhysicalSchema getPhysicalSchema(EObject obj) {
 		EObject res = getFirstAncestor(AbstractPhysicalSchema.class, obj);

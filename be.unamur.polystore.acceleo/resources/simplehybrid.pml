@@ -2,7 +2,7 @@ conceptual schema cs {
 	entity type Product{
 		id:string,
 		name:string,
-		price:float,
+		price:int,
 		description:string,
 		cat_name : string,
 		cat_description: string

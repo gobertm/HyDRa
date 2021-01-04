@@ -72,9 +72,6 @@ conceptual schema Store_with_professor {
 		...
 		
 	}
-	// Discussion sens des rôles
-	// Version Max 
-	// "Dans la relation 'productStock' le type d'entity Stock joue le role de storage, avec une cardinalité 1." --> = inversion des cardinalités par rapport à DBMain
 	// Version Loup
 	// "Dans la relation 'productStock' Le Stock joue le rôle d'entrepot N fois." 
 	// "Le produit joue le role d'objet stocké une seule fois"
@@ -339,8 +336,7 @@ mapping rules {
 	
 	
 	Stock(localisation)->docSchema.Stock(localisation),
-	productStock.stored_products->docSchema.Stock.stores,  // ! Cas particulier, tableau de référence de ObjectId mongodb, non présent en conceptuel, utilisation de _id en tant que wildcard/constante. + role "à l'envers" car on mappe le 0-N .
-	// J'ai l'impression qu'il y a un soucis avec les PRODUCT de la collection vs ceux du role.
+	productStock.stored_products->docSchema.Stock.stores,  
 	
 	// Groupe colonne 
 	Client(clientnumber, firstname, lastname) -> colSchema.Client(clientnumber, firstname, lastname),

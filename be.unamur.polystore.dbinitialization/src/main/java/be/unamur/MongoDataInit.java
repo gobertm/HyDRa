@@ -44,7 +44,7 @@ public class MongoDataInit implements DataInit{
         SQLDataInit sqlinit = new SQLDataInit("localhost","3307","mydb","root","password");
         sqlinit.createConnection();
         sqlinit.initStructure();
-        sqlinit.initData(nbdataobj);
+//        sqlinit.initData(nbdataobj);
         mongoDataInit.setSqlDB(sqlinit);
 
 //        mongoDataInit.persistData();
@@ -201,7 +201,7 @@ public class MongoDataInit implements DataInit{
 
     }
 
-    public void persistDataTest() {
+    public void persistDataSimpleRel_DocPMLModel() {
         Random r = new Random();
         if (mongoClient == null) {
             initConnection();

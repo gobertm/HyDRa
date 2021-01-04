@@ -66,6 +66,11 @@
 	return res;
 [/template]
 
+[comment 'generateGetSQLWhereClauseMethod(ent : EntityType, struct: AbstractPhysicalStructure, db : Database)'
+	Generate a recursive method that based on the argument Condition constructs a Pair containing a 'where' clause statement on the attribute of the condition and using the specified operator, the second argument of the Pair is the values to replace in the where clause.
+	Based on the operator of the condition (CONTAINS) or the Mapped Physical Field (LongField) it may be necessary to modify the value of the condition.
+	/]
+
 [template public generateGetSQLWhereClauseMethod(ent : EntityType, struct: AbstractPhysicalStructure, db : Database)]
 private static Pair<String, List<String>> getSQLWhereClauseIn[struct.name.toUpperFirst()/]From[db.name.toUpperFirst() /](Condition<[ent.name.toUpperFirst() /]Attribute> condition, MutableBoolean refilterFlag) {
 	String where = null;	

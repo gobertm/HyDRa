@@ -6,6 +6,12 @@
 [import be::unamur::polystore::acceleo::main::level2::select::entitytype::generateSimpleSelectFromGivenRelationalTable /]
 [import be::unamur::polystore::acceleo::main::level2::select::entitytype::generateSimpleSelectFromGivenDocumentCollection /]
 
+[comment Generate abstract or implemented selection method of Pojos. 
+@param override  determines the generation of the implementation
+
+Algorithm : We need to retrieve pojos in each AbstractPhysicalStructure this pojo is mapped to. A specific collection or table in a speicfic database.
+then the implementation needs to take into account the type of database in order to correctly generate the selection query (where clause in SQL or find regex for mongod, etc..) 
+/]
 [template public generateSimpleSelectMethods(entityType: EntityType, conceptualSchema: ConceptualSchema, override: Boolean)]
 
 [if (override = false)]public Dataset<[entityType.name.toUpperFirst() /]> get[entityType.name.toUpperFirst() /]List(conditions.Condition<conditions.[entityType.name.toUpperFirst() /]Attribute> condition)[generateSimpleSelectMethodsImpl(entityType, conceptualSchema) /][/if]
