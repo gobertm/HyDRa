@@ -222,13 +222,19 @@ MappingRules:
 
 
 AbstractMappingRule:
-	EntityMappingRule | RoleMappingRule
+	EntityMappingRule | RoleToEmbbededObjectMappingRule | RoleToReferenceMappingRule
 ;
 
-RoleMappingRule:
+RoleToEmbbededObjectMappingRule:
 	roleConceptual=[Role|QualifiedName]
 	'->'
-	 physicalStructure=[AbstractPhysicalStructure|QualifiedName]'('(physicalFields+=[PhysicalField|QualifiedName] (','physicalFields+=[PhysicalField|QualifiedName])*)?')'
+	physicalStructure=[AbstractPhysicalStructure|QualifiedName]'('(physicalFields+=[PhysicalField|QualifiedName] (','physicalFields+=[PhysicalField|QualifiedName])*)?')'
+;
+
+RoleToReferenceMappingRule:
+	roleConceptual=[Role|QualifiedName]
+	'->'
+	reference=[Reference|QualifiedName]
 ;
 
 EntityMappingRule:

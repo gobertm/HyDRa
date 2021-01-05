@@ -39,6 +39,8 @@ public class SQLDataInit {
         sqlinit.initStructure();
         sqlinit.initData(200);
         sqlinit.getConnection().close();
+
+        
     }
 
     public void initStructure() throws SQLException {

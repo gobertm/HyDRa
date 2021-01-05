@@ -23,7 +23,8 @@ import be.unamur.polystore.pml.LongField;
 import be.unamur.polystore.pml.Node;
 import be.unamur.polystore.pml.PhysicalField;
 import be.unamur.polystore.pml.PmlPackage;
-import be.unamur.polystore.pml.RoleMappingRule;
+import be.unamur.polystore.pml.RoleToEmbbededObjectMappingRule;
+import be.unamur.polystore.pml.RoleToReferenceMappingRule;
 import be.unamur.polystore.pml.ShortField;
 import be.unamur.polystore.pml.Table;
 import be.unamur.polystore.pml.TableColumnDB;
@@ -43,8 +44,8 @@ public class PmlScopeProvider extends AbstractPmlScopeProvider {
 			EntityMappingRule rule = EcoreUtil2.getContainerOfType(context, EntityMappingRule.class);
 			return Scopes.scopeFor(rule.getEntityConceptual().getAttributes());
 		}
-		if(context instanceof AbstractMappingRule && reference == PmlPackage.Literals.ABSTRACT_MAPPING_RULE__PHYSICAL_FIELDS) {
-			AbstractMappingRule rule = EcoreUtil2.getContainerOfType(context, AbstractMappingRule.class);
+		if(context instanceof RoleToEmbbededObjectMappingRule && reference == PmlPackage.Literals.ROLE_TO_EMBBEDED_OBJECT_MAPPING_RULE__PHYSICAL_FIELDS) {
+			RoleToEmbbededObjectMappingRule rule = EcoreUtil2.getContainerOfType(context, RoleToEmbbededObjectMappingRule.class);
 			AbstractPhysicalStructure struct= rule.getPhysicalStructure();
 			EList<PhysicalField> fields = new BasicEList<PhysicalField>();
 			if(struct instanceof Table) 
@@ -67,6 +68,9 @@ public class PmlScopeProvider extends AbstractPmlScopeProvider {
 			IScope scope = Scopes.scopeFor(fields);
 			//fields.addAll(fieldsInComplex);
 			return Scopes.scopeFor(fieldsInComplex,scope);
+		}
+		if(context instanceof RoleToReferenceMappingRule && reference == PmlPackage.Literals.ROLE_TO_REFERENCE_MAPPING_RULE__REFERENCE) {
+			return super.getScope(context, reference);
 		}
 		return super.getScope(context, reference);
 	}
