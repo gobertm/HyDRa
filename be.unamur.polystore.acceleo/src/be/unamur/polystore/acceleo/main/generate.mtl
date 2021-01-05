@@ -6,6 +6,8 @@
 [import be::unamur::polystore::acceleo::main::level1::generateLevel1EntityTypeClasses /]
 [import be::unamur::polystore::acceleo::main::level1::generateLevel1RelationshipTypeClasses /]
 [import be::unamur::polystore::acceleo::main::dbconnections::generateDBConnectionClasses /]
+[import be::unamur::polystore::acceleo::main::generateTechnicalDataObjects /]
+
 [import be::unamur::polystore::acceleo::main::generatePomFile /]
 
 [import be::unamur::polystore::acceleo::main::mappingrules::util]
@@ -21,6 +23,7 @@
 [for (entityType: EntityType | conceptualSchema.entities)]
 	[generateClass(entityType, conceptualSchema) /]
 	[generateAllLevelsEntityTypeClass(entityType, conceptualSchema) /]
+	[generateTechnicalDataObjects(entityType, conceptualSchema) /]
 [/for]
 
 [for (rel: RelationshipType | conceptualSchema.relationships)]

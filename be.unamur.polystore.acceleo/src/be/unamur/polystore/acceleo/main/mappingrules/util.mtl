@@ -34,7 +34,10 @@
 [query public getPatternOtherValue(): String
 = invoke('be.unamur.polystore.acceleo.main.services.MappingRuleService', 'getPatternOtherValue()', Sequence{}) /]
 
+[query public getMappedReferences(role: Role, rules: MappingRules ): Set(Reference) 
+= invoke('be.unamur.polystore.acceleo.main.services.MappingRuleService', 'getMappedReferences(be.unamur.polystore.pml.Role, be.unamur.polystore.pml.MappingRules)', Sequence{role, rules}) /]
 
-
+[query public getMappingRules(o: OclAny) : MappingRules = 
+	o.ancestors(Domainmodel)->first().mappingRules /]
 
 
