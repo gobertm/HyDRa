@@ -1,0 +1,56 @@
+[comment encoding = UTF-8 /]
+[module generateTechnicalDataObjects('http://www.unamur.be/polystore/Pml')]
+[import be::unamur::polystore::acceleo::main::generateJavaDataType /]
+[import be::unamur::polystore::acceleo::main::util /]
+[import be::unamur::polystore::acceleo::main::mappingrules::util /]
+
+[template public generateTechnicalDataObjects(ent : EntityType, conceptualSchema : ConceptualSchema)]
+[file ('src/main/java/tdo/' + ent.name.toUpperFirst() + 'TDO'.concat('.java'), false, 'UTF-8')]
+package tdo;
+
+import pojo.[ent.name.toUpperFirst() /];
+
+public class [ent.name.toUpperFirst() /]TDO extends [ent.name.toUpperFirst() /] {
+	[for (rel : RelationshipType | conceptualSchema.relationships)]
+	[if (hasEntityTypeInRelationshipType(rel, ent))]
+	[for (role : Role | rel.roles)]
+	[for (ref: Reference | getMappedReferences(role, conceptualSchema.getMappingRules()))]
+	[if (role.entity = ent)]
+	[for (field : PhysicalField | ref.sourceField)]
+	private Object [getJavaAbsolutePath(ref) /]_[field.getPhysicalName() /];
+	public Object get[getJavaAbsolutePath(ref).toUpperFirst() /]_[field.getPhysicalName() /]() {
+		return this.[getJavaAbsolutePath(ref) /]_[field.getPhysicalName() /];
+	}
+
+	public void set[getJavaAbsolutePath(ref).toUpperFirst() /]_[field.getPhysicalName() /]( Object [getJavaAbsolutePath(ref) /]_[field.getPhysicalName() /]) {
+		this.[getJavaAbsolutePath(ref) /]_[field.getPhysicalName() /] = [getJavaAbsolutePath(ref) /]_[field.getPhysicalName() /];
+	}
+
+	[/for]
+	[/if]
+	[if (getOppositeRoles(role)->any(true).entity = ent)]
+	[for (field : PhysicalField | ref.targetField)]
+	private Object [getJavaAbsolutePath(ref) /]_[field.getPhysicalName() /];
+	public Object get[getJavaAbsolutePath(ref).toUpperFirst() /]_[field.getPhysicalName() /]() {
+		return this.[getJavaAbsolutePath(ref) /]_[field.getPhysicalName() /];
+	}
+
+	public void set[getJavaAbsolutePath(ref).toUpperFirst() /]_[field.getPhysicalName() /]( Object [getJavaAbsolutePath(ref) /]_[field.getPhysicalName() /]) {
+		this.[getJavaAbsolutePath(ref) /]_[field.getPhysicalName() /] = [getJavaAbsolutePath(ref) /]_[field.getPhysicalName() /];
+	}
+
+	[/for]
+	[/if]
+	[/for]
+	[/for]
+	[/if]
+	[/for]
+}
+[/file]
+[/template]
+
+[query public hasEntityTypeInRelationshipType(rel : RelationshipType, ent : EntityType) : Boolean =  
+	rel.roles->select(role: Role | role.entity = ent and rel.roles->size() = 2)->size() > 0
+/]
+
+

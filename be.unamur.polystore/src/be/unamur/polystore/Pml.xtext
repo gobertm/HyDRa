@@ -75,9 +75,8 @@ Collection:
 ;
 
 Reference:
-	name=ID ':' sourceField=[PhysicalField|QualifiedName] '->' targetField=[PhysicalField|QualifiedName]
+	name=ID ':' sourceField+=[PhysicalField|QualifiedName](','sourceField+=[PhysicalField|QualifiedName])* '->' targetField+=[PhysicalField|QualifiedName](','targetField+=[PhysicalField|QualifiedName])*
 ;
-
 
 PhysicalField returns PhysicalField:
 	ShortField | EmbeddedObject | BracketsField | LongField

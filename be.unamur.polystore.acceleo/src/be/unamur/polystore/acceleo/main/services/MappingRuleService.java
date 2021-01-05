@@ -19,10 +19,11 @@ public class MappingRuleService {
 	private static final String PATTERN_VALUE = "@VAR@";
 	private static final String PATTERN_OTHER_VALUE = "@OTHERVAR@";
 
-	
 	/**
-	 * Gives a collection of corresponding mapped Physical Field in the pml model of the given attribute, reading the EntityMappingRule rules.
-	 * @param attr the conceptual attribute we look for 
+	 * Gives a collection of corresponding mapped Physical Field in the pml model of
+	 * the given attribute, reading the EntityMappingRule rules.
+	 * 
+	 * @param attr  the conceptual attribute we look for
 	 * @param rules The mapping rules in pml Model
 	 * @return A collection of Physical Field
 	 */
@@ -46,7 +47,10 @@ public class MappingRuleService {
 	}
 
 	/**
-	 * Given a specific conceptual attribute and a structure AbstractPhysicalStructure and a Database. Returns the first mapped PhysicalField found.
+	 * Given a specific conceptual attribute and a structure
+	 * AbstractPhysicalStructure and a Database. Returns the first mapped
+	 * PhysicalField found.
+	 * 
 	 * @param attr
 	 * @param struct
 	 * @param db
@@ -65,17 +69,19 @@ public class MappingRuleService {
 					return field;
 			}
 		}
-		
+
 		return null;
 	}
-	
-	
+
 	/**
-	 * Returns a Set of Database (PML domain object) that contains the mapped Physiucal Fields of the given conceptual attribute
-	 * Note : Uses @method getMappedPhysicalFields(Attribute a, MappingRules rules),  getPhysicalSchema(field) , getAttachedDatabases(schema);
-	 * @param attr The conceputal attribute 
+	 * Returns a Set of Database (PML domain object) that contains the mapped
+	 * Physiucal Fields of the given conceptual attribute Note : Uses @method
+	 * getMappedPhysicalFields(Attribute a, MappingRules rules),
+	 * getPhysicalSchema(field) , getAttachedDatabases(schema);
+	 * 
+	 * @param attr   The conceputal attribute
 	 * @param domain
-	 * @return A Set of Database 
+	 * @return A Set of Database
 	 */
 	public static Set<Database> getConcernedDatabases(Attribute attr, Domainmodel domain) {
 		Set<Database> res = new HashSet<Database>();
@@ -89,8 +95,10 @@ public class MappingRuleService {
 	}
 
 	/**
-	 * Given an EntityType , returns a Set of all the mapped PhysicalStructure , except the EmbeddedObject type.
-	 * Note : uses getMappedPhysicalFields, getPhysicalStructureNotEmbeddedObject
+	 * Given an EntityType , returns a Set of all the mapped PhysicalStructure ,
+	 * except the EmbeddedObject type. Note : uses getMappedPhysicalFields,
+	 * getPhysicalStructureNotEmbeddedObject
+	 * 
 	 * @param ent
 	 * @param domain
 	 * @return
@@ -109,7 +117,9 @@ public class MappingRuleService {
 	}
 
 	/**
-	 * Given an AbstractPhysicalStructure, retrieves its schema and returns the mapped databases using a call to the getAttachedDatabase(schema)
+	 * Given an AbstractPhysicalStructure, retrieves its schema and returns the
+	 * mapped databases using a call to the getAttachedDatabase(schema)
+	 * 
 	 * @param struct
 	 * @param domain
 	 * @return
@@ -123,8 +133,10 @@ public class MappingRuleService {
 	}
 
 	/**
-	 * Gets the Databases based onn EntityType. 
-	 *  	Goes through the mapped PhysicalField of this entity, gets its AbstractPhysicalSchema and returns the Database using getAttachedDatabases
+	 * Gets the Databases based onn EntityType. Goes through the mapped
+	 * PhysicalField of this entity, gets its AbstractPhysicalSchema and returns the
+	 * Database using getAttachedDatabases
+	 * 
 	 * @param ent
 	 * @param domain
 	 * @return
@@ -144,6 +156,7 @@ public class MappingRuleService {
 
 	/**
 	 * Returns the Databases of an AbstractPhysicalShcema
+	 * 
 	 * @param schema
 	 * @return
 	 */
@@ -154,7 +167,6 @@ public class MappingRuleService {
 		}
 		return res;
 	}
-
 
 	private static AbstractPhysicalSchema getPhysicalSchema(EObject obj) {
 		EObject res = getFirstAncestor(AbstractPhysicalSchema.class, obj);
@@ -279,7 +291,7 @@ public class MappingRuleService {
 		return str;
 
 	}
-	
+
 	public static void main(String[] args) {
 		System.out.println(escapeReservedChar(false, true, "$*^"));
 	}
@@ -295,6 +307,16 @@ public class MappingRuleService {
 
 	public static String getPatternOtherValue() {
 		return PATTERN_OTHER_VALUE;
+	}
+
+	public static Set<Reference> getMappedReferences(Role role, MappingRules rules) {
+		Set<Reference> res = new HashSet<Reference>();
+		for (AbstractMappingRule rule : rules.getMappingRules())
+			if (rule instanceof RoleToReferenceMappingRule) {
+				if (((RoleToReferenceMappingRule) rule).getRoleConceptual() == role)
+					res.add(((RoleToReferenceMappingRule) rule).getReference());
+			}
+		return res;
 	}
 
 }

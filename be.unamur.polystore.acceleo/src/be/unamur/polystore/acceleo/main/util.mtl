@@ -95,6 +95,9 @@
 	invoke('be.unamur.polystore.acceleo.main.services.Util', 'getPositionInLongField(be.unamur.polystore.pml.PhysicalField, be.unamur.polystore.pml.LongField)', Sequence{field, parent})
  /]
 
+
 [template public instantiateLogger(className : String)]static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger([className/].class);[/template]
 
+[query public getJavaAbsolutePath(ref : Reference) : String = 
+ref.eContainer(AbstractPhysicalSchema).name + '_' + ref.eContainer(AbstractPhysicalStructure).name + '_' + ref.name/]
 
