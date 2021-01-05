@@ -15,6 +15,7 @@ public class SQLDataInit {
     private String localhost;
     private String port;
     private Connection connection;
+    private static final int HYBRIDPML=0, ONETOMANYPML=1;
 
     public SQLDataInit(String localhost, String port, String databasename, String login, String password) {
         this.localhost=localhost;
@@ -24,33 +25,66 @@ public class SQLDataInit {
         this.password=password;
     }
 
-    public void initData(int numberofrecords) throws SQLException {
-        Statement stmt=connection.createStatement();
-        for (int i = 0; i < numberofrecords; i++) {
-            stmt.execute("insert into ProductCatalogTable(product_id,europrice, description, categoryname) VALUES ('product" + i + "'," + RandomUtils.nextInt() + ",'desc','"+ RandomStringUtils.random(2,65,70,true,false)+"')");
-        }
-        logger.info("Data [{}] rows inserted in table" + numberofrecords);
-    }
 
 
     public static void main(String args[]) throws SQLException {
         SQLDataInit sqlinit = new SQLDataInit("localhost","3307","mydb","root","password");
         sqlinit.createConnection();
-        sqlinit.initStructure();
-        sqlinit.initData(200);
+        // pml 'simplehybrid'
+//        sqlinit.initStructure(HYBRIDPML);
+//        sqlinit.initData(200);
+
+        // pml 'simpleonetomanyrel'
+        sqlinit.initStructure(ONETOMANYPML);
+        sqlinit.initData(30,ONETOMANYPML);
         sqlinit.getConnection().close();
 
-        
+
     }
 
-    public void initStructure() throws SQLException {
+    public void initStructure(int pmlmodel) throws SQLException {
         Statement stmt=connection.createStatement();
-        stmt.execute("create table IF NOT EXISTS ProductCatalogTable (" +
-                "product_id char(36)," +
-                "europrice char(36)," +
-                "description char(50)," +
-                "categoryname char(5))");
-        logger.info("Structure tables in database created");
+        if (pmlmodel == HYBRIDPML) {
+            stmt.execute("create table IF NOT EXISTS ProductCatalogTable (" +
+                    "product_id char(36)," +
+                    "europrice char(36)," +
+                    "description char(50)," +
+                    "categoryname char(5))");
+            logger.info("Structure tables in database created");
+        }
+        if (pmlmodel == ONETOMANYPML) {
+            stmt.execute("create table IF NOT EXISTS ProductCatalogTable (" +
+                    "product_id char(36) primary key," +
+                    "europrice char(36)," +
+                    "description char(50)," +
+                    "categoryname char(5))");
+            stmt.execute("create table IF NOT EXISTS ReviewTable(" +
+                    "review_id char(36)," +
+                    "rating int," +
+                    "content char(240)," +
+                    "product_ref  char(36)" +
+                    ")");
+            logger.info("Structure tables in database created");
+        }
+    }
+
+    public void initData(int numberofrecords, int pmlmodel) throws SQLException {
+        Statement stmt=connection.createStatement();
+        int insertedProduct = 0,insertedReviews=0;
+        for (int i = 0; i < numberofrecords; i++) {
+            try {
+                stmt.execute("insert into ProductCatalogTable(product_id,europrice, description, categoryname) VALUES ('product" + i + "'," + RandomUtils.nextInt() + ",'desc','" + RandomStringUtils.random(2, 65, 70, true, false) + "')");
+                insertedProduct++;
+            } catch (SQLIntegrityConstraintViolationException e) {
+                logger.warn("Duplicate entry. Skipping row..");
+            }
+            if (pmlmodel == ONETOMANYPML) {
+                stmt.execute("insert into ReviewTable(review_id, rating, content, product_ref) VALUES ('review"+i+"',"+RandomUtils.nextInt(0,5)+",'"+RandomStringUtils.randomAlphabetic(60)+"','product" + RandomUtils.nextInt(0,numberofrecords) + "')");
+                insertedReviews++;
+            }
+        }
+        logger.info("Data [{}] rows inserted in table ProductCatalogTable", insertedProduct);
+        logger.info("Data [{}] rows inserted in table ReviewTable", insertedReviews);
     }
 
     public void createConnection() {
