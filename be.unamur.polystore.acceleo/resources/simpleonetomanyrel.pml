@@ -34,7 +34,7 @@ physical schemas {
 		table ProductCatalogTable {
 			columns {
 				product_id,
-				europrice : [price]"€",
+				europrice : [price]"â‚¬",
 				description,
 				categoryname
 			}
