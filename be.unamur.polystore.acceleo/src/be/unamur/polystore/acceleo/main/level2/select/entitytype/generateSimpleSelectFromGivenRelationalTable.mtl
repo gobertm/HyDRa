@@ -7,12 +7,12 @@
 [comment get{E}List({E)AttributeCondition /]
 
 [template public generateSimpleSelectFromGivenRelationalTable(ent : EntityType, struct: AbstractPhysicalStructure, db : Database)]
-[generateSimpleSelectFromGivenRelationalTable(ent, struct, db, null) /]
+[generateSimpleSelectFromGivenRelationalTable(ent, struct, db, null, null) /]
 [/template]
 
-[template public generateSimpleSelectFromGivenRelationalTable(ent : EntityType, struct: AbstractPhysicalStructure, db : Database, ref: Reference)]
+[template public generateSimpleSelectFromGivenRelationalTable(ent : EntityType, struct: AbstractPhysicalStructure, db : Database, ref: Reference, left: Boolean)]
 [comment  select * from Client where (...) /]
-	Pair<String, List<String>> whereClause = getSQLWhereClauseIn[struct.name.toUpperFirst()/]From[db.name.toUpperFirst() /](condition, refilterFlag);
+	Pair<String, List<String>> whereClause = [ent.name.toUpperFirst()/]ServiceImpl.getSQLWhereClauseIn[struct.name.toUpperFirst()/]From[db.name.toUpperFirst() /](condition, refilterFlag);
 	String where = whereClause.getKey();
 	List<String> preparedValues = whereClause.getValue();
 	for(String preparedValue : preparedValues) {
@@ -24,8 +24,8 @@
 		d = d.where(where);
 	}
 
-	Dataset<[ent.name.toUpperFirst() /][getTDOLiteral(ref.oclIsUndefined()) /]> res = d.map((MapFunction<Row, [ent.name.toUpperFirst() /][getTDOLiteral(ref.oclIsUndefined()) /]>) r -> {
-				[ent.name.toUpperFirst() /] [ent.name.toLowerFirst() /]_res = new [ent.name.toUpperFirst() /]();
+	Dataset<[ent.name.toUpperFirst() /][getTDOLiteral(ref) /]> res = d.map((MapFunction<Row, [ent.name.toUpperFirst() /][getTDOLiteral(ref) /]>) r -> {
+				[ent.name.toUpperFirst() /][getTDOLiteral(ref) /] [ent.name.toLowerFirst() /]_res = new [ent.name.toUpperFirst() /][getTDOLiteral(ref) /]();
 				Integer groupIndex = null;
 				String regex = null;
 				String value = null;
@@ -63,8 +63,77 @@
 				[/let]
 				[/for]
 
+
+
+
+
+
+
+
+
+
+
+
+
+				[if (ref.oclIsUndefined() = false)]
+				[if (left)]
+				[for (field : PhysicalField | ref.sourceField)]
+				[if (field.ancestors(LongField) -> size() = 0)]
+				[comment shortField or bracketfield/]
+				Object [getJavaAbsolutePath(ref) /]_[field.getPhysicalName() /] = r.getAs("[getPhysicalName(field) /]");
+				[ent.name.toLowerFirst() /]_res.set[getJavaAbsolutePath(ref).toUpperFirst() /]_[field.getPhysicalName() /]([getJavaAbsolutePath(ref) /]_[field.getPhysicalName() /]);
+				[else]
+				[comment LongField /]
+				regex = "[getJavaRegexFromLongField(field.ancestors(LongField) -> first().oclAsType(LongField)) /]";
+				groupIndex = [getPositionInLongField(field, field.ancestors(LongField) -> first().oclAsType(LongField))/];
+				if(groupIndex == null) {
+					throw new Exception("Cannot retrieve value for BLABLABLA. Probably due to an ambiguous regex.");
+				}
+				value = r.getAs("[field.ancestors(LongField) -> first().oclAsType(LongField).physicalName /]");
+				p = Pattern.compile(regex);
+				m = p.matcher(value);
+				matches = m.find();
+				String [getJavaAbsolutePath(ref) /]_[field.getPhysicalName() /] = null;
+				if(matches) {
+					[getJavaAbsolutePath(ref) /]_[field.getPhysicalName() /] = m.group(groupIndex.intValue());
+				} else {
+					throw new Exception("Cannot retrieve value for BLABLABLA. Probably due to an ambiguous regex.");
+				}
+				[ent.name.toLowerFirst() /]_res.set[getJavaAbsolutePath(ref).toUpperFirst() /]_[field.getPhysicalName() /]([getJavaAbsolutePath(ref) /]_[field.getPhysicalName() /]);
+				[/if]
+				[/for]
+				[else]
+				[comment TODO refactorer car pareil que left /]
+				[for (field : PhysicalField | ref.targetField)]
+				[if (field.ancestors(LongField) -> size() = 0)]
+				[comment shortField or bracketfield/]
+				Object [getJavaAbsolutePath(ref) /]_[field.getPhysicalName() /] = r.getAs("[getPhysicalName(field) /]");
+				[ent.name.toLowerFirst() /]_res.set[getJavaAbsolutePath(ref).toUpperFirst() /]_[field.getPhysicalName() /]([getJavaAbsolutePath(ref) /]_[field.getPhysicalName() /]);
+				[else]
+				[comment LongField /]
+				regex = "[getJavaRegexFromLongField(field.ancestors(LongField) -> first().oclAsType(LongField)) /]";
+				groupIndex = [getPositionInLongField(field, field.ancestors(LongField) -> first().oclAsType(LongField))/];
+				if(groupIndex == null) {
+					throw new Exception("Cannot retrieve value for BLABLABLA. Probably due to an ambiguous regex.");
+				}
+				value = r.getAs("[field.ancestors(LongField) -> first().oclAsType(LongField).physicalName /]");
+				p = Pattern.compile(regex);
+				m = p.matcher(value);
+				matches = m.find();
+				String [getJavaAbsolutePath(ref) /]_[field.getPhysicalName() /] = null;
+				if(matches) {
+					[getJavaAbsolutePath(ref) /]_[field.getPhysicalName() /] = m.group(groupIndex.intValue());
+				} else {
+					throw new Exception("Cannot retrieve value for BLABLABLA. Probably due to an ambiguous regex.");
+				}
+				[ent.name.toLowerFirst() /]_res.set[getJavaAbsolutePath(ref).toUpperFirst() /]_[field.getPhysicalName() /]([getJavaAbsolutePath(ref) /]_[field.getPhysicalName() /]);
+				[/if]
+				[/for]
+				[/if]
+				[/if]
+
 				return [ent.name.toLowerFirst() /]_res;
-			}, Encoders.bean([ent.name.toUpperFirst() /].class));
+			}, Encoders.bean([ent.name.toUpperFirst() /][getTDOLiteral(ref) /].class));
 
 
 	return res;
@@ -76,7 +145,7 @@
 	/]
 
 [template public generateGetSQLWhereClauseMethod(ent : EntityType, struct: AbstractPhysicalStructure, db : Database)]
-private static Pair<String, List<String>> getSQLWhereClauseIn[struct.name.toUpperFirst()/]From[db.name.toUpperFirst() /](Condition<[ent.name.toUpperFirst() /]Attribute> condition, MutableBoolean refilterFlag) {
+public static Pair<String, List<String>> getSQLWhereClauseIn[struct.name.toUpperFirst()/]From[db.name.toUpperFirst() /](Condition<[ent.name.toUpperFirst() /]Attribute> condition, MutableBoolean refilterFlag) {
 	String where = null;	
 	List<String> preparedValues = new java.util.ArrayList<String>();
 	if(condition != null) {
@@ -185,4 +254,4 @@ private static Pair<String, List<String>> getSQLWhereClauseIn[struct.name.toUppe
 }
 [/template]
 
-[template public getTDOLiteral(tdo : Boolean)][if (tdo)]TDO[/if][/template]
+[template public getTDOLiteral(o : OclAny)][if (o.oclIsUndefined() = false)]TDO[/if][/template]

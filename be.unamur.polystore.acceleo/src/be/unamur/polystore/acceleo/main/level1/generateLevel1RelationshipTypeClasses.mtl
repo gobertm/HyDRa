@@ -21,6 +21,7 @@ import pojo.[role.entity.name.toUpperFirst() /];
 import conditions.[role.entity.name.toUpperFirst() /]Attribute;
 [/for]
 
+
 public abstract class [rel.name.toUpperFirst() + 'Service' /] {
 [comment]	[if (isBinaryWithAttributes(rel))]
 	[generateBinaryWithAttributesSelectMethods(rel) /]

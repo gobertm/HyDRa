@@ -16,6 +16,18 @@ import tdo.[role.entity.name.toUpperFirst() /]TDO;
 import pojo.[role.entity.name.toUpperFirst() /];
 import conditions.[role.entity.name.toUpperFirst() /]Attribute;
 [/for]
+import java.util.List;
+import java.util.ArrayList;
+import org.apache.spark.api.java.function.MapFunction;
+import org.apache.spark.sql.Encoders;
+import org.apache.spark.api.java.function.FilterFunction;
+import org.apache.commons.lang.mutable.MutableBoolean;
+import util.Util;
+import org.apache.commons.lang3.tuple.ImmutablePair;
+import org.apache.commons.lang3.tuple.Pair;
+import org.apache.spark.sql.Row;
+import java.util.regex.Pattern;
+import java.util.regex.Matcher;
 
 public class [rel.name.toUpperFirst() + 'ServiceImpl' /] extends dao.services.[rel.name.toUpperFirst() + 'Service' /] {
 	[generateSelectMethods(rel, true) /]
