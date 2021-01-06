@@ -7,6 +7,10 @@
 [comment get{E}List({E)AttributeCondition /]
 
 [template public generateSimpleSelectFromGivenRelationalTable(ent : EntityType, struct: AbstractPhysicalStructure, db : Database)]
+[generateSimpleSelectFromGivenRelationalTable(ent, struct, db, null) /]
+[/template]
+
+[template public generateSimpleSelectFromGivenRelationalTable(ent : EntityType, struct: AbstractPhysicalStructure, db : Database, ref: Reference)]
 [comment  select * from Client where (...) /]
 	Pair<String, List<String>> whereClause = getSQLWhereClauseIn[struct.name.toUpperFirst()/]From[db.name.toUpperFirst() /](condition, refilterFlag);
 	String where = whereClause.getKey();
@@ -20,7 +24,7 @@
 		d = d.where(where);
 	}
 
-	Dataset<[ent.name.toUpperFirst() /]> res = d.map((MapFunction<Row, [ent.name.toUpperFirst() /]>) r -> {
+	Dataset<[ent.name.toUpperFirst() /][getTDOLiteral(ref.oclIsUndefined()) /]> res = d.map((MapFunction<Row, [ent.name.toUpperFirst() /][getTDOLiteral(ref.oclIsUndefined()) /]>) r -> {
 				[ent.name.toUpperFirst() /] [ent.name.toLowerFirst() /]_res = new [ent.name.toUpperFirst() /]();
 				Integer groupIndex = null;
 				String regex = null;
@@ -180,3 +184,5 @@ private static Pair<String, List<String>> getSQLWhereClauseIn[struct.name.toUppe
 	return new ImmutablePair<String, List<String>>(where, preparedValues);
 }
 [/template]
+
+[template public getTDOLiteral(tdo : Boolean)][if (tdo)]TDO[/if][/template]

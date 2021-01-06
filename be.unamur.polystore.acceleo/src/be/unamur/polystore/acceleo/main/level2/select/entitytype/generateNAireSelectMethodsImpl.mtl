@@ -1,8 +1,27 @@
 [comment encoding = UTF-8 /]
 [module generateNAireSelectMethodsImpl('http://www.unamur.be/polystore/Pml')]
 
+[import be::unamur::polystore::acceleo::main::mappingrules::util /]
+[import be::unamur::polystore::acceleo::main::util /]
 
-[template public generateNAireSelectMethodsImpl(entity: EntityType, conceptualSchema: ConceptualSchema)]{
-	//TODO
-	return null;
-}[/template]
+
+[template public generateNAireSelectMethodsImpl(entity: EntityType, role: Role, conceptualSchema: ConceptualSchema)]{
+[if (role.getRelationShipType().roles -> size() = 2 and role.getRelationShipType().attributes -> size() = 0)]
+[let role2 : Role = getOppositeRoles(role)->any(true)]
+[for (ref: Reference | getMappedReferences(role, conceptualSchema.getMappingRules()))]
+[role.getRelationShipType().name.toLowerFirst()/]Service.get[entity.name.toUpperFirst()/]TDOList[role.name.toUpperFirst() /]In[ref.name.toUpperFirst()/]In[ref.getAbstractPhysicalStructure().name.toUpperFirst() /]From[ref.getPhysicalSchema().name.toUpperFirst()/]([role.name/]_condition);
+[role.getRelationShipType().name.toLowerFirst()/]Service.get[role2.entity.name.toUpperFirst()/]TDOList[role2.name.toUpperFirst() /]In[ref.name.toUpperFirst()/]In[ref.getAbstractPhysicalStructure().name.toUpperFirst() /]From[ref.getPhysicalSchema().name.toUpperFirst()/]([role2.name/]_condition);
+[/for]
+
+[for (ref: Reference | getMappedReferences(role2, conceptualSchema.getMappingRules()))]
+[role.getRelationShipType().name.toLowerFirst()/]Service.get[role2.entity.name.toUpperFirst()/]TDOList[role2.name.toUpperFirst() /]In[ref.name.toUpperFirst()/]In[ref.getAbstractPhysicalStructure().name.toUpperFirst() /]From[ref.getPhysicalSchema().name.toUpperFirst()/]([role2.name/]_condition);
+[role.getRelationShipType().name.toLowerFirst()/]Service.get[entity.name.toUpperFirst()/]TDOList[role.name.toUpperFirst() /]In[ref.name.toUpperFirst()/]In[ref.getAbstractPhysicalStructure().name.toUpperFirst() /]From[ref.getPhysicalSchema().name.toUpperFirst()/]([role.name/]_condition);
+[/for]
+
+[/let]
+[/if]
+
+//TODO
+return null;
+}
+[/template]

@@ -9,6 +9,14 @@
 [file ('src/main/java/dao/impl/' + rel.name.toUpperFirst() + 'ServiceImpl'.concat('.java'), false, 'UTF-8')]
 package dao.impl;
 
+import org.apache.spark.sql.Dataset;
+import conditions.Condition;
+[for (role : Role | rel.roles)]
+import tdo.[role.entity.name.toUpperFirst() /]TDO;
+import pojo.[role.entity.name.toUpperFirst() /];
+import conditions.[role.entity.name.toUpperFirst() /]Attribute;
+[/for]
+
 public class [rel.name.toUpperFirst() + 'ServiceImpl' /] extends dao.services.[rel.name.toUpperFirst() + 'Service' /] {
 	[generateSelectMethods(rel, true) /]
 	[generateInsertMethods(rel, true) /]

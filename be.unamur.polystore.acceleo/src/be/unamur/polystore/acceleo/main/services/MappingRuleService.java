@@ -10,6 +10,7 @@ import org.eclipse.emf.common.util.TreeIterator;
 import org.eclipse.emf.ecore.EClass;
 import org.eclipse.emf.ecore.EObject;
 import org.eclipse.emf.ecore.util.EcoreUtil;
+import org.eclipse.ocl.ecore.OCL;
 import org.eclipse.ocl.ecore.util.OCLEcoreUtil;
 
 import be.unamur.polystore.pml.*;
@@ -168,7 +169,7 @@ public class MappingRuleService {
 		return res;
 	}
 
-	private static AbstractPhysicalSchema getPhysicalSchema(EObject obj) {
+	public static AbstractPhysicalSchema getPhysicalSchema(EObject obj) {
 		EObject res = getFirstAncestor(AbstractPhysicalSchema.class, obj);
 		if (res == null)
 			return null;
@@ -182,7 +183,7 @@ public class MappingRuleService {
 //		return (AbstractPhysicalStructure) res;
 //	}
 
-	private static AbstractPhysicalStructure getPhysicalStructureNotEmbeddedObject(EObject obj) {
+	public static AbstractPhysicalStructure getPhysicalStructureNotEmbeddedObject(EObject obj) {
 		if (obj == null)
 			return null;
 		if (AbstractPhysicalStructure.class.isAssignableFrom(obj.getClass())
@@ -190,7 +191,7 @@ public class MappingRuleService {
 			return (AbstractPhysicalStructure) obj;
 		return getPhysicalStructureNotEmbeddedObject(obj.eContainer());
 	}
-
+	
 	private static EObject getFirstAncestor(final Class cl, EObject obj) {
 		if (obj == null)
 			return null;

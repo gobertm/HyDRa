@@ -12,7 +12,7 @@ import pojo.[ent.name.toUpperFirst() /];
 
 public class [ent.name.toUpperFirst() /]TDO extends [ent.name.toUpperFirst() /] {
 	[for (rel : RelationshipType | conceptualSchema.relationships)]
-	[if (hasEntityTypeInRelationshipType(rel, ent))]
+	[if (hasEntityTypeInBinarySimpleRelationshipType(rel, ent))]
 	[for (role : Role | rel.roles)]
 	[for (ref: Reference | getMappedReferences(role, conceptualSchema.getMappingRules()))]
 	[if (role.entity = ent)]
@@ -49,8 +49,8 @@ public class [ent.name.toUpperFirst() /]TDO extends [ent.name.toUpperFirst() /] 
 [/file]
 [/template]
 
-[query public hasEntityTypeInRelationshipType(rel : RelationshipType, ent : EntityType) : Boolean =  
-	rel.roles->select(role: Role | role.entity = ent and rel.roles->size() = 2)->size() > 0
+[query public hasEntityTypeInBinarySimpleRelationshipType(rel : RelationshipType, ent : EntityType) : Boolean =  
+	rel.roles->select(role: Role | role.entity = ent and rel.roles->size() = 2 and rel.attributes->size() = 0)->size() > 0
 /]
 
 

@@ -5,21 +5,21 @@
 
 [template public generateNAireSelectMethods(entity: EntityType, conceptualSchema: ConceptualSchema, override: Boolean)]
 [for (role: Role | getRolesFromEntityType(entity, conceptualSchema))]
-public [if (override = false)]abstract [/if]java.util.List<[entity.name.toUpperFirst() /]> get[role.name.toUpperFirst() /]ListIn[getRelationShipType(role).name.toUpperFirst() /]([for (role2: Role | getRelationShipType(role).roles)][if (i > 1)],[/if]
+public [if (override = false)]abstract [/if]Dataset<[entity.name.toUpperFirst() /]> get[role.name.toUpperFirst() /]ListIn[getRelationShipType(role).name.toUpperFirst() /]([for (role2: Role | getRelationShipType(role).roles)][if (i > 1)],[/if]
 	conditions.Condition<conditions.[role2.entity.name.toUpperFirst() /]Attribute> [role2.name/]_condition[/for][if (getRelationShipType(role).attributes->size() > 0)],
 	conditions.Condition<conditions.[getRelationShipType(role).name.toUpperFirst() /]Attribute> [getRelationShipType(role).name /]_condition
 	[/if]
-)[if (override = false)];[else][generateNAireSelectMethodsImpl(entity, conceptualSchema) /][/if]
+)[if (override = false)];[else][generateNAireSelectMethodsImpl(entity, role, conceptualSchema) /][/if]
 
 [for (role2: Role | getRelationShipType(role).roles)]
-public java.util.List<[entity.name.toUpperFirst() /]> get[role.name.toUpperFirst() /]ListIn[getRelationShipType(role).name.toUpperFirst() /]By[role2.name.toUpperFirst() /]Condition(
+public Dataset<[entity.name.toUpperFirst() /]> get[role.name.toUpperFirst() /]ListIn[getRelationShipType(role).name.toUpperFirst() /]By[role2.name.toUpperFirst() /]Condition(
 	conditions.Condition<conditions.[role2.entity.name.toUpperFirst()/]Attribute> [role2.name/]_condition
 ){
 	return get[role.name.toUpperFirst() /]ListIn[getRelationShipType(role).name.toUpperFirst() /]([getListOfNullValues(i - 1) /][if(i - 1 > 0)], [/if][role2.name/]_condition[getListOfNullValues(getRelationShipType(role).roles->size() -  i, true) /][if (getRelationShipType(role).attributes->size() > 0)], null[/if]);
 }
 [if (role2 <> role)]
 
-public [if (isMaxOne(role2) = false)]java.util.List<[entity.name.toUpperFirst() /]>[else][entity.name.toUpperFirst() /][/if] get[role.name.toUpperFirst() /][if (isMaxOne(role2) = false)]List[/if]In[getRelationShipType(role).name.toUpperFirst() /]By[role2.name.toUpperFirst() /](
+public [if (isMaxOne(role2) = false)]Dataset<[entity.name.toUpperFirst() /]>[else][entity.name.toUpperFirst() /][/if] get[role.name.toUpperFirst() /][if (isMaxOne(role2) = false)]List[/if]In[getRelationShipType(role).name.toUpperFirst() /]By[role2.name.toUpperFirst() /](
 	pojo.[role2.entity.name.toUpperFirst()/] [role2.name/]
 ){
 	//TODO get id in condition

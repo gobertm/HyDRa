@@ -13,6 +13,14 @@
 [file ('src/main/java/dao/services/' + rel.name.toUpperFirst() + 'Service'.concat('.java'), false, 'UTF-8')]
 package dao.services;
 
+import org.apache.spark.sql.Dataset;
+import conditions.Condition;
+[for (role : Role | rel.roles)]
+import tdo.[role.entity.name.toUpperFirst() /]TDO;
+import pojo.[role.entity.name.toUpperFirst() /];
+import conditions.[role.entity.name.toUpperFirst() /]Attribute;
+[/for]
+
 public abstract class [rel.name.toUpperFirst() + 'Service' /] {
 [comment]	[if (isBinaryWithAttributes(rel))]
 	[generateBinaryWithAttributesSelectMethods(rel) /]
