@@ -43,7 +43,7 @@ public class MongoDataInit implements DataInit{
         MongoDataInit mongoDataInit = new MongoDataInit(mongodbname, mongohost, mongoport, nbdataobj);
         SQLDataInit sqlinit = new SQLDataInit("localhost","3307","mydb","root","password");
         sqlinit.createConnection();
-        sqlinit.initStructure();
+        sqlinit.initStructure(1);
 //        sqlinit.initData(nbdataobj);
         mongoDataInit.setSqlDB(sqlinit);
 

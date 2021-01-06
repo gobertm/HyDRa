@@ -44,9 +44,18 @@ public class PmlScopeProvider extends AbstractPmlScopeProvider {
 			EntityMappingRule rule = EcoreUtil2.getContainerOfType(context, EntityMappingRule.class);
 			return Scopes.scopeFor(rule.getEntityConceptual().getAttributes());
 		}
-		if(context instanceof RoleToEmbbededObjectMappingRule && reference == PmlPackage.Literals.ROLE_TO_EMBBEDED_OBJECT_MAPPING_RULE__PHYSICAL_FIELDS) {
-			RoleToEmbbededObjectMappingRule rule = EcoreUtil2.getContainerOfType(context, RoleToEmbbededObjectMappingRule.class);
-			AbstractPhysicalStructure struct= rule.getPhysicalStructure();
+		if((context instanceof RoleToEmbbededObjectMappingRule || context instanceof EntityMappingRule) 
+				&& 
+				(reference == PmlPackage.Literals.ROLE_TO_EMBBEDED_OBJECT_MAPPING_RULE__PHYSICAL_FIELDS || reference == PmlPackage.Literals.ENTITY_MAPPING_RULE__PHYSICAL_FIELDS)) {
+			AbstractPhysicalStructure struct=null;
+			if(context instanceof RoleToEmbbededObjectMappingRule) {
+				RoleToEmbbededObjectMappingRule rule = EcoreUtil2.getContainerOfType(context, RoleToEmbbededObjectMappingRule.class);
+				struct = rule.getPhysicalStructure();
+			}
+			if(context instanceof EntityMappingRule) {
+				EntityMappingRule rule = EcoreUtil2.getContainerOfType(context, EntityMappingRule.class);
+				struct = rule.getPhysicalStructure();
+			}
 			EList<PhysicalField> fields = new BasicEList<PhysicalField>();
 			if(struct instanceof Table) 
 				fields=((Table) struct).getColumns();
