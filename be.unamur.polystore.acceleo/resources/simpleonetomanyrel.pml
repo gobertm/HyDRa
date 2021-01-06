@@ -34,7 +34,7 @@ physical schemas {
 		table ProductCatalogTable {
 			columns {
 				product_id,
-				europrice : [price]"ï¿½",
+				europrice : [price]"€",
 				description,
 				categoryname
 			}
@@ -56,8 +56,8 @@ physical schemas {
 }
 	
 mapping rules{
-	cs.Product(id,description,price) -> myRelSchema.ProductCatalogTable(myRelSchema.ProductCatalogTable.product_id, myRelSchema.ProductCatalogTable.description, myRelSchema.ProductCatalogTable.price),
-	cs.Review(content,id,rating) -> myRelSchema.ReviewTable(myRelSchema.ReviewTable.content,myRelSchema.ReviewTable.review_id,myRelSchema.ReviewTable.rating),
+	cs.Product(id,description,price) -> myRelSchema.ProductCatalogTable(product_id,description,price),
+	cs.Review(content,id,rating) -> myRelSchema.ReviewTable(content,review_id,rating),
 	cs.productReview.review -> myRelSchema.ReviewTable.reviewed_product
 }
 
