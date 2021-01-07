@@ -2,7 +2,7 @@
 [module generateSimpleUpdateMethods('http://www.unamur.be/polystore/Pml')]
 
 [import be::unamur::polystore::acceleo::main::util /]
-[import be::unamur::polystore::acceleo::main::level2::update::entitytype::generateSimpleUpdateMethodsImpl/]
+[import be::unamur::polystore::acceleo::main::impl::update::entitytype::generateSimpleUpdateMethodsImpl/]
 
 [template public generateSimpleUpdateMethods(entityType: EntityType, conceptualSchema: ConceptualSchema, override: Boolean)]
 public [if (override = false)]abstract [/if]void update[entityType.name.toUpperFirst() /]List(conditions.Condition<conditions.[entityType.name.toUpperFirst() /]Attribute> condition, conditions.SetClause<conditions.[entityType.name.toUpperFirst() /]Attribute> set)[if (override = false)];[else][implMethod1(entityType, conceptualSchema) /][/if]

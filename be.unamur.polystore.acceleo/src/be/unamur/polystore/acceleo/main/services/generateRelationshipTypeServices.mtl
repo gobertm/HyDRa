@@ -1,15 +1,15 @@
 [comment encoding = UTF-8 /]
-[module generateLevel1RelationshipTypeClasses('http://www.unamur.be/polystore/Pml')]
+[module generateRelationshipTypeServices('http://www.unamur.be/polystore/Pml')]
 [import be::unamur::polystore::acceleo::main::generateRelationshipTypeClass /]
 [import be::unamur::polystore::acceleo::main::util /]
-[import be::unamur::polystore::acceleo::main::level1::select::relationshiptype::generateBinaryWithAttributesSelectMethods /]
-[import be::unamur::polystore::acceleo::main::level1::select::relationshiptype::generateSelectMethods /]
-[import be::unamur::polystore::acceleo::main::level1::insert::relationshiptype::generateInsertMethods /]
-[import be::unamur::polystore::acceleo::main::level1::insert::relationshiptype::generateComplexRelationshipTypeInsertMethods /]
-[import be::unamur::polystore::acceleo::main::level1::update::relationshiptype::generateUpdateMethods /]
-[import be::unamur::polystore::acceleo::main::level1::delete::relationshiptype::generateDeleteMethods /]
+[import be::unamur::polystore::acceleo::main::services::select::relationshiptype::generateBinaryWithAttributesSelectMethods /]
+[import be::unamur::polystore::acceleo::main::services::select::relationshiptype::generateSelectMethods /]
+[import be::unamur::polystore::acceleo::main::services::insert::relationshiptype::generateInsertMethods /]
+[import be::unamur::polystore::acceleo::main::services::insert::relationshiptype::generateComplexRelationshipTypeInsertMethods /]
+[import be::unamur::polystore::acceleo::main::services::update::relationshiptype::generateUpdateMethods /]
+[import be::unamur::polystore::acceleo::main::services::delete::relationshiptype::generateDeleteMethods /]
 
-[template public generateLevel1RelationshipTypeClass(rel : RelationshipType, conceptualSchema: ConceptualSchema)]
+[template public generateRelationshipTypeServices(rel : RelationshipType, conceptualSchema: ConceptualSchema)]
 [file ('src/main/java/dao/services/' + rel.name.toUpperFirst() + 'Service'.concat('.java'), false, 'UTF-8')]
 package dao.services;
 

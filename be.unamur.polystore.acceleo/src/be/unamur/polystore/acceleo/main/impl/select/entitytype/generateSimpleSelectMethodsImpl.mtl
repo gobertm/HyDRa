@@ -3,8 +3,8 @@
 [import be::unamur::polystore::acceleo::main::mappingrules::util /]
 [import be::unamur::polystore::acceleo::main::generateJavaDataType /]
 [import be::unamur::polystore::acceleo::main::util /]
-[import be::unamur::polystore::acceleo::main::level2::select::entitytype::generateSimpleSelectFromGivenRelationalTable /]
-[import be::unamur::polystore::acceleo::main::level2::select::entitytype::generateSimpleSelectFromGivenDocumentCollection /]
+[import be::unamur::polystore::acceleo::main::impl::select::entitytype::generateSimpleSelectFromGivenRelationalTable /]
+[import be::unamur::polystore::acceleo::main::impl::select::entitytype::generateSimpleSelectFromGivenDocumentCollection /]
 
 [comment get{E}List({E)AttributeCondition /]
 

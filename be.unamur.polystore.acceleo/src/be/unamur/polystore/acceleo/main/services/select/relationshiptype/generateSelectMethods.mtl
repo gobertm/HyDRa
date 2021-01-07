@@ -1,8 +1,8 @@
 [comment encoding = UTF-8 /]
 [module generateSelectMethods('http://www.unamur.be/polystore/Pml')]
 [import be::unamur::polystore::acceleo::main::util /]
-[import be::unamur::polystore::acceleo::main::level2::select::relationshiptype::generateSelectMethodsImpl]
-[import be::unamur::polystore::acceleo::main::level2::select::relationshiptype::generateMappedReferenceSelectTDOMethods]
+[import be::unamur::polystore::acceleo::main::impl::select::relationshiptype::generateSelectMethodsImpl]
+[import be::unamur::polystore::acceleo::main::impl::select::relationshiptype::generateMappedReferenceSelectTDOMethods]
 
 
 

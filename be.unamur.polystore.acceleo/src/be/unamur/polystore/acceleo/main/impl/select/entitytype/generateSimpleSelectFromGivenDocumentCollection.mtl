@@ -237,19 +237,19 @@ if(toAdd[level /]) {
 [/template]
 
 [query private getChildrenNonArrayPhysicalFields(arg : OclAny) : Collection(PhysicalField) =  
-	invoke('be.unamur.polystore.acceleo.main.services.Util', 'getChildrenNonArrayPhysicalFields(java.lang.Object)', Sequence{arg})
+	invoke('be.unamur.polystore.acceleo.main.utils.Util', 'getChildrenNonArrayPhysicalFields(java.lang.Object)', Sequence{arg})
 /]
 
 [query private getMappedAttributes(field: PhysicalField, ent: EntityType, rules: MappingRules) : Collection(Attribute) =  
-	invoke('be.unamur.polystore.acceleo.main.services.Util', 'getMappedAttributes(be.unamur.polystore.pml.PhysicalField, be.unamur.polystore.pml.EntityType, be.unamur.polystore.pml.MappingRules)', Sequence{field, ent, rules})
+	invoke('be.unamur.polystore.acceleo.main.utils.Util', 'getMappedAttributes(be.unamur.polystore.pml.PhysicalField, be.unamur.polystore.pml.EntityType, be.unamur.polystore.pml.MappingRules)', Sequence{field, ent, rules})
 /]
 
 [query private getChildrenArrayPhysicalFieldsHavingDescendantMappedToGivenEntityType(arg : OclAny, ent: EntityType, rules: MappingRules) : Collection(EmbeddedObject) =  
-	invoke('be.unamur.polystore.acceleo.main.services.Util', 'getChildrenArrayPhysicalFieldsHavingDescendantMappedToGivenEntityType(java.lang.Object, be.unamur.polystore.pml.EntityType, be.unamur.polystore.pml.MappingRules)', Sequence{arg, ent, rules})
+	invoke('be.unamur.polystore.acceleo.main.utils.Util', 'getChildrenArrayPhysicalFieldsHavingDescendantMappedToGivenEntityType(java.lang.Object, be.unamur.polystore.pml.EntityType, be.unamur.polystore.pml.MappingRules)', Sequence{arg, ent, rules})
 /]
 
 [query private getSequenceOfNonArrayEmbeddedObjects(field : OclAny) : Sequence(EmbeddedObject) =  
-	invoke('be.unamur.polystore.acceleo.main.services.Util', 'getSequenceOfNonArrayEmbeddedObjects(org.eclipse.emf.ecore.EObject)', Sequence{field})
+	invoke('be.unamur.polystore.acceleo.main.utils.Util', 'getSequenceOfNonArrayEmbeddedObjects(org.eclipse.emf.ecore.EObject)', Sequence{field})
 /]
 
 

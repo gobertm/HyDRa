@@ -2,7 +2,7 @@
 [module generateSimpleInsertMethods('http://www.unamur.be/polystore/Pml')]
 [import be::unamur::polystore::acceleo::main::util /]
 [import be::unamur::polystore::acceleo::main::generateJavaDataType/]
-[import be::unamur::polystore::acceleo::main::level2::insert::entitytype::generateSimpleInsertMethodsImpl /]
+[import be::unamur::polystore::acceleo::main::impl::insert::entitytype::generateSimpleInsertMethodsImpl /]
 
 [template public generateSimpleInsertMethods(entityType: EntityType, conceptualSchema: ConceptualSchema, override: Boolean)]
 public [if (override = false)]abstract [/if]void insert[entityType.name.toUpperFirst() /]AndLinkedItems(pojo.[entityType.name.toUpperFirst() /] [entityType.name.toLowerFirst() /])[if (override = false)];[else][implMethod1(entityType, conceptualSchema) /][/if]

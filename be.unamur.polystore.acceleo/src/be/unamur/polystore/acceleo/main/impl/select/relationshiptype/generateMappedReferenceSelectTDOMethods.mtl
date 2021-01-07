@@ -2,7 +2,7 @@
 [module generateMappedReferenceSelectTDOMethods('http://www.unamur.be/polystore/Pml')]
 [import be::unamur::polystore::acceleo::main::util /]
 [import be::unamur::polystore::acceleo::main::mappingrules::util /]
-[import be::unamur::polystore::acceleo::main::level2::select::entitytype::generateSimpleSelectFromGivenRelationalTable/]
+[import be::unamur::polystore::acceleo::main::impl::select::entitytype::generateSimpleSelectFromGivenRelationalTable/]
 
 [template public generateMappedReferenceSelectTDOMethods(rel : RelationshipType, override: Boolean)]
 [if (rel.roles -> size() = 2 and rel.attributes->size() = 0)]

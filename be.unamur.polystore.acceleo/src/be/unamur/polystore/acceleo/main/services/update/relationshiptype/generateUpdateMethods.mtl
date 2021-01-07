@@ -2,7 +2,7 @@
 [module generateUpdateMethods('http://www.unamur.be/polystore/Pml')]
 
 [import be::unamur::polystore::acceleo::main::util /]
-[import be::unamur::polystore::acceleo::main::level2::update::relationshiptype::generateSimpleUpdateMethodsImpl/]
+[import be::unamur::polystore::acceleo::main::impl::update::relationshiptype::generateSimpleUpdateMethodsImpl/]
 
 [template public generateUpdateMethods(rel: RelationshipType, override: Boolean) ]
 [if (rel.attributes->size() > 0)]

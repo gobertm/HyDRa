@@ -1,11 +1,11 @@
 [comment encoding = UTF-8 /]
-[module generateNAireSelectMethodsImpl('http://www.unamur.be/polystore/Pml')]
+[module generateRoleBasedSelectMethodsImpl('http://www.unamur.be/polystore/Pml')]
 
 [import be::unamur::polystore::acceleo::main::mappingrules::util /]
 [import be::unamur::polystore::acceleo::main::util /]
 
 
-[template public generateNAireSelectMethodsImpl(entity: EntityType, role: Role, conceptualSchema: ConceptualSchema)]{
+[template public generateRoleBasedSelectMethodsImpl(entity: EntityType, role: Role, conceptualSchema: ConceptualSchema)]{
 [if (role.getRelationShipType().roles -> size() = 2 and role.getRelationShipType().attributes -> size() = 0)]
 [let role2 : Role = getOppositeRoles(role)->any(true)]
 [for (ref: Reference | getMappedReferences(role, conceptualSchema.getMappingRules()))]

@@ -21,5 +21,5 @@ Bundle-RequiredExecutionEnvironment: JavaSE-14
 Bundle-ActivationPolicy: lazy
 Eclipse-LazyStart: true
 Export-Package: be.unamur.polystore.acceleo.main,
- be.unamur.polystore.acceleo.main.services
+ be.unamur.polystore.acceleo.main.utils
 

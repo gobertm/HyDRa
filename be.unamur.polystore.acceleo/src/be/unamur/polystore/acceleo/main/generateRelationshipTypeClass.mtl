@@ -1,17 +1,17 @@
 [comment encoding = UTF-8 /]
 [module generateRelationshipTypeClass('http://www.unamur.be/polystore/Pml')]
 [import be::unamur::polystore::acceleo::main::generateJavaDataType /]
-[import be::unamur::polystore::acceleo::main::level1::generateLevel1RelationshipTypeClasses /]
-[import be::unamur::polystore::acceleo::main::level2::generateLevel2RelationshipTypeClass /]
+[import be::unamur::polystore::acceleo::main::services::generateRelationshipTypeServices /]
+[import be::unamur::polystore::acceleo::main::impl::generateRelationshipTypeServicesImpl /]
 
  [query public isRelationshipTypeComplex(rel : RelationshipType) : Boolean = rel.attributes->size() > 0 or rel.roles->size() > 2 /]
 
 [template public generateAllLevelsRelationshipTypeClass(rel: RelationshipType, conceptualSchema: ConceptualSchema)]
-[generateLevel1RelationshipTypeClass(rel, conceptualSchema) /]
-[generateLevel2RelationshipTypeClass(rel, conceptualSchema) /]
+[generateRelationshipTypeServices(rel, conceptualSchema) /]
+[generateRelationshipTypeServicesImpl(rel, conceptualSchema) /]
 [/template]
 
-[template public generateClass(rel : RelationshipType, conceptualSchema: ConceptualSchema)]
+[template public generateRelationshipTypePojoClass(rel : RelationshipType, conceptualSchema: ConceptualSchema)]
 [if (true or isRelationshipTypeComplex(rel))]
 [file ('src/main/java/pojo/' + rel.name.toUpperFirst().concat('.java'), false, 'UTF-8')]
 package pojo;

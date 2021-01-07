@@ -1,4 +1,4 @@
-package be.unamur.polystore.acceleo.main.services;
+package be.unamur.polystore.acceleo.main.utils;
 
 import java.util.ArrayList;
 import java.util.HashSet;
