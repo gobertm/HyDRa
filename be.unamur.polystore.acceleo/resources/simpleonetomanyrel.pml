@@ -1,6 +1,6 @@
 conceptual schema cs {
 	entity type Product{
-		id:int,
+		id:string,
 		name:string,
 		price:float,
 		description:string,
@@ -13,7 +13,7 @@ conceptual schema cs {
 	} 
 	
 	entity type Review {
-		id : int,
+		id : string,
 		rating : int,
 		content : string
 		
@@ -30,11 +30,11 @@ conceptual schema cs {
 	
 }
 physical schemas {
-	relational schema myRelSchema : mysqlite {
+	relational schema myRelSchema : mydb {
 		table ProductCatalogTable {
 			columns {
 				product_id,
-				europrice : [price]"�",
+				europrice : [price]"€",
 				description,
 				categoryname
 			}
@@ -63,9 +63,12 @@ mapping rules{
 
 databases {
 	
-	sqlite mysqlite {
-		host: "sqlite.unamur.be"
-		port: 8090
+	mariadb mydb {
+		host: "localhost"
+		port: 3307
+		dbname : "mydb"
+		password : "password"
+		login : "root"
 	}
 	
 	mongodb mymongo {

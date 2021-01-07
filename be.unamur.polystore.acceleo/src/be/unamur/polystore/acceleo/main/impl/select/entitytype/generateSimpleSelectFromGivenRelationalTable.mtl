@@ -63,21 +63,11 @@
 				[/let]
 				[/for]
 
-
-
-
-
-
-
-
-
-
-
-
-
+				[comment Generate setter for reference column (only in TDO Object) /]
 				[if (ref.oclIsUndefined() = false)]
 				[if (left)]
 				[for (field : PhysicalField | ref.sourceField)]
+				// Get reference column (left side) [ '[' /][field.getPhysicalName()/] [ ']' /] for reference [ '[' /][ref.name/][ ']' /]
 				[if (field.ancestors(LongField) -> size() = 0)]
 				[comment shortField or bracketfield/]
 				Object [getJavaAbsolutePath(ref) /]_[field.getPhysicalName() /] = r.getAs("[getPhysicalName(field) /]");
@@ -105,6 +95,7 @@
 				[else]
 				[comment TODO refactorer car pareil que left /]
 				[for (field : PhysicalField | ref.targetField)]
+				// Get reference column (right side) [ '[' /][field.getPhysicalName()/] [ ']' /] for reference [ '[' /][ref.name/][ ']' /]
 				[if (field.ancestors(LongField) -> size() = 0)]
 				[comment shortField or bracketfield/]
 				Object [getJavaAbsolutePath(ref) /]_[field.getPhysicalName() /] = r.getAs("[getPhysicalName(field) /]");

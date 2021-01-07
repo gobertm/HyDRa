@@ -9,13 +9,13 @@
 [if (role.getRelationShipType().roles -> size() = 2 and role.getRelationShipType().attributes -> size() = 0)]
 [let role2 : Role = getOppositeRoles(role)->any(true)]
 [for (ref: Reference | getMappedReferences(role, conceptualSchema.getMappingRules()))]
-[role.getRelationShipType().name.toLowerFirst()/]Service.get[entity.name.toUpperFirst()/]TDOList[role.name.toUpperFirst() /]In[ref.name.toUpperFirst()/]In[ref.getAbstractPhysicalStructure().name.toUpperFirst() /]From[ref.getPhysicalSchema().name.toUpperFirst()/]([role.name/]_condition);
-[role.getRelationShipType().name.toLowerFirst()/]Service.get[role2.entity.name.toUpperFirst()/]TDOList[role2.name.toUpperFirst() /]In[ref.name.toUpperFirst()/]In[ref.getAbstractPhysicalStructure().name.toUpperFirst() /]From[ref.getPhysicalSchema().name.toUpperFirst()/]([role2.name/]_condition);
+Dataset<[entity.name.toUpperFirst()/]TDO> [entity.name.toLowerFirst()/]TDO[ref.name/] = [role.getRelationShipType().name.toLowerFirst()/]Service.get[entity.name.toUpperFirst()/]TDOList[role.name.toUpperFirst() /]In[ref.name.toUpperFirst()/]In[ref.getAbstractPhysicalStructure().name.toUpperFirst() /]From[ref.getPhysicalSchema().name.toUpperFirst()/]([role.name/]_condition);
+Dataset<[role2.entity.name.toUpperFirst()/]TDO> [role2.entity.name.toLowerFirst()/]TDO[ref.name/] = [role.getRelationShipType().name.toLowerFirst()/]Service.get[role2.entity.name.toUpperFirst()/]TDOList[role2.name.toUpperFirst() /]In[ref.name.toUpperFirst()/]In[ref.getAbstractPhysicalStructure().name.toUpperFirst() /]From[ref.getPhysicalSchema().name.toUpperFirst()/]([role2.name/]_condition);
 [/for]
 
 [for (ref: Reference | getMappedReferences(role2, conceptualSchema.getMappingRules()))]
-[role.getRelationShipType().name.toLowerFirst()/]Service.get[role2.entity.name.toUpperFirst()/]TDOList[role2.name.toUpperFirst() /]In[ref.name.toUpperFirst()/]In[ref.getAbstractPhysicalStructure().name.toUpperFirst() /]From[ref.getPhysicalSchema().name.toUpperFirst()/]([role2.name/]_condition);
-[role.getRelationShipType().name.toLowerFirst()/]Service.get[entity.name.toUpperFirst()/]TDOList[role.name.toUpperFirst() /]In[ref.name.toUpperFirst()/]In[ref.getAbstractPhysicalStructure().name.toUpperFirst() /]From[ref.getPhysicalSchema().name.toUpperFirst()/]([role.name/]_condition);
+Dataset<[role2.entity.name.toUpperFirst()/]TDO> [role2.entity.name.toLowerFirst()/]TDO[ref.name/] = [role.getRelationShipType().name.toLowerFirst()/]Service.get[role2.entity.name.toUpperFirst()/]TDOList[role2.name.toUpperFirst() /]In[ref.name.toUpperFirst()/]In[ref.getAbstractPhysicalStructure().name.toUpperFirst() /]From[ref.getPhysicalSchema().name.toUpperFirst()/]([role2.name/]_condition);
+Dataset<[entity.name.toUpperFirst()/]TDO> [entity.name.toLowerFirst()/]TDO[ref.name/] = [role.getRelationShipType().name.toLowerFirst()/]Service.get[entity.name.toUpperFirst()/]TDOList[role.name.toUpperFirst() /]In[ref.name.toUpperFirst()/]In[ref.getAbstractPhysicalStructure().name.toUpperFirst() /]From[ref.getPhysicalSchema().name.toUpperFirst()/]([role.name/]_condition);
 [/for]
 
 [/let]

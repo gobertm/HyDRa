@@ -15,8 +15,8 @@ public [if (override = false)]abstract [/if]Dataset<[role1.entity.name.toUpperFi
 [if (dbs->size() = 0)]
 return null;
 [else]
-[let db : Database = dbs->any(true)]
 	MutableBoolean refilterFlag = new MutableBoolean(false);
+[let db : Database = dbs->any(true)]
 [if (db.dbType = pml::DatabaseType::MARIADB or db.dbType = pml::DatabaseType::SQLITE)]
 [generateSimpleSelectFromGivenRelationalTable(role1.entity, ref.getAbstractPhysicalStructure(), db, ref, true)/]
 [comment TODO tester pour les autres types de bds (mongo, ...) /]
