@@ -88,11 +88,11 @@
 [template public getListOfNullValues(nbOfValues: Integer, hasPrevious: Boolean)][if (nbOfValues > 0)][if (hasPrevious)], [/if]null[getListOfNullValues(nbOfValues - 1, true)/][/if][/template]
 
 [query public getJavaRegexFromLongField(field : LongField) : String = 
-	invoke('be.unamur.polystore.acceleo.main.services.Util', 'getJavaRegexFromLongField(be.unamur.polystore.pml.LongField)', Sequence{field})
+	invoke('be.unamur.polystore.acceleo.main.utils.Util', 'getJavaRegexFromLongField(be.unamur.polystore.pml.LongField)', Sequence{field})
  /]
 
 [query public getPositionInLongField(field : PhysicalField, parent : LongField) : String = 
-	invoke('be.unamur.polystore.acceleo.main.services.Util', 'getPositionInLongField(be.unamur.polystore.pml.PhysicalField, be.unamur.polystore.pml.LongField)', Sequence{field, parent})
+	invoke('be.unamur.polystore.acceleo.main.utils.Util', 'getPositionInLongField(be.unamur.polystore.pml.PhysicalField, be.unamur.polystore.pml.LongField)', Sequence{field, parent})
  /]
 
 
@@ -102,11 +102,11 @@
 ref.eContainer(AbstractPhysicalSchema).name + '_' + ref.getAbstractPhysicalStructure().name + '_' + ref.name/]
 
 [query public getAbstractPhysicalStructure(o : OclAny) : AbstractPhysicalStructure =
-	invoke('be.unamur.polystore.acceleo.main.services.MappingRuleService', 'getPhysicalStructureNotEmbeddedObject(org.eclipse.emf.ecore.EObject)', Sequence{o})
+	invoke('be.unamur.polystore.acceleo.main.utils.MappingRuleService', 'getPhysicalStructureNotEmbeddedObject(org.eclipse.emf.ecore.EObject)', Sequence{o})
 /]
 
 [query public getPhysicalSchema(o : OclAny) : AbstractPhysicalSchema =
-	invoke('be.unamur.polystore.acceleo.main.services.MappingRuleService', 'getPhysicalSchema(org.eclipse.emf.ecore.EObject)', Sequence{o})
+	invoke('be.unamur.polystore.acceleo.main.utils.MappingRuleService', 'getPhysicalSchema(org.eclipse.emf.ecore.EObject)', Sequence{o})
 /]
 
 

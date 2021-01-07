@@ -1,0 +1,49 @@
+[comment encoding = UTF-8 /]
+[module generateMappedReferenceSelectTDOMethods('http://www.unamur.be/polystore/Pml')]
+[import be::unamur::polystore::acceleo::main::util /]
+[import be::unamur::polystore::acceleo::main::mappingrules::util /]
+[import be::unamur::polystore::acceleo::main::impl::select::entitytype::generateSimpleSelectFromGivenRelationalTable/]
+
+[template public generateMappedReferenceSelectTDOMethods(rel : RelationshipType, override: Boolean)]
+[if (rel.roles -> size() = 2 and rel.attributes->size() = 0)]
+[let role1 : Role = rel.roles->any(true)]
+[let role2 : Role = role1.getOppositeRoles()->any(true)]
+
+[for (ref : Reference | role1.getMappedReferences(role1.getMappingRules()))]
+public [if (override = false)]abstract [/if]Dataset<[role1.entity.name.toUpperFirst() /]TDO> get[role1.entity.name.toUpperFirst()/]TDOList[role1.name.toUpperFirst() /]In[ref.name.toUpperFirst()/]In[ref.getAbstractPhysicalStructure().name.toUpperFirst() /]From[ref.getPhysicalSchema().name.toUpperFirst()/](Condition<[role1.entity.name.toUpperFirst()/]Attribute> condition)[if (override = false)];[else]{	
+[let dbs : Set(Database) = ref.getAbstractPhysicalStructure().getConcernedDatabases(ref.ancestors(Domainmodel)->any(true))]
+[if (dbs->size() = 0)]
+return null;
+[else]
+	MutableBoolean refilterFlag = new MutableBoolean(false);
+[let db : Database = dbs->any(true)]
+[if (db.dbType = pml::DatabaseType::MARIADB or db.dbType = pml::DatabaseType::SQLITE)]
+[generateSimpleSelectFromGivenRelationalTable(role1.entity, ref.getAbstractPhysicalStructure(), db, ref, true)/]
+[comment TODO tester pour les autres types de bds (mongo, ...) /]
+[/if]
+[/let]
+[/if]
+[/let]		
+}[/if]
+
+
+public [if (override = false)]abstract [/if]Dataset<[role2.entity.name.toUpperFirst() /]TDO> get[role2.entity.name.toUpperFirst()/]TDOList[role2.name.toUpperFirst() /]In[ref.name.toUpperFirst()/]In[ref.getAbstractPhysicalStructure().name.toUpperFirst() /]From[ref.getPhysicalSchema().name.toUpperFirst()/](Condition<[role2.entity.name.toUpperFirst()/]Attribute> condition)[if (override = false)];[else]{
+[let dbs : Set(Database) = ref.getAbstractPhysicalStructure().getConcernedDatabases(ref.ancestors(Domainmodel)->any(true))]
+[if (dbs->size() = 0)]
+return null;
+[else]
+[let db : Database = dbs->any(true)]
+	MutableBoolean refilterFlag = new MutableBoolean(false);
+[if (db.dbType = pml::DatabaseType::MARIADB or db.dbType = pml::DatabaseType::SQLITE)]
+[generateSimpleSelectFromGivenRelationalTable(role2.entity, ref.targetField->any(true).getAbstractPhysicalStructure(), db, ref, false)/]
+[comment TODO tester pour les autres types de bds (mongo, ...) /]
+[/if]
+[/let]
+[/if]
+[/let]	
+}[/if]
+[/for]
+[/let]
+[/let]
+[/if]
+[/template]

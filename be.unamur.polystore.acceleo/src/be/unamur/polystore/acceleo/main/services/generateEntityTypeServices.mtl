@@ -1,0 +1,118 @@
+[comment encoding = UTF-8 /]
+[module generateEntityTypeServices('http://www.unamur.be/polystore/Pml')]
+[import be::unamur::polystore::acceleo::main::generateEntityTypeRelatedClasses /]
+[import be::unamur::polystore::acceleo::main::generateRelationshipTypeClass /]
+[import be::unamur::polystore::acceleo::main::services::select::entitytype::generateSimpleSelectMethods /]
+[import be::unamur::polystore::acceleo::main::services::select::entitytype::generateSimpleBinarySelectMethods /]
+[import be::unamur::polystore::acceleo::main::services::select::entitytype::generateBinaryWithAttributesSelectMethods /]
+[import be::unamur::polystore::acceleo::main::services::select::entitytype::generateRoleBasedSelectMethods/]
+[import be::unamur::polystore::acceleo::main::util /]
+[import be::unamur::polystore::acceleo::main::services::insert::entitytype::generateSimpleInsertMethods/]
+[import be::unamur::polystore::acceleo::main::services::update::entitytype::generateSimpleUpdateMethods/]
+[import be::unamur::polystore::acceleo::main::services::delete::entitytype::generateSimpleDeleteMethods/]
+
+[template public generateEntityTypeServices(entityType : EntityType, conceptualSchema: ConceptualSchema)]
+[file ('src/main/java/dao/services/' + entityType.name.toUpperFirst() + 'Service'.concat('.java'), false, 'UTF-8')]
+package dao.services;
+
+import org.apache.spark.sql.Dataset;
+import org.apache.spark.sql.Row;
+import pojo.[entityType.name.toUpperFirst() /];
+import java.util.List;
+import java.util.ArrayList;
+import org.apache.spark.api.java.function.MapFunction;
+import org.apache.spark.sql.Encoders;
+import org.apache.spark.api.java.function.FilterFunction;
+import org.apache.commons.lang.mutable.MutableBoolean;
+
+public abstract class [entityType.name.toUpperFirst() + 'Service' /] {
+	[instantiateLogger(entityType.name.toUpperFirst() + 'Service') /]
+	[declareRelationshiTypeServices(entityType, conceptualSchema) /]
+
+
+	[printRoleConfiguration(entityType, conceptualSchema) /]
+	[printSelectMethods(entityType, conceptualSchema, false) /]
+	[printInsertMethods(entityType, conceptualSchema, false) /]
+	[printUpdateMethods(entityType, conceptualSchema, false) /]
+	[printDeleteMethods(entityType, conceptualSchema, false) /]
+}
+[/file]
+[/template]
+
+[template public printSelectMethods(entityType: EntityType, conceptualSchema: ConceptualSchema, override: Boolean)]
+[generateSimpleSelectMethods(entityType, conceptualSchema, override) /]
+[comment][generateSimpleBinarySelectMethods(entityType, conceptualSchema) /]
+[generateBinaryWithAttributesSelectMethods(entityType, conceptualSchema) /][/comment]
+[generateRoleBasedSelectMethods(entityType, conceptualSchema, override) /]
+[/template]
+
+[template public printInsertMethods(entityType: EntityType, conceptualSchema: ConceptualSchema, override: Boolean)]
+[generateSimpleInsertMethods(entityType, conceptualSchema, override) /]
+[/template]
+
+[template public printUpdateMethods(entityType: EntityType, conceptualSchema: ConceptualSchema, override: Boolean)]
+[generateSimpleUpdateMethods(entityType, conceptualSchema, override) /]
+[/template]
+
+[template public printDeleteMethods(entityType: EntityType, conceptualSchema: ConceptualSchema, override: Boolean)]
+[generateSimpleDeleteMethods(entityType, conceptualSchema, override) /]
+[/template]
+
+[template public printRoleConfiguration(entityType: EntityType, conceptualSchema : ConceptualSchema)]
+public static enum ROLE_NAME {
+	[for (role: Role | getRolesFromEntityType(entityType, conceptualSchema))][if (i > 1)], [/if][role.eContainer(pml::RelationshipType).name.toUpperCase() /]_[role.name.toUpperCase()/][/for]
+}
+private static java.util.Map<ROLE_NAME, loading.Loading> defaultLoadingParameters = new java.util.HashMap<ROLE_NAME, loading.Loading>();
+static {
+	[for (role: Role | getRolesFromEntityType(entityType, conceptualSchema))]
+	defaultLoadingParameters.put(ROLE_NAME.[role.eContainer(pml::RelationshipType).name.toUpperCase() /]_[role.name.toUpperCase()/], loading.Loading.[if (role.cardinality = pml::Cardinality::ONE or role.cardinality = pml::Cardinality::ZERO_ONE)]EAGER[else]LAZY[/if]);
+	[/for]
+}
+
+private java.util.Map<ROLE_NAME, loading.Loading> loadingParameters = new java.util.HashMap<ROLE_NAME, loading.Loading>();
+
+public [entityType.name.toUpperFirst() /]Service() {
+	for(java.util.Map.Entry<ROLE_NAME, loading.Loading> entry: defaultLoadingParameters.entrySet())
+		loadingParameters.put(entry.getKey(), entry.getValue());
+}
+
+public [entityType.name.toUpperFirst() /]Service(java.util.Map<ROLE_NAME, loading.Loading> loadingParams) {
+	this();
+	if(loadingParams != null)
+		for(java.util.Map.Entry<ROLE_NAME, loading.Loading> entry: loadingParams.entrySet())
+			loadingParameters.put(entry.getKey(), entry.getValue());
+}
+
+public static java.util.Map<ROLE_NAME, loading.Loading> getDefaultLoadingParameters() {
+	java.util.Map<ROLE_NAME, loading.Loading> res = new java.util.HashMap<ROLE_NAME, loading.Loading>();
+	for(java.util.Map.Entry<ROLE_NAME, loading.Loading> entry: defaultLoadingParameters.entrySet())
+			res.put(entry.getKey(), entry.getValue());
+	return res;
+}
+
+public static void setAllDefaultLoadingParameters(loading.Loading loading) {
+	java.util.Map<ROLE_NAME, loading.Loading> newParams = new java.util.HashMap<ROLE_NAME, loading.Loading>();
+	for(java.util.Map.Entry<ROLE_NAME, loading.Loading> entry: defaultLoadingParameters.entrySet())
+			newParams.put(entry.getKey(), entry.getValue());
+	defaultLoadingParameters = newParams;
+}
+
+public java.util.Map<ROLE_NAME, loading.Loading> getLoadingParameters() {
+	return this.loadingParameters;
+}
+
+public void setLoadingParameters(java.util.Map<ROLE_NAME, loading.Loading> newParams) {
+	this.loadingParameters = newParams;
+}
+
+public void updateLoadingParameter(ROLE_NAME role, loading.Loading l) {
+	this.loadingParameters.put(role, l);
+}
+
+[/template]
+
+[template private declareRelationshiTypeServices(entity : EntityType, conceptualSchema: ConceptualSchema)]
+[for (rel : RelationshipType | getConcernedRelationshipTypes(entity, conceptualSchema))]
+protected [rel.name.toUpperFirst() /]Service [rel.name.toLowerFirst() /]Service = new dao.impl.[rel.name.toUpperFirst() /]ServiceImpl();
+[/for]
+[/template]

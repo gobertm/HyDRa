@@ -1,0 +1,19 @@
+[comment encoding = UTF-8 /]
+[module generateSimpleInsertMethods('http://www.unamur.be/polystore/Pml')]
+[import be::unamur::polystore::acceleo::main::util /]
+[import be::unamur::polystore::acceleo::main::generateJavaDataType/]
+[import be::unamur::polystore::acceleo::main::impl::insert::entitytype::generateSimpleInsertMethodsImpl /]
+
+[template public generateSimpleInsertMethods(entityType: EntityType, conceptualSchema: ConceptualSchema, override: Boolean)]
+public [if (override = false)]abstract [/if]void insert[entityType.name.toUpperFirst() /]AndLinkedItems(pojo.[entityType.name.toUpperFirst() /] [entityType.name.toLowerFirst() /])[if (override = false)];[else][implMethod1(entityType, conceptualSchema) /][/if]
+[if (getMandatoryRoles(entityType, conceptualSchema)->size() = 0)]
+public [if (override = false)]abstract [/if]void insert[entityType.name.toUpperFirst() /](pojo.[entityType.name.toUpperFirst() /] [entityType.name /])[if (override = false)];[else][implMethod2(entityType, conceptualSchema) /][/if]
+[elseif (getOppositeMandatoryRoles(entityType, conceptualSchema)->size() = 0)]
+public [if (override = false)]abstract [/if]void insert[entityType.name.toUpperFirst() /](
+	pojo.[entityType.name.toUpperFirst() /] [entityType.name.toLowerFirst() /][for (opp: Role | getRolesOppositeToMandatoryEntityRole(entityType, conceptualSchema))],
+	pojo.[opp.entity.name.toUpperFirst() /] persistent[getRelationShipType(opp).name.toUpperFirst()/][opp.name.toUpperFirst()/][/for][for (attr: Attribute | getAttributesFromMandatoryRoles(entityType, conceptualSchema))],
+	[generateJavaType(attr.type)/] [getRelationshipType(attr).name /]_[attr.name /]
+	[/for]
+)[if (override = false)];[else][implMethod3(entityType, conceptualSchema) /][/if]
+[/if]
+[/template]
