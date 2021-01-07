@@ -56,7 +56,7 @@ physical schemas {
 }
 	
 mapping rules{
-	cs.Product(id,description,price) -> myRelSchema.ProductCatalogTable(product_id,description,price),
+	cs.Product(id,description,price,cat_name) -> myRelSchema.ProductCatalogTable(product_id,description,price,categoryname),
 	cs.Review(content,id,rating) -> myRelSchema.ReviewTable(content,review_id,rating),
 	cs.productReview.review -> myRelSchema.ReviewTable.reviewed_product
 }

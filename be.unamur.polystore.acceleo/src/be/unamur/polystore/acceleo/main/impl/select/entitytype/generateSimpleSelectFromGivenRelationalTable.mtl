@@ -45,6 +45,7 @@
 				regex = "[getJavaRegexFromLongField(field.ancestors(LongField) -> first().oclAsType(LongField)) /]";
 				groupIndex = [getPositionInLongField(field, field.ancestors(LongField) -> first().oclAsType(LongField))/];
 				if(groupIndex == null) {
+					logger.warn("Cannot retrieve value for [ent.name /][attr.name /] attribute stored in db [db.name/]. Probably due to an ambiguous regex.");
 					throw new Exception("Cannot retrieve value for [ent.name /][attr.name /] attribute stored in db [db.name/]. Probably due to an ambiguous regex.");
 				}
 				value = r.getAs("[field.ancestors(LongField) -> first().oclAsType(LongField).physicalName /]");
@@ -55,6 +56,7 @@
 				if(matches) {
 					[attr.name.toLowerFirst()/] = m.group(groupIndex.intValue());
 				} else {
+					logger.warn("Cannot retrieve value for [ent.name /][attr.name /] attribute stored in db [db.name/]. Probably due to an ambiguous regex.");
 					throw new Exception("Cannot retrieve value for [ent.name /][attr.name /] attribute stored in db [db.name/]. Probably due to an ambiguous regex.");
 				}
 				[ent.name.toLowerFirst() /]_res.set[attr.name.toUpperFirst()/]([generateParsingFunctionJavaType(attr.type, attr.name.toLowerFirst())/]);
@@ -70,13 +72,14 @@
 				// Get reference column (left side) [ '[' /][field.getPhysicalName()/] [ ']' /] for reference [ '[' /][ref.name/][ ']' /]
 				[if (field.ancestors(LongField) -> size() = 0)]
 				[comment shortField or bracketfield/]
-				Object [getJavaAbsolutePath(ref) /]_[field.getPhysicalName() /] = r.getAs("[getPhysicalName(field) /]");
+				String [getJavaAbsolutePath(ref) /]_[field.getPhysicalName() /] = r.getAs("[getPhysicalName(field) /]");
 				[ent.name.toLowerFirst() /]_res.set[getJavaAbsolutePath(ref).toUpperFirst() /]_[field.getPhysicalName() /]([getJavaAbsolutePath(ref) /]_[field.getPhysicalName() /]);
 				[else]
 				[comment LongField /]
 				regex = "[getJavaRegexFromLongField(field.ancestors(LongField) -> first().oclAsType(LongField)) /]";
 				groupIndex = [getPositionInLongField(field, field.ancestors(LongField) -> first().oclAsType(LongField))/];
 				if(groupIndex == null) {
+					logger.warn("Cannot retrieve value for [ent.name /][field.getPhysicalName() /] attribute stored in db [db.name/]. Probably due to an ambiguous regex.");
 					throw new Exception("Cannot retrieve value for BLABLABLA. Probably due to an ambiguous regex.");
 				}
 				value = r.getAs("[field.ancestors(LongField) -> first().oclAsType(LongField).physicalName /]");
@@ -87,6 +90,7 @@
 				if(matches) {
 					[getJavaAbsolutePath(ref) /]_[field.getPhysicalName() /] = m.group(groupIndex.intValue());
 				} else {
+					logger.warn("Cannot retrieve value for [ent.name /][field.getPhysicalName() /] attribute stored in db [db.name/]. Probably due to an ambiguous regex.");
 					throw new Exception("Cannot retrieve value for BLABLABLA. Probably due to an ambiguous regex.");
 				}
 				[ent.name.toLowerFirst() /]_res.set[getJavaAbsolutePath(ref).toUpperFirst() /]_[field.getPhysicalName() /]([getJavaAbsolutePath(ref) /]_[field.getPhysicalName() /]);
@@ -98,13 +102,14 @@
 				// Get reference column (right side) [ '[' /][field.getPhysicalName()/] [ ']' /] for reference [ '[' /][ref.name/][ ']' /]
 				[if (field.ancestors(LongField) -> size() = 0)]
 				[comment shortField or bracketfield/]
-				Object [getJavaAbsolutePath(ref) /]_[field.getPhysicalName() /] = r.getAs("[getPhysicalName(field) /]");
+				String [getJavaAbsolutePath(ref) /]_[field.getPhysicalName() /] = r.getAs("[getPhysicalName(field) /]");
 				[ent.name.toLowerFirst() /]_res.set[getJavaAbsolutePath(ref).toUpperFirst() /]_[field.getPhysicalName() /]([getJavaAbsolutePath(ref) /]_[field.getPhysicalName() /]);
 				[else]
 				[comment LongField /]
 				regex = "[getJavaRegexFromLongField(field.ancestors(LongField) -> first().oclAsType(LongField)) /]";
 				groupIndex = [getPositionInLongField(field, field.ancestors(LongField) -> first().oclAsType(LongField))/];
 				if(groupIndex == null) {
+					logger.warn("Cannot retrieve value for [ent.name /][field.getPhysicalName() /] attribute stored in db [db.name/]. Probably due to an ambiguous regex.");
 					throw new Exception("Cannot retrieve value for BLABLABLA. Probably due to an ambiguous regex.");
 				}
 				value = r.getAs("[field.ancestors(LongField) -> first().oclAsType(LongField).physicalName /]");
@@ -115,6 +120,7 @@
 				if(matches) {
 					[getJavaAbsolutePath(ref) /]_[field.getPhysicalName() /] = m.group(groupIndex.intValue());
 				} else {
+					logger.warn("Cannot retrieve value for [ent.name /][field.getPhysicalName() /] attribute stored in db [db.name/]. Probably due to an ambiguous regex.");
 					throw new Exception("Cannot retrieve value for BLABLABLA. Probably due to an ambiguous regex.");
 				}
 				[ent.name.toLowerFirst() /]_res.set[getJavaAbsolutePath(ref).toUpperFirst() /]_[field.getPhysicalName() /]([getJavaAbsolutePath(ref) /]_[field.getPhysicalName() /]);

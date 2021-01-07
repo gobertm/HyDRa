@@ -23,6 +23,7 @@ import conditions.[role.entity.name.toUpperFirst() /]Attribute;
 
 
 public abstract class [rel.name.toUpperFirst() + 'Service' /] {
+	[instantiateLogger(rel.name.toUpperFirst() + 'Service') /]
 [comment]	[if (isBinaryWithAttributes(rel))]
 	[generateBinaryWithAttributesSelectMethods(rel) /]
 	[/if]
