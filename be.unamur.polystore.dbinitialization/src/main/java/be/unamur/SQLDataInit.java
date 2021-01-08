@@ -56,8 +56,7 @@ public class SQLDataInit {
             stmt.execute("create table IF NOT EXISTS ProductCatalogTable (" +
                     "product_id char(36) primary key," +
                     "europrice char(36)," +
-                    "description char(50)," +
-                    "categoryname char(5))");
+                    "description char(50),");
             stmt.execute("create table IF NOT EXISTS ReviewTable(" +
                     "review_id char(36)," +
                     "rating int," +
@@ -73,12 +72,15 @@ public class SQLDataInit {
         int insertedProduct = 0,insertedReviews=0;
         for (int i = 0; i < numberofrecords; i++) {
             try {
-                stmt.execute("insert into ProductCatalogTable(product_id,europrice, description, categoryname) VALUES ('product" + i + "'," + RandomUtils.nextInt() + ",'desc','" + RandomStringUtils.random(2, 65, 70, true, false) + "')");
-                insertedProduct++;
+                if (pmlmodel == HYBRIDPML) {
+                    stmt.execute("insert into ProductCatalogTable(product_id,europrice, description, categoryname) VALUES ('product" + i + "'," + RandomUtils.nextInt() + ",'desc','" + RandomStringUtils.random(2, 65, 70, true, false) + "')");
+                    insertedProduct++;
+                }
             } catch (SQLIntegrityConstraintViolationException e) {
                 logger.warn("Duplicate entry. Skipping row..");
             }
             if (pmlmodel == ONETOMANYPML) {
+                stmt.execute("insert into ProductCatalogTable(product_id,europrice, description, categoryname) VALUES ('product" + i + "'," + RandomUtils.nextInt() + ",'desc','" + RandomStringUtils.random(2, 65, 70, true, false) + "')");
                 stmt.execute("insert into ReviewTable(review_id, rating, content, product_ref) VALUES ('review"+i+"',"+RandomUtils.nextInt(0,5)+",'"+RandomStringUtils.randomAlphabetic(60)+"','product" + RandomUtils.nextInt(0,numberofrecords) + "')");
                 insertedReviews++;
             }

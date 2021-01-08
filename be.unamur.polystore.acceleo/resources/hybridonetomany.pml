@@ -1,6 +1,6 @@
 conceptual schema cs {
 	entity type Product{
-		id:string,
+		id:int,
 		name:string,
 		price:float,
 		description:string,
@@ -13,7 +13,7 @@ conceptual schema cs {
 	} 
 	
 	entity type Review {
-		id : string,
+		id : int,
 		rating : int,
 		content : string
 		
@@ -30,7 +30,7 @@ conceptual schema cs {
 	
 }
 physical schemas {
-	relational schema myRelSchema : mydb {
+	relational schema myRelSchema : mysql {
 		table ProductCatalogTable {
 			columns {
 				product_id,
@@ -44,11 +44,27 @@ physical schemas {
 				review_id,
 				rating,
 				content,
-				product_ref
+				product_ref,
+				product_ref_mongo
 			}
 			
 			references{
 				reviewed_product : product_ref -> ProductCatalogTable.product_id
+				mongo_reviewed_product : product_ref_mongo -> myDocSchema.productCollection.doc_prod_id
+			}
+		}
+	}
+	
+	document schema myDocSchema : mymongo {
+		collection productCollection {
+			fields {
+				doc_prod_id,
+				prodname,
+				description,
+				category [1] {
+					categoryname,
+					categorydescription
+				}
 			}
 		}
 	}
@@ -57,12 +73,15 @@ physical schemas {
 mapping rules{
 	cs.Product(id,description,price) -> myRelSchema.ProductCatalogTable(product_id,description,price),
 	cs.Review(content,id,rating) -> myRelSchema.ReviewTable(content,review_id,rating),
-	cs.productReview.review -> myRelSchema.ReviewTable.reviewed_product
+	cs.productReview.review -> myRelSchema.ReviewTable.reviewed_product,
+	cs.Product(id,name,description) -> myDocSchema.productCollection(doc_prod_id,prodname,description),
+	cs.Product(cat_name, cat_description) -> myDocSchema.productCollection.category(categoryname,categorydescription),
+	cs.productReview.review -> myRelSchema.ReviewTable.mongo_reviewed_product
 }
 
 databases {
 	
-	mariadb mydb {
+	mariadb mysql {
 		host: "localhost"
 		port: 3307
 		dbname : "mydb"
