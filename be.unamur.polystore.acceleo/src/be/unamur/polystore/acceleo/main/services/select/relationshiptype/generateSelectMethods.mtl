@@ -2,12 +2,37 @@
 [module generateSelectMethods('http://www.unamur.be/polystore/Pml')]
 [import be::unamur::polystore::acceleo::main::util /]
 [import be::unamur::polystore::acceleo::main::impl::select::relationshiptype::generateSelectMethodsImpl]
-[import be::unamur::polystore::acceleo::main::impl::select::relationshiptype::generateMappedReferenceSelectTDOMethods]
-
+[import be::unamur::polystore::acceleo::main::mappingrules::util /]
+[import be::unamur::polystore::acceleo::main::impl::select::entitytype::generateSimpleSelectFromGivenRelationalTable/]
+[import be::unamur::polystore::acceleo::main::impl::select::entitytype::generateSimpleSelectFromGivenDocumentCollection/]
 
 
 [template public generateSelectMethods(rel : RelationshipType, override: Boolean)]
-[generateMappedReferenceSelectTDOMethods(rel, override) /]
+
+[comment Role TDO pojo retrieval methods /]
+
+[if (rel.roles -> size() = 2 and rel.attributes->size() = 0)]
+[let role1 : Role = rel.roles->any(true)]
+[let role2 : Role = role1.getOppositeRoles()->any(true)]
+
+/* Retrieve the Technical Data Object (TDO) for a Role in a mapped reference declared in a specific Abstract Physical Structure. 
+	The entity mapped on the right hand side of the reference may be stored in another physical structure than where the ref is declared. 
+	Leading to apparent inconsistency in the method name. But it is actually the physical structure of the ref and not the EntityDTO.*/
+[for (ref : Reference | role1.getMappedReferences(role1.getMappingRules()))]
+[generateRefRelatedMethods(ref, override, role1, role2)/]
+[/for]
+[for (ref : Reference | role2.getMappedReferences(role2.getMappingRules()))]
+[generateRefRelatedMethods(ref, override, role2, role1)/]
+[/for]
+[/let]
+[/let]
+[else]
+// Not implemented yet
+return null;
+[/if]
+
+[comment Relationship type POJO retrieval methods /]
+
 public [if (override = false)]abstract [/if]java.util.List<pojo.[rel.name.toUpperFirst()/]> get[rel.name.toUpperFirst()/]List([for (role: Role | rel.roles)][if (i > 1)],[/if]
 	conditions.Condition<conditions.[role.entity.name.toUpperFirst() /]Attribute> [role.name/]_condition[/for][if (rel.attributes->size() > 0)],
 	conditions.Condition<conditions.[rel.name.toUpperFirst() /]Attribute> [rel.name /]_condition
@@ -34,4 +59,50 @@ public java.util.List<pojo.[rel.name.toUpperFirst() /]> get[rel.name.toUpperFirs
 	return get[rel.name.toUpperFirst() /]List([getListOfNullValues(rel.roles->size()) /], [rel.name/]_condition);
 }
 [/if]
+[/template]
+
+
+[template private generateRefRelatedMethods(ref : Reference, override : Boolean, roleSource : Role, roleTarget : Role)]
+[comment left side of reference /]
+// Left side '[ref.sourceField->first().getPhysicalName()/]' of reference [ '['/][ref.name/] [ ']'/]
+public [if (override = false)]abstract [/if]Dataset<[roleSource.entity.name.toUpperFirst() /]TDO> get[roleSource.entity.name.toUpperFirst()/]TDOList[roleSource.name.toUpperFirst() /]In[ref.name.toUpperFirst()/]In[ref.getAbstractPhysicalStructure().name.toUpperFirst() /]From[ref.getPhysicalSchema().name.toUpperFirst()/](Condition<[roleSource.entity.name.toUpperFirst()/]Attribute> condition)[if (override = false)];[else]{	
+[comment TODO Implemented multi composed ref. Currently Apply only to single attribute reference /]
+[let dbs : Set(Database) = ref.sourceField->first().getAbstractPhysicalStructure().getConcernedDatabases(ref.ancestors(Domainmodel)->any(true))]
+[if (dbs->size() = 0)]
+return null;
+[else]
+	MutableBoolean refilterFlag = new MutableBoolean(false);
+[let db : Database = dbs->any(true)]
+[if (db.dbType = pml::DatabaseType::MARIADB or db.dbType = pml::DatabaseType::SQLITE)]
+[comment TODO change here if needed to handle multi composed refrences/]
+[generateSimpleSelectFromGivenRelationalTable(roleSource.entity, ref.getAbstractPhysicalStructure(), db,ref.sourceField->first(), ref)/]
+[/if]
+[if (db.dbType = pml::DatabaseType::MONGODB)] 
+[generateSimpleSelectFromGivenDocumentCollection(roleSource.entity, ref.sourceField->any(true).getAbstractPhysicalStructure(), db,ref, ref.sourceField->first()) /]
+[/if]
+[/let]
+[/if]
+[/let]		
+}[/if]
+
+
+// Right side '[ref.targetField->first().getPhysicalName()/]' of reference [ '['/][ref.name/] [ ']'/]
+[comment right side of reference /]
+[comment TODO Apply only to single attribute reference /]
+public [if (override = false)]abstract [/if]Dataset<[roleTarget.entity.name.toUpperFirst() /]TDO> get[roleTarget.entity.name.toUpperFirst()/]TDOList[roleTarget.name.toUpperFirst() /]In[ref.name.toUpperFirst()/]In[ref.getAbstractPhysicalStructure().name.toUpperFirst() /]From[ref.getPhysicalSchema().name.toUpperFirst()/](Condition<[roleTarget.entity.name.toUpperFirst()/]Attribute> condition)[if (override = false)];[else]{
+[let dbs : Set(Database) = ref.targetField->first().getAbstractPhysicalStructure().getConcernedDatabases(ref.ancestors(Domainmodel)->any(true))]
+[if (dbs->size() = 0)]
+return null;
+[else]
+[let db : Database = dbs->any(true)]
+	MutableBoolean refilterFlag = new MutableBoolean(false);
+[if (db.dbType = pml::DatabaseType::MARIADB or db.dbType = pml::DatabaseType::SQLITE)]
+[generateSimpleSelectFromGivenRelationalTable(roleTarget.entity, ref.targetField->any(true).getAbstractPhysicalStructure(), db, ref.targetField->first(), ref)/][/if]
+[if (db.dbType = pml::DatabaseType::MONGODB)] 
+[generateSimpleSelectFromGivenDocumentCollection(roleTarget.entity, ref.targetField->any(true).getAbstractPhysicalStructure(), db,ref, ref.targetField->first()) /]
+[/if]
+[/let]
+[/if]
+[/let]	
+}[/if]
 [/template]

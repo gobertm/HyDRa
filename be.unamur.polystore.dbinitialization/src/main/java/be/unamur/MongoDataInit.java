@@ -27,6 +27,7 @@ public class MongoDataInit implements DataInit{
     private SQLDataInit sqlDB;
     private final int port;
     private final int numberofdata;
+    private static final int SIMPLEHYBRID=0, ONETOMANYPML=1, ONETOMANYMONGOTOREL = 2;
 
     public MongoDataInit(String databasename, String host, int port, int numberofdata) {
         this.databasename = databasename;
@@ -36,33 +37,48 @@ public class MongoDataInit implements DataInit{
     }
 
     public static void main(String args[]) throws SQLException {
+        int nbdataobj = 30;
+
+        // Mongo DB 1
         String mongohost = "localhost";
         String mongodbname = "mymongo";
         int mongoport = 27000;
-        int nbdataobj = 30;
-        MongoDataInit mongoDataInit = new MongoDataInit(mongodbname, mongohost, mongoport, nbdataobj);
+
+        // Mongo DB 2
+        String mongohost2 = "localhost";
+        String mongodbname2 = "mymongo2";
+        int mongoport2 = 27100;
+
+        // Relational DB Init
         SQLDataInit sqlinit = new SQLDataInit("localhost","3307","mydb","root","password");
         sqlinit.createConnection();
-        sqlinit.initStructure(1);
+            // Structure init
+//        sqlinit.initStructure(1);
+            // Data init
 //        sqlinit.initData(nbdataobj);
-        mongoDataInit.setSqlDB(sqlinit);
 
+        // Model 'simplehybrid.pml'
+            // Mongo DB 1
+//        MongoDataInit mongoDataInit1 = new MongoDataInit(mongodbname, mongohost, mongoport, nbdataobj);
+//        mongoDataInit1.setSqlDB(sqlinit);
+//        mongoDataInit1.persistDataPmlModel(1,true, SIMPLEHYBRID);
+            // Mongo DB 2
+//        MongoDataInit mongoDataInit2 = new MongoDataInit(mongodbname2, mongohost2, mongoport2, nbdataobj);
+//        mongoDataInit2.setSqlDB(sqlinit);
+//        mongoDataInit2.persistDataSimpleHybridPmlModel(2,true,SIMPLEHYBRID);
+
+        // Model 'onetomanyMongoToRel.pml'
+            // On Mongo DB 2
+        MongoDataInit mongoDataInit2 = new MongoDataInit(mongodbname2, mongohost2, mongoport2, nbdataobj);
+        mongoDataInit2.setSqlDB(sqlinit);
+        mongoDataInit2.persistDataPmlModel(2,true,ONETOMANYMONGOTOREL);
+
+        // Old models 'simple_rel_doc.pml' ,..
 //        mongoDataInit.persistData();
 //        mongoDataInit.persistDataTest();
-        mongoDataInit.persistDataSimpleHybridPmlModel(1,true);
-
-        //Second mongo db init data
-        mongohost = "localhost";
-        mongodbname = "mymongo2";
-        mongoport = 27100;
-        mongoDataInit = new MongoDataInit(mongodbname, mongohost, mongoport, nbdataobj);
-        mongoDataInit.setSqlDB(sqlinit);
-        mongoDataInit.persistDataSimpleHybridPmlModel(2,true);
-
-
     }
 
-    public void persistDataSimpleHybridPmlModel(int mongoinstance, boolean sqlUpdate) {
+    public void persistDataPmlModel(int mongoinstance, boolean sqlUpdate, int pmlmodel) {
         String productref=null;
         int price;
         String productDesc;
@@ -98,7 +114,7 @@ public class MongoDataInit implements DataInit{
                 documentsProductReviews.add(product);
                 if(sqlUpdate){
                     logger.info("Update product record [{}] in SQL database ", productref);
-                    sqlDB.update("update ProductCatalogTable SET description='"+productDesc+"', europrice='"+price+"€' where product_id ='"+productref+"'");
+                    sqlDB.executeSQL("update ProductCatalogTable SET description='"+productDesc+"', europrice='"+price+"€' where product_id ='"+productref+"'");
                 }
             }
             productCollection.insertMany(documentsProductReviews);
@@ -115,6 +131,22 @@ public class MongoDataInit implements DataInit{
                 productref = "product"+i;
                 Document product = new Document()
                         .append("id", productref);
+                if (pmlmodel == ONETOMANYMONGOTOREL) {
+                    List<Document> reviewsOfProduct = new ArrayList<>();
+                    for (int j = 0; j < RandomUtils.nextInt(0, 5); j++) {
+                        String review_id = "review"+i+"-"+j;
+                        Document review = new Document()
+                                .append("review_ref",review_id)
+                                .append("rating",RandomUtils.nextInt(0,5));
+                        reviewsOfProduct.add(review);
+                        if(sqlUpdate){
+                            logger.info("Insert corresponding review in ReviewTable [{}] in SQL database ", review_id);
+                            sqlDB.executeSQL("insert into ReviewTable(review_id, rating, content, product_ref) VALUES ('"+review_id+"',"+RandomUtils.nextInt(0,5)+",'"+RandomStringUtils.randomAlphabetic(60)+"','"+productref + "')");
+
+                        }
+                    }
+                    product.append("reviews", reviewsOfProduct);
+                }
                 switch (i % 3) {
                     case 0 :
                         categoryName="A";
@@ -130,10 +162,10 @@ public class MongoDataInit implements DataInit{
                         break;
                 }
 
-                if(sqlUpdate) {
-                    logger.info("Update product record [{}] in SQL database ", productref);
-                    sqlDB.update("update ProductCatalogTable SET categoryname ='"+categoryName+"' where product_id ='"+productref+"' ");
-                }
+//                if(sqlUpdate) {
+//                    logger.info("Update product record [{}] in SQL database ", productref);
+//                    sqlDB.executeSQL("update ProductCatalogTable SET categoryname ='"+categoryName+"' where product_id ='"+productref+"' ");
+//                }
             }
             Document categoryA = new Document()
                     .append("categoryname", "A")

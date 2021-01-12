@@ -339,7 +339,7 @@ if(nestedRow != null) {
 [comment  /]
 
 [comment Ici modifier également afin d'aller voir dans les multi value complex object si l'objet refField n'y est pas./]
-[let children : Collection(EmbeddedObject) = getChildrenArrayPhysicalFieldsHavingDescendantMappedToGivenEntityType(arg, ent, ent.ancestors(Domainmodel)->first().mappingRules)]
+[let children : Collection(EmbeddedObject) = getChildrenArrayPhysicalFieldsHavingDescendantMappedToGivenEntityTypeOrToRefField(arg, ent, ent.ancestors(Domainmodel)->first().mappingRules, refField)]
 [if (children->size() > 0)]
 [for (child : EmbeddedObject | children)]
 array[level /] = r[level /].getAs("[getPhysicalName(child)/]");
@@ -383,6 +383,10 @@ if(toAdd[level /]) {
 
 [query private getChildrenArrayPhysicalFieldsHavingDescendantMappedToGivenEntityType(arg : OclAny, ent: EntityType, rules: MappingRules) : Collection(EmbeddedObject) =  
 	invoke('be.unamur.polystore.acceleo.main.utils.Util', 'getChildrenArrayPhysicalFieldsHavingDescendantMappedToGivenEntityType(java.lang.Object, be.unamur.polystore.pml.EntityType, be.unamur.polystore.pml.MappingRules)', Sequence{arg, ent, rules})
+/]
+
+[query private getChildrenArrayPhysicalFieldsHavingDescendantMappedToGivenEntityTypeOrToRefField(arg : OclAny, ent: EntityType, rules: MappingRules, refField: PhysicalField) : Collection(EmbeddedObject) =  
+	invoke('be.unamur.polystore.acceleo.main.utils.Util', 'getChildrenArrayPhysicalFieldsHavingDescendantMappedToGivenEntityTypeOrToRefField(java.lang.Object, be.unamur.polystore.pml.EntityType, be.unamur.polystore.pml.MappingRules, be.unamur.polystore.pml.PhysicalField)', Sequence{arg, ent, rules, refField})
 /]
 
 [query private getSequenceOfNonArrayEmbeddedObjects(field : OclAny) : Sequence(EmbeddedObject) =  

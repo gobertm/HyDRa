@@ -111,6 +111,14 @@ public class Util {
 
 	}
 
+	/**
+	 * Recursive function if argument field is an EmbeddedObject.
+	 * Goes through the mapping rules and return a list of conceptual attributes that are mapped to the given PhysicalField.
+	 * @param field
+	 * @param ent
+	 * @param rules
+	 * @return
+	 */
 	public static java.util.Collection<Attribute> getMappedAttributes(PhysicalField field, final EntityType ent,
 			final MappingRules rules) {
 		Set<Attribute> res = new HashSet<Attribute>();
@@ -139,8 +147,13 @@ public class Util {
 		return new ArrayList<Attribute>(res);
 	}
 
-	public static java.util.Collection<EmbeddedObject> getChildrenArrayPhysicalFieldsHavingDescendantMappedToGivenEntityType(
-			Object arg, EntityType ent, MappingRules rules) {
+	
+	public static java.util.Collection<EmbeddedObject> getChildrenArrayPhysicalFieldsHavingDescendantMappedToGivenEntityType(Object arg, EntityType ent, MappingRules rules){
+		return getChildrenArrayPhysicalFieldsHavingDescendantMappedToGivenEntityTypeOrToRefField(arg, ent, rules, null);
+	}
+	
+	public static java.util.Collection<EmbeddedObject> getChildrenArrayPhysicalFieldsHavingDescendantMappedToGivenEntityTypeOrToRefField(
+			Object arg, EntityType ent, MappingRules rules, PhysicalField refField) {
 		List<EmbeddedObject> res = new ArrayList<EmbeddedObject>();
 		List<PhysicalField> list = null;
 		if (arg instanceof Collection) {
@@ -158,13 +171,32 @@ public class Util {
 					if (((EmbeddedObject) field).getCardinality() == Cardinality.ONE_MANY
 							|| ((EmbeddedObject) field).getCardinality() == Cardinality.ZERO_MANY) {
 						java.util.Collection<Attribute> mappedAttributes = getMappedAttributes(field, ent, rules);
-						if (mappedAttributes.size() > 0)
+						if (mappedAttributes.size() > 0 || isContainedInPhysicalField(refField, field))
 							res.add((EmbeddedObject) field);
 					}
 				}
 			}
 
 		return res;
+	}
+
+
+	private static boolean isContainedInPhysicalField(PhysicalField refField, PhysicalField field) {
+		Set<Attribute> res = new HashSet<Attribute>();
+		if(refField!=null) {
+			if (field instanceof LongField) {
+				if(((LongField) field).getPattern().contains(refField))
+					return true;
+			}
+			if(refField.equals(field))
+				return true;
+			if (field instanceof EmbeddedObject) {
+				for (PhysicalField pf : ((EmbeddedObject) field).getFields())
+					return isContainedInPhysicalField(refField,pf);
+			}
+			return false;
+		}
+		return false;
 	}
 
 	public static java.util.Collection<EmbeddedObject> getSequenceOfNonArrayEmbeddedObjects(EObject field) {
