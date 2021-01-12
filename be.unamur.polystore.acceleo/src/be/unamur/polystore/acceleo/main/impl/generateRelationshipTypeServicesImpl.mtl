@@ -29,6 +29,9 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.apache.spark.sql.Row;
 import java.util.regex.Pattern;
 import java.util.regex.Matcher;
+import scala.collection.mutable.WrappedArray;
+import org.apache.spark.api.java.function.FlatMapFunction;
+
 
 public class [rel.name.toUpperFirst() + 'ServiceImpl' /] extends dao.services.[rel.name.toUpperFirst() + 'Service' /] {
 	[instantiateLogger(rel.name.toUpperFirst() + 'ServiceImpl') /]

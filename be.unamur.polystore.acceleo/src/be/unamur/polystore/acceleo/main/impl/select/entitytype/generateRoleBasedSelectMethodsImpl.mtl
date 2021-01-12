@@ -33,6 +33,9 @@ return res_[entity.name/];
 [/for]
 
 [/let]
+[else]
+// Not implemented yet for > 2 roles
+return null;
 [/if]
 }
 [/template]
