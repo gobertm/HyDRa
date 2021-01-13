@@ -1,6 +1,32 @@
 [comment encoding = UTF-8 /]
 [module util('http://www.unamur.be/polystore/Pml')]
 
+[template public generateJavaType(type : DataType) post (replaceAll('\n', '').trim())]
+[if (type.oclIsTypeOf(pml::IntType))]Integer[/if]
+[if (type.oclIsTypeOf(pml::BigintType))]Long[/if]
+[if (type.oclIsTypeOf(pml::TextType))]String[/if]
+[if (type.oclIsTypeOf(pml::StringType))]String[/if]
+[if (type.oclIsTypeOf(pml::BoolType))]Boolean[/if]
+[if (type.oclIsTypeOf(pml::FloatType))]Double[/if]
+[if (type.oclIsTypeOf(pml::BlobType))]Byte[/if]
+[if (type.oclIsTypeOf(pml::DateType))]java.util.Date[/if]
+[if (type.oclIsTypeOf(pml::DatetimeType))]java.util.Date[/if]
+[/template]
+
+[template public generateParsingFunctionJavaType(type : DataType, varName: String) post (replaceAll('\n', '').trim())]
+[if (type.oclIsTypeOf(pml::IntType))]Integer.parseInt([varName/])[/if]
+[if (type.oclIsTypeOf(pml::BigintType))]Long.parseLong([varName/])[/if]
+[if (type.oclIsTypeOf(pml::TextType))][varName/][/if]
+[if (type.oclIsTypeOf(pml::StringType))][varName/][/if]
+[if (type.oclIsTypeOf(pml::BoolType))]Boolean.parseBoolean([varName/])[/if]
+[if (type.oclIsTypeOf(pml::FloatType))]Double.parseDouble([varName/])[/if]
+[if (type.oclIsTypeOf(pml::BlobType))]Byte.parseByte([varName/])[/if]
+[if (type.oclIsTypeOf(pml::DateType))]TODO[/if]
+[comment définir un format dans la grammaire pourles dates au niveau conceptuel ex: birthdate: date {MY_FORMAT}/]
+[if (type.oclIsTypeOf(pml::DatetimeType))]TODO[/if]
+[/template]
+
+
 [query public getRolesFromEntityType(entityType: EntityType, conceptualSchema: ConceptualSchema) : Collection(pml::Role) = 
 	conceptualSchema.eAllContents(pml::Role)->select(role: pml::Role | role.entity = entityType)
 /]

@@ -39,9 +39,9 @@ physical schemas {
 				content,
                 product_ref
 			}
-//            references{
-//				reviewed_product : product_ref -> categorySchema.categoryCollection.products.id
-//			}
+            references{
+				reviewed_product : product_ref -> categorySchema.categoryCollection.products.id
+			}
 		}
 	}
 	
@@ -70,8 +70,8 @@ mapping rules{
 	cs.Review(content,id,rating) -> myRelSchema.ReviewTable(content,review_id,rating),
 	cs.productReview.reviewed_product -> categorySchema.categoryCollection.review_of_product,
 	cs.Product(cat_name) -> categorySchema.categoryCollection(categoryname),
-	cs.Product(id) -> categorySchema.categoryCollection.products(id)
-//    cs.productReview.review -> myRelSchema.ReviewTable.reviewed_product
+	cs.Product(id) -> categorySchema.categoryCollection.products(id),
+    cs.productReview.review -> myRelSchema.ReviewTable.reviewed_product
 }
 
 databases {

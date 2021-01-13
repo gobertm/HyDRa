@@ -1,10 +1,8 @@
 [comment encoding = UTF-8 /]
 [module generateEntityTypeRelatedClasses('http://www.unamur.be/polystore/Pml')]
-[import be::unamur::polystore::acceleo::main::generateJavaDataType /]
 [import be::unamur::polystore::acceleo::main::generateRelationshipTypeClass /]
 [import be::unamur::polystore::acceleo::main::services::generateEntityTypeServices /]
 [import be::unamur::polystore::acceleo::main::impl::generateEntityTypeServicesImpl /]
-[import be::unamur::polystore::acceleo::main::generateJavaDataType /]
 [import be::unamur::polystore::acceleo::main::util /]
 [import be::unamur::polystore::acceleo::main::mappingrules::util /]
 
