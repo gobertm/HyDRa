@@ -71,7 +71,8 @@ mapping rules{
 	cs.productReview.reviewed_product -> categorySchema.categoryCollection.review_of_product,
 	cs.Product(cat_name) -> categorySchema.categoryCollection(categoryname),
 	cs.Product(id) -> categorySchema.categoryCollection.products(id),
-    cs.productReview.review -> myRelSchema.ReviewTable.reviewed_product
+    cs.productReview.review -> myRelSchema.ReviewTable.reviewed_product,
+    cs.Review(id,rating) -> categorySchema.categoryCollection.products.reviews(review_ref,rating)  // Add this mapping rule to test detection of data insconsistencies in Reviews
 }
 
 databases {
