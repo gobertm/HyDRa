@@ -9,6 +9,7 @@
 [generateConditions(conceptualSchema) /]
 [generateLog4JConfFile() /]
 [generatePomFile(conceptualSchema) /]
+[generateExceptions()/]
 [/template]
 
 
@@ -510,6 +511,23 @@ public enum [rel.name.toUpperFirst() /]Attribute {
 	</root>
 
 </log4j:configuration>
+[/file]
+[/template]
+
+[template public generateExceptions()]
+	[generateInsertReferenceException()/]
+[/template]
+
+[template public generateInsertReferenceException()]
+[file ('src/main/java/exceptions/InsertReferenceException.java', false, 'UTF-8')]
+package exceptions;
+
+class InsertReferenceException extends Exception{
+
+	InsertReferenceException(String message){
+	super(message);
+	}
+}
 [/file]
 [/template]
 

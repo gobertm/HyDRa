@@ -73,6 +73,19 @@ public class MappingRuleService {
 
 		return null;
 	}
+	
+	public static List<Reference> getRefOfPhysicalStructure(AbstractPhysicalStructure structure) {
+		List<Reference> res = new ArrayList<Reference>();
+		if(structure instanceof Table) {
+			res.addAll(((Table)structure).getReferences());
+		}
+		if(structure instanceof Collection)
+			res.addAll(((Collection)structure).getReferences());
+		if(structure instanceof TableColumnDB)
+			res.addAll(((TableColumnDB)structure).getReferences());
+		// TODO For graph and others
+		return res;
+	}
 
 	/**
 	 * Returns a Set of Database (PML domain object) that contains the mapped

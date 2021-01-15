@@ -28,6 +28,7 @@ import com.mongodb.spark.MongoSpark;
 import org.bson.Document;
 import static java.util.Collections.singletonList;
 import dbconnection.SparkConnectionMgr;
+import dbconnection.DBConnectionMgr;
 import scala.collection.mutable.WrappedArray;
 import org.apache.spark.api.java.function.FlatMapFunction;
 import org.apache.spark.api.java.function.FilterFunction;

@@ -15,6 +15,7 @@ import be.unamur.polystore.pml.Attribute;
 import be.unamur.polystore.pml.BracketsField;
 import be.unamur.polystore.pml.Cardinality;
 import be.unamur.polystore.pml.Collection;
+import be.unamur.polystore.pml.Database;
 import be.unamur.polystore.pml.EmbeddedObject;
 import be.unamur.polystore.pml.EntityMappingRule;
 import be.unamur.polystore.pml.EntityType;
@@ -147,6 +148,24 @@ public class Util {
 		return new ArrayList<Attribute>(res);
 	}
 
+	public static java.util.Collection<Attribute> getMappedAttributes(EntityType entity, AbstractPhysicalStructure structure, Database db, MappingRules rules){
+		Set<Attribute> res = new HashSet<Attribute>();
+
+		for (AbstractMappingRule rule : rules.getMappingRules()) {
+			if (rule instanceof EntityMappingRule) {
+				EntityMappingRule r = (EntityMappingRule) rule;
+				if(r.getPhysicalStructure()== structure) {
+					if (r.getEntityConceptual() == entity && r.getAttributesConceptual().size() > 0) {
+						List<PhysicalField> fields = r.getPhysicalFields();
+						for (int i = 0; i < fields.size(); i++) {
+							res.add(r.getAttributesConceptual().get(i));
+						}
+					}
+				}
+			}
+		}	
+		return res;
+	}
 	
 	public static java.util.Collection<EmbeddedObject> getChildrenArrayPhysicalFieldsHavingDescendantMappedToGivenEntityType(Object arg, EntityType ent, MappingRules rules){
 		return getChildrenArrayPhysicalFieldsHavingDescendantMappedToGivenEntityTypeOrToRefField(arg, ent, rules, null);

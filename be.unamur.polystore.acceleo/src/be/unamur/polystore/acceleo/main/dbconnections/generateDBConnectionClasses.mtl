@@ -1,13 +1,63 @@
 [comment encoding = UTF-8 /]
 [module generateDBConnectionClasses('http://www.unamur.be/polystore/Pml')]
+[import be::unamur::polystore::acceleo::main::util /]
 
 [template public generateDBConnectionClasses(conceptualSchema: ConceptualSchema)]
+[generateDBConnectionInterface()/]
+[generateDBConnectionMgr(conceptualSchema)/]
 [generateSparkConnectionMgr(conceptualSchema) /]
-[comment][generateRelationalDBConnectionClasses(conceptualSchema) /]
-[generateDocumentDBConnectionClasses(conceptualSchema) /]
+[generateRelationalDBConnectionClasses(conceptualSchema) /]
+[comment][generateDocumentDBConnectionClasses(conceptualSchema) /]
 [generateKeyValueDBConnectionClasses(conceptualSchema) /]
 [generateColumnDBConnectionClasses(conceptualSchema) /]
 [generateGraphDBConnectionClasses(conceptualSchema) /][/comment]
+[/template]
+
+[template public generateDBConnectionInterface()]
+[file ('src/main/java/dbconnection/DBConnection.java', false, 'UTF-8')]
+package dbconnection;
+
+public interface DBConnection {
+	int insertOrUpdateOrDelete(String query, java.util.List<Object> inputs);
+}
+[/file]
+[/template]
+
+[template public generateDBConnectionMgr(conceptualSchema: ConceptualSchema)]
+[file ('src/main/java/dbconnection/DBConnectionMgr.java', false, 'UTF-8')]
+package dbconnection;
+
+import java.sql.SQLException;
+import java.util.HashMap;
+import java.util.Map;
+
+public class DBConnectionMgr {
+
+	[instantiateLogger('DBConnectionMgr') /]
+	private static Map<String, DBConnection> mapDB = new HashMap<String, DBConnection>(); 
+
+	static {
+		try{
+		[for (db : Database | conceptualSchema.ancestors(Domainmodel)->first().databases.databases)]
+				[if db.dbType = pml::DatabaseType::MARIADB or db.dbType = pml::DatabaseType::SQLITE]	
+				mapDB.put("[db.name /]", new RelationalDBConnection("[db.host /]", "[db.port /]", "[db.name /]", "[db.login /]", "[db.password /]"));
+				[/if]
+		[/for]
+		} catch(ClassNotFoundException e) {
+			logger.error("Error in DBConnection Mgr creation");
+			e.printStackTrace();
+		} catch(SQLException e) {
+			logger.error("Error in DBConnection Mgr creation");
+			e.printStackTrace();
+		}
+	}
+
+	public static Map<String, DBConnection> getMapDB(){
+		return mapDB;
+	}
+	
+}
+[/file]
 [/template]
 
 [template public generateSparkConnectionMgr(conceptualSchema: ConceptualSchema)]
@@ -30,6 +80,7 @@ import com.mongodb.spark.MongoSpark;
 import com.mongodb.spark.config.ReadConfig;
 
 public class SparkConnectionMgr {
+	[instantiateLogger('SparkConnectionMgr') /]
 	private static Map<String, DBCredentials> dbPorts = new HashMap<String, DBCredentials>();
 	private static SparkSession session = null;
 
@@ -105,7 +156,10 @@ public class SparkConnectionMgr {
 [file ('src/main/java/dbconnection/RelationalDBConnection.java', false, 'UTF-8')]
 package dbconnection;
 
-public class RelationalDBConnection {
+import java.sql.SQLException;
+
+public class RelationalDBConnection implements DBConnection{
+	[instantiateLogger('RelationalDBConnection') /]
 	protected String host;
 	protected String port;
 	protected String driverClass;
@@ -128,20 +182,30 @@ public class RelationalDBConnection {
 		this.jdbcUrl = "jdbc:mysql://" + this.host + ":" + this.port + "/" + this.schemaName;
 		this.driverClass = "com.mysql.jdbc.Driver";
 
-		Class.forName(this.driverClass);
+		//Class.forName(this.driverClass);
 		openConnection();
 	}
 
-	public void openConnection() throws java.sql.SQLException {
+	public void openConnection(){
 		if(this.conn == null)
+			try{
+			logger.debug("Opening relational DB connection {}", jdbcUrl);
 			this.conn = java.sql.DriverManager.getConnection(this.jdbcUrl, this.userName, this.userPassword);
+			}catch(SQLException e){
+				logger.error("Impossible to connect to DB {}", jdbcUrl);
+				System.err.println(e);
+				System.exit(1);
+			}
 	}
 
-	public void closeConnection() throws java.sql.SQLException {
+	public void closeConnection() {
 		try {
 			if(conn != null)
 				conn.close();
-		} finally {
+		}catch(SQLException e){
+				logger.error("Impossible to close DB connection{}", jdbcUrl);
+				System.err.println(e);
+			} finally {
 			conn = null;
 		}
 	}
@@ -178,10 +242,12 @@ public class RelationalDBConnection {
 		}
 	}
 
-	public int insertOrUpdateorDelete(String query, java.util.List<Object> inputs) throws java.sql.SQLException {
-		openConnection();
+	@Override
+	public int insertOrUpdateOrDelete(String query, java.util.List<Object> inputs) {
 		java.sql.PreparedStatement st = null;
 		try {
+			openConnection();
+			logger.debug("Executing insert/update/delete statement [ '['/]{}[ ']'/]",query);
 			st = conn.prepareStatement(query);
 			int i = 1;
 			if (inputs != null)
@@ -191,14 +257,24 @@ public class RelationalDBConnection {
 				}
 
 			return st.executeUpdate();
+		}catch(SQLException e){
+			logger.error("Error executing insert/update/delete statement");
+			System.err.println(e);
+			System.exit(1);
 		} finally {
 			if (st != null)
+			try{
 				st.close();
+			}catch(SQLException e){
+				logger.error("Impossible to close statement");
+				System.err.println(e);
+			}
 		}
+		return 0;
 	}
 
-	public int insertOrUpdateorDelete(String query) throws java.sql.SQLException {
-		return insertOrUpdateorDelete(query, null);
+	public int insertOrUpdateOrDelete(String query) throws java.sql.SQLException {
+		return insertOrUpdateOrDelete(query, null);
 	}
 
 }
