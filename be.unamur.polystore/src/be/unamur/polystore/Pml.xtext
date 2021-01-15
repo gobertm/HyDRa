@@ -121,13 +121,14 @@ TerminalExpression:
 
 ColumnSchema:
 	'column' 'schema' name=ID (':' databases+=[Database] (','databases+=[Database])*)? '{'
-		tables+=(TableColumnDB)* ('references' '{'references+=Reference*'}' )?
+		tables+=(TableColumnDB)*
 	'}'
 ;
 
 TableColumnDB:
 	'table' name=ID '{'
 		rowkey=Rowkey ('columnfamilies' '{'columnfamilies+=ColumnFamily*'}')
+		('references' '{'references+=Reference*'}')? 
 	'}'
 ;
 
@@ -144,7 +145,7 @@ Rowkey:
 	 '}'
 ;
 
-
+// TODO Modifier l'emplacement du bloc référence.
 GraphSchema:
 	'graph' 'schema' name=ID (':' databases+=[Database] (','databases+=[Database])*)?'{'
 		(nodes+=Node)* (edges+=Edge)* ('references' '{'references+=Reference*'}' )?
