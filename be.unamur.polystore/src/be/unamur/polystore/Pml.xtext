@@ -181,7 +181,7 @@ Table:
 ;
 
 AbstractPhysicalStructure:
-	Table | Collection | EmbeddedObject | TableColumnDB | Node | Edge
+	Table | Collection | EmbeddedObject | TableColumnDB | Node | Edge | KeyValuePair
 ;
 
 KeyValueSchema:
@@ -194,32 +194,19 @@ KeyValueSchema:
 KeyValuePair:
 	'kvpairs' name=ID '{'
 		'key' ':' key=Key ','
-		'value' ':' value=Value
+		'value' ':' value=PhysicalField
 	'}'
 ;
 
 Key:
-//	 stringParts+=STRING* & fields+=BracketsField*  // Comment intercaller les variables
-	left=TerminalExpression ('+' right+=TerminalExpression)*
+	pattern+=TerminalExpression+
 ;
-
-Value:
-	Object | BracketsField 
-;
-
-Object:
-	'{'
-		fields+=PhysicalField (',' fields+=PhysicalField)*
-	'}'
-;
-
 
 MappingRules:
 	{MappingRules} 'mapping' 'rules' '{'
 		(mappingRules+=AbstractMappingRule (','mappingRules+=AbstractMappingRule)*)?
 	'}'
 ;
-
 
 AbstractMappingRule:
 	EntityMappingRule | RoleToEmbbededObjectMappingRule | RoleToReferenceMappingRule

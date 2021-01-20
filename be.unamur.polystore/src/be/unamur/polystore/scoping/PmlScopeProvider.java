@@ -19,6 +19,8 @@ import be.unamur.polystore.pml.ColumnFamily;
 import be.unamur.polystore.pml.Edge;
 import be.unamur.polystore.pml.EmbeddedObject;
 import be.unamur.polystore.pml.EntityMappingRule;
+import be.unamur.polystore.pml.Key;
+import be.unamur.polystore.pml.KeyValuePair;
 import be.unamur.polystore.pml.LongField;
 import be.unamur.polystore.pml.Node;
 import be.unamur.polystore.pml.PhysicalField;
@@ -72,6 +74,11 @@ public class PmlScopeProvider extends AbstractPmlScopeProvider {
 				for(ColumnFamily cf : columnFamilies)
 					fields.addAll(cf.getColumns());
 			}
+			if(struct instanceof KeyValuePair) {
+				KeyValuePair kvpair = (KeyValuePair)struct;
+				fields.addAll(getPhysicalFieldsFromKey(kvpair.getKey()));
+				fields.add(kvpair.getValue());
+			}
 			EList<PhysicalField> fieldsInComplex;
 			fieldsInComplex= getFieldsFromLongField(fields);
 			IScope scope = Scopes.scopeFor(fields);
@@ -95,5 +102,14 @@ public class PmlScopeProvider extends AbstractPmlScopeProvider {
 			}
 		}
 		return fieldsInComplex;
+	}
+	
+	public EList<PhysicalField> getPhysicalFieldsFromKey(Key key){
+		EList<PhysicalField> fields = new BasicEList<PhysicalField>();
+		for(TerminalExpression terminal : key.getPattern()) {
+			if(terminal instanceof BracketsField)
+				fields.add((BracketsField)terminal);
+		}
+		return fields;
 	}
 }
