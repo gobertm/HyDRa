@@ -9,6 +9,24 @@
         </layout>
     </appender>
 
+    <logger name="org.apache.spark">
+        <level value="error" />
+    </logger>
+    <logger name="org.spark-project">
+        <level value="error" />
+    </logger>
+    <logger name="org.apache.hadoop">
+        <level value="error" />
+    </logger>
+    <logger name="io.netty">
+        <level value="error" />
+    </logger>
+    <logger name="org.apache.zookeeper">
+        <level value="error" />
+    </logger>
+    <logger name="org">
+        <level value="error" />
+    </logger>
     <root>
         <level value="DEBUG" />
         <appender-ref ref="console" />

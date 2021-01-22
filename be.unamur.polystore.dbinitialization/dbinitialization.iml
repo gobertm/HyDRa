@@ -144,6 +144,11 @@
     <orderEntry type="library" name="Maven: javax.xml.bind:jaxb-api:2.3.0" level="project" />
     <orderEntry type="library" name="Maven: org.neo4j.driver:neo4j-java-driver:4.1.0" level="project" />
     <orderEntry type="library" name="Maven: org.reactivestreams:reactive-streams:1.0.3" level="project" />
+    <orderEntry type="library" name="Maven: com.redislabs:spark-redis_2.12:2.4.2" level="project" />
+    <orderEntry type="library" name="Maven: org.scala-lang:scala-library:2.12.9" level="project" />
+    <orderEntry type="library" name="Maven: org.scala-lang:scalap:2.12.9" level="project" />
+    <orderEntry type="library" name="Maven: org.scala-lang:scala-compiler:2.12.9" level="project" />
+    <orderEntry type="library" name="Maven: org.mongodb.spark:mongo-spark-connector_2.12:3.0.0" level="project" />
     <orderEntry type="library" name="Maven: org.apache.spark:spark-core_2.12:3.0.1" level="project" />
     <orderEntry type="library" name="Maven: com.thoughtworks.paranamer:paranamer:2.8" level="project" />
     <orderEntry type="library" name="Maven: org.apache.avro:avro:1.8.2" level="project" />
@@ -222,7 +227,6 @@
     <orderEntry type="library" name="Maven: org.roaringbitmap:shims:0.7.45" level="project" />
     <orderEntry type="library" name="Maven: commons-net:commons-net:3.1" level="project" />
     <orderEntry type="library" name="Maven: org.scala-lang.modules:scala-xml_2.12:1.2.0" level="project" />
-    <orderEntry type="library" name="Maven: org.scala-lang:scala-library:2.12.10" level="project" />
     <orderEntry type="library" name="Maven: org.scala-lang:scala-reflect:2.12.10" level="project" />
     <orderEntry type="library" name="Maven: org.json4s:json4s-jackson_2.12:3.6.6" level="project" />
     <orderEntry type="library" name="Maven: org.json4s:json4s-core_2.12:3.6.6" level="project" />

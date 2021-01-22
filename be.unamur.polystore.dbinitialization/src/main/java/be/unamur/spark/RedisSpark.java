@@ -1,18 +1,8 @@
-package be.unamur.app;
+package be.unamur.spark;
 
-import com.redislabs.provider.redis.ReadWriteConfig;
-import com.redislabs.provider.redis.RedisConfig;
-import com.redislabs.provider.redis.RedisContext;
-import org.apache.spark.SparkConf;
-import org.apache.spark.api.java.JavaRDD;
-import org.apache.spark.api.java.JavaSparkContext;
-import org.apache.spark.rdd.RDD;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SparkSession;
-import org.apache.spark.sql.catalyst.encoders.RowEncoder;
-import org.apache.spark.sql.types.StructType;
-import scala.Tuple2;
 
 public class RedisSpark {
 
