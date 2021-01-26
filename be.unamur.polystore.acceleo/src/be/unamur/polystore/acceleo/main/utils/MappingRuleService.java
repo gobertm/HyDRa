@@ -196,11 +196,12 @@ public class MappingRuleService {
 //		return (AbstractPhysicalStructure) res;
 //	}
 
-	public static AbstractPhysicalStructure getPhysicalStructureNotEmbeddedObject(EObject obj) {
+	private static AbstractPhysicalStructure getPhysicalStructureNotEmbeddedObject(EObject obj) {
 		if (obj == null)
 			return null;
 		if (AbstractPhysicalStructure.class.isAssignableFrom(obj.getClass())
-				&& !EmbeddedObject.class.isAssignableFrom(obj.getClass()))
+				&& !EmbeddedObject.class.isAssignableFrom(obj.getClass())
+				&& !KVComplexField.class.isAssignableFrom(obj.getClass()))
 			return (AbstractPhysicalStructure) obj;
 		return getPhysicalStructureNotEmbeddedObject(obj.eContainer());
 	}

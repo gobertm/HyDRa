@@ -18,6 +18,13 @@
 	</properties>
 
 	<dependencies>
+		        <!-- https://mvnrepository.com/artifact/com.redislabs/spark-redis -->
+        <dependency>
+            <groupId>com.redislabs</groupId>
+            <artifactId>spark-redis_2.12</artifactId>
+            <version>2.4.2</version>
+        </dependency>
+
 
 		<dependency>
 		  <groupId>org.apache.maven.plugins</groupId>

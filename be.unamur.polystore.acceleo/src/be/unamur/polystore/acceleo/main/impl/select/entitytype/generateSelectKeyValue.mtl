@@ -1,0 +1,32 @@
+[comment encoding = UTF-8 /]
+[module generateSelectKeyValue('http://www.unamur.be/polystore/Pml')]
+[import be::unamur::polystore::acceleo::main::mappingrules::util /]
+[import be::unamur::polystore::acceleo::main::util /]
+
+[template public generateSelectKeyValue(ent : EntityType, struct : KeyValuePair, db : Database)]
+	// Build the key pattern
+	//  - If the condition attribute is in the key pattern, replace by the value. Only if operator is EQUALS.
+	//  - Replace all other fields of key pattern by a '*' 
+	String keypattern= "";
+	[for (expr : TerminalExpression | struct.key.pattern)]
+		[if (expr.oclIsTypeOf(pml::BracketsField) = true)]
+	[comment TODO here find a way to determine that the BracketField is indeed mapped to a POJO attribute and replace by condition value instead of */]
+	keypattern=keypattern.concat("*"); 
+		[else]
+	keypattern=keypattern.concat("[expr.literal/]");
+		[/if]
+	[/for]
+		
+	// Find the type of query to perform in order to retrieve a Dataset<Row>
+	// Based on the type of the value. Is a it a simple string or a hash or a list... 
+	Dataset<Row> rows;
+	[if struct.value.oclIsTypeOf(pml::KVComplexField)=false]
+	rows = SparkConnectionMgr.getRowsFromKeyValue("[db.name/]",keypattern);
+	[else]
+		[comment TODO handle other redis data types./]
+		// TODO only handles 'hash' for now
+		
+	[/if]
+	return rows;
+	// Convert to POJO type.
+[/template]

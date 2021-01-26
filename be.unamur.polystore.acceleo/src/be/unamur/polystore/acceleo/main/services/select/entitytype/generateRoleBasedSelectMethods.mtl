@@ -29,7 +29,7 @@ public [if (isMaxOne(role2) = false)]Dataset<[entity.name.toUpperFirst() /]>[els
 [/if]
 [/for]
 [if (getRelationShipType(role).attributes->size() > 0)]
-public java.util.List<[entity.name.toUpperFirst() /]> get[role.name.toUpperFirst() /]ListIn[getRelationShipType(role).name.toUpperFirst() /]By[getRelationShipType(role).name.toUpperFirst() /]Condition(
+public Dataset<[entity.name.toUpperFirst() /]> get[role.name.toUpperFirst() /]ListIn[getRelationShipType(role).name.toUpperFirst() /]By[getRelationShipType(role).name.toUpperFirst() /]Condition(
 	conditions.Condition<conditions.[getRelationShipType(role).name.toUpperFirst()/]Attribute> [getRelationShipType(role).name/]_condition
 ){
 	return get[role.name.toUpperFirst() /]ListIn[getRelationShipType(role).name.toUpperFirst() /]([getListOfNullValues(getRelationShipType(role).roles->size()) /], [getRelationShipType(role).name/]_condition);

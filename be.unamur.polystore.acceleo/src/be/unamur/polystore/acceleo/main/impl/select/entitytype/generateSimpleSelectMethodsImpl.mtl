@@ -4,6 +4,7 @@
 [import be::unamur::polystore::acceleo::main::util /]
 [import be::unamur::polystore::acceleo::main::impl::select::entitytype::generateSimpleSelectFromGivenRelationalTable /]
 [import be::unamur::polystore::acceleo::main::impl::select::entitytype::generateSimpleSelectFromGivenDocumentCollection /]
+[import be::unamur::polystore::acceleo::main::impl::select::entitytype::generateSelectKeyValue /]
 
 [comment get{E}List({E)AttributeCondition /]
 
@@ -12,7 +13,7 @@
 	List<Dataset<[entityType.name.toUpperFirst() /]>> datasets = new ArrayList<Dataset<[entityType.name.toUpperFirst() /]>>();
 	Dataset<[entityType.name.toUpperFirst()/]> d = null;
 	[for (struct: AbstractPhysicalStructure | getConcernedPhysicalStructures(entityType, entityType.ancestors(Domainmodel)->first()))]
-	[if (struct.oclIsTypeOf(pml::EmbeddedObject) = false)]
+	[if (struct.oclIsTypeOf(pml::EmbeddedObject) = false) and (struct.oclIsTypeOf(pml::KVComplexField) = false)]
 	[for (db: Database | getConcernedDatabases(struct, entityType.ancestors(Domainmodel)->first()))]
 	d = get[entityType.name.toUpperFirst() /]ListIn[struct.name.toUpperFirst()/]From[db.name.toUpperFirst() /](condition, refilterFlag);
 	if(d != null)
@@ -83,6 +84,8 @@
 [generateSimpleSelectFromGivenRelationalTable(ent, struct, db) /]
 [elseif (db.dbType = pml::DatabaseType::MONGODB)]
 [generateSimpleSelectFromGivenDocumentCollection(ent, struct, db) /]
+[elseif (db.dbType = pml::DatabaseType::REDIS)]
+[generateSelectKeyValue(ent, struct.oclAsType(pml::KeyValuePair), db) /]
 [else]return null;
 [/if]	
 	

@@ -46,7 +46,7 @@ physical schemas {
 		
 		kvpairs KVClient {
 			key : "CLIENT:"[clientID],
-			value : attr hash { // Mettre des mots clés définis pour les types Redis, modifier la caridnalité?
+			value : attr hash { 
 				name : [firstname]"_"[lastname],
 				streetnumber : [streetnbr], // En faire un embedded hash
 				street

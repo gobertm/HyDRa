@@ -28,7 +28,6 @@
 [/let]
 [else]
 // Not implemented yet
-return null;
 [/if]
 
 [comment Relationship type POJO retrieval methods /]
@@ -69,6 +68,7 @@ public [if (override = false)]abstract [/if]Dataset<[roleSource.entity.name.toUp
 [comment TODO Implemented multi composed ref. Currently Apply only to single attribute reference /]
 [let dbs : Set(Database) = ref.sourceField->first().getAbstractPhysicalStructure().getConcernedDatabases(ref.ancestors(Domainmodel)->any(true))]
 [if (dbs->size() = 0)]
+// ici (generateSelectMethods)
 return null;
 [else]
 	MutableBoolean refilterFlag = new MutableBoolean(false);
