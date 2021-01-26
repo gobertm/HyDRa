@@ -15,15 +15,15 @@ public class RedisDataInit {
     private final String host;
     private final int port;
     private Jedis jedis;
-    private int numberofprojects;
+    private int numberinstances;
     static final Logger logger = LoggerFactory.getLogger(RedisDataInit.class);
     private static final int SIMPLEKEYVALUE=1;
 
     public static void main(String args[]) {
         RedisDataInit redisDataInit = new RedisDataInit("localhost", 6363, 10);
         redisDataInit.initConnection();
-//        redisDataInit.persistData(SIMPLEKEYVALUE);
-        redisDataInit.persistHashes(20);
+        redisDataInit.persistData(SIMPLEKEYVALUE);
+//        redisDataInit.persistHashes(20);
     }
 
     private void persistHashes(int number) {
@@ -31,19 +31,20 @@ public class RedisDataInit {
         String key;
         Map<String, String> hash = new HashMap<>();
         for (int i = 0; i < number; i++) {
-            key = "product"+i;
-            hash.put("name", "productName" + i);
-            hash.put("price", String.valueOf(RandomUtils.nextInt(0, 100)));
+            key = "CLIENT:"+i;
+            hash.put("name", RandomStringUtils.randomAlphabetic(3)+"_"+RandomStringUtils.randomAlphabetic(5));
+            hash.put("streetnumber", String.valueOf(RandomUtils.nextInt(0, 100)));
+            hash.put("street", RandomStringUtils.randomAlphabetic(9));
             jedis.hset(key, hash);
             added++;
         }
         logger.info("Added {} hashes in Redis DB",added);
     }
 
-    public RedisDataInit(String host, int port, int numberofprojects) {
+    public RedisDataInit(String host, int port, int numberofinstances) {
         this.host = host;
         this.port = port;
-        this.numberofprojects = numberofprojects;
+        this.numberinstances = numberofinstances;
     }
 
     public void persistData(int model) {
@@ -54,8 +55,8 @@ public class RedisDataInit {
             initConnection();
         }
         if(model == SIMPLEKEYVALUE){
-            for (int i=0; i < numberofprojects; i++) {
-                key = "PROFESSOR:"+i+":NAME";
+            for (int i = 0; i < numberinstances; i++) {
+                key = "PRODUCT:"+i+":PHOTO";
                 value = RandomStringUtils.randomAlphabetic(8);
                 jedis.set(key, value);
                 added++;

@@ -51,11 +51,11 @@ public class RedisSpark {
         res.show();
 
         //Retrieves Dataset<Row> directly, only works on Redis Hashes structures as values
-//        comes from https://git
-//        ...................hub.com/RedisLabs/spark-redis/blob/master/doc/dataframe.md#reading-redis-hashes
+//        comes from https://github.com/RedisLabs/spark-redis/blob/master/doc/dataframe.md#reading-redis-hashes
 //        SparkSession spark = SparkSession.builder().config(sparkConf).getOrCreate();
         Dataset<Row> dataset = spark.read().format("org.apache.spark.sql.redis")
                 .option("keys.pattern","product*")
+                .option("key.column","id")
                 .option("infer.schema", true).load();
 
         dataset.printSchema();

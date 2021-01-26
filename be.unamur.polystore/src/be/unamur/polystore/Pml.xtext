@@ -90,6 +90,10 @@ LimitedPhysicalFieldDoc returns PhysicalField:
 	ShortField | LongField | EmbeddedObject 
 ;
 
+KVPhysicalField returns PhysicalField:
+	ShortField | LongField | KVComplexField
+;
+
 ShortField :
 	name=ID
 ;
@@ -108,9 +112,11 @@ EmbeddedObject:
 	'}')?
 ;
 
-//ComplexField :
-//	( 'cv' physicalName = ID ':' left=TerminalExpression ('+' right+=TerminalExpression)*)
-//;
+KVComplexField:
+	name=ID type=KVDataType	('{'
+		(fields+=KVPhysicalField (',' fields+=KVPhysicalField)*)?
+	'}')
+;
 
 TerminalExpression:
 	{TerminalExpression} literal=STRING | BracketsField
@@ -181,12 +187,12 @@ Table:
 ;
 
 AbstractPhysicalStructure:
-	Table | Collection | EmbeddedObject | TableColumnDB | Node | Edge | KeyValuePair
+	Table | Collection | EmbeddedObject | TableColumnDB | Node | Edge | KeyValuePair | KVComplexField
 ;
 
 KeyValueSchema:
 	'key' 'value' 'schema' name=ID (':' databases+=[Database] (','databases+=[Database])*)?'{'
-		kvpairs+=KeyValuePair
+		kvpairs+=KeyValuePair*
 		('references' '{'references+=Reference*'}')? 
 '}'
 ;
@@ -194,7 +200,7 @@ KeyValueSchema:
 KeyValuePair:
 	'kvpairs' name=ID '{'
 		'key' ':' key=Key ','
-		'value' ':' value=PhysicalField
+		'value' ':' value=KVPhysicalField
 	'}'
 ;
 
@@ -244,6 +250,10 @@ Database :
 	dbType=DatabaseType name=ID '{'
 		(('host'':'host=STRING)  & ('port'':'port= INT) & ('dbname'':'databaseName=STRING)? & ('login'':'login=STRING)? & ('password'':'password=STRING)?)
 	'}'
+;
+
+KVDataType :
+	'list' | 'set' | 'ordered' 'set'| 'hash'
 ;
 
 DataType returns DataType:

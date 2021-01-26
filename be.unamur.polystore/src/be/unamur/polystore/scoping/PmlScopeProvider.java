@@ -19,6 +19,7 @@ import be.unamur.polystore.pml.ColumnFamily;
 import be.unamur.polystore.pml.Edge;
 import be.unamur.polystore.pml.EmbeddedObject;
 import be.unamur.polystore.pml.EntityMappingRule;
+import be.unamur.polystore.pml.KVComplexField;
 import be.unamur.polystore.pml.Key;
 import be.unamur.polystore.pml.KeyValuePair;
 import be.unamur.polystore.pml.LongField;
@@ -78,6 +79,10 @@ public class PmlScopeProvider extends AbstractPmlScopeProvider {
 				KeyValuePair kvpair = (KeyValuePair)struct;
 				fields.addAll(getPhysicalFieldsFromKey(kvpair.getKey()));
 				fields.add(kvpair.getValue());
+			}
+			if(struct  instanceof KVComplexField) {
+				KVComplexField kvcomplex = (KVComplexField) struct;
+				fields.addAll(kvcomplex.getFields());
 			}
 			EList<PhysicalField> fieldsInComplex;
 			fieldsInComplex= getFieldsFromLongField(fields);

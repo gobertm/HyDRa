@@ -1,27 +1,66 @@
 conceptual schema conceptualSchema{
 		
-	entity type Professor {
+	entity type Product {
 		Id : int,
-		Name : string
+		Name : string,
+        photo : blob
+        identifier {
+        	Id
+        }
+    }
+	
+	entity type Client {
+		id : int,
+		firstname : string,
+		lastname : string,
+		street : string,
+		number : int
+		identifier {
+			id
+		}
 	}
-	entity type Project {
-		Id : int,
-		Description : string,
-		Name : string
+	
+	entity type ShoppingCart {
+		id : int,
+		nbArticle : int,
+		last_update_time : string
+	}
+	
+	relationship type clientShop{
+		customer[1] : Client,
+		cart[1] : ShoppingCart
+	}
+	
+	relationship type cartProduct{
+		booked_product[0-N]:Product,
+		cart[0-N] : ShoppingCart
 	}
 }
 
 physical schemas { 
-	key value schema KVResearchProjectsSchema : myredis{
-		kvpairs KVProfName {
-			key:"PROFESSOR:"[profID]":NAME",
-			value:name
+	key value schema KVSchema : myredis{
+		kvpairs KVProdPhotos {
+			key:"PRODUCT:"[prodID]":PHOTO",
+			value:photo
+		}
+		
+		kvpairs KVClient {
+			key : "CLIENT:"[clientID],
+			value : attr hash { // Mettre des mots clés définis pour les types Redis, modifier la caridnalité?
+				name : [firstname]"_"[lastname],
+				streetnumber : [streetnbr], // En faire un embedded hash
+				street
+			}
 		}	
 	}
+	
+	
 }
 
 mapping rules{
-	conceptualSchema.Professor(Id,Name) -> KVResearchProjectsSchema.KVProfName(profID,name)
+	conceptualSchema.Product(Id,photo) -> KVSchema.KVProdPhotos(prodID,photo),
+	conceptualSchema.Client(id) -> KVSchema.KVClient(clientID),
+	conceptualSchema.Client(firstname,lastname,street,number) -> KVSchema.KVClient.attr(firstname,lastname,street,streetnbr)
 }
 
 databases {
