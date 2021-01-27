@@ -35,7 +35,7 @@ public class RedisSpark {
 
         // Get key value pairs non specific type of values.
         // Convert RDD to Dataset<Row>
-        RDD<Tuple2<String, String>> rdd = redisContext.fromRedisKV("PROFESSOR:*:NAME", 5, redisConfig, readWriteConfig);
+        RDD<Tuple2<String, String>> rdd = redisContext.fromRedisKV("PRODUCT:*:PHOTO", 5, redisConfig, readWriteConfig);
         JavaRDD<Tuple2<String, String>> javaRDD = rdd.toJavaRDD();
         JavaRDD<Row> rowRDD = javaRDD.map((Function<Tuple2<String, String>, Row>) record -> {
             String key = record._1;
@@ -52,8 +52,7 @@ public class RedisSpark {
 //        comes from https://github.com/RedisLabs/spark-redis/blob/master/doc/dataframe.md#reading-redis-hashes
 //        SparkSession spark = SparkSession.builder().config(sparkConf).getOrCreate();
         Dataset<Row> dataset = spark.read().format("org.apache.spark.sql.redis")
-                .option("keys.pattern","product*")
-                .option("key.column","id")
+                .option("keys.pattern","CLIENT:*")
                 .option("infer.schema", true).load();
 
         dataset.printSchema();

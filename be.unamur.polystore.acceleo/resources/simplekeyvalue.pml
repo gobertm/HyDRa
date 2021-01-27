@@ -3,7 +3,7 @@ conceptual schema conceptualSchema{
 	entity type Product {
 		Id : int,
 		Name : string,
-        photo : blob
+        photo : string
         identifier {
         	Id
         }

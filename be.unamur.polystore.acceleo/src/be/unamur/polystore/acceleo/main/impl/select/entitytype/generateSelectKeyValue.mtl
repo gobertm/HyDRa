@@ -8,10 +8,13 @@
 	//  - If the condition attribute is in the key pattern, replace by the value. Only if operator is EQUALS.
 	//  - Replace all other fields of key pattern by a '*' 
 	String keypattern= "";
+	String finalKeypattern;
+	List<String> fieldsListInKey = new ArrayList<>();
 	[for (expr : TerminalExpression | struct.key.pattern)]
 		[if (expr.oclIsTypeOf(pml::BracketsField) = true)]
-	[comment TODO here find a way to determine that the BracketField is indeed mapped to a POJO attribute and replace by condition value instead of */]
-	keypattern=keypattern.concat("*"); 
+	[comment TODO here find a way to determine that the BracketField is indeed mapped to a POJO attribute and replace by condition value instead of '*'/]
+	keypattern=keypattern.concat("*");
+	fieldsListInKey.add("[expr.oclAsType(pml::BracketsField).name/]");
 		[else]
 	keypattern=keypattern.concat("[expr.literal/]");
 		[/if]
@@ -21,12 +24,154 @@
 	// Based on the type of the value. Is a it a simple string or a hash or a list... 
 	Dataset<Row> rows;
 	[if struct.value.oclIsTypeOf(pml::KVComplexField)=false]
+	[comment Retrieve data and build POJO based on Dataset<Row> containing only 'key' and 'value' attributes. /]
 	rows = SparkConnectionMgr.getRowsFromKeyValue("[db.name/]",keypattern);
+	// Transform to POJO. Based on Row containing (String key, String value)
+	finalKeypattern = keypattern;
+	Dataset<[ent.name.toUpperFirst() /]> res = rows.map((MapFunction<Row, [ent.name.toUpperFirst() /]>) r -> {
+				[ent.name.toUpperFirst() /] [ent.name.toLowerFirst() /]_res = new [ent.name.toUpperFirst() /]();
+				Integer groupindex = null;
+				String regex = null;
+				String value = null;
+				Pattern p = null;
+				Matcher m = null;
+				boolean matches = false;
+				[for (attr : Attribute | ent.attributes)]
+				[let field : PhysicalField = getMappedPhysicalField(attr, struct, db, ent.ancestors(Domainmodel)->first().mappingRules)]
+				[if (field <> null)]
+				[if (not (field.ancestors(Key) -> size() = 0))]
+				[comment Attribute mapped in a Key /]
+				// attribute [ '[' /][ent.name.toUpperFirst() /].[attr.name.toUpperFirst() /][ ']' /]
+				// Attribute mapped in a key.
+				String key = r.getAs("key");
+				regex = finalKeypattern.replaceAll("\\*","(.*)");
+				groupindex = fieldsListInKey.indexOf("[field.getPhysicalName()/]")+1;
+				if(groupindex==null) {
+					logger.warn("Attribute '[ent.name.toUpperFirst() /]' mapped physical field '[field.getPhysicalName()/]' found in key but can't get index in build keypattern '{}'.", finalKeypattern);
+				}
+				p = Pattern.compile(regex);
+				m = p.matcher(key);
+				matches = m.find();
+				String [attr.name.toLowerFirst()/] = null;
+				if(matches) {
+					[attr.name.toLowerFirst()/] = m.group(groupindex.intValue());
+				} else {
+					logger.warn("Cannot retrieve value for [ent.name /][attr.name /] attribute stored in db [db.name/]. Probably due to an ambiguous regex.");
+					throw new Exception("Cannot retrieve value for [ent.name /][attr.name /] attribute stored in db [db.name/]. Probably due to an ambiguous regex.");
+				}
+				[ent.name.toLowerFirst() /]_res.set[attr.name.toUpperFirst()/]([generateParsingFunctionJavaType(attr.type, attr.name.toLowerFirst())/]);
+				[else]
+				[comment Attribute mapped in value part of KVPair/]
+				// attribute [ '[' /][ent.name.toUpperFirst() /].[attr.name.toUpperFirst() /][ ']' /]
+				// Attribute mapped in value part.
+				value = r.getAs("value");
+				[if (field.ancestors(LongField) -> size() = 0)]
+				[comment shortField or bracketfield/]
+				[generateJavaType(attr.type)/] [attr.name.toLowerFirst()/] = [generateParsingFunctionJavaType(attr.type,'value')/];
+				[ent.name.toLowerFirst() /]_res.set[attr.name.toUpperFirst()/]([attr.name.toLowerFirst()/]);
+				[else]
+				[comment LongField /]
+				regex = "[getJavaRegexFromLongField(field.ancestors(LongField) -> first().oclAsType(LongField)) /]";
+				groupindex = [getPositionInLongField(field, field.ancestors(LongField) -> first().oclAsType(LongField))/];
+				if(groupindex == null) {
+					logger.warn("Cannot retrieve value for [ent.name /][attr.name /] attribute stored in db [db.name/]. Probably due to an ambiguous regex.");
+					throw new Exception("Cannot retrieve value for [ent.name /][attr.name /] attribute stored in db [db.name/]. Probably due to an ambiguous regex.");
+				}
+				p = Pattern.compile(regex);
+				m = p.matcher(value);
+				matches = m.find();
+				String [attr.name.toLowerFirst()/] = null;
+				if(matches) {
+					[attr.name.toLowerFirst()/] = m.group(groupindex.intValue());
+				} else {
+					logger.warn("Cannot retrieve value for [ent.name /][attr.name /] attribute stored in db [db.name/]. Probably due to an ambiguous regex.");
+					throw new Exception("Cannot retrieve value for [ent.name /][attr.name /] attribute stored in db [db.name/]. Probably due to an ambiguous regex.");
+				}
+				[ent.name.toLowerFirst() /]_res.set[attr.name.toUpperFirst()/]([generateParsingFunctionJavaType(attr.type, attr.name.toLowerFirst())/]);
+				[/if]
+				[/if]
+				[/if]
+				[/let]
+				[/for]
+				return [ent.name.toLowerFirst() /]_res;
+			}, Encoders.bean([ent.name.toUpperFirst() /].class));
+	return res;
 	[else]
-		[comment TODO handle other redis data types./]
+		[comment Retrieve Dataset<Row> containing field of hashes. TODO other Redis dataTypes. /]
 		// TODO only handles 'hash' for now
-		
+	rows = SparkConnectionMgr.getRowsFromKeyValueHashes("[db.name/]",keypattern);
+	finalKeypattern = keypattern;
+	Dataset<[ent.name.toUpperFirst() /]> res = rows.map((MapFunction<Row, [ent.name.toUpperFirst() /]>) r -> {
+				[ent.name.toUpperFirst() /] [ent.name.toLowerFirst() /]_res = new [ent.name.toUpperFirst() /]();
+				Integer groupindex = null;
+				String regex = null;
+				String value = null;
+				Pattern p = null;
+				Matcher m = null;
+				boolean matches = false;
+				[for (attr : Attribute | ent.attributes)]
+				[let field : PhysicalField = getMappedPhysicalField(attr, struct, db, ent.ancestors(Domainmodel)->first().mappingRules)]
+				[if (field <> null)]
+				[if (not (field.ancestors(Key) -> size() = 0))]
+				[comment Attribute mapped in a Key /]
+				// attribute [ '[' /][ent.name.toUpperFirst() /].[attr.name.toUpperFirst() /][ ']' /]
+				// Attribute mapped in a key.
+				String key = r.getAs("id");
+				[comment Spark Redis automatically strips leading character if the pattern provided contains a single '*' at the end. /]
+				// Spark Redis automatically strips leading character if the pattern provided contains a single '*' at the end.				
+				if(key.matches("['['/]0-9[']'/]*")){
+					[ent.name.toLowerFirst() /]_res.set[attr.name.toUpperFirst()/]([generateParsingFunctionJavaType(attr.type,'key')/]);
+				}else{
+					regex = finalKeypattern.replaceAll("\\*","(.*)");
+					groupindex = fieldsListInKey.indexOf("[field.getPhysicalName()/]")+1;
+					if(groupindex==null) {
+						logger.warn("Attribute '[ent.name.toUpperFirst() /]' mapped physical field '[field.getPhysicalName()/]' found in key but can't get index in build keypattern '{}'.", finalKeypattern);
+					}
+					p = Pattern.compile(regex);
+					m = p.matcher(key);
+					matches = m.find();
+					String [attr.name.toLowerFirst()/] = null;
+					if(matches) {
+						[attr.name.toLowerFirst()/] = m.group(groupindex.intValue());
+					} else {
+						logger.warn("Cannot retrieve value for [ent.name /][attr.name /] attribute stored in db [db.name/]. Probably due to an ambiguous regex.");
+						throw new Exception("Cannot retrieve value for [ent.name /][attr.name /] attribute stored in db [db.name/]. Probably due to an ambiguous regex.");
+					}
+					[ent.name.toLowerFirst() /]_res.set[attr.name.toUpperFirst()/]([generateParsingFunctionJavaType(attr.type, attr.name.toLowerFirst())/]);
+				}
+				[else]
+				// attribute [ '[' /][ent.name.toUpperFirst() /].[attr.name.toUpperFirst() /][ ']' /]
+				[if (field.ancestors(LongField) -> size() = 0)]
+				[comment shortField or bracketfield/]
+				[generateJavaType(attr.type)/] [attr.name.toLowerFirst()/] = r.getAs("[getPhysicalName(field) /]");
+				[ent.name.toLowerFirst() /]_res.set[attr.name.toUpperFirst()/]([attr.name.toLowerFirst()/]);
+				[else]
+				[comment LongField /]
+				regex = "[getJavaRegexFromLongField(field.ancestors(LongField) -> first().oclAsType(LongField)) /]";
+				groupindex = [getPositionInLongField(field, field.ancestors(LongField) -> first().oclAsType(LongField))/];
+				if(groupindex == null) {
+					logger.warn("Cannot retrieve value for [ent.name /][attr.name /] attribute stored in db [db.name/]. Probably due to an ambiguous regex.");
+					throw new Exception("Cannot retrieve value for [ent.name /][attr.name /] attribute stored in db [db.name/]. Probably due to an ambiguous regex.");
+				}
+				value = r.getAs("[field.ancestors(LongField) -> first().oclAsType(LongField).physicalName /]");
+				p = Pattern.compile(regex);
+				m = p.matcher(value);
+				matches = m.find();
+				String [attr.name.toLowerFirst()/] = null;
+				if(matches) {
+					[attr.name.toLowerFirst()/] = m.group(groupindex.intValue());
+				} else {
+					logger.warn("Cannot retrieve value for [ent.name /][attr.name /] attribute stored in db [db.name/]. Probably due to an ambiguous regex.");
+					throw new Exception("Cannot retrieve value for [ent.name /][attr.name /] attribute stored in db [db.name/]. Probably due to an ambiguous regex.");
+				}
+				[ent.name.toLowerFirst() /]_res.set[attr.name.toUpperFirst()/]([generateParsingFunctionJavaType(attr.type, attr.name.toLowerFirst())/]);
+				[/if]
+				[/if]
+				[/if]
+				[/let]
+				[/for]
+					return [ent.name.toLowerFirst() /]_res;
+			}, Encoders.bean([ent.name.toUpperFirst() /].class));
+	return res;
 	[/if]
-	return rows;
-	// Convert to POJO type.
 [/template]

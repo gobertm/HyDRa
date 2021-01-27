@@ -180,6 +180,21 @@ public class SparkConnectionMgr {
 		return res;
 	}
 
+	public static Dataset<Row> getRowsFromKeyValueHashes(String dbName, String keypattern){
+		DBCredentials credentials = dbPorts.get(dbName);
+		SparkConf sparkConf = new SparkConf()
+                .setAppName("MyApp")
+                .setMaster("local['['/]*[']'/]")
+                .set("spark.redis.host", credentials.url)
+                .set("spark.redis.port", credentials.port);
+		SparkSession spark = SparkSession.builder().config(sparkConf).getOrCreate();
+		Dataset<Row> res = spark.read().format("org.apache.spark.sql.redis")
+                .option("keys.pattern",keypattern)
+				.option("key.column", "id")
+                .option("infer.schema", true).load();
+		return res;
+	} 
+
 }
 [/file]
 [/template]
