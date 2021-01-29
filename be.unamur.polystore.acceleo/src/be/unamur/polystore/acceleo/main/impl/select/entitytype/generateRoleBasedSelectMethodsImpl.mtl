@@ -10,8 +10,8 @@
 List<Dataset<[entity.name.toUpperFirst() /]>> datasetsPOJO = new ArrayList<Dataset<[entity.name.toUpperFirst() /]>>();
 [let role2 : Role = getOppositeRoles(role)->any(true)]
 [for (ref: Reference | getMappedReferences(role, conceptualSchema.getMappingRules()))]
-Dataset<[entity.name.toUpperFirst()/]TDO> [entity.name.toLowerFirst()/]TDO[ref.name/] = [role.getRelationShipType().name.toLowerFirst()/]Service.get[entity.name.toUpperFirst()/]TDOList[role.name.toUpperFirst() /]In[ref.name.toUpperFirst()/]In[ref.getAbstractPhysicalStructure().name.toUpperFirst() /]From[ref.getPhysicalSchema().name.toUpperFirst()/]([role.name/]_condition);
-Dataset<[role2.entity.name.toUpperFirst()/]TDO> [role2.entity.name.toLowerFirst()/]TDO[ref.name/] = [role.getRelationShipType().name.toLowerFirst()/]Service.get[role2.entity.name.toUpperFirst()/]TDOList[role2.name.toUpperFirst() /]In[ref.name.toUpperFirst()/]In[ref.getAbstractPhysicalStructure().name.toUpperFirst() /]From[ref.getPhysicalSchema().name.toUpperFirst()/]([role2.name/]_condition);
+Dataset<[entity.name.toUpperFirst()/]TDO> [entity.name.toLowerFirst()/]TDO[ref.name/] = [role.getRelationShipType().name.toLowerFirst()/]Service.get[entity.name.toUpperFirst()/]TDOList[role.name.toUpperFirst() /]In[ref.name.toUpperFirst()/]In[ref.getAbstractPhysicalStructureNotEmbeddedObject().name.toUpperFirst() /]From[ref.getPhysicalSchema().name.toUpperFirst()/]([role.name/]_condition);
+Dataset<[role2.entity.name.toUpperFirst()/]TDO> [role2.entity.name.toLowerFirst()/]TDO[ref.name/] = [role.getRelationShipType().name.toLowerFirst()/]Service.get[role2.entity.name.toUpperFirst()/]TDOList[role2.name.toUpperFirst() /]In[ref.name.toUpperFirst()/]In[ref.getAbstractPhysicalStructureNotEmbeddedObject().name.toUpperFirst() /]From[ref.getPhysicalSchema().name.toUpperFirst()/]([role2.name/]_condition);
 [comment TODO Multi valued refernece not handled /]
 Dataset<Row> res_[ref.name/] = [entity.name.toLowerFirst()/]TDO[ref.name/].join([role2.entity.name.toLowerFirst()/]TDO[ref.name/]
 [for (attr : Attribute | role2.entity.attributes)]
@@ -22,8 +22,8 @@ datasetsPOJO.add(res_[entity.name/]_[ref.name/]);
 [/for]
 
 [for (ref: Reference | getMappedReferences(role2, conceptualSchema.getMappingRules()))]
-Dataset<[role2.entity.name.toUpperFirst()/]TDO> [role2.entity.name.toLowerFirst()/]TDO[ref.name/] = [role.getRelationShipType().name.toLowerFirst()/]Service.get[role2.entity.name.toUpperFirst()/]TDOList[role2.name.toUpperFirst() /]In[ref.name.toUpperFirst()/]In[ref.getAbstractPhysicalStructure().name.toUpperFirst() /]From[ref.getPhysicalSchema().name.toUpperFirst()/]([role2.name/]_condition);
-Dataset<[entity.name.toUpperFirst()/]TDO> [entity.name.toLowerFirst()/]TDO[ref.name/] = [role.getRelationShipType().name.toLowerFirst()/]Service.get[entity.name.toUpperFirst()/]TDOList[role.name.toUpperFirst() /]In[ref.name.toUpperFirst()/]In[ref.getAbstractPhysicalStructure().name.toUpperFirst() /]From[ref.getPhysicalSchema().name.toUpperFirst()/]([role.name/]_condition);
+Dataset<[role2.entity.name.toUpperFirst()/]TDO> [role2.entity.name.toLowerFirst()/]TDO[ref.name/] = [role.getRelationShipType().name.toLowerFirst()/]Service.get[role2.entity.name.toUpperFirst()/]TDOList[role2.name.toUpperFirst() /]In[ref.name.toUpperFirst()/]In[ref.getAbstractPhysicalStructureNotEmbeddedObject().name.toUpperFirst() /]From[ref.getPhysicalSchema().name.toUpperFirst()/]([role2.name/]_condition);
+Dataset<[entity.name.toUpperFirst()/]TDO> [entity.name.toLowerFirst()/]TDO[ref.name/] = [role.getRelationShipType().name.toLowerFirst()/]Service.get[entity.name.toUpperFirst()/]TDOList[role.name.toUpperFirst() /]In[ref.name.toUpperFirst()/]In[ref.getAbstractPhysicalStructureNotEmbeddedObject().name.toUpperFirst() /]From[ref.getPhysicalSchema().name.toUpperFirst()/]([role.name/]_condition);
 [comment TODO Multi valued refernece not handled /]
 Dataset<Row> res_[ref.name/] = [entity.name.toLowerFirst()/]TDO[ref.name/].join([role2.entity.name.toLowerFirst()/]TDO[ref.name/]
 [for (attr : Attribute | role2.entity.attributes)]

@@ -64,9 +64,9 @@ public java.util.List<pojo.[rel.name.toUpperFirst() /]> get[rel.name.toUpperFirs
 [template private generateRefRelatedMethods(ref : Reference, override : Boolean, roleSource : Role, roleTarget : Role)]
 [comment left side of reference /]
 // Left side '[ref.sourceField->first().getPhysicalName()/]' of reference [ '['/][ref.name/] [ ']'/]
-public [if (override = false)]abstract [/if]Dataset<[roleSource.entity.name.toUpperFirst() /]TDO> get[roleSource.entity.name.toUpperFirst()/]TDOList[roleSource.name.toUpperFirst() /]In[ref.name.toUpperFirst()/]In[ref.getAbstractPhysicalStructure().name.toUpperFirst() /]From[ref.getPhysicalSchema().name.toUpperFirst()/](Condition<[roleSource.entity.name.toUpperFirst()/]Attribute> condition)[if (override = false)];[else]{	
+public [if (override = false)]abstract [/if]Dataset<[roleSource.entity.name.toUpperFirst() /]TDO> get[roleSource.entity.name.toUpperFirst()/]TDOList[roleSource.name.toUpperFirst() /]In[ref.name.toUpperFirst()/]In[ref.getAbstractPhysicalStructureNotEmbeddedObject().name.toUpperFirst() /]From[ref.getPhysicalSchema().name.toUpperFirst()/](Condition<[roleSource.entity.name.toUpperFirst()/]Attribute> condition)[if (override = false)];[else]{	
 [comment TODO Implemented multi composed ref. Currently Apply only to single attribute reference /]
-[let dbs : Set(Database) = ref.sourceField->first().getAbstractPhysicalStructure().getConcernedDatabases(ref.ancestors(Domainmodel)->any(true))]
+[let dbs : Set(Database) = ref.sourceField->first().getAbstractPhysicalStructureNotEmbeddedObject().getConcernedDatabases(ref.ancestors(Domainmodel)->any(true))]
 [if (dbs->size() = 0)]
 // ici (generateSelectMethods)
 return null;
@@ -75,10 +75,10 @@ return null;
 [let db : Database = dbs->any(true)]
 [if (db.dbType = pml::DatabaseType::MARIADB or db.dbType = pml::DatabaseType::SQLITE)]
 [comment TODO change here if needed to handle multi composed refrences/]
-[generateSimpleSelectFromGivenRelationalTable(roleSource.entity, ref.getAbstractPhysicalStructure(), db,ref.sourceField->first(), ref)/]
+[generateSimpleSelectFromGivenRelationalTable(roleSource.entity, ref.getAbstractPhysicalStructureNotEmbeddedObject(), db,ref.sourceField->first(), ref)/]
 [/if]
 [if (db.dbType = pml::DatabaseType::MONGODB)] 
-[generateSimpleSelectFromGivenDocumentCollection(roleSource.entity, ref.sourceField->any(true).getAbstractPhysicalStructure(), db,ref, ref.sourceField->first()) /]
+[generateSimpleSelectFromGivenDocumentCollection(roleSource.entity, ref.sourceField->any(true).getAbstractPhysicalStructureNotEmbeddedObject(), db,ref, ref.sourceField->first()) /]
 [/if]
 [/let]
 [/if]
@@ -89,17 +89,17 @@ return null;
 // Right side '[ref.targetField->first().getPhysicalName()/]' of reference [ '['/][ref.name/] [ ']'/]
 [comment right side of reference /]
 [comment TODO Apply only to single attribute reference /]
-public [if (override = false)]abstract [/if]Dataset<[roleTarget.entity.name.toUpperFirst() /]TDO> get[roleTarget.entity.name.toUpperFirst()/]TDOList[roleTarget.name.toUpperFirst() /]In[ref.name.toUpperFirst()/]In[ref.getAbstractPhysicalStructure().name.toUpperFirst() /]From[ref.getPhysicalSchema().name.toUpperFirst()/](Condition<[roleTarget.entity.name.toUpperFirst()/]Attribute> condition)[if (override = false)];[else]{
-[let dbs : Set(Database) = ref.targetField->first().getAbstractPhysicalStructure().getConcernedDatabases(ref.ancestors(Domainmodel)->any(true))]
+public [if (override = false)]abstract [/if]Dataset<[roleTarget.entity.name.toUpperFirst() /]TDO> get[roleTarget.entity.name.toUpperFirst()/]TDOList[roleTarget.name.toUpperFirst() /]In[ref.name.toUpperFirst()/]In[ref.getAbstractPhysicalStructureNotEmbeddedObject().name.toUpperFirst() /]From[ref.getPhysicalSchema().name.toUpperFirst()/](Condition<[roleTarget.entity.name.toUpperFirst()/]Attribute> condition)[if (override = false)];[else]{
+[let dbs : Set(Database) = ref.targetField->first().getAbstractPhysicalStructureNotEmbeddedObject().getConcernedDatabases(ref.ancestors(Domainmodel)->any(true))]
 [if (dbs->size() = 0)]
 return null;
 [else]
 [let db : Database = dbs->any(true)]
 	MutableBoolean refilterFlag = new MutableBoolean(false);
 [if (db.dbType = pml::DatabaseType::MARIADB or db.dbType = pml::DatabaseType::SQLITE)]
-[generateSimpleSelectFromGivenRelationalTable(roleTarget.entity, ref.targetField->any(true).getAbstractPhysicalStructure(), db, ref.targetField->first(), ref)/][/if]
+[generateSimpleSelectFromGivenRelationalTable(roleTarget.entity, ref.targetField->any(true).getAbstractPhysicalStructureNotEmbeddedObject(), db, ref.targetField->first(), ref)/][/if]
 [if (db.dbType = pml::DatabaseType::MONGODB)] 
-[generateSimpleSelectFromGivenDocumentCollection(roleTarget.entity, ref.targetField->any(true).getAbstractPhysicalStructure(), db,ref, ref.targetField->first()) /]
+[generateSimpleSelectFromGivenDocumentCollection(roleTarget.entity, ref.targetField->any(true).getAbstractPhysicalStructureNotEmbeddedObject(), db,ref, ref.targetField->first()) /]
 [/if]
 [/let]
 [/if]
