@@ -66,8 +66,8 @@ public class MainCLI {
             if (commandLine.hasOption(OPT_NBDATAOBJ)) {
                 nbdataobj = Integer.parseInt(commandLine.getOptionValue(OPT_NBDATAOBJ));
             }
-            RedisDataInit redisDataInitialization = new RedisDataInit(redishost, redisport, nbdataobj );
-            redisDataInitialization.persistData(0);
+            RedisDataInit redisDataInitialization = new RedisDataInit(redishost, redisport );
+            redisDataInitialization.persistData(0, nbdataobj);
 
             MongoDataInit mongoDataInit = new MongoDataInit(mongodbname, mongohost, mongoport, nbdataobj);
             mongoDataInit.persistData();

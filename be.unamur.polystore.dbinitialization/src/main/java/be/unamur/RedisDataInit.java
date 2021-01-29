@@ -9,21 +9,20 @@ import redis.clients.jedis.Jedis;
 import java.util.HashMap;
 import java.util.Map;
 
-public class RedisDataInit {
+public class RedisDataInit implements DataInit{
 
 
     private final String host;
     private final int port;
     private Jedis jedis;
-    private int numberinstances;
     static final Logger logger = LoggerFactory.getLogger(RedisDataInit.class);
     private static final int SIMPLEKEYVALUE=1;
 
     public static void main(String args[]) {
-        RedisDataInit redisDataInit = new RedisDataInit("localhost", 6363, 10);
+        RedisDataInit redisDataInit = new RedisDataInit("localhost", 6363);
         redisDataInit.initConnection();
-        redisDataInit.persistData(SIMPLEKEYVALUE);
-//        redisDataInit.persistHashes(20);
+        redisDataInit.persistData(SIMPLEKEYVALUE,10);
+        redisDataInit.persistHashes(20);
     }
 
     private void persistHashes(int number) {
@@ -41,22 +40,22 @@ public class RedisDataInit {
         logger.info("Added {} hashes in Redis DB",added);
     }
 
-    public RedisDataInit(String host, int port, int numberofinstances) {
+    public RedisDataInit(String host, int port) {
         this.host = host;
         this.port = port;
-        this.numberinstances = numberofinstances;
     }
 
-    public void persistData(int model) {
+    public void persistData(int model, int numberofrecords) {
         String key;
         String value;
+        String productid="product";
         int added=0;
         if (jedis == null) {
             initConnection();
         }
         if(model == SIMPLEKEYVALUE){
-            for (int i = 0; i < numberinstances; i++) {
-                key = "PRODUCT:"+i+":PHOTO";
+            for (int i = 0; i < numberofrecords; i++) {
+                key = "PRODUCT:"+productid+i+":PHOTO";
                 value = RandomStringUtils.randomAlphabetic(8);
                 jedis.set(key, value);
                 added++;
@@ -73,6 +72,13 @@ public class RedisDataInit {
     public void initConnection() {
         logger.info("Initializing connection to Jedis [{},{}]", host, port);
         jedis = new Jedis(host, port);
+    }
+
+    public void deleteAll(String dbname){
+        if(jedis==null)
+            initConnection();
+        logger.info("Flushing all data in redis [{},{}]", host, port);
+        jedis.flushAll();
     }
 
 }

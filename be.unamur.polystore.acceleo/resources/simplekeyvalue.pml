@@ -1,11 +1,13 @@
 conceptual schema conceptualSchema{
 		
 	entity type Product {
-		Id : int,
+		id : string,
 		Name : string,
-        photo : string
+        photo : string,
+        price:int,
+        description : string
         identifier {
-        	Id
+        	id
         }
     }
 	
@@ -48,25 +50,46 @@ physical schemas {
 			key : "CLIENT:"[clientID],
 			value : attr hash { 
 				name : [firstname]"_"[lastname],
-				streetnumber : [streetnbr], // En faire un embedded hash
+				streetnumber : [streetnbr], 
 				street
 			}
-		}	
+		}
+			
+	}
+	
+	relational schema myRelSchema : mydb {
+		table ProductCatalogTable {
+			columns {
+				product_id,
+				europrice : [price]"€",
+				description,
+				categoryname
+			}
+		}
 	}
 	
 	
 }
 
 mapping rules{
-	conceptualSchema.Product(Id,photo) -> KVSchema.KVProdPhotos(prodID,photo),
+	conceptualSchema.Product(id,photo) -> KVSchema.KVProdPhotos(prodID,photo),
 	conceptualSchema.Client(id) -> KVSchema.KVClient(clientID),
-	conceptualSchema.Client(firstname,lastname,street,number) -> KVSchema.KVClient.attr(firstname,lastname,street,streetnbr)
+	conceptualSchema.Client(firstname,lastname,street,number) -> KVSchema.KVClient.attr(firstname,lastname,street,streetnbr),
+	conceptualSchema.Product(id,price,description) -> myRelSchema.ProductCatalogTable(product_id,price,description)
 }
 
 databases {
 	redis myredis{
 		host:"localhost"
 		port:6363
+	}
+	
+	mariadb mydb {
+		host: "localhost"
+		port: 3307
+		dbname : "mydb"
+		password : "password"
+		login : "root"
 	}
 }
 

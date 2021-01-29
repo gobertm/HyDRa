@@ -27,7 +27,7 @@ public class MongoDataInit implements DataInit{
     private SQLDataInit sqlDB;
     private final int port;
     private final int numberofdata;
-    private static final int SIMPLEHYBRID=0, ONETOMANYPML=1, ONETOMANYMONGOTOREL = 2;
+    private static final int SIMPLEHYBRID=0, ONETOMANYPML=1, ONETOMANYMONGOTOREL = 2, ALLDBS= 3;
 
     public MongoDataInit(String databasename, String host, int port, int numberofdata) {
         this.databasename = databasename;
@@ -51,7 +51,7 @@ public class MongoDataInit implements DataInit{
 
         // Relational DB Init
         SQLDataInit sqlinit = new SQLDataInit("localhost","3307","mydb","root","password");
-        sqlinit.createConnection();
+        sqlinit.initConnection();
             // Structure init
 //        sqlinit.initStructure(1);
             // Data init
@@ -303,6 +303,20 @@ public class MongoDataInit implements DataInit{
         mongoDatabase = mongoClient.getDatabase(databasename);
     }
 
+    @Override
+    public void persistData(int model, int numberofrecords) {
+        logger.error("To refactor. Use persistDataPmlModel instead for now");
+    }
+
+    @Override
+    public void deleteAll(String dbname) {
+        initConnection();
+        logger.info("Dropping mongo database [{}]", dbname);
+//        MongoCollection<Document> collection = mongoDatabase.getCollection(dbname);
+//        collection.drop();
+        mongoDatabase.drop();
+    }
+
     public SQLDataInit getSqlDB() {
         return sqlDB;
     }
@@ -310,4 +324,5 @@ public class MongoDataInit implements DataInit{
     public void setSqlDB(SQLDataInit sqlDB) {
         this.sqlDB = sqlDB;
     }
+
 }

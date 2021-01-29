@@ -1,7 +1,8 @@
 package be.unamur;
 
 public interface DataInit {
-    void persistData();
-
     void initConnection();
+    void persistData(int model, int numberofrecords);
+
+    void deleteAll(String dbname);
 }
