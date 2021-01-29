@@ -47,7 +47,7 @@ physical schemas {
 
 mapping rules{
 	conceptualSchema.Product(id,photo) -> KVSchema.KVProdPhotos(prodID,photo),
-	conceptualSchema.Product(id,description,price) -> myRelSchema.ProductCatalogTable(product_id,price,description),
+	conceptualSchema.Product(id,price, description) -> myRelSchema.ProductCatalogTable(product_id,price,description),
 	conceptualSchema.Product(category) -> categorySchema.categoryCollection(categoryname),
 	//Nested attributes of Product
 	conceptualSchema.Product(id, Name) -> categorySchema.categoryCollection.products(id,name)

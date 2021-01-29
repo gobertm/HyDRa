@@ -162,7 +162,8 @@ public class SparkConnectionMgr {
                 .set("spark.redis.port", credentials.port);
         RedisConfig redisConfig = RedisConfig.fromSparkConf(sparkConf);
         ReadWriteConfig readWriteConfig = ReadWriteConfig.fromSparkConf(sparkConf);
-        JavaSparkContext jsc = new JavaSparkContext(sparkConf);
+		//        JavaSparkContext jsc = new JavaSparkContext(sparkConf);
+        JavaSparkContext jsc = JavaSparkContext.fromSparkContext(getSession().sparkContext());
         RedisContext redisContext = new RedisContext(jsc.sc());
 
         // Get key value pairs non specific type of values.

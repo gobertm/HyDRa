@@ -130,7 +130,8 @@ public class MongoDataInit implements DataInit{
             for (int i = 0; i < numberofdata; i++) {
                 productref = "product"+i;
                 Document product = new Document()
-                        .append("id", productref);
+                        .append("id", productref)
+                        .append("name", "productName" + i);
                 if (pmlmodel == ONETOMANYMONGOTOREL) {
                     List<Document> reviewsOfProduct = new ArrayList<>();
                     for (int j = 0; j < RandomUtils.nextInt(0, 5); j++) {
