@@ -73,6 +73,7 @@
 	}
 	if(refilterFlag.booleanValue())
 		d = d.filter((FilterFunction<[entityType.name.toUpperFirst() /]>) r -> condition == null || condition.evaluate(r));
+	d=d.dropDuplicates();
 	return d;
 }[/template]
 
