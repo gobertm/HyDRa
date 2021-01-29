@@ -18,7 +18,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Random;
 
-public class MongoDataInit implements DataInit{
+public class MongoDataInit {
     static final Logger logger = LoggerFactory.getLogger(MongoDataInit.class);
     private MongoClient mongoClient;
     private MongoDatabase mongoDatabase;
@@ -27,7 +27,8 @@ public class MongoDataInit implements DataInit{
     private SQLDataInit sqlDB;
     private final int port;
     private final int numberofdata;
-    private static final int SIMPLEHYBRID=0, ONETOMANYPML=1, ONETOMANYMONGOTOREL = 2, ALLDBS= 3;
+//    private static final int SIMPLEHYBRID=0, ONETOMANYPML=1, ONETOMANYMONGOTOREL = 2, ALLDBS= 3;
+
 
     public MongoDataInit(String databasename, String host, int port, int numberofdata) {
         this.databasename = databasename;
@@ -61,24 +62,24 @@ public class MongoDataInit implements DataInit{
             // Mongo DB 1
 //        MongoDataInit mongoDataInit1 = new MongoDataInit(mongodbname, mongohost, mongoport, nbdataobj);
 //        mongoDataInit1.setSqlDB(sqlinit);
-//        mongoDataInit1.persistDataPmlModel(1,true, SIMPLEHYBRID);
+//        mongoDataInit1.persistDataPmlModel(1,true, PmlModelEnum.SIMPLEHYBRID);
             // Mongo DB 2
 //        MongoDataInit mongoDataInit2 = new MongoDataInit(mongodbname2, mongohost2, mongoport2, nbdataobj);
 //        mongoDataInit2.setSqlDB(sqlinit);
-//        mongoDataInit2.persistDataSimpleHybridPmlModel(2,true,SIMPLEHYBRID);
+//        mongoDataInit2.persistDataSimpleHybridPmlModel(2,true,PmlModelEnum.SIMPLEHYBRID);
 
         // Model 'onetomanyMongoToRel.pml'
             // On Mongo DB 2
         MongoDataInit mongoDataInit2 = new MongoDataInit(mongodbname2, mongohost2, mongoport2, nbdataobj);
         mongoDataInit2.setSqlDB(sqlinit);
-        mongoDataInit2.persistDataPmlModel(2,true,ONETOMANYMONGOTOREL);
+        mongoDataInit2.persistDataPmlModel(2,true,PmlModelEnum.ONETOMANYMONGOTOREL);
 
         // Old models 'simple_rel_doc.pml' ,..
 //        mongoDataInit.persistData();
 //        mongoDataInit.persistDataTest();
     }
 
-    public void persistDataPmlModel(int mongoinstance, boolean sqlUpdate, int pmlmodel) {
+    public void persistDataPmlModel(int mongoinstance, boolean sqlUpdate, PmlModelEnum pmlmodel) {
         String productref=null;
         int price;
         String productDesc;
@@ -132,7 +133,7 @@ public class MongoDataInit implements DataInit{
                 Document product = new Document()
                         .append("id", productref)
                         .append("name", "productName" + i);
-                if (pmlmodel == ONETOMANYMONGOTOREL) {
+                if (pmlmodel == PmlModelEnum.ONETOMANYMONGOTOREL) {
                     List<Document> reviewsOfProduct = new ArrayList<>();
                     for (int j = 0; j < RandomUtils.nextInt(0, 5); j++) {
                         String review_id = "review"+i+"-"+j;
@@ -304,18 +305,15 @@ public class MongoDataInit implements DataInit{
         mongoDatabase = mongoClient.getDatabase(databasename);
     }
 
-    @Override
-    public void persistData(int model, int numberofrecords) {
-        logger.error("To refactor. Use persistDataPmlModel instead for now");
-    }
-
-    @Override
-    public void deleteAll(String dbname) {
+    public void deleteAll() {
         initConnection();
-        logger.info("Dropping mongo database [{}]", dbname);
+        logger.info("Dropping mongo database [{}]", databasename);
 //        MongoCollection<Document> collection = mongoDatabase.getCollection(dbname);
 //        collection.drop();
         mongoDatabase.drop();
+    }
+    public String getDatabasename() {
+        return databasename;
     }
 
     public SQLDataInit getSqlDB() {

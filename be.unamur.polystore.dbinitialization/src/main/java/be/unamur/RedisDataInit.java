@@ -9,7 +9,7 @@ import redis.clients.jedis.Jedis;
 import java.util.HashMap;
 import java.util.Map;
 
-public class RedisDataInit implements DataInit{
+public class RedisDataInit {
 
 
     private final String host;
@@ -18,10 +18,15 @@ public class RedisDataInit implements DataInit{
     static final Logger logger = LoggerFactory.getLogger(RedisDataInit.class);
     private static final int SIMPLEKEYVALUE=1;
 
+
+    public RedisDataInit(String host, int port) {
+        this.host = host;
+        this.port = port;
+    }
     public static void main(String args[]) {
         RedisDataInit redisDataInit = new RedisDataInit("localhost", 6363);
         redisDataInit.initConnection();
-        redisDataInit.persistData(SIMPLEKEYVALUE,10);
+        redisDataInit.persistData(PmlModelEnum.SIMPLEKEYVALUE,10);
         redisDataInit.persistHashes(20);
     }
 
@@ -40,12 +45,7 @@ public class RedisDataInit implements DataInit{
         logger.info("Added {} hashes in Redis DB",added);
     }
 
-    public RedisDataInit(String host, int port) {
-        this.host = host;
-        this.port = port;
-    }
-
-    public void persistData(int model, int numberofrecords) {
+    public void persistData(PmlModelEnum model, int numberofrecords) {
         String key;
         String value;
         String productid="product";
@@ -53,7 +53,7 @@ public class RedisDataInit implements DataInit{
         if (jedis == null) {
             initConnection();
         }
-        if(model == SIMPLEKEYVALUE){
+        if(model == PmlModelEnum.SIMPLEKEYVALUE || model == PmlModelEnum.ALLDBS){
             for (int i = 0; i < numberofrecords; i++) {
                 key = "PRODUCT:"+productid+i+":PHOTO";
                 value = RandomStringUtils.randomAlphabetic(8);
@@ -63,7 +63,25 @@ public class RedisDataInit implements DataInit{
             logger.info("Generated and inserted [{}] key/value pairs in [{}]", added, host);
 
         }
-        if(model == 0){
+
+        if (model == PmlModelEnum.KVEMBEDDED) {
+            String keyproduct;
+            Map<String, String> hash = new HashMap<>();
+            for (int i = 0; i < numberofrecords; i++) {
+                keyproduct = "PRODUCT:"+productid+i;
+                for (int j = 0; j < RandomUtils.nextInt(0, 4); j++) {
+                    hash.clear();
+                    key=keyproduct+":REVIEW:review"+i+"-"+j;
+                    hash.put("content", RandomStringUtils.randomAlphabetic(20));
+                    hash.put("stars", RandomUtils.nextInt(0,5)+"*");
+                    jedis.hset(key, hash);
+                    added++;
+                }
+            }
+            logger.info("Generated and inserted [{}] key/value pairs in [{}]", added, host);
+
+        }
+        if(model == null){
             logger.error("Please provide the int value of a pml model in order to persist compatible data");
         }
 
