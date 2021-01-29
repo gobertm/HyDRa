@@ -4,6 +4,8 @@
 [import be::unamur::polystore::acceleo::main::util /]
 
 [template public generateSelectKeyValue(ent : EntityType, struct : KeyValuePair, db : Database)]
+	// As we cannot filter on the values in a Redis DB, we always put the refilterflag to true.
+	refilterFlag.setValue(true);
 	// Build the key pattern
 	//  - If the condition attribute is in the key pattern, replace by the value. Only if operator is EQUALS.
 	//  - Replace all other fields of key pattern by a '*' 

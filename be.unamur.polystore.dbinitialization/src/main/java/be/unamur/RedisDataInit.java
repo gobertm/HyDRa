@@ -69,7 +69,7 @@ public class RedisDataInit {
             Map<String, String> hash = new HashMap<>();
             for (int i = 0; i < numberofrecords; i++) {
                 keyproduct = "PRODUCT:"+productid+i;
-                for (int j = 0; j < RandomUtils.nextInt(0, 4); j++) {
+                for (int j = 0; j < RandomUtils.nextInt(1, 4); j++) {
                     hash.clear();
                     key=keyproduct+":REVIEW:review"+i+"-"+j;
                     hash.put("content", RandomStringUtils.randomAlphabetic(20));
