@@ -168,7 +168,7 @@ public class SparkConnectionMgr {
 
         // Get key value pairs non specific type of values.
         // Convert RDD to Dataset<Row>
-        RDD<Tuple2<String, String>> rdd = redisContext.fromRedisKV(keypattern, 2, redisConfig, readWriteConfig);
+        RDD<Tuple2<String, String>> rdd = redisContext.fromRedisKV(keypattern, 1, redisConfig, readWriteConfig);
         JavaRDD<Tuple2<String, String>> javaRDD = rdd.toJavaRDD();
         JavaRDD<Row> rowRDD = javaRDD.map((Function<Tuple2<String, String>, Row>) record -> {
             String key = record._1;

@@ -30,12 +30,19 @@ public class MainInit {
         // For '3-dbs.pml model"
 //        mainInit.init3DBMS();
         // 'kv-embedded.pml'
-        mainInit.initKVEmbedded();
+//        mainInit.initKVEmbedded();
+        //'kv-manytoone.pml'
+        mainInit.initKVManytoone();
     }
 
     private void initKVEmbedded() {
         redisDataInit.deleteAll("");
         redisDataInit.persistData(PmlModelEnum.KVEMBEDDED,20);
+    }
+
+    private void initKVManytoone() {
+        redisDataInit.deleteAll("");
+        redisDataInit.persistData(PmlModelEnum.KVMANYTOONE,20);
     }
 
     private void init3DBMS() throws SQLException {

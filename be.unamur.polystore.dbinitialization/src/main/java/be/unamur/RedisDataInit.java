@@ -27,22 +27,22 @@ public class RedisDataInit {
         RedisDataInit redisDataInit = new RedisDataInit("localhost", 6363);
         redisDataInit.initConnection();
         redisDataInit.persistData(PmlModelEnum.SIMPLEKEYVALUE,10);
-        redisDataInit.persistHashes(20);
+        redisDataInit.persistClientHashes(20);
     }
 
-    private void persistHashes(int number) {
+    private void persistClientHashes(int number) {
         int added=0;
         String key;
         Map<String, String> hash = new HashMap<>();
         for (int i = 0; i < number; i++) {
-            key = "CLIENT:"+i;
+            key = "CLIENT:client"+i;
             hash.put("name", RandomStringUtils.randomAlphabetic(3)+"_"+RandomStringUtils.randomAlphabetic(5));
             hash.put("streetnumber", String.valueOf(RandomUtils.nextInt(0, 100)));
             hash.put("street", RandomStringUtils.randomAlphabetic(9));
             jedis.hset(key, hash);
             added++;
         }
-        logger.info("Added {} hashes in Redis DB",added);
+        logger.info("Added {} CLIENT:[clientID] hashes in Redis DB",added);
     }
 
     public void persistData(PmlModelEnum model, int numberofrecords) {
@@ -80,6 +80,25 @@ public class RedisDataInit {
             }
             logger.info("Generated and inserted [{}] key/value pairs in [{}]", added, host);
 
+        }
+
+        if (model == PmlModelEnum.KVMANYTOONE) {
+            String keyproduct;
+            Map<String, String> hash = new HashMap<>();
+            for (int i = 0; i < numberofrecords; i++) {
+                keyproduct = "PRODUCT:"+productid+i;
+                for (int j = 0; j < RandomUtils.nextInt(1, 4); j++) {
+                    hash.clear();
+                    key=keyproduct+":REVIEW:review"+i+"-"+j;
+                    hash.put("content", RandomStringUtils.randomAlphabetic(20));
+                    hash.put("stars", RandomUtils.nextInt(0,5)+"*");
+                    hash.put("posted_by","client"+RandomUtils.nextInt(0,20));
+                    jedis.hset(key, hash);
+                    added++;
+                }
+            }
+            logger.info("Generated and inserted [{}] PRODUCT:[prodid]:REVIEW:[reviewid] key/value pairs in [{}]", added, host);
+            persistClientHashes(20);
         }
         if(model == null){
             logger.error("Please provide the int value of a pml model in order to persist compatible data");

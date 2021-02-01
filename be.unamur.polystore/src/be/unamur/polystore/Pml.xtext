@@ -193,7 +193,6 @@ AbstractPhysicalStructure:
 KeyValueSchema:
 	'key' 'value' 'schema' name=ID (':' databases+=[Database] (','databases+=[Database])*)?'{'
 		kvpairs+=KeyValuePair*
-		('references' '{'references+=Reference*'}')? 
 '}'
 ;
 
@@ -201,6 +200,7 @@ KeyValuePair:
 	'kvpairs' name=ID '{'
 		'key' ':' key=Key ','
 		'value' ':' value=KVPhysicalField
+		('references' '{'references+=Reference*'}' )?
 	'}'
 ;
 

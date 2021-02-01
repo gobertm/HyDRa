@@ -5,6 +5,7 @@
 [import be::unamur::polystore::acceleo::main::mappingrules::util /]
 [import be::unamur::polystore::acceleo::main::impl::select::entitytype::generateSimpleSelectFromGivenRelationalTable/]
 [import be::unamur::polystore::acceleo::main::impl::select::entitytype::generateSimpleSelectFromGivenDocumentCollection/]
+[import be::unamur::polystore::acceleo::main::impl::select::entitytype::generateSelectKeyValue/]
 
 
 [template public generateSelectMethods(rel : RelationshipType, override: Boolean)]
@@ -68,7 +69,6 @@ public [if (override = false)]abstract [/if]Dataset<[roleSource.entity.name.toUp
 [comment TODO Implemented multi composed ref. Currently Apply only to single attribute reference /]
 [let dbs : Set(Database) = ref.sourceField->first().getAbstractPhysicalStructureNotEmbeddedObject().getConcernedDatabases(ref.ancestors(Domainmodel)->any(true))]
 [if (dbs->size() = 0)]
-// ici (generateSelectMethods)
 return null;
 [else]
 	MutableBoolean refilterFlag = new MutableBoolean(false);
@@ -79,6 +79,9 @@ return null;
 [/if]
 [if (db.dbType = pml::DatabaseType::MONGODB)] 
 [generateSimpleSelectFromGivenDocumentCollection(roleSource.entity, ref.sourceField->any(true).getAbstractPhysicalStructureNotEmbeddedObject(), db,ref, ref.sourceField->first()) /]
+[/if]
+[if (db.dbType = pml::DatabaseType::REDIS)]
+[generateSelectKeyValue(roleSource.entity, ref.sourceField->any(true).getAbstractPhysicalStructureNotEmbeddedObject().oclAsType(pml::KeyValuePair), db, ref, ref.sourceField->first())/]
 [/if]
 [/let]
 [/if]
@@ -100,6 +103,9 @@ return null;
 [generateSimpleSelectFromGivenRelationalTable(roleTarget.entity, ref.targetField->any(true).getAbstractPhysicalStructureNotEmbeddedObject(), db, ref.targetField->first(), ref)/][/if]
 [if (db.dbType = pml::DatabaseType::MONGODB)] 
 [generateSimpleSelectFromGivenDocumentCollection(roleTarget.entity, ref.targetField->any(true).getAbstractPhysicalStructureNotEmbeddedObject(), db,ref, ref.targetField->first()) /]
+[/if]
+[if (db.dbType = pml::DatabaseType::REDIS)]
+[generateSelectKeyValue(roleTarget.entity, ref.targetField->any(true).getAbstractPhysicalStructureNotEmbeddedObject().oclAsType(pml::KeyValuePair), db, ref, ref.targetField->first())/]
 [/if]
 [/let]
 [/if]

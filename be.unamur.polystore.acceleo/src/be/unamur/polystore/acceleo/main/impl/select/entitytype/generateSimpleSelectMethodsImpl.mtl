@@ -73,6 +73,8 @@
 	}
 	if(refilterFlag.booleanValue())
 		d = d.filter((FilterFunction<[entityType.name.toUpperFirst() /]>) r -> condition == null || condition.evaluate(r));
+	[comment 
+	 This drop duplicates is necessary when readin data from a key value db, with key structures such as PRODUCT:id:REVIEW:reviewid . /]
 	d=d.dropDuplicates();
 	return d;
 }[/template]
