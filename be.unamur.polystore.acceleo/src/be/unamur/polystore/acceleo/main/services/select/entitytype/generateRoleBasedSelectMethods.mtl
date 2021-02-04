@@ -19,9 +19,7 @@ public Dataset<[entity.name.toUpperFirst() /]> get[role.name.toUpperFirst() /]Li
 }
 [if (role2 <> role)]
 
-public [if (isMaxOne(role2) = false)]Dataset<[entity.name.toUpperFirst() /]>[else][entity.name.toUpperFirst() /][/if] get[role.name.toUpperFirst() /][if (isMaxOne(role2) = false)]List[/if]In[getRelationShipType(role).name.toUpperFirst() /]By[role2.name.toUpperFirst() /](
-	pojo.[role2.entity.name.toUpperFirst()/] [role2.name/]
-){
+public [if (isMaxOne(role2) = false)]Dataset<[entity.name.toUpperFirst() /]>[else][entity.name.toUpperFirst() /][/if] get[role.name.toUpperFirst() /][if (isMaxOne(role2) = false)]List[/if]In[getRelationShipType(role).name.toUpperFirst() /]By[role2.name.toUpperFirst() /](pojo.[role2.entity.name.toUpperFirst()/] [role2.name/]){
 	//TODO get id in condition
 	return null;	
 }

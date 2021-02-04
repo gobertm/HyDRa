@@ -33,11 +33,5 @@ public Dataset<[entityType.name.toUpperFirst() /]> get[entityType.name.toUpperFi
 	return get[entityType.name.toUpperFirst() /]List(conditions.Condition.simple(conditions.[entityType.name.toUpperFirst() /]Attribute.[attr.name /], conditions.Operator.EQUALS, [attr.name /]));
 }
 
-[comment][for (db: Database | getConcernedDatabases(attr, entityType.ancestors(Domainmodel)->first()))]
-public java.util.List<pojo.[entityType.name.toUpperFirst() /]> get[entityType.name.toUpperFirst() /]ListBy[attr.name.toUpperFirst()/]In[db.name.toUpperFirst() /]([generateJavaType(attr.type)/] [attr.name /]) {
-	return get[entityType.name.toUpperFirst() /]ListIn[db.name.toUpperFirst() /](conditions.Condition.simple(conditions.[entityType.name.toUpperFirst() /]Attribute.[attr.name /], conditions.Operator.EQUALS, [attr.name /]));
-}
-[/for][/comment]
-
 [/ for]
 [/template]

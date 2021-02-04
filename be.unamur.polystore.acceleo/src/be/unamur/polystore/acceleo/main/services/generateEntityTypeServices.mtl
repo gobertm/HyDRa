@@ -3,8 +3,6 @@
 [import be::unamur::polystore::acceleo::main::generateEntityTypeRelatedClasses /]
 [import be::unamur::polystore::acceleo::main::generateRelationshipTypeClass /]
 [import be::unamur::polystore::acceleo::main::services::select::entitytype::generateSimpleSelectMethods /]
-[import be::unamur::polystore::acceleo::main::services::select::entitytype::generateSimpleBinarySelectMethods /]
-[import be::unamur::polystore::acceleo::main::services::select::entitytype::generateBinaryWithAttributesSelectMethods /]
 [import be::unamur::polystore::acceleo::main::services::select::entitytype::generateRoleBasedSelectMethods/]
 [import be::unamur::polystore::acceleo::main::util /]
 [import be::unamur::polystore::acceleo::main::services::insert::entitytype::generateSimpleInsertMethods/]
@@ -41,8 +39,6 @@ public abstract class [entityType.name.toUpperFirst() + 'Service' /] {
 
 [template public printSelectMethods(entityType: EntityType, conceptualSchema: ConceptualSchema, override: Boolean)]
 [generateSimpleSelectMethods(entityType, conceptualSchema, override) /]
-[comment][generateSimpleBinarySelectMethods(entityType, conceptualSchema) /]
-[generateBinaryWithAttributesSelectMethods(entityType, conceptualSchema) /][/comment]
 [generateRoleBasedSelectMethods(entityType, conceptualSchema, override) /]
 [/template]
 
