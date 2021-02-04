@@ -232,8 +232,16 @@ RoleToReferenceMappingRule:
 
 EntityMappingRule:
 	(entityConceptual=[EntityType|QualifiedName]'('(attributesConceptual+=[Attribute|QualifiedName] (','attributesConceptual+=[Attribute|QualifiedName])*)?')'
-	'->'
+	('->' | '-''('conditionAttribute+=[Attribute|QualifiedName] operator=Operator value=ValueCondition')->')
 	 physicalStructure=[AbstractPhysicalStructure|QualifiedName]'('(physicalFields+=[PhysicalField|QualifiedName] (','physicalFields+=[PhysicalField|QualifiedName])*)?')')
+;
+
+enum Operator:
+	EQUAL = '=' | LT = '<' | LTE = '<=' | GT = '>' | GTE = '>='
+;
+
+ValueCondition:
+	INT | STRING
 ;
 
 Databases :

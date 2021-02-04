@@ -47,6 +47,10 @@ public class PmlScopeProvider extends AbstractPmlScopeProvider {
 			EntityMappingRule rule = EcoreUtil2.getContainerOfType(context, EntityMappingRule.class);
 			return Scopes.scopeFor(rule.getEntityConceptual().getAttributes());
 		}
+		if (context instanceof EntityMappingRule && reference == PmlPackage.Literals.ENTITY_MAPPING_RULE__CONDITION_ATTRIBUTE) {
+			EntityMappingRule rule = EcoreUtil2.getContainerOfType(context, EntityMappingRule.class);
+			return Scopes.scopeFor(rule.getEntityConceptual().getAttributes());
+		}
 		if((context instanceof RoleToEmbbededObjectMappingRule || context instanceof EntityMappingRule) 
 				&& 
 				(reference == PmlPackage.Literals.ROLE_TO_EMBBEDED_OBJECT_MAPPING_RULE__PHYSICAL_FIELDS || reference == PmlPackage.Literals.ENTITY_MAPPING_RULE__PHYSICAL_FIELDS)) {
