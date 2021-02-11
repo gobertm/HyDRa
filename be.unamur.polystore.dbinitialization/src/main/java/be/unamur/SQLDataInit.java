@@ -86,7 +86,7 @@ public class SQLDataInit {
         Statement stmt= null;
         try {
             stmt = connection2.createStatement();
-            stmt.execute("CREATE DATABASE IF NOT EXISTS "+dbname);
+            stmt.execute("CREATE DATABASE IF NOT EXISTS "+dbname+" CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci");
             logger.info("Created database {}", databasename);
             connection2.close();
         } catch (SQLException e) {
