@@ -24,8 +24,8 @@ conceptual schema cs {
 	
 	
 	relationship type productReview{
-	review[1]: Review,
-	reviewed_product[0-N] : Product
+	review_role[1]: Review,
+	product_role[0-N] : Product
 	}
 	
 }
@@ -68,10 +68,10 @@ physical schemas {
 	
 mapping rules{
 	cs.Review(content,id,rating) -> myRelSchema.ReviewTable(content,review_id,rating),
-	cs.productReview.reviewed_product -> categorySchema.categoryCollection.review_of_product,
+	cs.productReview.product_role -> categorySchema.categoryCollection.review_of_product,
 	cs.Product(cat_name) -> categorySchema.categoryCollection(categoryname),
 	cs.Product(id) -> categorySchema.categoryCollection.products(id),
-    cs.productReview.review -> myRelSchema.ReviewTable.reviewed_product
+    cs.productReview.review_role -> myRelSchema.ReviewTable.reviewed_product
  //   cs.Review(id,rating) -> categorySchema.categoryCollection.products.reviews(review_ref,rating)  // Add this mapping rule to test detection of data insconsistencies in Reviews
 }
 

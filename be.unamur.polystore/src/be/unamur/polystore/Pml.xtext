@@ -9,7 +9,7 @@ Domainmodel:
 
 ConceptualSchema :
 	'conceptual' 'schema' name=ID '{'
-		(entities+=EntityType)+ & (relationships+=RelationshipType)*
+		(entities+=EntityType)* & (relationships+=RelationshipType)*
 	'}'
 ;
 

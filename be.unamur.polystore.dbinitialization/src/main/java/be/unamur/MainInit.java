@@ -27,12 +27,23 @@ public class MainInit {
         mongoDataInit2.setSqlDB(sqlinit);
         MainInit mainInit = new MainInit(redisDataInit,sqlinit,mongoDataInit2);
 
+        // for Model 'onetomanyMongoToRel.pml'
+//        mainInit.initOneToManyMongoToRel();
         // For '3-dbs.pml model"
-//        mainInit.init3DBMS();
+        mainInit.init3DBMS();
         // 'kv-embedded.pml'
 //        mainInit.initKVEmbedded();
         //'kv-manytoone.pml'
-        mainInit.initKVManytoone();
+//        mainInit.initKVManytoone();
+    }
+
+    private void initOneToManyMongoToRel() throws SQLException {
+//                sqlDataInit.deleteAll("mydb");
+//        sqlDataInit.createDatabase("mydb");
+//        sqlDataInit.initStructure(PmlModelEnum.ONETOMANYPML,"mydb");
+        sqlDataInit.persistData(30,PmlModelEnum.ONETOMANYPML);
+        mongoDataInit.deleteAll();
+        mongoDataInit.persistDataPmlModel(2,true,PmlModelEnum.ONETOMANYMONGOTOREL);
     }
 
     private void initKVEmbedded() {
