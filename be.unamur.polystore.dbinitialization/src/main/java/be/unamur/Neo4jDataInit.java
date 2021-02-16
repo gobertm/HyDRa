@@ -12,6 +12,15 @@ public class Neo4jDataInit {
     private CypherExecutor cypherExecutor;
     String query = "MATCH (:Movie {title:{1}})<-[:ACTED_IN]-(a:Person) RETURN a.name as actor";
 
+    public static void main(String args[]) throws SQLException {
+        Neo4jDataInit neo4jDataInit = new Neo4jDataInit("localhost", 7687, "neo4j", "myneo4j", CypherExecutorType.JAVADRIVER_EXEC);
+        neo4jDataInit.createProducts("http://data.neo4j.com/northwind/products.csv");
+        neo4jDataInit.createCategories("http://data.neo4j.com/northwind/categories.csv");
+        neo4jDataInit.createSuppliers("http://data.neo4j.com/northwind/suppliers.csv");
+        neo4jDataInit.createRelationships();
+        neo4jDataInit.close();
+    }
+
     public Neo4jDataInit(String neohost, int neoport, String neouser, String neopwd, CypherExecutorType executorType) throws SQLException {
         if(executorType == CypherExecutorType.JDBC_EXEC)
             cypherExecutor = new JdbcCypherExecutor(neohost, neoport, neouser, neopwd);
