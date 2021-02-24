@@ -261,7 +261,7 @@ Database :
 ;
 
 KVDataType :
-	'list' | 'set' | 'ordered' 'set'| 'hash'
+	'list' | 'set' | 'ordered' 'set'| 'hash' // and more to add
 ;
 
 DataType returns DataType:

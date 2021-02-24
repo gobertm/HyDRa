@@ -5,38 +5,48 @@ services:
     image: redis:latest
     ports: 
       - 6363:6379
+    volumes :
+      - "./src/main/resources/imdb/:/data/"
+    # From https://github.com/Redis-Developer/redis-datasets/tree/movie-dataset/movie-database
+    # IMDB data
+    command:
+    - /bin/sh
+    - -c
+    - |
+        nohup redis-server &
+        sleep 2
+        echo "adding actors redis key hashes"
+        redis-cli < /data/import_actors.redis
+        echo "adding movies redis key hashes"
+        redis-cli < /data/import_movies.redis
+        # this will keep container running
+        tail -f /dev/null
+  # mymongo:
+  #   image: mongo:latest
+  #   ports: 
+  #     - 27000:27017
 
-  mymongo:
-    image: mongo:latest
-    ports: 
-      - 27000:27017
+  # mymongo2:
+  #   image: mongo:latest
+  #   ports:
+  #     - 27100:27017
 
-  mymongo2:
-    image: mongo:latest
-    ports:
-      - 27100:27017
+  # mysql:
+  #   image: mysql:latest
+  #   ports: 
+  #     - 3307:3306
+  #   environment:
+  #     - MYSQL_ROOT_PASSWORD=password
+  #     - MYSQL_DATABASE=mydb
+  #   # For IMDB data loading
+  #   volumes: 
+  #     - "./src/main/resources/imdb/imdb-1-structure.sql:/docker-entrypoint-initdb.d/1.sql"
+  #     - "./src/main/resources/imdb/imdb-2-data.sql:/docker-entrypoint-initdb.d/2.sql"
 
-  mysql:
-    image: mysql:latest
-    ports: 
-      - 3307:3306
-    environment:
-      - MYSQL_ROOT_PASSWORD=password
-      - MYSQL_DATABASE=mydb
-
-  neo4jdb:
-    image: neo4j:latest
-    ports:
-      - 7474:7474
-      - 7687:7687
-    environment:
-      - NEO4J_AUTH=neo4j/myneo4j
-
-  # initdb:
-  #   image: initdb:latest
-  #   command: ["-redishost","redisdb","-mongohost","mongodb","-mongoport","27017","-neohost","neo4jdb","-neoport","7687","-neouser","neo4j","-neopwd","myneo4j"]
-  #   depends_on:
-  #     - redisdb
-  #     - mymongo
-  #     - neo4jdb
-  
+  # neo4jdb:
+  #   image: neo4j:latest
+  #   ports:
+  #     - 7474:7474
+  #     - 7687:7687
+  #   environment:
+  #     - NEO4J_AUTH=neo4j/myneo4j
