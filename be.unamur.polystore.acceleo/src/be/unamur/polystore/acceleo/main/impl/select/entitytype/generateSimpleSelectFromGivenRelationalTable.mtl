@@ -69,7 +69,7 @@
 				// Get reference column [ '[' /][refField.getPhysicalName()/] [ ']' /] for reference [ '[' /][ref.name/][ ']' /]
 				[if (refField.ancestors(LongField) -> size() = 0)]
 				[comment shortField or bracketfield/]
-				String [getJavaAbsolutePath(ref) /]_[refField.getPhysicalName() /] = r.getAs("[getPhysicalName(refField) /]");
+				String [getJavaAbsolutePath(ref) /]_[refField.getPhysicalName() /] = r.getAs("[getPhysicalName(refField) /]") == null ? null : r.getAs("[getPhysicalName(refField) /]").toString();
 				[ent.name.toLowerFirst() /]_res.set[getJavaAbsolutePath(ref).toUpperFirst() /]_[refField.getPhysicalName() /]([getJavaAbsolutePath(ref) /]_[refField.getPhysicalName() /]);
 				[else]
 				[comment LongField /]

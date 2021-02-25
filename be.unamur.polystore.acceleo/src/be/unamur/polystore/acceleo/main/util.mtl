@@ -22,7 +22,7 @@
 [if (type.oclIsTypeOf(pml::FloatType))]Double.parseDouble([varName/])[/if]
 [if (type.oclIsTypeOf(pml::BlobType))]Byte.parseByte([varName/])[/if]
 [if (type.oclIsTypeOf(pml::DateType))]TODO[/if]
-[comment définir un format dans la grammaire pourles dates au niveau conceptuel ex: birthdate: date {MY_FORMAT}/]
+[comment dï¿½finir un format dans la grammaire pourles dates au niveau conceptuel ex: birthdate: date {MY_FORMAT}/]
 [if (type.oclIsTypeOf(pml::DatetimeType))]TODO[/if]
 [/template]
 
