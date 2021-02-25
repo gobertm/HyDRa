@@ -21,27 +21,40 @@ services:
         redis-cli < /data/import_movies.redis
         # this will keep container running
         tail -f /dev/null
-  # mymongo:
+
+  mymongo:
+    image: mongo:latest
+    ports: 
+      - 27000:27017
+
+  # mongodata : 
   #   image: mongo:latest
-  #   ports: 
-  #     - 27000:27017
+  #   links: 
+  #     - mymongo
+  #   volumes: 
+  #     - "./src/main/resources/imdb/sample_mflix/:/data/"
+  #   command : 
+  #     - ls -al /data
+  #     # - mongorestore --host mymongo --port 27000 -d mymongo -c movies /data/movies.bson
+      
 
   # mymongo2:
   #   image: mongo:latest
   #   ports:
   #     - 27100:27017
 
-  # mysql:
-  #   image: mysql:latest
-  #   ports: 
-  #     - 3307:3306
-  #   environment:
-  #     - MYSQL_ROOT_PASSWORD=password
-  #     - MYSQL_DATABASE=mydb
-  #   # For IMDB data loading
-  #   volumes: 
-  #     - "./src/main/resources/imdb/imdb-1-structure.sql:/docker-entrypoint-initdb.d/1.sql"
-  #     - "./src/main/resources/imdb/imdb-2-data.sql:/docker-entrypoint-initdb.d/2.sql"
+  mysql:
+    image: mysql:latest
+    ports: 
+      - 3307:3306
+    environment:
+      - MYSQL_ROOT_PASSWORD=password
+      - MYSQL_DATABASE=mydb
+    # For IMDB data loading
+    # https://relational.fit.cvut.cz/dataset/IMDb
+    volumes: 
+      - "./src/main/resources/imdb/imdb-1-structure.sql:/docker-entrypoint-initdb.d/1.sql"
+      - "./src/main/resources/imdb/imdb-2-data.sql:/docker-entrypoint-initdb.d/2.sql"
 
   # neo4jdb:
   #   image: neo4j:latest
