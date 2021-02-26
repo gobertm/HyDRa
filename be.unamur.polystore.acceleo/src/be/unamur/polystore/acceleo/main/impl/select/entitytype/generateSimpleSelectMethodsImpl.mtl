@@ -55,6 +55,7 @@
 				for (int i = 1; i < datasets.size(); i++) {
 					[generateJavaType(attr.type) /] [attr.name.toLowerFirst() /]2 = r.getAs("[attr.name.toLowerFirst() /]_" + i);
 					if (firstNotNull_[attr.name /] != null && [attr.name.toLowerFirst() /]2 != null && !firstNotNull_[attr.name/].equals([attr.name.toLowerFirst() /]2)) {
+						[entityType.name.toLowerFirst() /]_res.addLogEvent("Data consistency problem: duplicate values found for attribute '[entityType.name.toUpperFirst() /].[attr.name.toLowerFirst() /]': " + firstNotNull_[attr.name /] + " and " + [attr.name.toLowerFirst() /]2 + "." );
 						logger.warn("data consistency problem: duplicate values for attribute : '[entityType.name.toUpperFirst() /].[attr.name.toLowerFirst() /]' ==> " + firstNotNull_[attr.name /] + " and " + [attr.name.toLowerFirst() /]2);
 					}
 					if (firstNotNull_[attr.name /] == null && [attr.name.toLowerFirst() /]2 != null) {

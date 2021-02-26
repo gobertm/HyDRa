@@ -16,7 +16,7 @@
 [file ('src/main/java/pojo/' + rel.name.toUpperFirst().concat('.java'), false, 'UTF-8')]
 package pojo;
 
-public class [rel.name.toUpperFirst() /] implements IPojo {
+public class [rel.name.toUpperFirst() /] extends LoggingPojo {
 
 [for (role: Role | rel.roles)]
 	private [role.entity.name.toUpperFirst()/] [role.name/];	

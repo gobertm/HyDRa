@@ -17,8 +17,10 @@ Dataset<[role2.entity.name.toUpperFirst()/]TDO> [role2.entity.name.toLowerFirst(
 Dataset<Row> res_[ref.name/] = [entity.name.toLowerFirst()/]TDO[ref.name/].join([role2.entity.name.toLowerFirst()/]TDO[ref.name/]
 [for (attr : Attribute | role2.entity.attributes)]
 		.withColumnRenamed("[attr.name.toLowerFirst() /]", "[role2.entity.name/]_[attr.name.toLowerFirst() /]")
-[/for]		,[entity.name.toLowerFirst()/]TDO[ref.name/].col("[getJavaAbsolutePath(ref) /]_[ref.sourceField->first().getPhysicalName()/]").equalTo([role2.entity.name.toLowerFirst()/]TDO[ref.name/].col("[getJavaAbsolutePath(ref) /]_[ref.targetField->first().getPhysicalName()/]")));
-Dataset<[entity.name.toUpperFirst()/]> res_[entity.name/]_[ref.name/] = res_[ref.name/].select([for (attr : Attribute | entity.attributes) separator(',')] "[attr.name/]"[/for]).as(Encoders.bean([entity.name.toUpperFirst()/].class));
+[/for]
+		.withColumnRenamed("logEvents", "[role2.entity.name/]_logEvents"),
+		[entity.name.toLowerFirst()/]TDO[ref.name/].col("[getJavaAbsolutePath(ref) /]_[ref.sourceField->first().getPhysicalName()/]").equalTo([role2.entity.name.toLowerFirst()/]TDO[ref.name/].col("[getJavaAbsolutePath(ref) /]_[ref.targetField->first().getPhysicalName()/]")));
+Dataset<[entity.name.toUpperFirst()/]> res_[entity.name/]_[ref.name/] = res_[ref.name/].select([for (attr : Attribute | entity.attributes)] "[attr.name/]",[/for] "logEvents").as(Encoders.bean([entity.name.toUpperFirst()/].class));
 datasetsPOJO.add(res_[entity.name/]_[ref.name/]);
 [/for]
 
@@ -30,8 +32,10 @@ Dataset<[entity.name.toUpperFirst()/]TDO> [entity.name.toLowerFirst()/]TDO[ref.n
 Dataset<Row> res_[ref.name/] = [entity.name.toLowerFirst()/]TDO[ref.name/].join([role2.entity.name.toLowerFirst()/]TDO[ref.name/]
 [for (attr : Attribute | role2.entity.attributes)]
 		.withColumnRenamed("[attr.name.toLowerFirst() /]", "[role2.entity.name/]_[attr.name.toLowerFirst() /]")
-[/for],[entity.name.toLowerFirst()/]TDO[ref.name/].col("[getJavaAbsolutePath(ref) /]_[ref.targetField->first().getPhysicalName()/]").equalTo([role2.entity.name.toLowerFirst()/]TDO[ref.name/].col("[getJavaAbsolutePath(ref) /]_[ref.sourceField->first().getPhysicalName()/]")));
-Dataset<[entity.name.toUpperFirst()/]> res_[entity.name/]_[ref.name/] = res_[ref.name/].select([for (attr : Attribute | entity.attributes) separator(',')] "[attr.name/]"[/for]).as(Encoders.bean([entity.name.toUpperFirst()/].class));
+[/for]
+		.withColumnRenamed("logEvents", "[role2.entity.name/]_logEvents"),
+		[entity.name.toLowerFirst()/]TDO[ref.name/].col("[getJavaAbsolutePath(ref) /]_[ref.targetField->first().getPhysicalName()/]").equalTo([role2.entity.name.toLowerFirst()/]TDO[ref.name/].col("[getJavaAbsolutePath(ref) /]_[ref.sourceField->first().getPhysicalName()/]")));
+Dataset<[entity.name.toUpperFirst()/]> res_[entity.name/]_[ref.name/] = res_[ref.name/].select([for (attr : Attribute | entity.attributes)] "[attr.name/]",[/for] "logEvents").as(Encoders.bean([entity.name.toUpperFirst()/].class));
 datasetsPOJO.add(res_[entity.name/]_[ref.name/]);
 [/for]
 [/let]
@@ -79,6 +83,7 @@ return null;
 				for (int i = 1; i < datasetsPOJO.size(); i++) {
 					[generateJavaType(attr.type) /] [attr.name.toLowerFirst() /]2 = r.getAs("[attr.name.toLowerFirst() /]_" + i);
 					if (firstNotNull_[attr.name /] != null && [attr.name.toLowerFirst() /]2 != null && !firstNotNull_[attr.name/].equals([attr.name.toLowerFirst() /]2)) {
+						[entityType.name.toLowerFirst() /]_res.addLogEvent("Data consistency problem: duplicate values found for attribute '[entityType.name.toUpperFirst() /].[attr.name.toLowerFirst() /]': " + firstNotNull_[attr.name /] + " and " + [attr.name.toLowerFirst() /]2 + "." );
 						logger.warn("data consistency problem: duplicate values for attribute : '[entityType.name.toUpperFirst() /].[attr.name.toLowerFirst() /]' ==> " + firstNotNull_[attr.name /] + " and " + [attr.name.toLowerFirst() /]2);
 					}
 					if (firstNotNull_[attr.name /] == null && [attr.name.toLowerFirst() /]2 != null) {
