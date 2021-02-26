@@ -62,12 +62,13 @@ public class Util {
 		return s.replaceAll("'", "\\\\\\\\'");
 	}
 
+	
 	public static String getDelimitedMongoValue(Class cl, String value) {
 		if(value == null)
 			return null;
 
 		if(cl == String.class)
-			return "'" + value + "'";
+			return "'" + value.replaceAll("'","\\\\\\'") + "'";
 
 		//TODO handle the other special data types, e.g., Byte, Date, ...
 		return value;

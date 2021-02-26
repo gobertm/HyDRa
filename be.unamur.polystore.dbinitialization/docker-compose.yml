@@ -4,7 +4,7 @@ services:
   redisdb:
     image: redis:latest
     ports: 
-      - 6363:6379
+      - 6379:6379
     volumes :
       - "./src/main/resources/imdb/:/data/"
     # From https://github.com/Redis-Developer/redis-datasets/tree/movie-dataset/movie-database
@@ -38,10 +38,10 @@ services:
   #     # - mongorestore --host mymongo --port 27000 -d mymongo -c movies /data/movies.bson
       
 
-  # mymongo2:
-  #   image: mongo:latest
-  #   ports:
-  #     - 27100:27017
+  mymongo2:
+    image: mongo:latest
+    ports:
+      - 27100:27017
 
   mysql:
     image: mysql:latest

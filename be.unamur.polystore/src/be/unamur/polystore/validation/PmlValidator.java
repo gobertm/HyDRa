@@ -31,7 +31,7 @@ public class PmlValidator extends AbstractPmlValidator {
 	@Check
 	public void checkRelationshipStartsWithLowerCase(RelationshipType relationship) {
 		if (!Character.isLowerCase(relationship.getName().charAt(0))) {
-			warning("Name should start with a lower case letter",
+			warning("Relationhsip names should start with a lower case letter",
 					PmlPackage.Literals.RELATIONSHIP_TYPE__NAME,
 					INVALID_NAME);
 		}

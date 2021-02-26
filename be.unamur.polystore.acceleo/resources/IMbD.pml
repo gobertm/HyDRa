@@ -4,7 +4,8 @@ conceptual schema conceptualSchema{
 		id : int,
 		firstName : string,
 		lastName : string,
-		gender : string
+		gender : string,
+		yearOfBirth : int
 		identifier {
 			id
 		}
@@ -29,7 +30,16 @@ conceptual schema conceptualSchema{
 		id : int,
 		name : string,
         year : int,
-        rank : float
+        rank : float,
+		plot : string,
+		genre : string,
+		release_year : int,
+		rating : float,
+		votes : int,
+		award_win:int,
+		award_nomination:int,
+		poster : string,
+		imdb_id : string
         identifier {
         	id
         }
@@ -140,26 +150,87 @@ physical schemas {
 		}
 	}
 	
+	key value schema MovieDBRedis : myredis{
+		kvpairs moviesKV {
+			key : "movie:"[id],
+			value : attr hash{
+				title,
+				plot,
+				genre,
+				release_year,
+				rating,
+				votes,
+				poster,
+				ibmdb_id
+			}
+		}
+		
+		kvpairs actorsKV {
+			key : "actor:"[id],
+			value : attr hash{
+				first_name,
+				last_name,
+				date_of_birth
+			}
+		}
+		
+	}
+	
+	document schema MflixMongo : mymongo {
+		collection movies {
+			fields {
+				title,
+				awards [1]{
+					wins,
+					nominations,
+					description
+				}
+			}
+		}
+	}
+	
+	
+	
 }
 
 mapping rules{
+	// MySQL data mapping
 	conceptualSchema.Movie(id,name,year,rank) -> myRelSchema.movies(id,name,year,rank),
 	conceptualSchema.Actor(id,firstName,lastName,gender) -> myRelSchema.actors(id,first_name,last_name,gender),
 	conceptualSchema.Director(id,firstName,lastName) -> myRelSchema.directors(id,first_name,last_name),
 	conceptualSchema.DirectorGenre(genre, probability) -> myRelSchema.directors_genres(genre, prob),
 	conceptualSchema.HasMovieGenre.genre -> myRelSchema.movies_genres.movie,
 	conceptualSchema.HasDirectorGenre.genre -> myRelSchema.directors_genres.director,
-	conceptualSchema.MovieGenre(genre) -> myRelSchema.movies_genres(genre)
+	conceptualSchema.MovieGenre(genre) -> myRelSchema.movies_genres(genre),
+	// MongoDB Mflix dataset
+	conceptualSchema.Movie(name) -> MflixMongo.movies(title),
+	conceptualSchema.Movie(award_nomination, award_win) -> MflixMongo.movies.awards(nominations,wins),
+	//Redis data mapping
+	conceptualSchema.Movie(id) -> MovieDBRedis.moviesKV(id),
+	conceptualSchema.Movie(name, plot,genre, release_year, rating, votes, poster, imdb_id) -> MovieDBRedis.moviesKV.attr(title,plot,genre,release_year,rating,votes,poster, ibmdb_id),
+	conceptualSchema.Actor(id) -> MovieDBRedis.actorsKV(id),
+	conceptualSchema.Actor(firstName,lastName, yearOfBirth) -> MovieDBRedis.actorsKV.attr(first_name,last_name,date_of_birth)
 }
 
 databases {
 	
 	mariadb mydb {
-		host: "relational.fit.cvut.cz"
-		port: 3306
-		dbname : "imdb_ijs"
-		password : "relational"
-		login : "guest"
+		host: "localhost"
+		port: 3307
+		dbname : "mydb"
+		password : "password"
+		login : "root"
 	}
+	
+	mongodb mymongo{
+		host : "localhost"
+		port: 27000
+	}
+
+	redis myredis {
+		host:"localhost"
+		port:6379
+	}
+	
 	
 }
