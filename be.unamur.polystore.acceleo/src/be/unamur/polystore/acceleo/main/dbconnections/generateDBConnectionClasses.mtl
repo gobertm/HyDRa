@@ -115,6 +115,7 @@ public class SparkConnectionMgr {
 		private static SparkSession getSession() {
 		if (session == null) {
 			session = SparkSession.builder().appName("Polystore").config("spark.master", "local")
+					.config("spark.sql.shuffle.partitions", 5)
 					.config("spark.some.config.option", "some-value")
 					.config("spark.mongodb.input.uri", "mongodb://127.0.0.1:1/fakedb.fakecollection")
 //			.config("spark.mongodb.output.uri", "mongodb://127.0.0.1:1/mymongo.productCollection")
