@@ -26,9 +26,7 @@
 [file ('src/main/java/pojo/' + entityType.name.toUpperFirst().concat('.java'), false, 'UTF-8')]
 package pojo;
 
-import java.io.Serializable;
-
-public class [entityType.name.toUpperFirst() /] implements Serializable, Cloneable, IPojo{
+public class [entityType.name.toUpperFirst() /] extends LoggingPojo {
 
 	[for (attr: Attribute | entityType.attributes)]
 	private [generateJavaType(attr.type) /] [attr.name /];
