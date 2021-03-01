@@ -1,0 +1,20 @@
+version: "3"
+
+services:
+  redisdb:
+    image: redis:latest
+    ports: 
+      - 6379:6379
+      
+  mymongo:
+    image: mongo:latest
+    ports: 
+      - 27000:27017
+
+  mysql:
+    image: mysql:latest
+    ports: 
+      - 3307:3306
+    environment:
+      - MYSQL_ROOT_PASSWORD=password
+      - MYSQL_DATABASE=mydb
