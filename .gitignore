@@ -9,3 +9,8 @@ test-bin
 .classpath
 .idea
 be.unamur.polystore.dbinitialization/.project
+be.unamur.polystore.dbinitialization/src/main/resources/imdb/name-basics.tsv
+be.unamur.polystore.dbinitialization/src/main/resources/imdb/title-basics.tsv
+be.unamur.polystore.dbinitialization/src/main/resources/imdb/title-crew.tsv
+be.unamur.polystore.dbinitialization/src/main/resources/imdb/title-principals.tsv
+be.unamur.polystore.dbinitialization/src/main/resources/imdb/title-ratings.tsv
