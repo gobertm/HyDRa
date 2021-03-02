@@ -9,6 +9,7 @@ import com.mongodb.client.MongoDatabase;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.lang3.RandomUtils;
 import org.bson.Document;
+import org.bson.conversions.Bson;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -17,6 +18,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Random;
+
+import static com.mongodb.client.model.Filters.eq;
 
 public class MongoDataInit {
     static final Logger logger = LoggerFactory.getLogger(MongoDataInit.class);
@@ -324,4 +327,36 @@ public class MongoDataInit {
         this.sqlDB = sqlDB;
     }
 
+    public void addDirector(String[] director) {
+        if (mongoClient == null) {
+            initConnection();
+        }
+        MongoCollection<Document> collection = mongoDatabase.getCollection("directorCollection");
+        Document directorDoc = new Document();
+        directorDoc.append("id",director[0])
+                .append("fullname", director[1])
+                .append("birthyear",director[2]);
+        if (!(director[2].contains("\\N")))
+            directorDoc.append("birthyear",director[2]);
+        if (!(director[3].contains("\\N")))
+            directorDoc.append("deathyear",director[3]);
+        List<Document> titlesDocs = new ArrayList<>();
+        String[] titles = director[5].split(",");
+        for (String titleId : Arrays.asList(titles)) {
+            Document d = new Document("id", titleId);
+            titlesDocs.add(d);
+        }
+        directorDoc.append("movies", titlesDocs);
+        collection.insertOne(directorDoc);
+        logger.debug("Inserted into director {}", director[0]);
+    }
+
+    public void updateDirectorMovieInfo(String[] movieLine) {
+        if (mongoClient == null) {
+            initConnection();
+        }
+        MongoCollection<Document> collection = mongoDatabase.getCollection("directorCollection");
+//        Bson filter = eq();
+//        collection.updateMany()
+    }
 }

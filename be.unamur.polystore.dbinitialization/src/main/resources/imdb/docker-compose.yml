@@ -9,7 +9,9 @@ services:
   mymongo:
     image: mongo:latest
     ports: 
-      - 27000:27017
+      - 27100:27017
+    environment: 
+      - MONGO_INITDB_DATABASE=mymongo
 
   mysql:
     image: mysql:latest

@@ -118,4 +118,19 @@ public class RedisDataInit {
         jedis.flushAll();
     }
 
+    public void addMovie(String[] movieLine) {
+        if (jedis == null) {
+            initConnection();
+        }
+        String key;
+        Map<String, String> hash = new HashMap<>();
+        key = "movie:"+movieLine[0];
+        hash.put("title", movieLine[2]);
+        hash.put("originalTitle",movieLine[3]);
+        hash.put("isAdult",movieLine[4]);
+        hash.put("startYear",movieLine[5]);
+        hash.put("runtimeMinutes",movieLine[7]);
+        jedis.hset(key, hash);
+        logger.debug("Inserted movie hset {}", key);
+    }
 }
