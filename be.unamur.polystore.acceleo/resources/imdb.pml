@@ -79,7 +79,7 @@ physical schemas {
 	
 	key value schema movieRedis : myredis {
 		kvpairs movieKV {
-			key : "movie"[id],
+			key : "movie:"[id],
 			value : attr hash{
 				title,
 				originalTitle,
@@ -95,8 +95,7 @@ physical schemas {
 		table actorTable{
 			columns{
 				id,
-				firstname,
-				lastname,
+				fullname:[firstname]" "[lastname],
 				birth,
 				death
 			}
@@ -117,7 +116,7 @@ physical schemas {
 }
 
 mapping rules{
-	conceptualSchema.Actor(id,firstName,firstName,yearOfBirth,yearOfDeath) -> myRelSchema.actorTable(id,firstname,lastname,birth,death),
+	conceptualSchema.Actor(id,firstName,lastName,yearOfBirth,yearOfDeath) -> myRelSchema.actorTable(id,firstname,lastname,birth,death),
 	conceptualSchema.movieActor.character-> myRelSchema.role.plays_in,
 	conceptualSchema.movieActor.movie -> myRelSchema.role.played_by,
 	conceptualSchema.Director(id,firstName,lastName, yearOfBirth,yearOfDeath) -> directorCollection.directorInfo(id,firstname,lastname,birthyear,deathyear),
