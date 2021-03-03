@@ -329,17 +329,6 @@ public class MongoDataInit {
         this.sqlDB = sqlDB;
     }
 
-    public void addDirector(String[] director) {
-        if (mongoClient == null) {
-            initConnection();
-        }
-        MongoCollection<Document> collection = mongoDatabase.getCollection("directorCollection");
-        Document directorDoc = getDirectorDocument(director);
-        collection.insertOne(directorDoc);
-        logger.debug("Inserted into director {}", director[0]);
-    }
-
-
     public void addDirector(List<String[]> directors) {
         if (mongoClient == null) {
             initConnection();

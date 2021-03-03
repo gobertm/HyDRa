@@ -175,40 +175,6 @@ public class SQLDataInit {
         }
     }
 
-    public void addActorToTable(String[] actor) {
-        if(connection==null)
-            initConnection();
-        try {
-            logger.debug("Inserting actor {}", actor[0]);
-            PreparedStatement statement = connection.prepareStatement("INSERT INTO actorTable (id, fullname, birth, death) VALUES (?,?,?,?)");
-            statement.setObject(1,actor[0]);
-            statement.setObject(2,actor[1]);
-            if (actor[2].contains("\\N")) {
-                statement.setObject(3,null);
-            }else
-                statement.setObject(3,actor[2]);
-            if (actor[3].contains("\\N")) {
-                statement.setObject(4,null);
-            }else
-                statement.setObject(4,actor[3]);
-            statement.execute();
-
-            statement = connection.prepareStatement("INSERT INTO role (actor_id, movie_id) VALUES (?,?)");
-            String[] titles = actor[5].split(",");
-            for (String titleId : Arrays.asList(titles)) {
-                statement.clearParameters();
-                statement.setObject(1, actor[0]);
-                statement.setObject(2,titleId);
-                statement.addBatch();
-            }
-            statement.executeBatch();
-            logger.debug("Inserted roles {} - {}",actor[0],titles);
-        } catch (SQLException e) {
-            logger.error("SQLException error");
-            e.printStackTrace();
-        }
-    }
-
     public void addActorToTable(List<String[]> actors) {
         if(connection==null)
             initConnection();
