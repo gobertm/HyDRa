@@ -28,6 +28,7 @@
 
 [for (rel: RelationshipType | conceptualSchema.relationships)]
 	[ generateRelationshipTypePojoClass(rel, conceptualSchema)/]
+	[generateRelationshipTypeTechnicalDataObjectsClass(rel, conceptualSchema) /]
 	[ generateAllLevelsRelationshipTypeClass(rel, conceptualSchema) /]
 [/for]
 [/template]

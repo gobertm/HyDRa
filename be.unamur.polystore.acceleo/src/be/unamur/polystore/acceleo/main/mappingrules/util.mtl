@@ -1,5 +1,6 @@
 [comment encoding = Cp1252 /]
 [module util('http://www.unamur.be/polystore/Pml')/]
+[import be::unamur::polystore::acceleo::main::util /]
 
 [query public getMappedPhysicalFields(arg0 : Attribute, arg1 : MappingRules) : Collection(PhysicalField)
 	= invoke('be.unamur.polystore.acceleo.main.utils.MappingRuleService', 'getMappedPhysicalFields(be.unamur.polystore.pml.Attribute, be.unamur.polystore.pml.MappingRules)', Sequence{arg0, arg1})
@@ -40,4 +41,12 @@
 [query public getMappingRules(o: OclAny) : MappingRules = 
 	o.ancestors(Domainmodel)->first().mappingRules /]
 
+[query public isHostedInJoinPhysicalStructureServing(role : Role, struct: AbstractPhysicalStructure) : Boolean = 
+	hasMappedReferenceInSamePhysicalStructureForOppoisteRole(role, struct) /]
+
+[query public hasMappedReferenceInSamePhysicalStructureForOppoisteRole(role : Role, struct: AbstractPhysicalStructure) : Boolean = 
+	getMappedReferences(role, role.getMappingRules()) -> select(ref : Reference | ref.getAbstractPhysicalStructureNotEmbeddedObject() = struct) -> size() > 0 /]
+
+[query public getMappedReferenceInSamePhysicalStructureForOppositeRole(role : Role, struct: AbstractPhysicalStructure) : Reference = 
+	getMappedReferences(role, role.getMappingRules()) -> select(ref : Reference | ref.getAbstractPhysicalStructureNotEmbeddedObject() = struct) -> any(true) /]
 

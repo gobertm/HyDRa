@@ -12,8 +12,14 @@ package dao.impl;
 
 import org.apache.spark.sql.Dataset;
 import conditions.Condition;
+import conditions.AndCondition;
+import conditions.OrCondition;
+import conditions.SimpleCondition;
+import conditions.[rel.name.toUpperFirst()/]Attribute;
+import conditions.Operator;
 [for (role : Role | rel.roles)]
 import tdo.[role.entity.name.toUpperFirst() /]TDO;
+import tdo.[rel.name.toUpperFirst()/]TDO;
 import pojo.[role.entity.name.toUpperFirst() /];
 import conditions.[role.entity.name.toUpperFirst() /]Attribute;
 [/for]

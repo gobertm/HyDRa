@@ -136,9 +136,11 @@ public class [ent.name.toUpperFirst() /]TDO extends [ent.name.toUpperFirst() /] 
 	[for (rel : RelationshipType | conceptualSchema.relationships)]
 	[if (hasEntityTypeInBinarySimpleRelationshipType(rel, ent))]
 	[for (role : Role | rel.roles)]
+	[let role2 : Role = getOppositeRoles(role)->any(true)]
 	[for (ref: Reference | getMappedReferences(role, conceptualSchema.getMappingRules()))]
 	[if (role.entity = ent)]
-	[for (field : PhysicalField | ref.sourceField)]
+	[let fieldsList : Sequence(PhysicalField) = getFields(ref, role, role2)]
+	[for (field : PhysicalField | fieldsList)]
 	private String [getJavaAbsolutePath(ref) /]_[field.getPhysicalName() /];
 	public String get[getJavaAbsolutePath(ref).toUpperFirst() /]_[field.getPhysicalName() /]() {
 		return this.[getJavaAbsolutePath(ref) /]_[field.getPhysicalName() /];
@@ -149,8 +151,9 @@ public class [ent.name.toUpperFirst() /]TDO extends [ent.name.toUpperFirst() /] 
 	}
 
 	[/for]
+	[/let]
 	[/if]
-	[if (getOppositeRoles(role)->any(true).entity = ent)]
+	[if (role2.entity = ent and isHostedInJoinPhysicalStructureServing(role2, ref.getAbstractPhysicalStructureNotEmbeddedObject()) = false)]
 	[for (field : PhysicalField | ref.targetField)]
 	private String [getJavaAbsolutePath(ref) /]_[field.getPhysicalName() /];
 	public String get[getJavaAbsolutePath(ref).toUpperFirst() /]_[field.getPhysicalName() /]() {
@@ -164,6 +167,7 @@ public class [ent.name.toUpperFirst() /]TDO extends [ent.name.toUpperFirst() /] 
 	[/for]
 	[/if]
 	[/for]
+	[/let]
 	[/for]
 	[/if]
 	[/for]
@@ -174,6 +178,11 @@ public class [ent.name.toUpperFirst() /]TDO extends [ent.name.toUpperFirst() /] 
 [query public hasEntityTypeInBinarySimpleRelationshipType(rel : RelationshipType, ent : EntityType) : Boolean =  
 	rel.roles->select(role: Role | role.entity = ent and rel.roles->size() = 2 and rel.attributes->size() = 0)->size() > 0
 /]
+
+[query private getFields(ref: Reference, role1 : Role, role2 : Role) : Sequence(PhysicalField) = 
+	invoke('be.unamur.polystore.acceleo.main.utils.Util', 'getFields(be.unamur.polystore.pml.Reference, java.lang.Boolean)', Sequence{ref, isHostedInJoinPhysicalStructureServing(role2, ref.getAbstractPhysicalStructureNotEmbeddedObject())})
+ /]
+
 
 
 

@@ -1,6 +1,8 @@
 [comment encoding = UTF-8 /]
 [module util('http://www.unamur.be/polystore/Pml')]
 
+[import be::unamur::polystore::acceleo::main::mappingrules::util /]
+
 [template public generateJavaType(type : DataType) post (replaceAll('\n', '').trim())]
 [if (type.oclIsTypeOf(pml::IntType))]Integer[/if]
 [if (type.oclIsTypeOf(pml::BigintType))]Long[/if]
@@ -126,6 +128,10 @@
 
 [query public getJavaAbsolutePath(ref : Reference) : String = 
 ref.eContainer(AbstractPhysicalSchema).name + '_' + ref.getAbstractPhysicalStructureNotEmbeddedObject().name + '_' + ref.name/]
+
+[query public getJavaAbsolutePath(field : PhysicalField) : String = 
+field.eContainer(AbstractPhysicalSchema).name + '_' + field.getAbstractPhysicalStructureNotEmbeddedObject().name + '_' + field.getPhysicalName()/]
+
 
 [query public getAbstractPhysicalStructureNotEmbeddedObject(o : OclAny) : AbstractPhysicalStructure =
 	invoke('be.unamur.polystore.acceleo.main.utils.MappingRuleService', 'getPhysicalStructureNotEmbeddedObject(org.eclipse.emf.ecore.EObject)', Sequence{o})
