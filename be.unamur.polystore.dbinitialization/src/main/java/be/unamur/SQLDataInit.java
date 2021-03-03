@@ -8,6 +8,7 @@ import org.slf4j.LoggerFactory;
 
 import java.sql.*;
 import java.util.Arrays;
+import java.util.List;
 
 public class SQLDataInit {
     static final Logger logger = LoggerFactory.getLogger(SQLDataInit.class);
@@ -103,29 +104,29 @@ public class SQLDataInit {
         Statement stmt= null;
         try {
             stmt = connection.createStatement();
-        int insertedProduct = 0,insertedReviews=0;
-        for (int i = 0; i < numberofrecords; i++) {
-            try {
-                if (pmlmodel == PmlModelEnum.SIMPLEHYBRID) {
-                    stmt.execute("insert into ProductCatalogTable(product_id,europrice, description, categoryname) VALUES ('product" + i + "'," + RandomUtils.nextInt()+"€" + ",'desc','" + RandomStringUtils.random(2, 65, 70, true, false) + "')");
-                    insertedProduct++;
+            int insertedProduct = 0,insertedReviews=0;
+            for (int i = 0; i < numberofrecords; i++) {
+                try {
+                    if (pmlmodel == PmlModelEnum.SIMPLEHYBRID) {
+                        stmt.execute("insert into ProductCatalogTable(product_id,europrice, description, categoryname) VALUES ('product" + i + "'," + RandomUtils.nextInt()+"€" + ",'desc','" + RandomStringUtils.random(2, 65, 70, true, false) + "')");
+                        insertedProduct++;
+                    }
+                    if (pmlmodel == PmlModelEnum.ALLDBS) {
+                        stmt.execute("insert into ProductCatalogTable(product_id,europrice, description) VALUES ('product" + i + "','" + RandomUtils.nextInt()+"€'" + ",'"+RandomStringUtils.randomAlphabetic(12)+"')");
+                        insertedProduct++;
+                    }
+                    if (pmlmodel == PmlModelEnum.ONETOMANYPML) {
+                        stmt.execute("insert into ProductCatalogTable(product_id,europrice, description) VALUES ('product" + i + "','" + RandomUtils.nextInt()+"€'" + ",'"+RandomStringUtils.randomAlphabetic(12)+"')");
+                        insertedProduct++;
+                        stmt.execute("insert into ReviewTable(review_id, rating, content, product_ref) VALUES ('review"+i+"',"+RandomUtils.nextInt(0,5)+",'"+RandomStringUtils.randomAlphabetic(60)+"','product" + RandomUtils.nextInt(0,numberofrecords) + "')");
+                        insertedReviews++;
+                    }
+                } catch (SQLIntegrityConstraintViolationException e) {
+                    logger.warn("Duplicate entry. Skipping row..");
                 }
-                if (pmlmodel == PmlModelEnum.ALLDBS) {
-                    stmt.execute("insert into ProductCatalogTable(product_id,europrice, description) VALUES ('product" + i + "','" + RandomUtils.nextInt()+"€'" + ",'"+RandomStringUtils.randomAlphabetic(12)+"')");
-                    insertedProduct++;
-                }
-                if (pmlmodel == PmlModelEnum.ONETOMANYPML) {
-                    stmt.execute("insert into ProductCatalogTable(product_id,europrice, description) VALUES ('product" + i + "','" + RandomUtils.nextInt()+"€'" + ",'"+RandomStringUtils.randomAlphabetic(12)+"')");
-                    insertedProduct++;
-                    stmt.execute("insert into ReviewTable(review_id, rating, content, product_ref) VALUES ('review"+i+"',"+RandomUtils.nextInt(0,5)+",'"+RandomStringUtils.randomAlphabetic(60)+"','product" + RandomUtils.nextInt(0,numberofrecords) + "')");
-                    insertedReviews++;
-                }
-            } catch (SQLIntegrityConstraintViolationException e) {
-                logger.warn("Duplicate entry. Skipping row..");
             }
-        }
-        logger.info("Data [{}] rows inserted in table ProductCatalogTable", insertedProduct);
-        logger.info("Data [{}] rows inserted in table ReviewTable", insertedReviews);
+            logger.info("Data [{}] rows inserted in table ProductCatalogTable", insertedProduct);
+            logger.info("Data [{}] rows inserted in table ReviewTable", insertedReviews);
         } catch (SQLException e) {
             logger.error("Unexpected SQLException");
             e.printStackTrace();
@@ -208,6 +209,58 @@ public class SQLDataInit {
         }
     }
 
+    public void addActorToTable(List<String[]> actors) {
+        if(connection==null)
+            initConnection();
+        try {
+            connection.setAutoCommit(false);
+            PreparedStatement statementActor = connection.prepareStatement("INSERT INTO actorTable (id, fullname, birth, death) VALUES (?,?,?,?)");
+            PreparedStatement statementRole = connection.prepareStatement("INSERT INTO role (actor_id, movie_id) VALUES (?,?)");
+            int count=0;
+            int batchSize = 10000;
+            for (String[] actor : actors) {
+                statementActor.setObject(1,actor[0]);
+                statementActor.setObject(2,actor[1]);
+                if (actor[2].contains("\\N")) {
+                    statementActor.setObject(3,null);
+                }else
+                    statementActor.setObject(3,actor[2]);
+                if (actor[3].contains("\\N")) {
+                    statementActor.setObject(4,null);
+                }else
+                    statementActor.setObject(4,actor[3]);
+                count++;
+                statementActor.addBatch();
+                statementActor.clearParameters();
+                String[] titles = actor[5].split(",");
+                for (String titleId : Arrays.asList(titles)) {
+                    statementRole.clearParameters();
+                    statementRole.setObject(1, actor[0]);
+                    statementRole.setObject(2,titleId);
+                    statementRole.addBatch();
+                    statementRole.clearParameters();
+                }
+                if (count % batchSize == 0) {
+                    int[] result = statementActor.executeBatch();
+                    logger.info("Partial insert into actors : {}", result.length);
+                    connection.commit();
+                    result = statementRole.executeBatch();
+                    logger.info("Partial insert into roles : {}", result.length);
+                    connection.commit();
+                }
+            }
+            int[] result = statementActor.executeBatch();
+            logger.info("Final insert into actors : {}", result.length);
+            connection.commit();
+            result = statementRole.executeBatch();
+            logger.info("Final insert into roles : {}", result.length);
+            connection.commit();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+    }
+
     public void initIMDBStructure() {
         logger.info("Creating IMDB data tables");
         if(connection==null)
@@ -243,4 +296,5 @@ public class SQLDataInit {
             e.printStackTrace();
         }
     }
+
 }

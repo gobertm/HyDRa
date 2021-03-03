@@ -6,6 +6,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.*;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -52,50 +54,49 @@ public class MainInit {
         mongoDataInit.deleteAll();
         sqlDataInit.deleteDataImdb();
         sqlDataInit.initIMDBStructure();
-        processNamesFile("src/main/resources/imdb/name-basics.tsv");
-//        processTitleBasicsFile("src/main/resources/imdb/title-basics.tsv");
+        processNamesFile("src/main/resources/imdb/name-basics.tsv",true);
+        processTitleBasicsFile("src/main/resources/imdb/title-basics.tsv","directorCollection");
     }
 
-    private void processTitleBasicsFile(String path) {
-        logger.info("Starting initialise of IMDB data. Movies");
-        try {
-            BufferedReader tsv = new BufferedReader(new FileReader(path));
-            BufferedWriter out = new BufferedWriter(new FileWriter(outpath + "movies.tsv"));
-            String line = null;
-            int i = 0;
-            while ((line = tsv.readLine()) != null) {
-                String[] lineItems = line.split("\t");
-                if (lineItems[1].contains("movie")) {
-                    redisDataInit.addMovie(lineItems);
-                    mongoDataInit.updateDirectorMovieInfo(lineItems);
-                }
-            }
-        } catch (FileNotFoundException e) {
-            logger.error("Error opening file");
-            e.printStackTrace();
-        } catch (IOException e) {
-            logger.error("Error reading file");
-            e.printStackTrace();
-        }
-    }
 
-    private void processNamesFile(String path) {
+    private void processNamesFile(String path, boolean bulkVersion) {
         //Note : The column 'knowForTitles' at index 5, contains id of title (not limited to movies)
         logger.info("Starting initialise of IMDB data. Actors and Directors");
         try {
             BufferedReader tsv = new BufferedReader(new FileReader(path));
             String line =null;
+            String[] lineItems;
             int i=0;
-            while ((line = tsv.readLine()) != null) {
-                String[] lineItems = line.split("\t");
-                if (lineItems[4].contains("director")) {
-                    mongoDataInit.addDirector(lineItems);
-                }else if(lineItems[4].contains("actor") || lineItems[4].contains("actress")){
-                    sqlDataInit.addActorToTable(lineItems);
+            if (!bulkVersion) {
+                while ((line = tsv.readLine()) != null) {
+                    lineItems = line.split("\t");
+                    if (lineItems[4].contains("director")) {
+                        mongoDataInit.addDirector(lineItems);
+                    }else if(lineItems[4].contains("actor") || lineItems[4].contains("actress")){
+                        sqlDataInit.addActorToTable(lineItems);
+                    }
+                    i++;
+                    if(i%10000==0)
+                        logger.info("Processed {} lines of 'name-basics.tsv file",i);
                 }
-                i++;
-                if(i%10000==0)
-                    logger.info("Processed {} lines of 'name-basics.tsv file",i);
+            }else{
+                List<String> namesFile = Files.readAllLines(Paths.get(path));
+                logger.debug("All lines loaded");
+                List<String[]> directors = new ArrayList<>();
+                List<String[]> actors = new ArrayList<>();
+                for (String nameLine : namesFile) {
+                    lineItems = nameLine.split("\t");
+                    if (lineItems[4].contains("director"))
+                        directors.add(lineItems);
+                    else if(lineItems[4].contains("actor") || lineItems[4].contains("actress"))
+                        actors.add(lineItems);
+                    i++;
+                    if(i%10000==0)
+                        logger.debug("Processed {} lines",i);
+                }
+                mongoDataInit.addDirector(directors);
+                sqlDataInit.addActorToTable(actors);
+                logger.info("Inserted data indirector collection, actorTable and role table.");
             }
         } catch (FileNotFoundException e) {
             logger.error("Can't open file ");
@@ -105,6 +106,35 @@ public class MainInit {
             e.printStackTrace();
         }
 
+    }
+
+    private void processTitleBasicsFile(String path,String directorCollection) {
+        logger.info("Starting initialise of IMDB data. Movies");
+        try {
+            BufferedReader tsv = new BufferedReader(new FileReader(path));
+            String line = null;
+            String[] lineItems;
+            int i = 0;
+            List<String> titleFile = Files.readAllLines(Paths.get(path));
+            logger.debug("All lines loaded");
+            List<String[]> movies = new ArrayList<>();
+            for (String movieLine : titleFile) {
+                 lineItems = movieLine.split("\t");
+                if (lineItems[1].contains("movie")) {
+                    movies.add(lineItems);
+                    i++;
+                }
+            }
+            logger.debug("Found {} movies ",i);
+            redisDataInit.addMovie(movies);
+            mongoDataInit.updateDirectorMovieInfo(movies,directorCollection);
+        } catch (FileNotFoundException e) {
+            logger.error("Error opening file");
+            e.printStackTrace();
+        } catch (IOException e) {
+            logger.error("Error reading file");
+            e.printStackTrace();
+        }
     }
 
     private void initOneToManyMongoToRel() throws SQLException {

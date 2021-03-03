@@ -19,7 +19,9 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Random;
 
+import static com.mongodb.client.model.Filters.elemMatch;
 import static com.mongodb.client.model.Filters.eq;
+import static com.mongodb.client.model.Updates.*;
 
 public class MongoDataInit {
     static final Logger logger = LoggerFactory.getLogger(MongoDataInit.class);
@@ -332,6 +334,38 @@ public class MongoDataInit {
             initConnection();
         }
         MongoCollection<Document> collection = mongoDatabase.getCollection("directorCollection");
+        Document directorDoc = getDirectorDocument(director);
+        collection.insertOne(directorDoc);
+        logger.debug("Inserted into director {}", director[0]);
+    }
+
+
+    public void addDirector(List<String[]> directors) {
+        if (mongoClient == null) {
+            initConnection();
+        }
+        int i=0;
+        MongoCollection<Document> collection = mongoDatabase.getCollection("directorCollection");
+        List<Document> direcDocumentList = new ArrayList<>();
+        for (String[] directorLine : directors) {
+            direcDocumentList.add(getDirectorDocument(directorLine));
+            i++;
+        }
+        logger.debug("Starting bulk insert in mongo {} documents",i);
+        collection.insertMany(direcDocumentList);
+        logger.debug("Inserted directors [{}] documents", i);
+    }
+
+    public void updateDirectorMovieInfo(String[] movieLine) {
+        if (mongoClient == null) {
+            initConnection();
+        }
+        MongoCollection<Document> collection = mongoDatabase.getCollection("directorCollection");
+//        Bson filter = eq();
+//        collection.updateMany()
+    }
+
+    private Document getDirectorDocument(String[] director) {
         Document directorDoc = new Document();
         directorDoc.append("id",director[0])
                 .append("fullname", director[1])
@@ -347,16 +381,23 @@ public class MongoDataInit {
             titlesDocs.add(d);
         }
         directorDoc.append("movies", titlesDocs);
-        collection.insertOne(directorDoc);
-        logger.debug("Inserted into director {}", director[0]);
+        return directorDoc;
     }
 
-    public void updateDirectorMovieInfo(String[] movieLine) {
+    public void updateDirectorMovieInfo(List<String[]> movies, String directorCollection) {
+        //{movies:{$elemMatch:{id:"tt0050986"}}}
+        // movies.$.title : "dd"
         if (mongoClient == null) {
             initConnection();
         }
-        MongoCollection<Document> collection = mongoDatabase.getCollection("directorCollection");
-//        Bson filter = eq();
-//        collection.updateMany()
+        Bson filter=null;
+        Bson updateOp = null;
+        MongoCollection<Document> collection = mongoDatabase.getCollection(directorCollection);
+        for (String[] movie : movies) {
+            filter = elemMatch("movies",Document.parse("{id:'"+movie[0]+"'}"));
+            updateOp = set("movies.$.title", movie[2]);
+            logger.debug("Updating movie title in director collection {} - {}", movie[0], movie[2]);
+            collection.updateMany(filter,updateOp);
+        }
     }
 }

@@ -5,8 +5,10 @@ import org.apache.commons.lang3.RandomUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import redis.clients.jedis.Jedis;
+import redis.clients.jedis.Pipeline;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class RedisDataInit {
@@ -132,5 +134,26 @@ public class RedisDataInit {
         hash.put("runtimeMinutes",movieLine[7]);
         jedis.hset(key, hash);
         logger.debug("Inserted movie hset {}", key);
+    }
+
+    public void addMovie(List<String[]> movies) {
+        Pipeline pipeline = jedis.pipelined();
+        String key;
+        int count=0;
+        Map<String, String> hash = new HashMap<>();
+        logger.debug("Starting building hset movies for redis pipeline insert");
+        for (String[] movieLine : movies) {
+            key = "movie:"+movieLine[0];
+            hash.put("title", movieLine[2]);
+            hash.put("originalTitle",movieLine[3]);
+            hash.put("isAdult",movieLine[4]);
+            hash.put("startYear",movieLine[5]);
+            hash.put("runtimeMinutes",movieLine[7]);
+            pipeline.hset(key, hash);
+            count++;
+        }
+        logger.debug("Sync of redis pipeline with {} hset keys", count);
+        pipeline.sync();
+        logger.info("Done pipeline insert in redis");
     }
 }
