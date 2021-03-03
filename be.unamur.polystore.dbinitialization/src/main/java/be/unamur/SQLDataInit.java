@@ -2,10 +2,12 @@ package be.unamur;
 
 import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.lang3.RandomUtils;
+import org.bson.Document;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.sql.*;
+import java.util.Arrays;
 
 public class SQLDataInit {
     static final Logger logger = LoggerFactory.getLogger(SQLDataInit.class);
@@ -168,6 +170,76 @@ public class SQLDataInit {
             stmt = connection.createStatement();
             stmt.execute(query);
         } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void addActorToTable(String[] actor) {
+        if(connection==null)
+            initConnection();
+        try {
+            logger.debug("Inserting actor {}", actor[0]);
+            PreparedStatement statement = connection.prepareStatement("INSERT INTO actorTable (id, fullname, birth, death) VALUES (?,?,?,?)");
+            statement.setObject(1,actor[0]);
+            statement.setObject(2,actor[1]);
+            if (actor[2].contains("\\N")) {
+                statement.setObject(3,null);
+            }else
+                statement.setObject(3,actor[2]);
+            if (actor[3].contains("\\N")) {
+                statement.setObject(4,null);
+            }else
+                statement.setObject(4,actor[3]);
+            statement.execute();
+
+            statement = connection.prepareStatement("INSERT INTO role (actor_id, movie_id) VALUES (?,?)");
+            String[] titles = actor[5].split(",");
+            for (String titleId : Arrays.asList(titles)) {
+                statement.clearParameters();
+                statement.setObject(1, actor[0]);
+                statement.setObject(2,titleId);
+                statement.addBatch();
+            }
+            statement.executeBatch();
+            logger.debug("Inserted roles {} - {}",actor[0],titles);
+        } catch (SQLException e) {
+            logger.error("SQLException error");
+            e.printStackTrace();
+        }
+    }
+
+    public void initIMDBStructure() {
+        logger.info("Creating IMDB data tables");
+        if(connection==null)
+            initConnection();
+        try {
+            Statement stmt=connection.createStatement();
+            stmt.execute("CREATE TABLE IF NOT EXISTS actorTable(" +
+                    "id varchar(20)," +
+                    "fullname char(50)," +
+                    "birth int," +
+                    "death int" +
+                    ")");
+            stmt.execute("CREATE TABLE IF NOT EXISTS role(" +
+                    "actor_id char(20)," +
+                    "movie_id char(20)" +
+                    ")");
+        } catch (SQLException e) {
+            logger.error("SQLException error");
+            e.printStackTrace();
+        }
+    }
+
+    public void deleteDataImdb() {
+        logger.info("Deleting data in IMDB tables ");
+        if(connection==null)
+            initConnection();
+        try{
+            Statement stmt = connection.createStatement();
+            stmt.execute("DELETE FROM role");
+            stmt.execute("DELETE FROM actorTable");
+        } catch (SQLException e) {
+            logger.error("SQLException error");
             e.printStackTrace();
         }
     }
