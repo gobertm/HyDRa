@@ -29,7 +29,7 @@ conceptual schema conceptualSchema{
 		isAdult : bool,
 		startYear : int,
 		runtimeMinutes: int,
-		averageRating : float,
+		averageRating : string,
 		numVotes : int
 		identifier{
 			id
@@ -47,8 +47,8 @@ conceptual schema conceptualSchema{
 }
 physical schemas { 
 	
-	document schema actorCollection : mymongo {
-		collection actorInfo {
+	document schema IMDB_Mongo : mymongo {
+		collection actorCollection {
 			fields {
 				id,
 				fullname:[firstname]" "[lastname],
@@ -113,14 +113,14 @@ physical schemas {
 }
 
 mapping rules{
-	conceptualSchema.Actor(id,firstName,lastName,yearOfBirth,yearOfDeath) -> actorCollection.actorInfo(id,firstname,lastname,birthyear,deathyear),
-	conceptualSchema.movieActor.character-> actorCollection.actorInfo.movies(),
+	conceptualSchema.Actor(id,firstName,lastName,yearOfBirth,yearOfDeath) -> IMDB_Mongo.actorCollection(id,firstname,lastname,birthyear,deathyear),
+	conceptualSchema.movieActor.character-> IMDB_Mongo.actorCollection.movies(),
 	conceptualSchema.Director(id,firstName,lastName, yearOfBirth,yearOfDeath) -> myRelSchema.directorTable(id,firstname,lastname,birth,death),
 	conceptualSchema.movieDirector.director -> myRelSchema.directed.directed_by,
 	conceptualSchema.movieDirector.directed_movie -> myRelSchema.directed.has_directed,
-	conceptualSchema.Movie(id, primaryTitle) -> actorCollection.actorInfo.movies(id,title),
-	conceptualSchema.Movie(averageRating,numVotes) -> actorCollection.actorInfo.movies.rating(rate,numberofvotes),
-	conceptualSchema.Movie(id,primaryTitle,averageRating,numVotes) -(averageRating > 9)-> actorCollection.topMovies(id,title,rate,numberofvotes),
+	conceptualSchema.Movie(id, primaryTitle) -> IMDB_Mongo.actorCollection.movies(id,title),
+	conceptualSchema.Movie(averageRating,numVotes) -> IMDB_Mongo.actorCollection.movies.rating(rate,numberofvotes),
+	conceptualSchema.Movie(id,primaryTitle,averageRating,numVotes) -(averageRating > 9)-> IMDB_Mongo.topMovies(id,title,rate,numberofvotes),
 	conceptualSchema.Movie(id) -> movieRedis.movieKV(id),
 	conceptualSchema.Movie(primaryTitle,originalTitle,isAdult,startYear,runtimeMinutes) ->movieRedis.movieKV.attr(title,originalTitle,isAdult,startYear,runtimeMinutes) 
 }

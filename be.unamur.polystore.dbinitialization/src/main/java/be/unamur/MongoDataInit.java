@@ -331,7 +331,9 @@ public class MongoDataInit {
 
     private Document getActorDocument(String[] actor) {
         Document actorDoc = new Document();
+        long seed;
         String title;
+        Random random = new Random();
         String[] movieLine;
         actorDoc.append("id",actor[0])
                 .append("fullname", actor[1])
@@ -344,9 +346,12 @@ public class MongoDataInit {
         String[] titles = actor[5].split(",");
         for (String titleId : Arrays.asList(titles)) {
             title = redis.getTitleMovie(titleId);
-            Document rating = new Document("rate", String.format("%.1f", RandomUtils.nextFloat(0, 10)) + "/10")
-                    .append("numberofvotes", RandomUtils.nextInt(0, 100000));
             if (title != null) {
+                titleId = titleId.replaceAll("\\\\N", "NoID");
+                seed = Long.parseLong(titleId,36);
+                random.setSeed(seed);
+                Document rating = new Document("rate", String.format("%.1f", random.nextFloat()*10) + "/10")
+                        .append("numberofvotes", random.nextInt());
                 Document movie = new Document("id", titleId)
                         .append("title",title )
                         .append("rating", rating);

@@ -158,8 +158,12 @@ public class RedisDataInit {
             hash.put("title", movieLine[2]);
             hash.put("originalTitle",movieLine[3]);
             hash.put("isAdult",movieLine[4]);
-            hash.put("startYear",movieLine[5]);
-            hash.put("runtimeMinutes",movieLine[7]);
+            if (!movieLine[5].equals("\\N")) {
+                hash.put("startYear",movieLine[5]);
+            }
+            if (!movieLine[7].equals("\\N")) {
+                hash.put("runtimeMinutes", movieLine[7]);
+            }
             pipeline.hset(key, hash);
             count++;
         }
