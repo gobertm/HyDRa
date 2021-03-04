@@ -388,7 +388,7 @@ public class MongoDataInit {
         for (String[] actorLine : actors) {
             actorDocList.add(getActorDocument(actorLine));
             i++;
-            if(i % 1000000==0){
+            if(i % 100000==0){
                 logger.debug("Starting bulk insert 1 000 000 documents in mongo");
                 collection.insertMany(actorDocList);
                 logger.debug("Inserted actors documents", i);

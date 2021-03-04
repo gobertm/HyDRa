@@ -26,13 +26,23 @@ public class MainInit {
     }
 
     public static void main(String args[]) throws SQLException {
-        // Init
-        RedisDataInit redisDataInit = new RedisDataInit("localhost", 6379);
-        SQLDataInit sqlinit = new SQLDataInit("localhost","3307","mydb","root","password");
-        String mongohost2 = "localhost";
-        String mongodbname2 = "mymongo";
-        int mongoport2 = 27100;
-        MongoDataInit mongoDataInit2 = new MongoDataInit(mongodbname2, mongohost2, mongoport2, 20);
+        String redisUrl, sqlUrl, mongoUrl;
+        int redisport, sqlport, mongoport;
+        redisUrl="localhost";
+        sqlUrl = "localhost";
+        mongoUrl = "localhost";
+        String mongodbname = "mymongo";
+        // Init IMDB
+        redisport=6379;
+        mongoport=27100;
+        sqlport=3307;
+        // Init other
+//        redisport = 6363;
+//        mongoport=27000;
+//        sqlport=3310;
+        RedisDataInit redisDataInit = new RedisDataInit(redisUrl, redisport);
+        SQLDataInit sqlinit = new SQLDataInit(sqlUrl,""+sqlport,"mydb","root","password");
+        MongoDataInit mongoDataInit2 = new MongoDataInit(mongodbname, mongoUrl, mongoport, 20);
         mongoDataInit2.setSqlDB(sqlinit);
         mongoDataInit2.setRedis(redisDataInit);
         MainInit mainInit = new MainInit(redisDataInit,sqlinit,mongoDataInit2);
@@ -52,10 +62,10 @@ public class MainInit {
 
     private void initIMDB() {
         mongoDataInit.deleteAll("actorCollection");
-        sqlDataInit.deleteDataImdb("directorTable","directed");
-        redisDataInit.deleteAll();
-        sqlDataInit.initIMDBStructure("directorTable","directed");
-        processTitleBasicsFile("src/main/resources/imdb/title-basics.tsv","directorCollection");
+//        redisDataInit.deleteAll();
+//        sqlDataInit.deleteDataImdb("directorTable","directed");
+//        sqlDataInit.initIMDBStructure("directorTable","directed");
+//        processTitleBasicsFile("src/main/resources/imdb/title-basics.tsv","directorCollection");
         processNamesFile("src/main/resources/imdb/name-basics.tsv", "actorCollection", "directorTable","directed");
     }
 
@@ -81,7 +91,7 @@ public class MainInit {
                     logger.debug("Processed {} lines",i);
             }
             mongoDataInit.addActors(actors,actorCollection);
-            sqlDataInit.addPersonToTable(directors, directorTable, joinTable);
+//            sqlDataInit.addPersonToTable(directors, directorTable, joinTable);
             logger.info("Inserted data director, actor and work of director.");
         } catch (FileNotFoundException e) {
             logger.error("Can't open file ");
