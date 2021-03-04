@@ -2,7 +2,6 @@ package be.unamur;
 
 import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.lang3.RandomUtils;
-import org.bson.Document;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -175,51 +174,55 @@ public class SQLDataInit {
         }
     }
 
-    public void addActorToTable(List<String[]> actors) {
+    public void addPersonToTable(List<String[]> persons, String personTable, String worksJoinTable) {
         if(connection==null)
             initConnection();
         try {
             connection.setAutoCommit(false);
-            PreparedStatement statementActor = connection.prepareStatement("INSERT INTO actorTable (id, fullname, birth, death) VALUES (?,?,?,?)");
-            PreparedStatement statementRole = connection.prepareStatement("INSERT INTO role (actor_id, movie_id) VALUES (?,?)");
+            // I know, not SQL Injection proof TODO
+            PreparedStatement statementPerson = connection.prepareStatement("INSERT INTO "+personTable+" (id, fullname, birth, death) VALUES (?,?,?,?)");
+            PreparedStatement statementRole = connection.prepareStatement("INSERT INTO "+worksJoinTable+" (director_id, movie_id) VALUES (?,?)");
             int count=0;
-            int batchSize = 10000;
-            for (String[] actor : actors) {
-                statementActor.setObject(1,actor[0]);
-                statementActor.setObject(2,actor[1]);
-                if (actor[2].contains("\\N")) {
-                    statementActor.setObject(3,null);
-                }else
-                    statementActor.setObject(3,actor[2]);
-                if (actor[3].contains("\\N")) {
-                    statementActor.setObject(4,null);
-                }else
-                    statementActor.setObject(4,actor[3]);
+            int batchSize = 20000;
+            for (String[] person : persons) {
                 count++;
-                statementActor.addBatch();
-                statementActor.clearParameters();
-                String[] titles = actor[5].split(",");
+                if (count < 720000) {
+
+                statementPerson.setObject(1,person[0]);
+                statementPerson.setObject(2,person[1]);
+                if (person[2].contains("\\N")) {
+                    statementPerson.setObject(3,null);
+                }else
+                    statementPerson.setObject(3,person[2]);
+                if (person[3].contains("\\N")) {
+                    statementPerson.setObject(4,null);
+                }else
+                    statementPerson.setObject(4,person[3]);
+                statementPerson.addBatch();
+                statementPerson.clearParameters();
+                String[] titles = person[5].split(",");
                 for (String titleId : Arrays.asList(titles)) {
                     statementRole.clearParameters();
-                    statementRole.setObject(1, actor[0]);
+                    statementRole.setObject(1, person[0]);
                     statementRole.setObject(2,titleId);
                     statementRole.addBatch();
                     statementRole.clearParameters();
                 }
                 if (count % batchSize == 0) {
-                    int[] result = statementActor.executeBatch();
-                    logger.info("Partial insert into actors : {}", result.length);
+                    int[] result = statementPerson.executeBatch();
+                    logger.info("Partial insert into {} : {}",personTable, result.length);
                     connection.commit();
                     result = statementRole.executeBatch();
-                    logger.info("Partial insert into roles : {}", result.length);
+                    logger.info("Partial insert into {} : {}",worksJoinTable, result.length);
                     connection.commit();
                 }
+                }
             }
-            int[] result = statementActor.executeBatch();
-            logger.info("Final insert into actors : {}", result.length);
+            int[] result = statementPerson.executeBatch();
+            logger.info("Final insert into {} : {}",personTable, result.length);
             connection.commit();
             result = statementRole.executeBatch();
-            logger.info("Final insert into roles : {}", result.length);
+            logger.info("Final insert into {} : {}",worksJoinTable, result.length);
             connection.commit();
         } catch (SQLException e) {
             e.printStackTrace();
@@ -227,21 +230,21 @@ public class SQLDataInit {
 
     }
 
-    public void initIMDBStructure() {
+    public void initIMDBStructure(String personTable, String joinTable) {
         logger.info("Creating IMDB data tables");
         if(connection==null)
             initConnection();
         try {
             Statement stmt=connection.createStatement();
-            stmt.execute("CREATE TABLE IF NOT EXISTS actorTable(" +
+            stmt.execute("CREATE TABLE IF NOT EXISTS "+personTable+"(" +
                     "id varchar(20)," +
-                    "fullname char(50)," +
+                    "fullname varchar(70)," +
                     "birth int," +
                     "death int" +
                     ")");
-            stmt.execute("CREATE TABLE IF NOT EXISTS role(" +
-                    "actor_id char(20)," +
-                    "movie_id char(20)" +
+            stmt.execute("CREATE TABLE IF NOT EXISTS "+joinTable+"(" +
+                    "director_id varchar(20)," +
+                    "movie_id varchar(20)" +
                     ")");
         } catch (SQLException e) {
             logger.error("SQLException error");
@@ -249,18 +252,17 @@ public class SQLDataInit {
         }
     }
 
-    public void deleteDataImdb() {
+    public void deleteDataImdb(String personTable, String joinTable) {
         logger.info("Deleting data in IMDB tables ");
         if(connection==null)
             initConnection();
         try{
             Statement stmt = connection.createStatement();
-            stmt.execute("DELETE FROM role");
-            stmt.execute("DELETE FROM actorTable");
+            stmt.execute("DELETE FROM "+joinTable);
+            stmt.execute("DELETE FROM "+personTable);
         } catch (SQLException e) {
             logger.error("SQLException error");
             e.printStackTrace();
         }
     }
-
 }

@@ -47,6 +47,14 @@ public class RedisDataInit {
         logger.info("Added {} CLIENT:[clientID] hashes in Redis DB",added);
     }
 
+    // Used in IMDB data init use case.
+    public String getTitleMovie(String movieId) {
+        if (jedis == null) {
+            initConnection();
+        }
+        return jedis.hget("movie:"+movieId, "title");
+    }
+
     public void persistData(PmlModelEnum model, int numberofrecords) {
         String key;
         String value;
@@ -113,7 +121,7 @@ public class RedisDataInit {
         jedis = new Jedis(host, port);
     }
 
-    public void deleteAll(String dbname){
+    public void deleteAll(){
         if(jedis==null)
             initConnection();
         logger.info("Flushing all data in redis [{},{}]", host, port);
@@ -137,6 +145,9 @@ public class RedisDataInit {
     }
 
     public void addMovie(List<String[]> movies) {
+        if (jedis == null) {
+            initConnection();
+        }
         Pipeline pipeline = jedis.pipelined();
         String key;
         int count=0;

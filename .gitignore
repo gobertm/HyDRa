@@ -14,3 +14,4 @@ be.unamur.polystore.dbinitialization/src/main/resources/imdb/title-basics.tsv
 be.unamur.polystore.dbinitialization/src/main/resources/imdb/title-crew.tsv
 be.unamur.polystore.dbinitialization/src/main/resources/imdb/title-principals.tsv
 be.unamur.polystore.dbinitialization/src/main/resources/imdb/title-ratings.tsv
+be.unamur.polystore.dbinitialization/dbinitialization.iml

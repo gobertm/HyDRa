@@ -1,7 +1,5 @@
 package be.unamur;
 
-import com.mongodb.client.MongoCollection;
-import org.bson.Document;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -10,8 +8,9 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class MainInit {
     static final Logger logger = LoggerFactory.getLogger(MainInit.class);
@@ -35,6 +34,7 @@ public class MainInit {
         int mongoport2 = 27100;
         MongoDataInit mongoDataInit2 = new MongoDataInit(mongodbname2, mongohost2, mongoport2, 20);
         mongoDataInit2.setSqlDB(sqlinit);
+        mongoDataInit2.setRedis(redisDataInit);
         MainInit mainInit = new MainInit(redisDataInit,sqlinit,mongoDataInit2);
 
         // for Model 'onetomanyMongoToRel.pml'
@@ -51,20 +51,19 @@ public class MainInit {
     }
 
     private void initIMDB() {
-        mongoDataInit.deleteAll();
-        sqlDataInit.deleteDataImdb();
-        sqlDataInit.initIMDBStructure();
-        processNamesFile("src/main/resources/imdb/name-basics.tsv");
+        mongoDataInit.deleteAll("actorCollection");
+        sqlDataInit.deleteDataImdb("directorTable","directed");
+        redisDataInit.deleteAll();
+        sqlDataInit.initIMDBStructure("directorTable","directed");
         processTitleBasicsFile("src/main/resources/imdb/title-basics.tsv","directorCollection");
+        processNamesFile("src/main/resources/imdb/name-basics.tsv", "actorCollection", "directorTable","directed");
     }
 
 
-    private void processNamesFile(String path) {
+    private void processNamesFile(String path, String actorCollection, String directorTable, String joinTable) {
         //Note : The column 'knowForTitles' at index 5, contains id of title (not limited to movies)
         logger.info("Starting initialise of IMDB data. Actors and Directors");
         try {
-            BufferedReader tsv = new BufferedReader(new FileReader(path));
-            String line =null;
             String[] lineItems;
             int i=0;
             List<String> namesFile = Files.readAllLines(Paths.get(path));
@@ -78,12 +77,12 @@ public class MainInit {
                 else if(lineItems[4].contains("actor") || lineItems[4].contains("actress"))
                     actors.add(lineItems);
                 i++;
-                if(i%10000==0)
+                if(i%50000==0)
                     logger.debug("Processed {} lines",i);
             }
-            mongoDataInit.addDirector(directors);
-            sqlDataInit.addActorToTable(actors);
-            logger.info("Inserted data indirector collection, actorTable and role table.");
+            mongoDataInit.addActors(actors,actorCollection);
+            sqlDataInit.addPersonToTable(directors, directorTable, joinTable);
+            logger.info("Inserted data director, actor and work of director.");
         } catch (FileNotFoundException e) {
             logger.error("Can't open file ");
             e.printStackTrace();
@@ -94,7 +93,7 @@ public class MainInit {
 
     }
 
-    private void processTitleBasicsFile(String path,String directorCollection) {
+    private void processTitleBasicsFile(String path, String collectionWithMovies) {
         logger.info("Starting initialise of IMDB data. Movies");
         try {
             BufferedReader tsv = new BufferedReader(new FileReader(path));
@@ -113,7 +112,6 @@ public class MainInit {
             }
             logger.debug("Found {} movies ",i);
             redisDataInit.addMovie(movies);
-            mongoDataInit.updateDirectorMovieInfo(movies,directorCollection);
         } catch (FileNotFoundException e) {
             logger.error("Error opening file");
             e.printStackTrace();
@@ -128,22 +126,22 @@ public class MainInit {
 //        sqlDataInit.createDatabase("mydb");
 //        sqlDataInit.initStructure(PmlModelEnum.ONETOMANYPML,"mydb");
         sqlDataInit.persistData(30,PmlModelEnum.ONETOMANYPML);
-        mongoDataInit.deleteAll();
+        mongoDataInit.dropDatabase();
         mongoDataInit.persistDataPmlModel(2,true,PmlModelEnum.ONETOMANYMONGOTOREL);
     }
 
     private void initKVEmbedded() {
-        redisDataInit.deleteAll("");
+        redisDataInit.deleteAll();
         redisDataInit.persistData(PmlModelEnum.KVEMBEDDED,20);
     }
 
     private void initKVManytoone() {
-        redisDataInit.deleteAll("");
+        redisDataInit.deleteAll();
         redisDataInit.persistData(PmlModelEnum.KVMANYTOONE,20);
     }
 
     private void init3DBMS() throws SQLException {
-        redisDataInit.deleteAll("");
+        redisDataInit.deleteAll();
         redisDataInit.persistData(PmlModelEnum.ALLDBS,10);
 
 //        sqlDataInit.deleteAll("mydb");
@@ -153,7 +151,7 @@ public class MainInit {
         sqlDataInit.getConnection().close();
 
         // Mongo DB 2
-        mongoDataInit.deleteAll();
+        mongoDataInit.dropDatabase();
         mongoDataInit.persistDataPmlModel(2,false,null);
 
     }

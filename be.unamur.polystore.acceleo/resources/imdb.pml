@@ -28,7 +28,6 @@ conceptual schema conceptualSchema{
 		originalTitle : string,
 		isAdult : bool,
 		startYear : int,
-		endYear : int,
 		runtimeMinutes: int,
 		averageRating : float,
 		numVotes : int
@@ -41,7 +40,6 @@ conceptual schema conceptualSchema{
 		directed_movie[0-N]: Movie,
 		director[0-N] : Director
 	}
-	
 	relationship type movieActor{
 		character[0-N]: Actor,
 		movie[0-N] : Movie
@@ -49,8 +47,8 @@ conceptual schema conceptualSchema{
 }
 physical schemas { 
 	
-	document schema directorCollection : mymongo {
-		collection directorInfo {
+	document schema actorCollection : mymongo {
+		collection actorInfo {
 			fields {
 				id,
 				fullname:[firstname]" "[lastname],
@@ -85,14 +83,13 @@ physical schemas {
 				originalTitle,
 				isAdult,
 				startYear,
-				endYear,
 				runtimeMinutes
 			}
 		}
 	}
 	
 	relational schema myRelSchema : mydb {
-		table actorTable{
+		table directorTable{
 			columns{
 				id,
 				fullname:[firstname]" "[lastname],
@@ -102,30 +99,30 @@ physical schemas {
 		}
 		
 		
-		table role {
+		table directed {
 			columns{
-				actor_id,
+				director_id,
 				movie_id
 			}
 			references {
-				played_by : actor_id -> actorTable.id
-				plays_in : movie_id -> movieRedis.movieKV.id
+				directed_by : director_id -> directorTable.id
+				has_directed : movie_id -> movieRedis.movieKV.id
 			}
 		}
 	}
 }
 
 mapping rules{
-	conceptualSchema.Actor(id,firstName,lastName,yearOfBirth,yearOfDeath) -> myRelSchema.actorTable(id,firstname,lastname,birth,death),
-	conceptualSchema.movieActor.character-> myRelSchema.role.plays_in,
-	conceptualSchema.movieActor.movie -> myRelSchema.role.played_by,
-	conceptualSchema.Director(id,firstName,lastName, yearOfBirth,yearOfDeath) -> directorCollection.directorInfo(id,firstname,lastname,birthyear,deathyear),
-	conceptualSchema.movieDirector.director -> directorCollection.directorInfo.movies(),
-	conceptualSchema.Movie(id, primaryTitle) -> directorCollection.directorInfo.movies(id,title),
-	conceptualSchema.Movie(averageRating,numVotes) -> directorCollection.directorInfo.movies.rating(rate,numberofvotes),
-	conceptualSchema.Movie(id,primaryTitle,averageRating,numVotes) -(averageRating > 9)-> directorCollection.topMovies(id,title,rate,numberofvotes),
+	conceptualSchema.Actor(id,firstName,lastName,yearOfBirth,yearOfDeath) -> actorCollection.actorInfo(id,firstname,lastname,birthyear,deathyear),
+	conceptualSchema.movieActor.character-> actorCollection.actorInfo.movies(),
+	conceptualSchema.Director(id,firstName,lastName, yearOfBirth,yearOfDeath) -> myRelSchema.directorTable(id,firstname,lastname,birth,death),
+	conceptualSchema.movieDirector.director -> myRelSchema.directed.directed_by,
+	conceptualSchema.movieDirector.directed_movie -> myRelSchema.directed.has_directed,
+	conceptualSchema.Movie(id, primaryTitle) -> actorCollection.actorInfo.movies(id,title),
+	conceptualSchema.Movie(averageRating,numVotes) -> actorCollection.actorInfo.movies.rating(rate,numberofvotes),
+	conceptualSchema.Movie(id,primaryTitle,averageRating,numVotes) -(averageRating > 9)-> actorCollection.topMovies(id,title,rate,numberofvotes),
 	conceptualSchema.Movie(id) -> movieRedis.movieKV(id),
-	conceptualSchema.Movie(primaryTitle,originalTitle,isAdult,startYear,endYear,runtimeMinutes) ->movieRedis.movieKV.attr(title,originalTitle,isAdult,startYear,endYear,runtimeMinutes) 
+	conceptualSchema.Movie(primaryTitle,originalTitle,isAdult,startYear,runtimeMinutes) ->movieRedis.movieKV.attr(title,originalTitle,isAdult,startYear,runtimeMinutes) 
 }
 
 databases {
@@ -145,7 +142,7 @@ databases {
 	
 	mongodb mymongo{
 		host : "localhost"
-		port: 27000
+		port: 27100
 	}
 	
 }

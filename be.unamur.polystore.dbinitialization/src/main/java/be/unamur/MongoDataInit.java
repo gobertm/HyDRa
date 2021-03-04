@@ -6,18 +6,17 @@ import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoClients;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
+import com.mongodb.client.result.UpdateResult;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.lang3.RandomUtils;
 import org.bson.Document;
 import org.bson.conversions.Bson;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import redis.clients.jedis.Jedis;
 
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Random;
+import java.util.*;
 
 import static com.mongodb.client.model.Filters.elemMatch;
 import static com.mongodb.client.model.Filters.eq;
@@ -30,6 +29,7 @@ public class MongoDataInit {
     private final String databasename;
     private final String host;
     private SQLDataInit sqlDB;
+    private RedisDataInit redis;
     private final int port;
     private final int numberofdata;
 //    private static final int SIMPLEHYBRID=0, ONETOMANYPML=1, ONETOMANYMONGOTOREL = 2, ALLDBS= 3;
@@ -58,23 +58,23 @@ public class MongoDataInit {
         // Relational DB Init
         SQLDataInit sqlinit = new SQLDataInit("localhost","3307","mydb","root","password");
         sqlinit.initConnection();
-            // Structure init
+        // Structure init
 //        sqlinit.initStructure(1);
-            // Data init
+        // Data init
 //        sqlinit.initData(nbdataobj);
 
         // Model 'simplehybrid.pml'
-            // Mongo DB 1
+        // Mongo DB 1
 //        MongoDataInit mongoDataInit1 = new MongoDataInit(mongodbname, mongohost, mongoport, nbdataobj);
 //        mongoDataInit1.setSqlDB(sqlinit);
 //        mongoDataInit1.persistDataPmlModel(1,true, PmlModelEnum.SIMPLEHYBRID);
-            // Mongo DB 2
+        // Mongo DB 2
 //        MongoDataInit mongoDataInit2 = new MongoDataInit(mongodbname2, mongohost2, mongoport2, nbdataobj);
 //        mongoDataInit2.setSqlDB(sqlinit);
 //        mongoDataInit2.persistDataSimpleHybridPmlModel(2,true,PmlModelEnum.SIMPLEHYBRID);
 
         // Model 'onetomanyMongoToRel.pml'
-            // On Mongo DB 2
+        // On Mongo DB 2
         MongoDataInit mongoDataInit2 = new MongoDataInit(mongodbname2, mongohost2, mongoport2, nbdataobj);
         mongoDataInit2.setSqlDB(sqlinit);
         mongoDataInit2.persistDataPmlModel(2,true,PmlModelEnum.ONETOMANYMONGOTOREL);
@@ -310,12 +310,12 @@ public class MongoDataInit {
         mongoDatabase = mongoClient.getDatabase(databasename);
     }
 
-    public void deleteAll() {
+    public void deleteAll(String collectionToDrop) {
         initConnection();
         logger.info("Dropping mongo database [{}]", databasename);
-//        MongoCollection<Document> collection = mongoDatabase.getCollection(dbname);
-//        collection.drop();
-        mongoDatabase.drop();
+        MongoCollection<Document> collection = mongoDatabase.getCollection(collectionToDrop);
+        collection.drop();
+//        mongoDatabase.drop();
     }
     public String getDatabasename() {
         return databasename;
@@ -329,64 +329,84 @@ public class MongoDataInit {
         this.sqlDB = sqlDB;
     }
 
-    public void addDirector(List<String[]> directors) {
-        if (mongoClient == null) {
-            initConnection();
-        }
-        int i=0;
-        MongoCollection<Document> collection = mongoDatabase.getCollection("directorCollection");
-        List<Document> direcDocumentList = new ArrayList<>();
-        for (String[] directorLine : directors) {
-            direcDocumentList.add(getDirectorDocument(directorLine));
-            i++;
-        }
-        logger.debug("Starting bulk insert in mongo {} documents",i);
-        collection.insertMany(direcDocumentList);
-        logger.debug("Inserted directors [{}] documents", i);
-    }
-
-    public void updateDirectorMovieInfo(String[] movieLine) {
-        if (mongoClient == null) {
-            initConnection();
-        }
-        MongoCollection<Document> collection = mongoDatabase.getCollection("directorCollection");
-//        Bson filter = eq();
-//        collection.updateMany()
-    }
-
-    private Document getDirectorDocument(String[] director) {
-        Document directorDoc = new Document();
-        directorDoc.append("id",director[0])
-                .append("fullname", director[1])
-                .append("birthyear",director[2]);
-        if (!(director[2].contains("\\N")))
-            directorDoc.append("birthyear",director[2]);
-        if (!(director[3].contains("\\N")))
-            directorDoc.append("deathyear",director[3]);
+    private Document getActorDocument(String[] actor) {
+        Document actorDoc = new Document();
+        String title;
+        String[] movieLine;
+        actorDoc.append("id",actor[0])
+                .append("fullname", actor[1])
+                .append("birthyear",actor[2]);
+        if (!(actor[2].contains("\\N")))
+            actorDoc.append("birthyear",actor[2]);
+        if (!(actor[3].contains("\\N")))
+            actorDoc.append("deathyear",actor[3]);
         List<Document> titlesDocs = new ArrayList<>();
-        String[] titles = director[5].split(",");
+        String[] titles = actor[5].split(",");
         for (String titleId : Arrays.asList(titles)) {
-            Document d = new Document("id", titleId);
-            titlesDocs.add(d);
+            title = redis.getTitleMovie(titleId);
+            Document rating = new Document("rate", String.format("%.1f", RandomUtils.nextFloat(0, 10)) + "/10")
+                    .append("numberofvotes", RandomUtils.nextInt(0, 100000));
+            if (title != null) {
+                Document movie = new Document("id", titleId)
+                        .append("title",title )
+                        .append("rating", rating);
+                titlesDocs.add(movie);
+            }
         }
-        directorDoc.append("movies", titlesDocs);
-        return directorDoc;
+        actorDoc.append("movies", titlesDocs);
+        return actorDoc;
     }
 
-    public void updateDirectorMovieInfo(List<String[]> movies, String directorCollection) {
+    public void updateMovieInfo(List<String[]> movies, String collectionWithMovies) {
         //{movies:{$elemMatch:{id:"tt0050986"}}}
         // movies.$.title : "dd"
         if (mongoClient == null) {
             initConnection();
         }
         Bson filter=null;
-        Bson updateOp = null;
-        MongoCollection<Document> collection = mongoDatabase.getCollection(directorCollection);
+        Bson titleUpdate = null, ratingUpdate=null, votesUpdate=null,updates=null;
+        UpdateResult res;
+        MongoCollection<Document> collection = mongoDatabase.getCollection(collectionWithMovies);
         for (String[] movie : movies) {
             filter = elemMatch("movies",Document.parse("{id:'"+movie[0]+"'}"));
-            updateOp = set("movies.$.title", movie[2]);
-            logger.debug("Updating movie title in director collection {} - {}", movie[0], movie[2]);
-            collection.updateMany(filter,updateOp);
+            titleUpdate = set("movies.$.title", movie[2]);
+            ratingUpdate = set("movies.$.rating.rate", String.format("%.1f",RandomUtils.nextFloat(0,10))+"/10");
+            votesUpdate = set("movies.$.rating.numberofvotes",RandomUtils.nextInt(0,100000));
+            updates = combine(titleUpdate, ratingUpdate, votesUpdate);
+            res = collection.updateMany(filter,updates);
+            logger.debug("Updated {} actor documents movie title in {} {} - {}",res.getModifiedCount(),collectionWithMovies, movie[0], movie[2]);
         }
+    }
+
+    public void addActors(List<String[]> actors, String actorCollection) {
+        if (mongoClient == null) {
+            initConnection();
+        }
+        int i=0;
+        MongoCollection<Document> collection = mongoDatabase.getCollection(actorCollection);
+        List<Document> actorDocList = new ArrayList<>();
+        for (String[] actorLine : actors) {
+            actorDocList.add(getActorDocument(actorLine));
+            i++;
+            if(i % 1000000==0){
+                logger.debug("Starting bulk insert 1 000 000 documents in mongo");
+                collection.insertMany(actorDocList);
+                logger.debug("Inserted actors documents", i);
+                actorDocList.clear();
+            }
+        }
+        logger.debug("Final bulk insert in mongo documents",i);
+        collection.insertMany(actorDocList);
+        logger.debug("Inserted actors [{}] documents", i);
+    }
+
+    public void dropDatabase() {
+        initConnection();
+        logger.info("Dropping mongo database [{}]", databasename);
+        mongoDatabase.drop();
+    }
+
+    public void setRedis(RedisDataInit redisDataInit) {
+        this.redis= redisDataInit;
     }
 }
