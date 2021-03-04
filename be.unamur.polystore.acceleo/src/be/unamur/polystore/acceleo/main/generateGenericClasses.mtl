@@ -460,7 +460,6 @@ public enum [ent.name.toUpperFirst() /]Attribute {
 [/for]
 
 [for (rel: RelationshipType | conceptualSchema.relationships)]
-[if (rel.attributes->size() > 0)]
 [file ('src/main/java/conditions/' + rel.name.toUpperFirst() + 'Attribute.java', false, 'UTF-8')]
 package conditions;
 
@@ -468,7 +467,6 @@ public enum [rel.name.toUpperFirst() /]Attribute {
 	[for (attr : Attribute | rel.attributes)][if (i > 1)], [/if][attr.name /][/for]
 }
 [/file]
-[/if]
 [/for]
 
 [/template]

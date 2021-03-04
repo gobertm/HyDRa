@@ -4,20 +4,33 @@
 [import be::unamur::polystore::acceleo::main::util /]
 
 [comment get{E}List({E)AttributeCondition /]
-[template public generateSimpleSelectFromGivenDocumentCollection(ent : EntityType, struct: AbstractPhysicalStructure, db : Database)]
-[generateSimpleSelectFromGivenDocumentCollection(ent, struct, db,null,null)/]
+
+[template public generateSimpleSelectFromGivenDocumentCollection(rel : RelationshipType, struct: AbstractPhysicalStructure, db : Database)]
+[generateSimpleSelectFromGivenDocumentCollection(rel, struct, db,Sequence{})/]
 [/template]
 
-[template public generateSimpleSelectFromGivenDocumentCollection(ent : EntityType, struct: AbstractPhysicalStructure, db : Database, ref : Reference, refField : PhysicalField)]
-	String bsonQuery = [ent.name.toUpperFirst()/]ServiceImpl.getBSONMatchQueryIn[struct.name.toUpperFirst()/]From[db.name.toUpperFirst() /](condition, refilterFlag);
+[template public generateSimpleSelectFromGivenDocumentCollection(rel : RelationshipType, struct: AbstractPhysicalStructure, db : Database, references : Sequence(Sequence(OclAny)))]
+[generateSimpleSelectFromGivenDocumentCollection(rel.name.toUpperFirst(), rel, rel.attributes, struct, db, references)/]
+[/template]	
+
+[template public generateSimpleSelectFromGivenDocumentCollection(ent : EntityType, struct: AbstractPhysicalStructure, db : Database)]
+[generateSimpleSelectFromGivenDocumentCollection(ent, struct, db, Sequence{})/]
+[/template]
+
+[template public generateSimpleSelectFromGivenDocumentCollection(ent : EntityType, struct: AbstractPhysicalStructure, db : Database, references : Sequence(Sequence(OclAny)))]
+[generateSimpleSelectFromGivenDocumentCollection(ent.name.toUpperFirst(), ent, ent.attributes, struct, db, references)/]
+[/template]	
+
+[template public generateSimpleSelectFromGivenDocumentCollection(pojoName : String, entOrRel : OclAny, attributes : Collection(Attribute), struct: AbstractPhysicalStructure, db : Database, references : Sequence(Sequence(OclAny)))]
+	String bsonQuery = [pojoName/]ServiceImpl.getBSONMatchQueryIn[struct.name.toUpperFirst()/]From[db.name.toUpperFirst() /](condition, refilterFlag);
 	if(bsonQuery != null) {
 		bsonQuery = "{$match: {" + bsonQuery + "}}";	
 	} 
 	
 	Dataset<Row> dataset = dbconnection.SparkConnectionMgr.getSparkSessionForMongoDB("[db.name /]", "[struct.name /]", bsonQuery);
 
-	Dataset<[ent.name.toUpperFirst() /][getTDOLiteral(ref) /]> res = dataset.flatMap((FlatMapFunction<Row, [ent.name.toUpperFirst() /][getTDOLiteral(ref) /]>) r -> {
-			List<[ent.name.toUpperFirst() /][getTDOLiteral(ref) /]> list_res = new ArrayList<[ent.name.toUpperFirst() /][getTDOLiteral(ref) /]>();
+	Dataset<[pojoName /][if (references->size() > 0)][getTDOLiteral('') /][/if]> res = dataset.flatMap((FlatMapFunction<Row, [pojoName /][if (references->size() > 0)][getTDOLiteral('') /][/if]>) r -> {
+			List<[pojoName /][if (references->size() > 0)][getTDOLiteral('') /][/if]> list_res = new ArrayList<[pojoName /][if (references->size() > 0)][getTDOLiteral('') /][/if]>();
 			Integer groupIndex = null;
 			String regex = null;
 			String value = null;
@@ -28,35 +41,44 @@
 
 			boolean addedInList = false;
 			Row r1 = r;
-			[ent.name.toUpperFirst() /][getTDOLiteral(ref) /] [ent.name.toLowerFirst() /]1 = new [ent.name.toUpperFirst() /][getTDOLiteral(ref) /]();
-			[if (ref.oclIsUndefined())]
-				[generateFlatMapBody(struct, ent, db, 1)/]
+			[pojoName /][if (references->size() > 0)][getTDOLiteral('') /][/if] [pojoName.toLowerFirst() /]1 = new [pojoName /][if (references->size() > 0)][getTDOLiteral('') /][/if]();
+			[if (references->size() = 0)]
+				[generateFlatMapBody(struct, entOrRel, pojoName, db, 1)/]
 			[else]
-				[generateFlatMapBodyTDOObject(struct, ent, db, 1, ref, refField)/]
+				[generateFlatMapBodyTDOObject(struct, entOrRel, pojoName, db, 1, references)/]
 			[/if]
 			
 			return list_res.iterator();
 
-	}, Encoders.bean([ent.name.toUpperFirst() /][getTDOLiteral(ref) /].class));
+	}, Encoders.bean([pojoName /][if (references->size() > 0)][getTDOLiteral('') /][/if].class));
 
 	return res;
 [/template]
 
 [template public generateBSONMatchQueryMethod(ent : EntityType, struct: AbstractPhysicalStructure, db : Database)]
-public static String getBSONMatchQueryIn[struct.name.toUpperFirst()/]From[db.name.toUpperFirst() /](Condition<[ent.name.toUpperFirst() /]Attribute> condition, MutableBoolean refilterFlag) {	
+[generateBSONMatchQueryMethod(ent.name.toUpperFirst(), ent.attributes, struct, db)/]
+[/template]
+
+[template public generateBSONMatchQueryMethod(rel : RelationshipType, struct: AbstractPhysicalStructure, db : Database)]
+[generateBSONMatchQueryMethod(rel.name.toUpperFirst(), rel.attributes, struct, db)/]
+[/template]
+
+
+[template public generateBSONMatchQueryMethod(pojoName : String, attributes : Collection(Attribute), struct: AbstractPhysicalStructure, db : Database)]
+public static String getBSONMatchQueryIn[struct.name.toUpperFirst()/]From[db.name.toUpperFirst() /](Condition<[pojoName.toUpperFirst() /]Attribute> condition, MutableBoolean refilterFlag) {	
 	String res = null;	
 	if(condition != null) {
 		if(condition instanceof SimpleCondition) {
-			[ent.name /]Attribute attr = ((SimpleCondition<[ent.name /]Attribute>) condition).getAttribute();
-			Operator op = ((SimpleCondition<[ent.name /]Attribute>) condition).getOperator();
-			Object value = ((SimpleCondition<[ent.name /]Attribute>) condition).getValue();
+			[pojoName /]Attribute attr = ((SimpleCondition<[pojoName /]Attribute>) condition).getAttribute();
+			Operator op = ((SimpleCondition<[pojoName /]Attribute>) condition).getOperator();
+			Object value = ((SimpleCondition<[pojoName /]Attribute>) condition).getValue();
 			if(value != null) {
 				String valueString = Util.transformBSONValue(value);
 				boolean isConditionAttrEncountered = false;
 
-				[for (attr : Attribute | ent.attributes)]
-				[let field : PhysicalField = getMappedPhysicalField(attr, struct, db, ent.ancestors(Domainmodel)->first().mappingRules)][if (field <> null)]
-				if(attr == [ent.name.toUpperFirst() /]Attribute.[attr.name /] ) {
+				[for (attr : Attribute | attributes)]
+				[let field : PhysicalField = getMappedPhysicalField(attr, struct, db, struct.ancestors(Domainmodel)->first().mappingRules)][if (field <> null)]
+				if(attr == [pojoName.toUpperFirst() /]Attribute.[attr.name /] ) {
 					isConditionAttrEncountered = true;
 				[let ancestorsList : Sequence(EmbeddedObject) = field.ancestors(EmbeddedObject)]
 				
@@ -159,15 +181,15 @@ public static String getBSONMatchQueryIn[struct.name.toUpperFirst()/]From[db.nam
 }
 [/template]
 
-[template private generateFlatMapBody(arg : OclAny, ent : EntityType, db : Database, level : Integer)]
+[template private generateFlatMapBody(arg : OclAny, entOrRel : OclAny, pojoName : String, db : Database, level : Integer)]
 boolean toAdd[level /]  = false;
 WrappedArray array[level /]  = null;
 [for (child : PhysicalField | getChildrenNonArrayPhysicalFields(arg))]
-[let mappedAttrList : Collection(Attribute) = getMappedAttributes(child, ent, ent.ancestors(Domainmodel)->first().mappingRules)]
+[let mappedAttrList : Collection(Attribute) = getMappedAttributes(child, entOrRel, db.ancestors(Domainmodel)->first().mappingRules)]
 [if (mappedAttrList->size() > 0)]
 [for (attr : Attribute | mappedAttrList)]
 [let ancestorsList : Sequence(EmbeddedObject) = getSequenceOfNonArrayEmbeddedObjects(child)]
-// 	attribute [ent.name /].[attr.name /] for field [getPhysicalName(child) /]			
+// 	attribute [pojoName /].[attr.name /] for field [getPhysicalName(child) /]			
 nestedRow =  r[level /];
 [for (anc : EmbeddedObject | ancestorsList->reverse())]
 [comment simple row /]
@@ -177,18 +199,18 @@ nestedRow = (nestedRow == null) ? null : (Row) nestedRow.getAs("[getPhysicalName
 if(nestedRow != null) {
 	[if (child.ancestors(LongField) -> size() = 0)]
 	[comment shortField or bracketfield/]
-	[ent.name.toLowerFirst() /][level/].set[attr.name.toUpperFirst() /](([generateJavaType(attr.type)/]) nestedRow.getAs("[getPhysicalName(child) /]"));
+	[pojoName.toLowerFirst() /][level/].set[attr.name.toUpperFirst() /](([generateJavaType(attr.type)/]) nestedRow.getAs("[getPhysicalName(child) /]"));
 	toAdd[level/] = true;					
 	[else]
 		[if (child.ancestors(LongField) -> first().oclAsType(LongField).pattern->size() = 1)][comment if you encounter a "short" long field. E.g., rate: rating  /]
-	[ent.name.toLowerFirst() /][level/].set[attr.name.toUpperFirst() /](([generateJavaType(attr.type)/]) nestedRow.getAs("[getPhysicalName(child.ancestors(LongField) -> first().oclAsType(LongField)) /]"));
+	[pojoName.toLowerFirst() /][level/].set[attr.name.toUpperFirst() /](([generateJavaType(attr.type)/]) nestedRow.getAs("[getPhysicalName(child.ancestors(LongField) -> first().oclAsType(LongField)) /]"));
 	toAdd[level/] = true;	
 		[else]
 	[comment LongField /]
 	regex = "[getJavaRegexFromLongField(child.ancestors(LongField) -> first().oclAsType(LongField)) /]";
 	groupIndex = [getPositionInLongField(child, child.ancestors(LongField) -> first().oclAsType(LongField))/];
 	if(groupIndex == null) {
-		throw new Exception("Cannot retrieve value for [ent.name /].[attr.name /] attribute stored in db [db.name/]. Probably due to an ambiguous regex.");
+		throw new Exception("Cannot retrieve value for [pojoName /].[attr.name /] attribute stored in db [db.name/]. Probably due to an ambiguous regex.");
 	}
 	value = nestedRow.getAs("[child.ancestors(LongField) -> first().oclAsType(LongField).physicalName /]");
 	p = Pattern.compile(regex);
@@ -196,10 +218,10 @@ if(nestedRow != null) {
 	matches = m.find();
 	if(matches) {
 		String [attr.name.toLowerFirst()/] = m.group(groupIndex.intValue());
-		[ent.name.toLowerFirst() /][level/].set[attr.name.toUpperFirst()/]([generateParsingFunctionJavaType(attr.type, attr.name.toLowerFirst())/]);
+		[pojoName.toLowerFirst() /][level/].set[attr.name.toUpperFirst()/]([generateParsingFunctionJavaType(attr.type, attr.name.toLowerFirst())/]);
 		toAdd[level/] = true;
 	} else {
-		throw new Exception("Cannot retrieve value for [ent.name /].[attr.name /] attribute stored in db [db.name/]. Probably due to an ambiguous regex.");
+		throw new Exception("Cannot retrieve value for [pojoName /].[attr.name /] attribute stored in db [db.name/]. Probably due to an ambiguous regex.");
 	}
 		[/if]
 	[/if]
@@ -208,21 +230,21 @@ if(nestedRow != null) {
 [/if]
 [/let]
 [/for]
-[let children : Collection(EmbeddedObject) = getChildrenArrayPhysicalFieldsHavingDescendantMappedToGivenEntityType(arg, ent, ent.ancestors(Domainmodel)->first().mappingRules)]
+[let children : Collection(EmbeddedObject) = getChildrenArrayPhysicalFieldsHavingDescendantMappedToGivenEntityType(arg, entOrRel, entOrRel.ancestors(Domainmodel)->first().mappingRules)]
 [if (children->size() > 0)]
 [for (child : EmbeddedObject | children)]
 array[level /] = r[level /].getAs("[getPhysicalName(child)/]");
 if(array[level /]!= null) {
 	for (int i[level + 1/] = 0; i[level + 1/] < array[level /].size(); i[level + 1/]++){
 		Row r[level + 1 /] = (Row) array[level /].apply(i[level + 1/]);
-		[ent.name.toUpperFirst() /] [ent.name.toLowerFirst() /][level + 1/] = ([ent.name.toUpperFirst() /]) [ent.name.toLowerFirst() /][level/].clone();
-		[generateFlatMapBody(child, ent, db, level + 1)/]
+		[pojoName /] [pojoName.toLowerFirst() /][level + 1/] = ([pojoName /]) [pojoName.toLowerFirst() /][level/].clone();
+		[generateFlatMapBody(child, entOrRel, pojoName, db, level + 1)/]
 	}
 }
 
 if(toAdd[level /]) {
-	[if (level > 1)]if(condition == null || condition.evaluate([ent.name.toLowerFirst() /][level /]))[/if]
-		list_res.add([ent.name.toLowerFirst() /][level /]);
+	[if (level > 1)]if(condition == null || condition.evaluate([pojoName.toLowerFirst() /][level /]))[/if]
+		list_res.add([pojoName.toLowerFirst() /][level /]);
 	addedInList = true;
 } 
 [if (level > 1)]if(addedInList)
@@ -231,8 +253,8 @@ if(toAdd[level /]) {
 [/for]
 [else]
 if(toAdd[level /]) {
-	[if (level > 1)]if(condition ==null || condition.evaluate([ent.name.toLowerFirst() /][level /]))[/if]
-	list_res.add([ent.name.toLowerFirst() /][level /]);
+	[if (level > 1)]if(condition ==null || condition.evaluate([pojoName.toLowerFirst() /][level /]))[/if]
+	list_res.add([pojoName.toLowerFirst() /][level /]);
 	addedInList = true;
 } 
 [if (level > 1)]if(addedInList)
@@ -241,15 +263,15 @@ if(toAdd[level /]) {
 [/let]
 [/template]
 
-[template private generateFlatMapBodyTDOObject(arg : OclAny, ent : EntityType, db : Database, level : Integer, ref : Reference, refField : PhysicalField)]
+[template private generateFlatMapBodyTDOObject(arg : OclAny, entOrRel : OclAny, pojoName : String, db : Database, level : Integer, references : Sequence(Sequence(OclAny)))]
 boolean toAdd[level /]  = false;
 WrappedArray array[level /]  = null;
 [for (child : PhysicalField | getChildrenNonArrayPhysicalFields(arg))]
-[let mappedAttrList : Collection(Attribute) = getMappedAttributes(child, ent, ent.ancestors(Domainmodel)->first().mappingRules)]
+[let mappedAttrList : Collection(Attribute) = getMappedAttributes(child, entOrRel, entOrRel.ancestors(Domainmodel)->first().mappingRules)]
 [if (mappedAttrList->size() > 0)]
 [for (attr : Attribute | mappedAttrList)]
 [let ancestorsList : Sequence(EmbeddedObject) = getSequenceOfNonArrayEmbeddedObjects(child)]
-// 	attribute [ent.name /].[attr.name /] for field [getPhysicalName(child) /]			
+// 	attribute [pojoName /].[attr.name /] for field [getPhysicalName(child) /]			
 nestedRow =  r[level /];
 [for (anc : EmbeddedObject | ancestorsList->reverse())]
 [comment simple row /]
@@ -259,18 +281,18 @@ nestedRow = (nestedRow == null) ? null : (Row) nestedRow.getAs("[getPhysicalName
 if(nestedRow != null) {
 	[if (child.ancestors(LongField) -> size() = 0)]
 	[comment shortField or bracketfield/]
-	[ent.name.toLowerFirst() /][level/].set[attr.name.toUpperFirst() /](([generateJavaType(attr.type)/]) nestedRow.getAs("[getPhysicalName(child) /]"));
+	[pojoName.toLowerFirst() /][level/].set[attr.name.toUpperFirst() /](([generateJavaType(attr.type)/]) nestedRow.getAs("[getPhysicalName(child) /]"));
 	toAdd[level/] = true;					
 	[else]
 		[if (child.ancestors(LongField) -> first().oclAsType(LongField).pattern->size() = 1)][comment if you encounter a "short" long field. E.g., rate: rating  /]
-	[ent.name.toLowerFirst() /][getTDOLiteral(ref) /][level/].set[attr.name.toUpperFirst() /](([generateJavaType(attr.type)/]) nestedRow.getAs("[getPhysicalName(child.ancestors(LongField) -> first().oclAsType(LongField)) /]"));
+	[pojoName.toLowerFirst() /][if (references->size() > 0)][getTDOLiteral('') /][/if][level/].set[attr.name.toUpperFirst() /](([generateJavaType(attr.type)/]) nestedRow.getAs("[getPhysicalName(child.ancestors(LongField) -> first().oclAsType(LongField)) /]"));
 	toAdd[level/] = true;	
 		[else]
 	[comment LongField /]
 	regex = "[getJavaRegexFromLongField(child.ancestors(LongField) -> first().oclAsType(LongField)) /]";
 	groupIndex = [getPositionInLongField(child, child.ancestors(LongField) -> first().oclAsType(LongField))/];
 	if(groupIndex == null) {
-		throw new Exception("Cannot retrieve value for [ent.name /].[attr.name /] attribute stored in db [db.name/]. Probably due to an ambiguous regex.");
+		throw new Exception("Cannot retrieve value for [pojoName/].[attr.name /] attribute stored in db [db.name/]. Probably due to an ambiguous regex.");
 	}
 	value = nestedRow.getAs("[child.ancestors(LongField) -> first().oclAsType(LongField).physicalName /]");
 	p = Pattern.compile(regex);
@@ -278,10 +300,10 @@ if(nestedRow != null) {
 	matches = m.find();
 	if(matches) {
 		String [attr.name.toLowerFirst()/] = m.group(groupIndex.intValue());
-		[ent.name.toLowerFirst() /][getTDOLiteral(ref) /][level/].set[attr.name.toUpperFirst()/]([generateParsingFunctionJavaType(attr.type, attr.name.toLowerFirst())/]);
+		[pojoName.toLowerFirst() /][if (references->size() > 0)][getTDOLiteral('') /][/if][level/].set[attr.name.toUpperFirst()/]([generateParsingFunctionJavaType(attr.type, attr.name.toLowerFirst())/]);
 		toAdd[level/] = true;
 	} else {
-		throw new Exception("Cannot retrieve value for [ent.name /].[attr.name /] attribute stored in db [db.name/]. Probably due to an ambiguous regex.");
+		throw new Exception("Cannot retrieve value for [pojoName /].[attr.name /] attribute stored in db [db.name/]. Probably due to an ambiguous regex.");
 	}
 		[/if]
 	[/if]
@@ -290,7 +312,12 @@ if(nestedRow != null) {
 [/if]
 [/let]
 [/for]
-[comment Ici réitérer sur 'child' et véfifier ce n'est aps le refField Si oui appliquer comme au dessus /]
+
+[for (pair : Sequence(OclAny) | references)]
+[let ref : Reference = pair->at(1)]
+[let refFields : Sequence(PhysicalField) = pair->at(2)]
+[for (refField : PhysicalField | refFields)]
+[comment Ici rï¿½itï¿½rer sur 'child' et vï¿½fifier ce n'est aps le refField Si oui appliquer comme au dessus /]
 [for (child : PhysicalField | getChildrenNonArrayPhysicalFields(arg))]
 [if (child.getPhysicalName() = refField.getPhysicalName())]
 	// field  [getPhysicalName(child) /] for reference [ref.name/]
@@ -304,19 +331,19 @@ nestedRow = (nestedRow == null) ? null : (Row) nestedRow.getAs("[getPhysicalName
 if(nestedRow != null) {
 	[if (child.ancestors(LongField) -> size() = 0)]
 	[comment shortField or bracketfield/]
-	[ent.name.toLowerFirst() /][level/].set[getJavaAbsolutePath(ref).toUpperFirst() /]_[refField.getPhysicalName() /](nestedRow.getAs("[refField.getPhysicalName() /]"));
+	[pojoName.toLowerFirst() /][level/].set[getJavaAbsolutePath(ref).toUpperFirst() /]_[refField.getPhysicalName() /](nestedRow.getAs("[refField.getPhysicalName() /]"));
 	toAdd[level/] = true;					
 	[else]
 		[if (child.ancestors(LongField) -> first().oclAsType(LongField).pattern->size() = 1)][comment if you encounter a "short" long field. E.g., rate: rating  /]
-	[ent.name.toLowerFirst() /][getTDOLiteral(ref) /][level/].set[getJavaAbsolutePath(ref).toUpperFirst() /]_[refField.getPhysicalName() /]((String) nestedRow.getAs("[getPhysicalName(child.ancestors(LongField) -> first().oclAsType(LongField)) /]"));
+	[pojoName.toLowerFirst() /][getTDOLiteral(ref) /][level/].set[getJavaAbsolutePath(ref).toUpperFirst() /]_[refField.getPhysicalName() /]((String) nestedRow.getAs("[getPhysicalName(child.ancestors(LongField) -> first().oclAsType(LongField)) /]"));
 	toAdd[level/] = true;	
 		[else]
 	[comment LongField /]
 	regex = "[getJavaRegexFromLongField(child.ancestors(LongField) -> first().oclAsType(LongField)) /]";
 	groupIndex = [getPositionInLongField(child, child.ancestors(LongField) -> first().oclAsType(LongField))/];
 	if(groupIndex == null) {
-		logger.warn("Cannot retrieve value for [ent.name /][refField.getPhysicalName() /] attribute stored in db [db.name/]. Probably due to an ambiguous regex.");
-		throw new Exception("Cannot retrieve value for [ent.name /][refField.getPhysicalName() /] attribute stored in db [db.name/]. Probably due to an ambiguous regex.");
+		logger.warn("Cannot retrieve value for [pojoName /][refField.getPhysicalName() /] attribute stored in db [db.name/]. Probably due to an ambiguous regex.");
+		throw new Exception("Cannot retrieve value for [pojoName /][refField.getPhysicalName() /] attribute stored in db [db.name/]. Probably due to an ambiguous regex.");
 	}
 	value = nestedRow.getAs("[child.ancestors(LongField) -> first().oclAsType(LongField).physicalName /]");
 	p = Pattern.compile(regex);
@@ -324,35 +351,43 @@ if(nestedRow != null) {
 	matches = m.find();
 	if(matches) {
 		String [getJavaAbsolutePath(ref) /]_[refField.getPhysicalName() /] = m.group(groupIndex.intValue());
-		[ent.name.toLowerFirst() /][getTDOLiteral(ref) /][level/].set[getJavaAbsolutePath(ref).toUpperFirst() /]_[refField.getPhysicalName() /]([getJavaAbsolutePath(ref) /]_[refField.getPhysicalName() /]);
+		[pojoName.toLowerFirst() /][getTDOLiteral(ref) /][level/].set[getJavaAbsolutePath(ref).toUpperFirst() /]_[refField.getPhysicalName() /]([getJavaAbsolutePath(ref) /]_[refField.getPhysicalName() /]);
 		toAdd[level/] = true;
 	} else {
-		logger.warn("Cannot retrieve value for [ent.name /][refField.getPhysicalName() /] attribute stored in db [db.name/]. Probably due to an ambiguous regex.");
-		throw new Exception("Cannot retrieve value for [ent.name /][refField.getPhysicalName() /] attribute stored in db [db.name/]. Probably due to an ambiguous regex.");
+		logger.warn("Cannot retrieve value for [pojoName /][refField.getPhysicalName() /] attribute stored in db [db.name/]. Probably due to an ambiguous regex.");
+		throw new Exception("Cannot retrieve value for [pojoName /][refField.getPhysicalName() /] attribute stored in db [db.name/]. Probably due to an ambiguous regex.");
 	}
 		[/if]
 	[/if]
 }
 [/if]
 [/for]
+[/for]
+[/let]
+[/let]
+[/for]
+
 [comment  /]
 
-[comment Ici modifier également afin d'aller voir dans les multi value complex object si l'objet refField n'y est pas./]
-[let children : Collection(EmbeddedObject) = getChildrenArrayPhysicalFieldsHavingDescendantMappedToGivenEntityTypeOrToRefField(arg, ent, ent.ancestors(Domainmodel)->first().mappingRules, refField)]
+[comment Ici modifier ï¿½galement afin d'aller voir dans les multi value complex object si l'objet refField n'y est pas./]
+[for (pair : Sequence(OclAny) | references)]
+[let ref : Reference = pair->at(1)]
+[let refFields : Sequence(PhysicalField) = pair->at(2)]
+[let children : Collection(EmbeddedObject) = getChildrenArrayPhysicalFieldsHavingDescendantMappedToGivenEntityTypeOrToRefField(arg, entOrRel, entOrRel.ancestors(Domainmodel)->first().mappingRules, refFields)]
 [if (children->size() > 0)]
 [for (child : EmbeddedObject | children)]
 array[level /] = r[level /].getAs("[getPhysicalName(child)/]");
 if(array[level /]!= null) {
 	for (int i[level + 1/] = 0; i[level + 1/] < array[level /].size(); i[level + 1/]++){
 		Row r[level + 1 /] = (Row) array[level /].apply(i[level + 1/]);
-		[ent.name.toUpperFirst() /][getTDOLiteral(ref) /] [ent.name.toLowerFirst() /][level + 1/] = ([ent.name.toUpperFirst() /][getTDOLiteral(ref) /]) [ent.name.toLowerFirst() /][level/].clone();
-		[generateFlatMapBodyTDOObject(child, ent, db, level + 1, ref, refField)/]
+		[pojoName /][getTDOLiteral(ref) /] [pojoName.toLowerFirst() /][level + 1/] = ([pojoName /][getTDOLiteral(ref) /]) [pojoName.toLowerFirst() /][level/].clone();
+		[generateFlatMapBodyTDOObject(child, entOrRel,pojoName, db, level + 1, Sequence{Sequence{ref, refFields}})/]
 	}
 }
 
 if(toAdd[level /]) {
-	[if (level > 1)]if(condition == null || condition.evaluate([ent.name.toLowerFirst() /][level /]))[/if]
-		list_res.add([ent.name.toLowerFirst() /][level /]);
+	[if (level > 1)]if(condition == null || condition.evaluate([pojoName.toLowerFirst() /][level /]))[/if]
+		list_res.add([pojoName.toLowerFirst() /][level /]);
 	addedInList = true;
 } 
 [if (level > 1)]if(addedInList)
@@ -361,14 +396,17 @@ if(toAdd[level /]) {
 [/for]
 [else]
 if(toAdd[level /]) {
-	[if (level > 1)]if(condition ==null || condition.evaluate([ent.name.toLowerFirst() /][level /]))[/if]
-	list_res.add([ent.name.toLowerFirst() /][level /]);
+	[if (level > 1)]if(condition ==null || condition.evaluate([pojoName.toLowerFirst() /][level /]))[/if]
+	list_res.add([pojoName.toLowerFirst() /][level /]);
 	addedInList = true;
 } 
 [if (level > 1)]if(addedInList)
 	toAdd[level - 1 /] = false;[/if]
 [/if]
 [/let]
+[/let]
+[/let]
+[/for]
 
 [/template]
 
@@ -376,16 +414,16 @@ if(toAdd[level /]) {
 	invoke('be.unamur.polystore.acceleo.main.utils.Util', 'getChildrenNonArrayPhysicalFields(java.lang.Object)', Sequence{arg})
 /]
 
-[query private getMappedAttributes(field: PhysicalField, ent: EntityType, rules: MappingRules) : Collection(Attribute) =  
-	invoke('be.unamur.polystore.acceleo.main.utils.Util', 'getMappedAttributes(be.unamur.polystore.pml.PhysicalField, be.unamur.polystore.pml.EntityType, be.unamur.polystore.pml.MappingRules)', Sequence{field, ent, rules})
+[query private getMappedAttributes(field: PhysicalField, entOrRel: OclAny, rules: MappingRules) : Collection(Attribute) =  
+	invoke('be.unamur.polystore.acceleo.main.utils.Util', 'getMappedAttributes(be.unamur.polystore.pml.PhysicalField, java.lang.Object, be.unamur.polystore.pml.MappingRules)', Sequence{field, entOrRel, rules})
 /]
 
-[query private getChildrenArrayPhysicalFieldsHavingDescendantMappedToGivenEntityType(arg : OclAny, ent: EntityType, rules: MappingRules) : Collection(EmbeddedObject) =  
-	invoke('be.unamur.polystore.acceleo.main.utils.Util', 'getChildrenArrayPhysicalFieldsHavingDescendantMappedToGivenEntityType(java.lang.Object, be.unamur.polystore.pml.EntityType, be.unamur.polystore.pml.MappingRules)', Sequence{arg, ent, rules})
+[query private getChildrenArrayPhysicalFieldsHavingDescendantMappedToGivenEntityType(arg : OclAny, entOrRel: OclAny, rules: MappingRules) : Collection(EmbeddedObject) =  
+	invoke('be.unamur.polystore.acceleo.main.utils.Util', 'getChildrenArrayPhysicalFieldsHavingDescendantMappedToGivenEntityType(java.lang.Object, java.lang.Object, be.unamur.polystore.pml.MappingRules)', Sequence{arg, entOrRel, rules})
 /]
 
-[query private getChildrenArrayPhysicalFieldsHavingDescendantMappedToGivenEntityTypeOrToRefField(arg : OclAny, ent: EntityType, rules: MappingRules, refField: PhysicalField) : Collection(EmbeddedObject) =  
-	invoke('be.unamur.polystore.acceleo.main.utils.Util', 'getChildrenArrayPhysicalFieldsHavingDescendantMappedToGivenEntityTypeOrToRefField(java.lang.Object, be.unamur.polystore.pml.EntityType, be.unamur.polystore.pml.MappingRules, be.unamur.polystore.pml.PhysicalField)', Sequence{arg, ent, rules, refField})
+[query private getChildrenArrayPhysicalFieldsHavingDescendantMappedToGivenEntityTypeOrToRefField(arg : OclAny, entOrRel: OclAny, rules: MappingRules, refFields: Collection(PhysicalField)) : Collection(EmbeddedObject) =  
+	invoke('be.unamur.polystore.acceleo.main.utils.Util', 'getChildrenArrayPhysicalFieldsHavingDescendantMappedToGivenEntityTypeOrToRefField(java.lang.Object, java.lang.Object, be.unamur.polystore.pml.MappingRules, java.util.List)', Sequence{arg, entOrRel, rules, refFields})
 /]
 
 [query private getSequenceOfNonArrayEmbeddedObjects(field : OclAny) : Sequence(EmbeddedObject) =  

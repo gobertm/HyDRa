@@ -17,6 +17,7 @@ import org.apache.spark.sql.Dataset;
 import conditions.Condition;
 [for (role : Role | rel.roles)]
 import tdo.[role.entity.name.toUpperFirst() /]TDO;
+import tdo.[rel.name.toUpperFirst()/]TDO;
 import pojo.[role.entity.name.toUpperFirst() /];
 import conditions.[role.entity.name.toUpperFirst() /]Attribute;
 [/for]

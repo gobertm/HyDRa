@@ -5,13 +5,28 @@
 
 [comment get{E}List({E)AttributeCondition /]
 
-[template public generateSimpleSelectFromGivenRelationalTable(ent : EntityType, struct: AbstractPhysicalStructure, db : Database)]
-[generateSimpleSelectFromGivenRelationalTable(ent, struct, db, null, null) /]
+[template public generateSimpleSelectFromGivenRelationalTable(rel : RelationshipType, struct: AbstractPhysicalStructure, db : Database)]
+[generateSimpleSelectFromGivenRelationalTable(rel, struct, db, Sequence{}) /]
 [/template]
 
-[template public generateSimpleSelectFromGivenRelationalTable(ent : EntityType, struct: AbstractPhysicalStructure, db : Database, refField : PhysicalField, ref : Reference)]
+[template public generateSimpleSelectFromGivenRelationalTable(rel : RelationshipType, struct: AbstractPhysicalStructure, db : Database, references : Sequence(Sequence(OclAny)))]
+[generateSimpleSelectFromGivenRelationalTable(rel.name.toUpperFirst(), rel.attributes, struct, db, references)/]
+[/template]
+
+[template public generateSimpleSelectFromGivenRelationalTable(ent : EntityType, struct: AbstractPhysicalStructure, db : Database)]
+[generateSimpleSelectFromGivenRelationalTable(ent, struct, db, Sequence{}) /]
+[/template]
+
+[template public generateSimpleSelectFromGivenRelationalTable(ent : EntityType, struct: AbstractPhysicalStructure, db : Database, references : Sequence(Sequence(OclAny)))]
+[generateSimpleSelectFromGivenRelationalTable(ent.name.toUpperFirst(), ent.attributes, struct, db, references)/]
+[/template]
+
+
+
+[template public generateSimpleSelectFromGivenRelationalTable(pojoName : String, attributes : Collection(Attribute), struct: AbstractPhysicalStructure, db : Database, references : Sequence(Sequence(OclAny)))]
+
 [comment  select * from Client where (...) /]
-	Pair<String, List<String>> whereClause = [ent.name.toUpperFirst()/]ServiceImpl.getSQLWhereClauseIn[struct.name.toUpperFirst()/]From[db.name.toUpperFirst() /](condition, refilterFlag);
+	Pair<String, List<String>> whereClause = [pojoName/]ServiceImpl.getSQLWhereClauseIn[struct.name.toUpperFirst()/]From[db.name.toUpperFirst() /](condition, refilterFlag);
 	String where = whereClause.getKey();
 	List<String> preparedValues = whereClause.getValue();
 	for(String preparedValue : preparedValues) {
@@ -23,29 +38,29 @@
 		d = d.where(where);
 	}
 
-	Dataset<[ent.name.toUpperFirst() /][getTDOLiteral(refField) /]> res = d.map((MapFunction<Row, [ent.name.toUpperFirst() /][getTDOLiteral(refField) /]>) r -> {
-				[ent.name.toUpperFirst() /][getTDOLiteral(refField) /] [ent.name.toLowerFirst() /]_res = new [ent.name.toUpperFirst() /][getTDOLiteral(refField) /]();
+	Dataset<[pojoName /][if (references->size() > 0)][getTDOLiteral('') /][/if]> res = d.map((MapFunction<Row, [pojoName/][if (references->size() > 0)][getTDOLiteral('') /][/if]>) r -> {
+				[pojoName /][if (references->size() > 0)][getTDOLiteral('') /][/if] [pojoName.toLowerFirst() /]_res = new [pojoName /][if (references->size() > 0)][getTDOLiteral('') /][/if]();
 				Integer groupIndex = null;
 				String regex = null;
 				String value = null;
 				Pattern p = null;
 				Matcher m = null;
 				boolean matches = false;
-				[for (attr : Attribute | ent.attributes)]
-				[let field : PhysicalField = getMappedPhysicalField(attr, struct, db, ent.ancestors(Domainmodel)->first().mappingRules)][if (field <> null)]
+				[for (attr : Attribute | attributes)]
+				[let field : PhysicalField = getMappedPhysicalField(attr, struct, db, struct.ancestors(Domainmodel)->first().mappingRules)][if (field <> null)]
 				
-				// attribute [ '[' /][ent.name.toUpperFirst() /].[attr.name.toUpperFirst() /][ ']' /]
+				// attribute [ '[' /][pojoName /].[attr.name.toUpperFirst() /][ ']' /]
 				[if (field.ancestors(LongField) -> size() = 0)]
 				[comment shortField or bracketfield/]
 				[generateJavaType(attr.type)/] [attr.name.toLowerFirst()/] = r.getAs("[getPhysicalName(field) /]");
-				[ent.name.toLowerFirst() /]_res.set[attr.name.toUpperFirst()/]([attr.name.toLowerFirst()/]);
+				[pojoName.toLowerFirst() /]_res.set[attr.name.toUpperFirst()/]([attr.name.toLowerFirst()/]);
 				[else]
 				[comment LongField /]
 				regex = "[getJavaRegexFromLongField(field.ancestors(LongField) -> first().oclAsType(LongField)) /]";
 				groupIndex = [getPositionInLongField(field, field.ancestors(LongField) -> first().oclAsType(LongField))/];
 				if(groupIndex == null) {
-					logger.warn("Cannot retrieve value for [ent.name /][attr.name /] attribute stored in db [db.name/]. Probably due to an ambiguous regex.");
-					throw new Exception("Cannot retrieve value for [ent.name /][attr.name /] attribute stored in db [db.name/]. Probably due to an ambiguous regex.");
+					logger.warn("Cannot retrieve value for [pojoName /][attr.name /] attribute stored in db [db.name/]. Probably due to an ambiguous regex.");
+					throw new Exception("Cannot retrieve value for [pojoName /][attr.name /] attribute stored in db [db.name/]. Probably due to an ambiguous regex.");
 				}
 				value = r.getAs("[field.ancestors(LongField) -> first().oclAsType(LongField).physicalName /]");
 				p = Pattern.compile(regex);
@@ -55,28 +70,32 @@
 				if(matches) {
 					[attr.name.toLowerFirst()/] = m.group(groupIndex.intValue());
 				} else {
-					logger.warn("Cannot retrieve value for [ent.name /][attr.name /] attribute stored in db [db.name/]. Probably due to an ambiguous regex.");
-					throw new Exception("Cannot retrieve value for [ent.name /][attr.name /] attribute stored in db [db.name/]. Probably due to an ambiguous regex.");
+					logger.warn("Cannot retrieve value for [pojoName /][attr.name /] attribute stored in db [db.name/]. Probably due to an ambiguous regex.");
+					throw new Exception("Cannot retrieve value for [pojoName /][attr.name /] attribute stored in db [db.name/]. Probably due to an ambiguous regex.");
 				}
-				[ent.name.toLowerFirst() /]_res.set[attr.name.toUpperFirst()/]([generateParsingFunctionJavaType(attr.type, attr.name.toLowerFirst())/]);
+				[pojoName.toLowerFirst() /]_res.set[attr.name.toUpperFirst()/]([generateParsingFunctionJavaType(attr.type, attr.name.toLowerFirst())/]);
 				[/if]
 				[/if]
 				[/let]
 				[/for]
 
+				[for (pair : Sequence(OclAny) | references)]
+				[let ref : Reference = pair->at(1)]
+				[let refFields : Sequence(PhysicalField) = pair->at(2)]
+				[for (refField : PhysicalField | refFields)]
 				[comment Generate setter for reference column (only in TDO Object) /]
 				[if (refField.oclIsUndefined() = false)]
 				// Get reference column [ '[' /][refField.getPhysicalName()/] [ ']' /] for reference [ '[' /][ref.name/][ ']' /]
 				[if (refField.ancestors(LongField) -> size() = 0)]
 				[comment shortField or bracketfield/]
 				String [getJavaAbsolutePath(ref) /]_[refField.getPhysicalName() /] = r.getAs("[getPhysicalName(refField) /]") == null ? null : r.getAs("[getPhysicalName(refField) /]").toString();
-				[ent.name.toLowerFirst() /]_res.set[getJavaAbsolutePath(ref).toUpperFirst() /]_[refField.getPhysicalName() /]([getJavaAbsolutePath(ref) /]_[refField.getPhysicalName() /]);
+				[pojoName.toLowerFirst() /]_res.set[getJavaAbsolutePath(ref).toUpperFirst() /]_[refField.getPhysicalName() /]([getJavaAbsolutePath(ref) /]_[refField.getPhysicalName() /]);
 				[else]
 				[comment LongField /]
 				regex = "[getJavaRegexFromLongField(refField.ancestors(LongField) -> first().oclAsType(LongField)) /]";
 				groupIndex = [getPositionInLongField(refField, refField.ancestors(LongField) -> first().oclAsType(LongField))/];
 				if(groupIndex == null) {
-					logger.warn("Cannot retrieve value for [ent.name /][refField.getPhysicalName() /] attribute stored in db [db.name/]. Probably due to an ambiguous regex.");
+					logger.warn("Cannot retrieve value for [pojoName /][refField.getPhysicalName() /] attribute stored in db [db.name/]. Probably due to an ambiguous regex.");
 					throw new Exception("Cannot retrieve value for BLABLABLA. Probably due to an ambiguous regex.");
 				}
 				value = r.getAs("[refField.ancestors(LongField) -> first().oclAsType(LongField).physicalName /]");
@@ -87,19 +106,34 @@
 				if(matches) {
 					[getJavaAbsolutePath(ref) /]_[refField.getPhysicalName() /] = m.group(groupIndex.intValue());
 				} else {
-					logger.warn("Cannot retrieve value for [ent.name /][refField.getPhysicalName() /] attribute stored in db [db.name/]. Probably due to an ambiguous regex.");
+					logger.warn("Cannot retrieve value for [pojoName/][refField.getPhysicalName() /] attribute stored in db [db.name/]. Probably due to an ambiguous regex.");
 					throw new Exception("Cannot retrieve value for BLABLABLA. Probably due to an ambiguous regex.");
 				}
-				[ent.name.toLowerFirst() /]_res.set[getJavaAbsolutePath(ref).toUpperFirst() /]_[refField.getPhysicalName() /]([getJavaAbsolutePath(ref) /]_[refField.getPhysicalName() /]);
+				[pojoName.toLowerFirst() /]_res.set[getJavaAbsolutePath(ref).toUpperFirst() /]_[refField.getPhysicalName() /]([getJavaAbsolutePath(ref) /]_[refField.getPhysicalName() /]);
 				[/if]
 				[/if]
+				[/for]	
+				[/let]
+				[/let]
+				[/for]
 
-				return [ent.name.toLowerFirst() /]_res;
-			}, Encoders.bean([ent.name.toUpperFirst() /][getTDOLiteral(ref) /].class));
+
+				return [pojoName.toLowerFirst() /]_res;
+			}, Encoders.bean([pojoName /][if (references->size() > 0)][getTDOLiteral('') /][/if].class));
 
 
 	return res;
 [/template]
+
+
+
+
+
+
+
+
+
+
 
 [comment 'generateGetSQLWhereClauseMethod(ent : EntityType, struct: AbstractPhysicalStructure, db : Database)'
 	Generate a recursive method that based on the argument Condition constructs a Pair containing a 'where' clause statement on the attribute of the condition and using the specified operator, the second argument of the Pair is the values to replace in the where clause.
@@ -107,20 +141,28 @@
 	/]
 
 [template public generateGetSQLWhereClauseMethod(ent : EntityType, struct: AbstractPhysicalStructure, db : Database)]
-public static Pair<String, List<String>> getSQLWhereClauseIn[struct.name.toUpperFirst()/]From[db.name.toUpperFirst() /](Condition<[ent.name.toUpperFirst() /]Attribute> condition, MutableBoolean refilterFlag) {
+[generateGetSQLWhereClauseMethod(ent.name.toUpperFirst(), ent.attributes, struct, db)/]
+[/template]
+
+[template public generateGetSQLWhereClauseMethod(rel : RelationshipType, struct: AbstractPhysicalStructure, db : Database)]
+[generateGetSQLWhereClauseMethod(rel.name.toUpperFirst(), rel.attributes, struct, db)/]
+[/template]
+
+[template public generateGetSQLWhereClauseMethod(pojoName : String, pojoAttributes : Collection(Attribute), struct: AbstractPhysicalStructure, db : Database)]
+public static Pair<String, List<String>> getSQLWhereClauseIn[struct.name.toUpperFirst()/]From[db.name.toUpperFirst() /](Condition<[pojoName.toUpperFirst() /]Attribute> condition, MutableBoolean refilterFlag) {
 	String where = null;	
 	List<String> preparedValues = new java.util.ArrayList<String>();
 	if(condition != null) {
 		
 		if(condition instanceof SimpleCondition) {
-			[ent.name /]Attribute attr = ((SimpleCondition<[ent.name /]Attribute>) condition).getAttribute();
-			Operator op = ((SimpleCondition<[ent.name /]Attribute>) condition).getOperator();
-			Object value = ((SimpleCondition<[ent.name /]Attribute>) condition).getValue();
+			[pojoName.toUpperFirst() /]Attribute attr = ((SimpleCondition<[pojoName /]Attribute>) condition).getAttribute();
+			Operator op = ((SimpleCondition<[pojoName /]Attribute>) condition).getOperator();
+			Object value = ((SimpleCondition<[pojoName /]Attribute>) condition).getValue();
 			if(value != null) {
 				boolean isConditionAttrEncountered = false;
-				[for (attr : Attribute | ent.attributes)]
-				[let field : PhysicalField = getMappedPhysicalField(attr, struct, db, ent.ancestors(Domainmodel)->first().mappingRules)][if (field <> null)]
-				if(attr == [ent.name.toUpperFirst() /]Attribute.[attr.name /] ) {
+				[for (attr : Attribute | pojoAttributes)]
+				[let field : PhysicalField = getMappedPhysicalField(attr, struct, db, struct.ancestors(Domainmodel)->first().mappingRules)][if (field <> null)]
+				if(attr == [pojoName.toUpperFirst() /]Attribute.[attr.name /] ) {
 					isConditionAttrEncountered = true;
 					String valueString = Util.transformSQLValue(value);
 					String sqlOp = op.getSQLOperator();
@@ -215,5 +257,6 @@ public static Pair<String, List<String>> getSQLWhereClauseIn[struct.name.toUpper
 	return new ImmutablePair<String, List<String>>(where, preparedValues);
 }
 [/template]
+
 
 [template public getTDOLiteral(o : OclAny)][if (o.oclIsUndefined() = false)]TDO[/if][/template]
