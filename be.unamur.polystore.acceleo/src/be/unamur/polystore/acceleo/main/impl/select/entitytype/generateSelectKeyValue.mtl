@@ -46,8 +46,8 @@
 	rows = SparkConnectionMgr.getRowsFromKeyValue("[db.name/]",keypattern);
 	// Transform to POJO. Based on Row containing (String key, String value)
 	finalKeypattern = keypattern;
-	Dataset<[pojoName /][getTDOLiteral(references) /]> res = rows.map((MapFunction<Row, [pojoName /][getTDOLiteral(references) /]>) r -> {
-				[pojoName /][getTDOLiteral(references) /] [pojoName.toLowerFirst() /]_res = new [pojoName /][getTDOLiteral(references) /]();
+	Dataset<[pojoName /][if (references->size() > 0)][getTDOLiteral('') /][/if]> res = rows.map((MapFunction<Row, [pojoName /][if (references->size() > 0)][getTDOLiteral('') /][/if]>) r -> {
+				[pojoName /][if (references->size() > 0)][getTDOLiteral('') /][/if] [pojoName.toLowerFirst() /]_res = new [pojoName /][if (references->size() > 0)][getTDOLiteral('') /][/if]();
 				Integer groupindex = null;
 				String regex = null;
 				String value = null;
@@ -171,15 +171,15 @@
 				[/for]
 					
 				return [pojoName.toLowerFirst() /]_res;
-			}, Encoders.bean([pojoName /][getTDOLiteral(references) /].class));
+			}, Encoders.bean([pojoName /][if (references->size() > 0)][getTDOLiteral('') /][/if].class));
 	return res;
 	[else]
 		[comment Retrieve Dataset<Row> containing field of hashes. TODO other Redis dataTypes. /]
 		// TODO only handles 'hash' for now
 	rows = SparkConnectionMgr.getRowsFromKeyValueHashes("[db.name/]",keypattern);
 	finalKeypattern = keypattern;
-	Dataset<[pojoName /][getTDOLiteral(references) /]> res = rows.map((MapFunction<Row, [pojoName /][getTDOLiteral(references) /]>) r -> {
-				[pojoName/][getTDOLiteral(references) /] [pojoName.toLowerFirst() /]_res = new [pojoName/][getTDOLiteral(references) /]();
+	Dataset<[pojoName /][if (references->size() > 0)][getTDOLiteral('') /][/if]> res = rows.map((MapFunction<Row, [pojoName /][if (references->size() > 0)][getTDOLiteral('') /][/if]>) r -> {
+				[pojoName/][if (references->size() > 0)][getTDOLiteral('') /][/if] [pojoName.toLowerFirst() /]_res = new [pojoName/][if (references->size() > 0)][getTDOLiteral('') /][/if]();
 				Integer groupindex = null;
 				String regex = null;
 				String value = null;
@@ -316,11 +316,11 @@
 				[/for]
 
 					return [pojoName.toLowerFirst() /]_res;
-			}, Encoders.bean([pojoName /][getTDOLiteral(references) /].class));
+			}, Encoders.bean([pojoName /][if (references->size() > 0)][getTDOLiteral('') /][/if].class));
 	[comment Contrary to other dbs, we perform the filter here, as in case of role based selection, at least one of the retrieved TDO datasets must be filtered in order to join. But refilterFlag is not available at the caller level
 	And to not refactor everything we do it here. As the refilterFlag is always true. /]
 	if(refilterFlag.booleanValue())
-		res = res.filter((FilterFunction<[pojoName /][getTDOLiteral(references) /]>) r -> condition == null || condition.evaluate(r));
+		res = res.filter((FilterFunction<[pojoName /][if (references->size() > 0)][getTDOLiteral('') /][/if]>) r -> condition == null || condition.evaluate(r));
 	[comment 
 	 This drop duplicates is necessary when readin data from a key value db, with key structures such as PRODUCT:id:REVIEW:reviewid . /]
 	res=res.dropDuplicates();
@@ -328,4 +328,4 @@
 	[/if]
 [/template]
 
-[template public getTDOLiteral(o : OclAny)][if (o->size() > 0)]TDO[/if][/template]
+[template public getTDOLiteral(o : OclAny)][if (o.oclIsUndefined() = false)]TDO[/if][/template]
