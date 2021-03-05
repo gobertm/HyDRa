@@ -29,8 +29,8 @@
 	
 	Dataset<Row> dataset = dbconnection.SparkConnectionMgr.getSparkSessionForMongoDB("[db.name /]", "[struct.name /]", bsonQuery);
 
-	Dataset<[pojoName /][if (references->size() > 0)][getTDOLiteral('') /][/if]> res = dataset.flatMap((FlatMapFunction<Row, [pojoName /][if (references->size() > 0)][getTDOLiteral('') /][/if]>) r -> {
-			List<[pojoName /][if (references->size() > 0)][getTDOLiteral('') /][/if]> list_res = new ArrayList<[pojoName /][if (references->size() > 0)][getTDOLiteral('') /][/if]>();
+	Dataset<[pojoName /][getTDOLiteral(references) /]> res = dataset.flatMap((FlatMapFunction<Row, [pojoName /][getTDOLiteral(references) /]>) r -> {
+			List<[pojoName /][getTDOLiteral(references) /]> list_res = new ArrayList<[pojoName /][getTDOLiteral(references) /]>();
 			Integer groupIndex = null;
 			String regex = null;
 			String value = null;
@@ -41,7 +41,7 @@
 
 			boolean addedInList = false;
 			Row r1 = r;
-			[pojoName /][if (references->size() > 0)][getTDOLiteral('') /][/if] [pojoName.toLowerFirst() /]1 = new [pojoName /][if (references->size() > 0)][getTDOLiteral('') /][/if]();
+			[pojoName /][getTDOLiteral(references) /] [pojoName.toLowerFirst() /]1 = new [pojoName /][getTDOLiteral(references) /]();
 			[if (references->size() = 0)]
 				[generateFlatMapBody(struct, entOrRel, pojoName, db, 1)/]
 			[else]
@@ -50,7 +50,7 @@
 			
 			return list_res.iterator();
 
-	}, Encoders.bean([pojoName /][if (references->size() > 0)][getTDOLiteral('') /][/if].class));
+	}, Encoders.bean([pojoName /][getTDOLiteral(references) /].class));
 
 	return res;
 [/template]
@@ -285,7 +285,7 @@ if(nestedRow != null) {
 	toAdd[level/] = true;					
 	[else]
 		[if (child.ancestors(LongField) -> first().oclAsType(LongField).pattern->size() = 1)][comment if you encounter a "short" long field. E.g., rate: rating  /]
-	[pojoName.toLowerFirst() /][if (references->size() > 0)][getTDOLiteral('') /][/if][level/].set[attr.name.toUpperFirst() /](([generateJavaType(attr.type)/]) nestedRow.getAs("[getPhysicalName(child.ancestors(LongField) -> first().oclAsType(LongField)) /]"));
+	[pojoName.toLowerFirst() /][getTDOLiteral(references) /][level/].set[attr.name.toUpperFirst() /](([generateJavaType(attr.type)/]) nestedRow.getAs("[getPhysicalName(child.ancestors(LongField) -> first().oclAsType(LongField)) /]"));
 	toAdd[level/] = true;	
 		[else]
 	[comment LongField /]
@@ -300,7 +300,7 @@ if(nestedRow != null) {
 	matches = m.find();
 	if(matches) {
 		String [attr.name.toLowerFirst()/] = m.group(groupIndex.intValue());
-		[pojoName.toLowerFirst() /][if (references->size() > 0)][getTDOLiteral('') /][/if][level/].set[attr.name.toUpperFirst()/]([generateParsingFunctionJavaType(attr.type, attr.name.toLowerFirst())/]);
+		[pojoName.toLowerFirst() /][getTDOLiteral(references) /][level/].set[attr.name.toUpperFirst()/]([generateParsingFunctionJavaType(attr.type, attr.name.toLowerFirst())/]);
 		toAdd[level/] = true;
 	} else {
 		throw new Exception("Cannot retrieve value for [pojoName /].[attr.name /] attribute stored in db [db.name/]. Probably due to an ambiguous regex.");
@@ -430,5 +430,5 @@ if(toAdd[level /]) {
 	invoke('be.unamur.polystore.acceleo.main.utils.Util', 'getSequenceOfNonArrayEmbeddedObjects(org.eclipse.emf.ecore.EObject)', Sequence{field})
 /]
 
+[template public getTDOLiteral(o : OclAny)][if (o->size() > 0)]TDO[/if][/template]
 
-[template public getTDOLiteral(o : OclAny)][if (o.oclIsUndefined() = false)]TDO[/if][/template]

@@ -2,7 +2,6 @@
 [module generateSimpleSelectFromGivenRelationalTable('http://www.unamur.be/polystore/Pml')]
 [import be::unamur::polystore::acceleo::main::mappingrules::util /]
 [import be::unamur::polystore::acceleo::main::util /]
-
 [comment get{E}List({E)AttributeCondition /]
 
 [template public generateSimpleSelectFromGivenRelationalTable(rel : RelationshipType, struct: AbstractPhysicalStructure, db : Database)]
@@ -38,8 +37,8 @@
 		d = d.where(where);
 	}
 
-	Dataset<[pojoName /][if (references->size() > 0)][getTDOLiteral('') /][/if]> res = d.map((MapFunction<Row, [pojoName/][if (references->size() > 0)][getTDOLiteral('') /][/if]>) r -> {
-				[pojoName /][if (references->size() > 0)][getTDOLiteral('') /][/if] [pojoName.toLowerFirst() /]_res = new [pojoName /][if (references->size() > 0)][getTDOLiteral('') /][/if]();
+	Dataset<[pojoName /][getTDOLiteral(references) /]> res = d.map((MapFunction<Row, [pojoName/][getTDOLiteral(references) /]>) r -> {
+				[pojoName /][getTDOLiteral(references) /] [pojoName.toLowerFirst() /]_res = new [pojoName /][getTDOLiteral(references) /]();
 				Integer groupIndex = null;
 				String regex = null;
 				String value = null;
@@ -119,9 +118,9 @@
 
 
 				return [pojoName.toLowerFirst() /]_res;
-			}, Encoders.bean([pojoName /][if (references->size() > 0)][getTDOLiteral('') /][/if].class));
+			}, Encoders.bean([pojoName /][getTDOLiteral(references)/].class));
 
-
+	res = res.dropDuplicates();
 	return res;
 [/template]
 
@@ -259,4 +258,4 @@ public static Pair<String, List<String>> getSQLWhereClauseIn[struct.name.toUpper
 [/template]
 
 
-[template public getTDOLiteral(o : OclAny)][if (o.oclIsUndefined() = false)]TDO[/if][/template]
+[template public getTDOLiteral(o : OclAny)][if (o->size() > 0)]TDO[/if][/template]
