@@ -22,6 +22,13 @@ import org.apache.spark.api.java.function.MapFunction;
 import org.apache.spark.sql.Encoders;
 import org.apache.spark.api.java.function.FilterFunction;
 import org.apache.commons.lang.mutable.MutableBoolean;
+import conditions.Condition;
+import conditions.Operator;
+[for (role: Role | getRolesFromEntityType(entityType, conceptualSchema))]
+[for (oppositeRole : Role | role.getOppositeRoles())]
+import conditions.[oppositeRole.entity.name.toUpperFirst()/]Attribute;
+[/for]
+[/for]
 
 public abstract class [entityType.name.toUpperFirst() + 'Service' /] {
 	[instantiateLogger(entityType.name.toUpperFirst() + 'Service') /]

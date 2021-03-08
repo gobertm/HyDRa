@@ -107,6 +107,7 @@ physical schemas {
 			references {
 				directed_by : director_id -> directorTable.id
 				has_directed : movie_id -> movieRedis.movieKV.id
+				movie_info : movie_id -> IMDB_Mongo.actorCollection.movies.id
 			}
 		}
 	}
@@ -118,6 +119,7 @@ mapping rules{
 	conceptualSchema.Director(id,firstName,lastName, yearOfBirth,yearOfDeath) -> myRelSchema.directorTable(id,firstname,lastname,birth,death),
 	conceptualSchema.movieDirector.director -> myRelSchema.directed.directed_by,
 	conceptualSchema.movieDirector.directed_movie -> myRelSchema.directed.has_directed,
+	conceptualSchema.movieDirector.directed_movie -> myRelSchema.directed.movie_info,
 	conceptualSchema.Movie(id, primaryTitle) -> IMDB_Mongo.actorCollection.movies(id,title),
 	conceptualSchema.Movie(averageRating,numVotes) -> IMDB_Mongo.actorCollection.movies.rating(rate,numberofvotes),
 	conceptualSchema.Movie(id,primaryTitle,averageRating,numVotes) -(averageRating > 9)-> IMDB_Mongo.topMovies(id,title,rate,numberofvotes),
