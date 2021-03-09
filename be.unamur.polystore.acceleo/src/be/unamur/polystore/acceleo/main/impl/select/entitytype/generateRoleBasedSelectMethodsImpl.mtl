@@ -40,7 +40,7 @@ Dataset<Row> res_[ref.name/] = [entity.name.toLowerFirst()/]TDO[ref.name/][role.
 		.withColumnRenamed("[attr.name.toLowerFirst() /]", "[role2.entity.name/]_[attr.name.toLowerFirst() /]")
 [/for]
 		.withColumnRenamed("logEvents", "[role2.entity.name/]_logEvents"),
-		[entity.name.toLowerFirst()/]TDO[ref.name/].col("[getJavaAbsolutePath(ref) /]_[ref.sourceField->first().getPhysicalName()/]").equalTo([role2.entity.name.toLowerFirst()/]TDO[ref.name/].col("[getJavaAbsolutePath(ref) /]_[ref.targetField->first().getPhysicalName()/]")));
+		[entity.name.toLowerFirst()/]TDO[ref.name/][role.name/].col("[getJavaAbsolutePath(ref) /]_[ref.sourceField->first().getPhysicalName()/]").equalTo([role2.entity.name.toLowerFirst()/]TDO[ref.name/][role2.name/].col("[getJavaAbsolutePath(ref) /]_[ref.targetField->first().getPhysicalName()/]")));
 Dataset<[entity.name.toUpperFirst()/]> res_[entity.name/]_[ref.name/] = res_[ref.name/].select([for (attr : Attribute | entity.attributes)] "[attr.name/]",[/for] "logEvents").as(Encoders.bean([entity.name.toUpperFirst()/].class));
 datasetsPOJO.add(res_[entity.name/]_[ref.name/]);
 [/if]
@@ -53,12 +53,12 @@ datasetsPOJO.add(res_[entity.name/]_[ref.name/]);
 Dataset<[role2.entity.name.toUpperFirst()/]TDO> [role2.entity.name.toLowerFirst()/]TDO[ref.name/][role2.name/] = [role.getRelationShipType().name.toLowerFirst()/]Service.get[role2.entity.name.toUpperFirst()/]TDOList[role2.name.toUpperFirst() /]In[ref.name.toUpperFirst()/]In[ref.getAbstractPhysicalStructureNotEmbeddedObject().name.toUpperFirst() /]From[ref.getPhysicalSchema().name.toUpperFirst()/]([role2.name/]_condition);
 Dataset<[entity.name.toUpperFirst()/]TDO> [entity.name.toLowerFirst()/]TDO[ref.name/][role.name /] = [role.getRelationShipType().name.toLowerFirst()/]Service.get[entity.name.toUpperFirst()/]TDOList[role.name.toUpperFirst() /]In[ref.name.toUpperFirst()/]In[ref.getAbstractPhysicalStructureNotEmbeddedObject().name.toUpperFirst() /]From[ref.getPhysicalSchema().name.toUpperFirst()/]([role.name/]_condition);
 [comment TODO Multi valued refernece not handled /]
-Dataset<Row> res_[ref.name/] = [entity.name.toLowerFirst()/]TDO[ref.name/][role.name /].join([role2.entity.name.toLowerFirst()/]TDO[ref.name/][role2.name/]]
+Dataset<Row> res_[ref.name/] = [entity.name.toLowerFirst()/]TDO[ref.name/][role.name /].join([role2.entity.name.toLowerFirst()/]TDO[ref.name/][role2.name/]
 [for (attr : Attribute | role2.entity.attributes)]
 		.withColumnRenamed("[attr.name.toLowerFirst() /]", "[role2.entity.name/]_[attr.name.toLowerFirst() /]")
 [/for]
 		.withColumnRenamed("logEvents", "[role2.entity.name/]_logEvents"),
-		[entity.name.toLowerFirst()/]TDO[ref.name/].col("[getJavaAbsolutePath(ref) /]_[ref.targetField->first().getPhysicalName()/]").equalTo([role2.entity.name.toLowerFirst()/]TDO[ref.name/].col("[getJavaAbsolutePath(ref) /]_[ref.sourceField->first().getPhysicalName()/]")));
+		[entity.name.toLowerFirst()/]TDO[ref.name/][role.name/].col("[getJavaAbsolutePath(ref) /]_[ref.targetField->first().getPhysicalName()/]").equalTo([role2.entity.name.toLowerFirst()/]TDO[ref.name/][role2.name/].col("[getJavaAbsolutePath(ref) /]_[ref.sourceField->first().getPhysicalName()/]")));
 Dataset<[entity.name.toUpperFirst()/]> res_[entity.name/]_[ref.name/] = res_[ref.name/].select([for (attr : Attribute | entity.attributes)] "[attr.name/]",[/for] "logEvents").as(Encoders.bean([entity.name.toUpperFirst()/].class));
 datasetsPOJO.add(res_[entity.name/]_[ref.name/]);
 [/if]
