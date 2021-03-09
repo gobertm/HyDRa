@@ -221,7 +221,7 @@ AbstractMappingRule:
 RoleToEmbbededObjectMappingRule:
 	roleConceptual=[Role|QualifiedName]
 	'->'
-	physicalStructure=[AbstractPhysicalStructure|QualifiedName]'('(physicalFields+=[PhysicalField|QualifiedName] (','physicalFields+=[PhysicalField|QualifiedName])*)?')'
+	physicalStructure=[EmbeddedObject|QualifiedName]'('(physicalFields+=[PhysicalField|QualifiedName] (','physicalFields+=[PhysicalField|QualifiedName])*)?')'
 ;
 
 RoleToReferenceMappingRule:
