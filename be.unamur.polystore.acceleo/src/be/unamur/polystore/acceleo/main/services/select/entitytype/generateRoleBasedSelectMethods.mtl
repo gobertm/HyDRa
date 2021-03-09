@@ -6,7 +6,7 @@
 [template public generateRoleBasedSelectMethods(entity: EntityType, conceptualSchema: ConceptualSchema, override: Boolean)]
 [for (role: Role | getRolesFromEntityType(entity, conceptualSchema))]
 public [if (override = false)]abstract [/if]Dataset<[entity.name.toUpperFirst() /]> get[role.name.toUpperFirst() /]ListIn[getRelationShipType(role).name.toUpperFirst() /]([for (role2: Role | getRelationShipType(role).roles)][if (i > 1)],[/if]conditions.Condition<conditions.[role2.entity.name.toUpperFirst() /]Attribute> [role2.name/]_condition[/for][if (getRelationShipType(role).attributes->size() > 0)], conditions.Condition<conditions.[getRelationShipType(role).name.toUpperFirst() /]Attribute> [getRelationShipType(role).name /]_condition[/if])[if (override = false)];
-[else][generateRoleBasedSelectMethodsImpl(entity, role, conceptualSchema) /][/if]
+[else]		[generateRoleBasedSelectMethodsImpl(entity, role, conceptualSchema) /][/if]
 
 [for (role2: Role | getRelationShipType(role).roles)]
 public Dataset<[entity.name.toUpperFirst() /]> get[role.name.toUpperFirst() /]ListIn[getRelationShipType(role).name.toUpperFirst() /]By[role2.name.toUpperFirst() /]Condition(conditions.Condition<conditions.[role2.entity.name.toUpperFirst()/]Attribute> [role2.name/]_condition){
@@ -15,6 +15,9 @@ public Dataset<[entity.name.toUpperFirst() /]> get[role.name.toUpperFirst() /]Li
 [if (role2 <> role)]
 
 public [if (isMaxOne(role2) = false)]Dataset<[entity.name.toUpperFirst() /]>[else][entity.name.toUpperFirst() /][/if] get[role.name.toUpperFirst() /][if (isMaxOne(role2) = false)]List[/if]In[getRelationShipType(role).name.toUpperFirst() /]By[role2.name.toUpperFirst() /](pojo.[role2.entity.name.toUpperFirst()/] [role2.name/]){
+	if([role2.name/] == null)
+		return null;
+
 	Condition c;
 	[if (role2.entity.identifier.oclIsUndefined())]
 	c=null;
@@ -34,7 +37,12 @@ public [if (isMaxOne(role2) = false)]Dataset<[entity.name.toUpperFirst() /]>[els
 	[/let]
 	[/if]
 	[/if]
-	return get[role.name.toUpperFirst() /]ListIn[getRelationShipType(role).name.toUpperFirst() /]By[role2.name.toUpperFirst()/]Condition(c);
+	Dataset<[entity.name.toUpperFirst() /]> res = get[role.name.toUpperFirst() /]ListIn[getRelationShipType(role).name.toUpperFirst() /]By[role2.name.toUpperFirst()/]Condition(c);
+	[if (isMaxOne(role2) = false)]
+	return res;
+	[else]
+	return res.first();
+	[/if]
 [comment]getDirected_movieListInMovieDirector(null, Condition.simple(DirectorAttribute.id, Operator.EQUALS, director.getId()));[/comment]
 }
 

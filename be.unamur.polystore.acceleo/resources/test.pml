@@ -1,116 +1,130 @@
 conceptual schema conceptualSchema{
 
-	entity type Client {
-		id: int,
-		name: string
+	entity type Actor {
+		id : string,
+		fullName : string,
+		yearOfBirth : int,
+		yearOfDeath : int
 		identifier {
 			id
 		}
 	}
 	
-	entity type Adresse {
-		id: int,
-		street: string
-	}
-	
-	entity type Commande {
-		id: int,
-		dates: string
+	entity type Director {
+		id : string,
+		firstName : string,
+		lastName : string,
+		yearOfBirth : int,
+		yearOfDeath : int
 		identifier {
 			id
 		}
 	}
 	
-	relationship type Vit {
-		resident[1]: Client
-		adresse[0-N]: Adresse
+	entity type Movie {
+		id : string,
+		primaryTitle : string,
+		originalTitle : string,
+		isAdult : bool,
+		startYear : int,
+		runtimeMinutes: int,
+		averageRating : string,
+		numVotes : int
+		identifier{
+			id
+		}
 	}
-	
-	relationship type Passe {
-		acheteur[0-N]: Client,
-		achete[0-N] : Commande
+	   
+    relationship type movieDirector{
+		directed_movie[0-N]: Movie,
+		director[0-N] : Director
 	}
-	
-	
-    
+	relationship type movieActor{
+		character[0-N]: Actor,
+		movie[0-N] : Movie
+	}    
 }
 physical schemas { 
 	
-	relational schema myRelSchema : mydb {
-	
-		table ADRESSE {
-			columns {
+	document schema IMDB_Mongo : mymongo {
+		collection actorCollection {
+			fields {
 				id,
-				street
-			}
-			
-		}
-		
-		table CLIENT {
-			columns {
-				ID1,
-				NAME,
-				ADRESSE
-			}
-			
-			references {
-				vit : ADRESSE -> myRelSchema.ADRESSE.id
+				fullname,
+				birthyear,
+				deathyear,
+				movies[0-N]{
+					id,
+					title,
+					rating[1]{
+						rate: [rate] "/10",
+						numberofvotes
+					}
+				}
 			}
 		}
 		
-		table COMMANDE {
-			columns {
-				ID2,
-				DATE
+		collection topMovies {
+			fields {
+				id,
+				title,
+				rate,
+				numberofvotes
 			}
-			
 		}
-		
 	}
 	
-	document schema categorySchema : mymongo {
-			collection cli_com {
-				fields {
-					cli,
-					com
-				}
-				
-				references {
-					achat_par : cli -> myRelSchema.CLIENT.ID1
-					achat_de : com -> myRelSchema.COMMANDE.ID2
-				}
+	key value schema movieRedis {
+		kvpairs movieKV {
+			key : "movie:"[id],
+			value : attr hash{
+				title,
+				originalTitle,
+				isAdult,
+				startYear,
+				runtimeMinutes
 			}
-		
-	}	
+		}
+	}
 	
+	relational schema myRelSchema  {
+		table directorTable{
+			columns{
+				id,
+				fullname:[firstname]" "[lastname],
+				birth,
+				death
+			}
+		}
+		
+		
+		table directed {
+			columns{
+				director_id,
+				movie_id
+			}
+			references {
+				directed_by : director_id -> directorTable.id
+				has_directed : movie_id -> movieRedis.movieKV.id
+				movie_info : movie_id -> IMDB_Mongo.actorCollection.movies.id
+			}
+		}
+	}
 }
 
 mapping rules{
-	conceptualSchema.Client(id, name) -> myRelSchema.CLIENT(ID1, NAME),
-	conceptualSchema.Adresse(id, street) -> myRelSchema.ADRESSE(id, street),
-	conceptualSchema.Commande(id, dates) -> myRelSchema.COMMANDE(ID2, DATE),
-	conceptualSchema.Passe.acheteur -> categorySchema.cli_com.achat_par,
-	conceptualSchema.Passe.achete -> categorySchema.cli_com.achat_de,
-	conceptualSchema.Vit.resident -> myRelSchema.CLIENT.vit
-	
+	conceptualSchema.Actor(id,fullName,yearOfBirth) -> IMDB_Mongo.actorCollection(id,fullname,birthyear),
+	conceptualSchema.movieActor.character-> IMDB_Mongo.actorCollection.movies(),
+	conceptualSchema.Movie(id, primaryTitle) -> IMDB_Mongo.actorCollection.movies(id,title),
+	conceptualSchema.Movie(averageRating,numVotes) -> IMDB_Mongo.actorCollection.movies.rating(rate,numberofvotes)
 }
 
 databases {
 	
-	mariadb mydb {
-		host: "localhost"
-		port: 3306
-		dbname : "test"
-		password : "admin"
-		login : "root"
-	}
 	
-	mongodb mymongo {
-		host:"localhost"
-		port: 27000
-		dbname: "admin"
-		login: "admin"
-		password: "admin"
+	mongodb mymongo{
+		host : "localhost"
+		port: 27100
 	}
 	
 }

@@ -10,6 +10,7 @@ import org.eclipse.emf.ecore.EObject;
 import org.eclipse.ocl.ecore.OCL;
 
 import be.unamur.polystore.pml.AbstractMappingRule;
+import be.unamur.polystore.pml.AbstractPhysicalSchema;
 import be.unamur.polystore.pml.AbstractPhysicalStructure;
 import be.unamur.polystore.pml.Attribute;
 import be.unamur.polystore.pml.BracketsField;
@@ -291,5 +292,29 @@ public class Util {
 		List<PhysicalField> res = (hasToReturnTargetFields) ? ref.getTargetField() : ref.getSourceField();
 		return res;
 	}
+	
+	public static String getPhysicalFieldAbsolutePath(PhysicalField field) {
+		return getAbsoluteName(field);
+		
+	}
+	
+	private static String getAbsoluteName(EObject o) {
+		if(o instanceof AbstractPhysicalSchema)
+			return ((AbstractPhysicalSchema) o).getName();
+		
+		if(o instanceof PhysicalField) {
+			return getAbsoluteName(o.eContainer()) + MappingRuleService.getPhysicalName((PhysicalField)o);
+		}
+		
+		if(o instanceof AbstractPhysicalStructure) {
+			return getAbsoluteName(o.eContainer()) + ((AbstractPhysicalStructure)o).getName();
+		}
+		
+		return null;
+		
+	}
+	
+	
+	
 
 }

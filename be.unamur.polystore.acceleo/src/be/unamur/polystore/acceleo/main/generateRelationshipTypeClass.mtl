@@ -28,6 +28,11 @@ public class [rel.name.toUpperFirst() /] extends LoggingPojo {
 
 	public [rel.name.toUpperFirst() /]() {}
 
+	@Override
+    public Object clone() throws CloneNotSupportedException {
+        return super.clone();
+    }
+
 [for (role: Role | rel.roles)]
 	public [role.entity.name.toUpperFirst()/] _get[role.name.toUpperFirst()/]() {
 		return [role.name/];

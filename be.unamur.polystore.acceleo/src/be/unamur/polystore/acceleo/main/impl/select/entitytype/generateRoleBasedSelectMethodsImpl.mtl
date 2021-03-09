@@ -63,6 +63,15 @@ Dataset<[entity.name.toUpperFirst()/]> res_[entity.name/]_[ref.name/] = res_[ref
 datasetsPOJO.add(res_[entity.name/]_[ref.name/]);
 [/if]
 [/for]
+
+[let rel : RelationshipType = role.getRelationShipType()]
+Dataset<[rel.name.toUpperFirst()/]> [rel.name/]_[role.name/];
+[for (embedded : EmbeddedObject | getMappedEmbeddedObjects(role, conceptualSchema.getMappingRules()))]
+[rel.name/]_[role.name/] = [rel.name.toLowerFirst()/]Service.get[rel.name.toUpperFirst()/]ListIn[ getPhysicalFieldAbsolutePath(embedded) /]([role.name/]_condition, [role2.name/]_condition);
+
+[/for]
+[/let]
+
 [/let]
 //Join datasets or return 
 if(datasetsPOJO.size() == 0)

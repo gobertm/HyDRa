@@ -141,4 +141,9 @@ field.eContainer(AbstractPhysicalSchema).name + '_' + field.getAbstractPhysicalS
 	invoke('be.unamur.polystore.acceleo.main.utils.MappingRuleService', 'getPhysicalSchema(org.eclipse.emf.ecore.EObject)', Sequence{o})
 /]
 
+[query public getPhysicalFieldAbsolutePath(field : PhysicalField) : String =  
+invoke('be.unamur.polystore.acceleo.main.utils.Util', 'getPhysicalFieldAbsolutePath(be.unamur.polystore.pml.PhysicalField)', Sequence{field})
+/]
+
+
 

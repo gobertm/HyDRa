@@ -21,6 +21,46 @@
 [generateSimpleSelectFromGivenDocumentCollection(ent.name.toUpperFirst(), ent, ent.attributes, struct, db, references)/]
 [/template]	
 
+[template public generateSelectFromGivenHybridDocumentCollection(rel: RelationshipType, struct: AbstractPhysicalStructure, db : Database)]
+	List<String> bsons = new ArrayList<String>();
+	String bson = null;
+	[for (role : Role | rel.roles)]
+	bson = [role.entity.name.toUpperFirst()/]ServiceImpl.getBSONMatchQueryIn[struct.name.toUpperFirst()/]From[db.name.toUpperFirst() /]([role.name + '_condition' /] ,refilterFlag);
+	if(bson != null)
+		bsons.add("{" + bson + "}");
+	[/for]
+
+	String bsonQuery = bsons.size() == 0 ? null : "{$match: { $and: [ '['/]" + String.join(",", bsons) + "[ ']'/] }}";
+
+	Dataset<Row> dataset = dbconnection.SparkConnectionMgr.getSparkSessionForMongoDB("[db.name /]", "[struct.name /]", bsonQuery);
+
+	Dataset<[rel.name.toUpperFirst() /]> res = dataset.flatMap((FlatMapFunction<Row, [rel.name.toUpperFirst() /]>) r -> {
+			List<[rel.name.toUpperFirst() /]> list_res = new ArrayList<[rel.name.toUpperFirst() /]>();
+			Integer groupIndex = null;
+			String regex = null;
+			String value = null;
+			Pattern p = null;
+			Matcher m = null;
+			boolean matches = false;
+			Row nestedRow = null;
+
+			boolean addedInList = false;
+			Row r1 = r;
+			[rel.name.toUpperFirst() /] [rel.name.toLowerFirst() /]1 = new [rel.name.toUpperFirst() /]();
+			[for (role : Role | rel.roles)]
+			[rel.name.toLowerFirst() /]1._set[role.name.toUpperFirst() /](new [role.entity.name.toUpperFirst() /]());
+			[/for]
+			
+			[generateHybridFlatMapBody(struct, rel, db, 1)/]
+			
+			return list_res.iterator();
+
+	}, Encoders.bean([rel.name.toUpperFirst() /].class));
+	// TODO drop duplicates based on roles ids
+	//res= res.dropDuplicates(new String {});
+	return res;
+[/template]
+
 [template public generateSimpleSelectFromGivenDocumentCollection(pojoName : String, entOrRel : OclAny, attributes : Collection(Attribute), struct: AbstractPhysicalStructure, db : Database, references : Sequence(Sequence(OclAny)))]
 	String bsonQuery = [pojoName/]ServiceImpl.getBSONMatchQueryIn[struct.name.toUpperFirst()/]From[db.name.toUpperFirst() /](condition, refilterFlag);
 	if(bsonQuery != null) {
@@ -51,7 +91,7 @@
 			return list_res.iterator();
 
 	}, Encoders.bean([pojoName /][if (references->size() > 0)][getTDOLiteral('') /][/if].class));
-	res= res.dropDuplicates(new String['['/][']'/]{[for (attr : Attribute | attributes->any(true).ancestors(EntityType)->first().identifier.attributes) separator(',')]"[attr.name/]"[/for]});
+	res= res.dropDuplicates(new String['['/][']'/]{[if (attributes->size() > 0)][for (attr : Attribute | attributes->any(true).ancestors(EntityType)->first().identifier.attributes) separator(',')]"[attr.name/]"[/for][/if]});
 	return res;
 [/template]
 
@@ -180,6 +220,99 @@ public static String getBSONMatchQueryIn[struct.name.toUpperFirst()/]From[db.nam
 	return res;
 }
 [/template]
+
+
+
+[template private generateHybridFlatMapBody(arg : OclAny, rel: RelationshipType, db : Database, level : Integer)]
+boolean toAdd[level /]  = false;
+WrappedArray array[level /]  = null;
+[for (child : PhysicalField | getChildrenNonArrayPhysicalFields(arg))]
+[let mappedAttrList : Collection(Attribute) = getMappedAttributesFromMultipleEntityTypes(child, rel.roles -> collect(role : Role | role.entity)->asSet(), db.ancestors(Domainmodel)->first().mappingRules)]
+[if (mappedAttrList->size() > 0)]
+[for (attr : Attribute | mappedAttrList)]
+[let entity : EntityType = attr.ancestors(EntityType) -> any(true)]
+[let ancestorsList : Sequence(EmbeddedObject) = getSequenceOfNonArrayEmbeddedObjects(child)]
+// 	attribute [entity.name /].[attr.name /] for field [getPhysicalName(child) /]			
+nestedRow =  r[level /];
+[for (anc : EmbeddedObject | ancestorsList->reverse())]
+[comment simple row /]
+nestedRow = (nestedRow == null) ? null : (Row) nestedRow.getAs("[getPhysicalName(anc)/]");
+[/for]
+[/let]
+if(nestedRow != null) {
+	[if (child.ancestors(LongField) -> size() = 0)]
+	[comment shortField or bracketfield/]
+	if(nestedRow.getAs("[getPhysicalName(child)/]")==null)
+		[rel.name.toLowerFirst() /][level/]._get[rel.roles->select(role : Role | role.entity = entity )->any(true).name.toUpperFirst() /]().set[attr.name.toUpperFirst() /](null);
+	else
+		[rel.name.toLowerFirst() /][level/]._get[rel.roles->select(role : Role | role.entity = entity )->any(true).name.toUpperFirst() /]().set[attr.name.toUpperFirst() /]([generateParsingFunctionJavaType(attr.type, 'nestedRow.getAs("' + getPhysicalName(child) + '")' )/]);
+	toAdd[level/] = true;					
+	[else]
+		[if (child.ancestors(LongField) -> first().oclAsType(LongField).pattern->size() = 1)][comment if you encounter a "short" long field. E.g., rate: rating  /]
+	if(nestedRow.getAs("[getPhysicalName(child.ancestors(LongField) -> first().oclAsType(LongField)) /]")==null)
+		[rel.name.toLowerFirst() /][level/]._get[rel.roles->select(role : Role | role.entity = entity )->any(true).name.toUpperFirst() /]().set[attr.name.toUpperFirst() /](null)
+	else
+		[rel.name.toLowerFirst() /][level/]._get[rel.roles->select(role : Role | role.entity = entity )->any(true).name.toUpperFirst() /]().set[attr.name.toUpperFirst() /](([generateJavaType(attr.type)/]) nestedRow.getAs("[getPhysicalName(child.ancestors(LongField) -> first().oclAsType(LongField)) /]"));
+	toAdd[level/] = true;	
+		[else]
+	[comment LongField /]
+	regex = "[getJavaRegexFromLongField(child.ancestors(LongField) -> first().oclAsType(LongField)) /]";
+	groupIndex = [getPositionInLongField(child, child.ancestors(LongField) -> first().oclAsType(LongField))/];
+	if(groupIndex == null) {
+		throw new Exception("Cannot retrieve value for [entity.name /].[attr.name /] attribute stored in db [db.name/]. Probably due to an ambiguous regex.");
+	}
+	value = nestedRow.getAs("[child.ancestors(LongField) -> first().oclAsType(LongField).physicalName /]");
+	p = Pattern.compile(regex);
+	m = p.matcher(value);
+	matches = m.find();
+	if(matches) {
+		String [attr.name.toLowerFirst()/] = m.group(groupIndex.intValue());
+		[rel.name.toLowerFirst() /][level/]._get[rel.roles->select(role : Role | role.entity = entity )->any(true).name.toUpperFirst() /]().set[attr.name.toUpperFirst()/]([generateParsingFunctionJavaType(attr.type, attr.name.toLowerFirst())/]);
+		toAdd[level/] = true;
+	} else {
+		throw new Exception("Cannot retrieve value for [entity.name /].[attr.name /] attribute stored in db [db.name/]. Probably due to an ambiguous regex.");
+	}
+		[/if]
+	[/if]
+}
+[/let]
+[/for]
+[/if]
+[/let]
+[/for]
+[let children : Collection(EmbeddedObject) = getChildrenArrayPhysicalFieldsHavingDescendantMappedToGivenEntityTypes(arg, rel.roles -> collect(role : Role | role.entity)->asSet(), rel.ancestors(Domainmodel)->first().mappingRules)]
+[if (children->size() > 0)]
+[for (child : EmbeddedObject | children)]
+array[level /] = r[level /].getAs("[getPhysicalName(child)/]");
+if(array[level /]!= null) {
+	for (int i[level + 1/] = 0; i[level + 1/] < array[level /].size(); i[level + 1/]++){
+		Row r[level + 1 /] = (Row) array[level /].apply(i[level + 1/]);
+		[rel.name.toUpperFirst() /] [rel.name.toLowerFirst() /][level + 1/] = ([rel.name.toUpperFirst() /]) [rel.name.toLowerFirst() /][level/].clone();
+		[generateHybridFlatMapBody(child, rel, db, level + 1)/]
+	}
+}
+
+if(toAdd[level /]) {
+	[if (level > 1)]if([for (role : Role | rel.roles) separator('&&')]([role.name/]_condition == null || [role.name/]_condition.evaluate([rel.name.toLowerFirst() /][level /]._get[role.name.toUpperFirst()/]()))[/for])[/if]
+		list_res.add([rel.name.toLowerFirst() /][level /]);
+	addedInList = true;
+} 
+[if (level > 1)]if(addedInList)
+	toAdd[level - 1 /] = false;[/if]
+
+[/for]
+[else]
+if(toAdd[level /]) {
+	[if (level > 1)]if([for (role : Role | rel.roles) separator('&&')]([role.name/]_condition == null || [role.name/]_condition.evaluate([rel.name.toLowerFirst() /][level /]._get[role.name.toUpperFirst()/]()))[/for])[/if]
+	list_res.add([rel.name.toLowerFirst() /][level /]);
+	addedInList = true;
+} 
+[if (level > 1)]if(addedInList)
+	toAdd[level - 1 /] = false;[/if]
+[/if]
+[/let]
+[/template]
+
 
 [template private generateFlatMapBody(arg : OclAny, entOrRel : OclAny, pojoName : String, db : Database, level : Integer)]
 boolean toAdd[level /]  = false;
@@ -423,6 +556,10 @@ if(toAdd[level /]) {
 	invoke('be.unamur.polystore.acceleo.main.utils.Util', 'getChildrenNonArrayPhysicalFields(java.lang.Object)', Sequence{arg})
 /]
 
+[query public getMappedAttributesFromMultipleEntityTypes(field : PhysicalField, entities : Set(EntityType), rules : MappingRules) :  Collection(Attribute) = 
+entities->collect(entity : EntityType | getMappedAttributes(field, entity, rules))->flatten()/]
+
+
 [query private getMappedAttributes(field: PhysicalField, entOrRel: OclAny, rules: MappingRules) : Collection(Attribute) =  
 	invoke('be.unamur.polystore.acceleo.main.utils.Util', 'getMappedAttributes(be.unamur.polystore.pml.PhysicalField, java.lang.Object, be.unamur.polystore.pml.MappingRules)', Sequence{field, entOrRel, rules})
 /]
@@ -430,6 +567,10 @@ if(toAdd[level /]) {
 [query private getChildrenArrayPhysicalFieldsHavingDescendantMappedToGivenEntityType(arg : OclAny, entOrRel: OclAny, rules: MappingRules) : Collection(EmbeddedObject) =  
 	invoke('be.unamur.polystore.acceleo.main.utils.Util', 'getChildrenArrayPhysicalFieldsHavingDescendantMappedToGivenEntityType(java.lang.Object, java.lang.Object, be.unamur.polystore.pml.MappingRules)', Sequence{arg, entOrRel, rules})
 /]
+
+[query private getChildrenArrayPhysicalFieldsHavingDescendantMappedToGivenEntityTypes(arg : OclAny, entities: Set(EntityType), rules: MappingRules) : Collection(EmbeddedObject) = 
+entities->collect(entity : EntityType | getChildrenArrayPhysicalFieldsHavingDescendantMappedToGivenEntityType(arg, entity, rules))->flatten()/]
+
 
 [query private getChildrenArrayPhysicalFieldsHavingDescendantMappedToGivenEntityTypeOrToRefField(arg : OclAny, entOrRel: OclAny, rules: MappingRules, refFields: Collection(PhysicalField)) : Collection(EmbeddedObject) =  
 	invoke('be.unamur.polystore.acceleo.main.utils.Util', 'getChildrenArrayPhysicalFieldsHavingDescendantMappedToGivenEntityTypeOrToRefField(java.lang.Object, java.lang.Object, be.unamur.polystore.pml.MappingRules, java.util.List)', Sequence{arg, entOrRel, rules, refFields})

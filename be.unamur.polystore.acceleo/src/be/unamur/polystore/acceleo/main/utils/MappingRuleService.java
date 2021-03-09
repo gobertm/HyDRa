@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Set;
 
 import org.eclipse.emf.common.util.EList;
+import org.eclipse.emf.common.util.EMap;
 import org.eclipse.emf.common.util.TreeIterator;
 import org.eclipse.emf.ecore.EClass;
 import org.eclipse.emf.ecore.EObject;
@@ -331,6 +332,17 @@ public class MappingRuleService {
 			if (rule instanceof RoleToReferenceMappingRule) {
 				if (((RoleToReferenceMappingRule) rule).getRoleConceptual() == role)
 					res.add(((RoleToReferenceMappingRule) rule).getReference());
+			}
+		return res;
+	}
+	
+	public static Set<EmbeddedObject> getMappedEmbeddedObjects(Role role, MappingRules rules) {
+		Set<EmbeddedObject> res = new HashSet<EmbeddedObject>();
+		for (AbstractMappingRule rule : rules.getMappingRules())
+			if (rule instanceof RoleToEmbbededObjectMappingRule) {
+				if (((RoleToEmbbededObjectMappingRule) rule).getRoleConceptual() == role) {
+					res.add(((RoleToEmbbededObjectMappingRule) rule).getPhysicalStructure());
+				}
 			}
 		return res;
 	}

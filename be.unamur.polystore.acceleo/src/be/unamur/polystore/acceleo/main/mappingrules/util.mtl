@@ -50,3 +50,7 @@
 [query public getMappedReferenceInSamePhysicalStructureForOppositeRole(role : Role, struct: AbstractPhysicalStructure) : Reference = 
 	getMappedReferences(role, role.getMappingRules()) -> select(ref : Reference | ref.getAbstractPhysicalStructureNotEmbeddedObject() = struct) -> any(true) /]
 
+[query public getMappedEmbeddedObjects(role: Role, rules: MappingRules ) : Set(EmbeddedObject) 
+	= invoke('be.unamur.polystore.acceleo.main.utils.MappingRuleService', 'getMappedEmbeddedObjects(be.unamur.polystore.pml.Role, be.unamur.polystore.pml.MappingRules)', Sequence{role, rules}) /]
+
+

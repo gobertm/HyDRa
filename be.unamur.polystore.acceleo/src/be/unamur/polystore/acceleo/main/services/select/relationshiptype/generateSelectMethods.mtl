@@ -39,6 +39,11 @@
 [/let]
 [/if]
 [/for]
+
+[for (embedded : EmbeddedObject | getMappedEmbeddedObjects(role1, role1.getMappingRules()))]
+[generateEmbeddedObjectMappedToRoleMethod(role1, embedded, role2, override) /]
+[/for]
+
 [/let]
 [/let]
 [else]
@@ -194,4 +199,22 @@ return null;
 [/if]
 
 
+[/template]
+
+[template private generateEmbeddedObjectMappedToRoleMethod(role : Role, embedded : EmbeddedObject, opposite : Role, override : Boolean)]
+// method accessing the embedded object [embedded.name/] mapped to role [role.name /]
+public [if (override = false)]abstract [/if]Dataset<pojo.[role.getRelationShipType().name.toUpperFirst() /]> get[role.getRelationShipType().name.toUpperFirst()/]ListIn[ getPhysicalFieldAbsolutePath(embedded) /](Condition<[role.entity.name.toUpperFirst()/]Attribute> [role.name /]_condition, Condition<[opposite.entity.name.toUpperFirst()/]Attribute> [opposite.name /]_condition)[if (override = false)];[else]{	
+[let dbs : Set(Database) = embedded.getAbstractPhysicalStructureNotEmbeddedObject().getConcernedDatabases(embedded.ancestors(Domainmodel)->any(true))]
+[if (dbs->size() = 0)]
+	return null;
+[else]
+	MutableBoolean refilterFlag = new MutableBoolean(false);
+[let db : Database = dbs->any(true)]
+[if (db.dbType = pml::DatabaseType::MONGODB)] 
+	[generateSelectFromGivenHybridDocumentCollection(role.ancestors(RelationshipType)->any(true), embedded.getAbstractPhysicalStructureNotEmbeddedObject(), db) /]
+[/if]
+[/let]
+[/if]
+[/let]		
+}[/if]
 [/template]
