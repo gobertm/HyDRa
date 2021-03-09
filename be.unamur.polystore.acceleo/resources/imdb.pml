@@ -2,8 +2,7 @@ conceptual schema conceptualSchema{
 
 	entity type Actor {
 		id : string,
-		firstName : string,
-		lastName : string,
+		fullName : string,
 		yearOfBirth : int,
 		yearOfDeath : int
 		identifier {
@@ -51,7 +50,7 @@ physical schemas {
 		collection actorCollection {
 			fields {
 				id,
-				fullname:[firstname]" "[lastname],
+				fullname,
 				birthyear,
 				deathyear,
 				movies[0-N]{
@@ -114,7 +113,7 @@ physical schemas {
 }
 
 mapping rules{
-	conceptualSchema.Actor(id,firstName,lastName,yearOfBirth,yearOfDeath) -> IMDB_Mongo.actorCollection(id,firstname,lastname,birthyear,deathyear),
+	conceptualSchema.Actor(id,fullName,yearOfBirth,yearOfDeath) -> IMDB_Mongo.actorCollection(id,fullname,birthyear,deathyear),
 	conceptualSchema.movieActor.character-> IMDB_Mongo.actorCollection.movies(),
 	conceptualSchema.Director(id,firstName,lastName, yearOfBirth,yearOfDeath) -> myRelSchema.directorTable(id,firstname,lastname,birth,death),
 	conceptualSchema.movieDirector.director -> myRelSchema.directed.directed_by,

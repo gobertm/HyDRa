@@ -336,8 +336,7 @@ public class MongoDataInit {
         Random random = new Random();
         String[] movieLine;
         actorDoc.append("id",actor[0])
-                .append("fullname", actor[1])
-                .append("birthyear",actor[2]);
+                .append("fullname", actor[1]);
         if (!(actor[2].contains("\\N")))
             actorDoc.append("birthyear",actor[2]);
         if (!(actor[3].contains("\\N")))
@@ -394,7 +393,7 @@ public class MongoDataInit {
             actorDocList.add(getActorDocument(actorLine));
             i++;
             if(i % 100000==0){
-                logger.debug("Starting bulk insert 1 000 000 documents in mongo");
+                logger.debug("Starting bulk insert 100000 documents in mongo");
                 collection.insertMany(actorDocList);
                 logger.debug("Inserted actors documents", i);
                 actorDocList.clear();
