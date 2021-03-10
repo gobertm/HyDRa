@@ -244,16 +244,18 @@ if(nestedRow != null) {
 	[comment shortField or bracketfield/]
 	if(nestedRow.getAs("[getPhysicalName(child)/]")==null)
 		[rel.name.toLowerFirst() /][level/]._get[rel.roles->select(role : Role | role.entity = entity )->any(true).name.toUpperFirst() /]().set[attr.name.toUpperFirst() /](null);
-	else
-		[rel.name.toLowerFirst() /][level/]._get[rel.roles->select(role : Role | role.entity = entity )->any(true).name.toUpperFirst() /]().set[attr.name.toUpperFirst() /]([generateParsingFunctionJavaType(attr.type, 'nestedRow.getAs("' + getPhysicalName(child) + '")' )/]);
-	toAdd[level/] = true;					
+	else{
+		[rel.name.toLowerFirst() /][level/]._get[rel.roles->select(role : Role | role.entity = entity )->any(true).name.toUpperFirst() /]().set[attr.name.toUpperFirst() /](([generateJavaType(attr.type)/])nestedRow.getAs("[getPhysicalName(child)/]");
+		toAdd[level/] = true;					
+		}
 	[else]
 		[if (child.ancestors(LongField) -> first().oclAsType(LongField).pattern->size() = 1)][comment if you encounter a "short" long field. E.g., rate: rating  /]
 	if(nestedRow.getAs("[getPhysicalName(child.ancestors(LongField) -> first().oclAsType(LongField)) /]")==null)
 		[rel.name.toLowerFirst() /][level/]._get[rel.roles->select(role : Role | role.entity = entity )->any(true).name.toUpperFirst() /]().set[attr.name.toUpperFirst() /](null)
-	else
+	else{
 		[rel.name.toLowerFirst() /][level/]._get[rel.roles->select(role : Role | role.entity = entity )->any(true).name.toUpperFirst() /]().set[attr.name.toUpperFirst() /](([generateJavaType(attr.type)/]) nestedRow.getAs("[getPhysicalName(child.ancestors(LongField) -> first().oclAsType(LongField)) /]"));
-	toAdd[level/] = true;	
+		toAdd[level/] = true;	
+		}
 		[else]
 	[comment LongField /]
 	regex = "[getJavaRegexFromLongField(child.ancestors(LongField) -> first().oclAsType(LongField)) /]";
@@ -334,16 +336,18 @@ if(nestedRow != null) {
 	[comment shortField or bracketfield/]
 	if(nestedRow.getAs("[getPhysicalName(child)/]")==null)
 		[pojoName.toLowerFirst() /][level/].set[attr.name.toUpperFirst() /](null);
-	else
-		[pojoName.toLowerFirst() /][level/].set[attr.name.toUpperFirst() /]([generateParsingFunctionJavaType(attr.type, 'nestedRow.getAs("' + getPhysicalName(child) + '")' )/]);
-	toAdd[level/] = true;					
+	else{
+		[pojoName.toLowerFirst() /][level/].set[attr.name.toUpperFirst() /](([generateJavaType(attr.type)/]) nestedRow.getAs("[getPhysicalName(child) /]"));
+		toAdd[level/] = true;					
+		}
 	[else]
 		[if (child.ancestors(LongField) -> first().oclAsType(LongField).pattern->size() = 1)][comment if you encounter a "short" long field. E.g., rate: rating  /]
 	if(nestedRow.getAs("[getPhysicalName(child.ancestors(LongField) -> first().oclAsType(LongField)) /]")==null)
 		[pojoName.toLowerFirst() /][level/].set[attr.name.toUpperFirst() /](null)
-	else
+	else{
 		[pojoName.toLowerFirst() /][level/].set[attr.name.toUpperFirst() /](([generateJavaType(attr.type)/]) nestedRow.getAs("[getPhysicalName(child.ancestors(LongField) -> first().oclAsType(LongField)) /]"));
-	toAdd[level/] = true;	
+		toAdd[level/] = true;	
+		}
 		[else]
 	[comment LongField /]
 	regex = "[getJavaRegexFromLongField(child.ancestors(LongField) -> first().oclAsType(LongField)) /]";
@@ -422,12 +426,13 @@ if(nestedRow != null) {
 	[comment shortField or bracketfield/]
 	if(nestedRow.getAs("[getPhysicalName(child)/]") == null){
 		[pojoName.toLowerFirst() /][level/].set[attr.name.toUpperFirst() /](null);
-	}else
-	 	[pojoName.toLowerFirst() /][level/].set[attr.name.toUpperFirst() /]([generateParsingFunctionJavaType(attr.type, 'nestedRow.getAs("' + getPhysicalName(child) + '")' )/]);
-	toAdd[level/] = true;					
+	}else{
+		[pojoName.toLowerFirst() /][level/].set[attr.name.toUpperFirst() /](([generateJavaType(attr.type)/]) nestedRow.getAs("[getPhysicalName(child) /]"));
+		toAdd[level/] = true;					
+		}
 	[else]
 		[if (child.ancestors(LongField) -> first().oclAsType(LongField).pattern->size() = 1)][comment if you encounter a "short" long field. E.g., rate: rating  /]
-	[pojoName.toLowerFirst() /][if (references->size() > 0)][getTDOLiteral('') /][/if][level/].set[attr.name.toUpperFirst() /]([generateParsingFunctionJavaType(attr.type, 'nestedRow.getAs("' + getPhysicalName(child.ancestors(LongField) -> first().oclAsType(LongField)) + '")' )/] "));
+	[pojoName.toLowerFirst() /][if (references->size() > 0)][getTDOLiteral('') /][/if][level/].set[attr.name.toUpperFirst() /](([generateJavaType(attr.type)/]) nestedRow.getAs("[getPhysicalName(child.ancestors(LongField) -> first().oclAsType(LongField)) /]"));
 	toAdd[level/] = true;	
 		[else]
 	[comment LongField /]
