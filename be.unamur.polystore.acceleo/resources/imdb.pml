@@ -3,8 +3,8 @@ conceptual schema conceptualSchema{
 	entity type Actor {
 		id : string,
 		fullName : string,
-		yearOfBirth : int,
-		yearOfDeath : int
+		yearOfBirth : string,
+		yearOfDeath : string
 		identifier {
 			id
 		}
