@@ -245,7 +245,7 @@ if(nestedRow != null) {
 	if(nestedRow.getAs("[getPhysicalName(child)/]")==null)
 		[rel.name.toLowerFirst() /][level/]._get[rel.roles->select(role : Role | role.entity = entity )->any(true).name.toUpperFirst() /]().set[attr.name.toUpperFirst() /](null);
 	else{
-		[rel.name.toLowerFirst() /][level/]._get[rel.roles->select(role : Role | role.entity = entity )->any(true).name.toUpperFirst() /]().set[attr.name.toUpperFirst() /](([generateJavaType(attr.type)/])nestedRow.getAs("[getPhysicalName(child)/]");
+		[rel.name.toLowerFirst() /][level/]._get[rel.roles->select(role : Role | role.entity = entity )->any(true).name.toUpperFirst() /]().set[attr.name.toUpperFirst() /](([generateJavaType(attr.type)/])nestedRow.getAs("[getPhysicalName(child)/]"));
 		toAdd[level/] = true;					
 		}
 	[else]
