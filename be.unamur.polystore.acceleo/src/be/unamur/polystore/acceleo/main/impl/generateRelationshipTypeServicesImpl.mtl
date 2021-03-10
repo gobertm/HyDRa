@@ -10,6 +10,7 @@
 [file ('src/main/java/dao/impl/' + rel.name.toUpperFirst() + 'ServiceImpl'.concat('.java'), false, 'UTF-8')]
 package dao.impl;
 
+import java.util.Arrays;
 import org.apache.spark.sql.Dataset;
 import conditions.Condition;
 import conditions.AndCondition;

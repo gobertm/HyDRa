@@ -30,15 +30,19 @@ public class [rel.name.toUpperFirst() /] extends LoggingPojo {
 
 	@Override
     public Object clone() throws CloneNotSupportedException {
-        return super.clone();
+        [rel.name.toUpperFirst() /] cloned = ([rel.name.toUpperFirst() /]) super.clone();
+		[for (role: Role | rel.roles)]
+		cloned.set[role.name.toUpperFirst()/](([role.entity.name.toUpperFirst()/])cloned.get[role.name.toUpperFirst()/]().clone());	
+		[/for]
+		return cloned;
     }
 
 [for (role: Role | rel.roles)]
-	public [role.entity.name.toUpperFirst()/] _get[role.name.toUpperFirst()/]() {
+	public [role.entity.name.toUpperFirst()/] get[role.name.toUpperFirst()/]() {
 		return [role.name/];
 	}	
 
-	public void _set[role.name.toUpperFirst()/]([role.entity.name.toUpperFirst()/] [role.name/]) {
+	public void set[role.name.toUpperFirst()/]([role.entity.name.toUpperFirst()/] [role.name/]) {
 		this.[role.name/] = [role.name/];
 	}
 	

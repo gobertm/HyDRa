@@ -9,6 +9,7 @@
 [file ('src/main/java/dao/impl/' + entityType.name.toUpperFirst() + 'ServiceImpl'.concat('.java'), false, 'UTF-8')]
 package dao.impl;
 
+import java.util.Arrays;
 import java.util.List;
 import pojo.[entityType.name.toUpperFirst() /];
 import conditions.*;

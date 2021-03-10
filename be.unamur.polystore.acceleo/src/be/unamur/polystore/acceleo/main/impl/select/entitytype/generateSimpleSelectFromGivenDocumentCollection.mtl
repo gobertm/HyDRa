@@ -48,7 +48,7 @@
 			Row r1 = r;
 			[rel.name.toUpperFirst() /] [rel.name.toLowerFirst() /]1 = new [rel.name.toUpperFirst() /]();
 			[for (role : Role | rel.roles)]
-			[rel.name.toLowerFirst() /]1._set[role.name.toUpperFirst() /](new [role.entity.name.toUpperFirst() /]());
+			[rel.name.toLowerFirst() /]1.set[role.name.toUpperFirst() /](new [role.entity.name.toUpperFirst() /]());
 			[/for]
 			
 			[generateHybridFlatMapBody(struct, rel, db, 1)/]
@@ -239,21 +239,21 @@ nestedRow =  r[level /];
 nestedRow = (nestedRow == null) ? null : (Row) nestedRow.getAs("[getPhysicalName(anc)/]");
 [/for]
 [/let]
-if(nestedRow != null) {
+if(nestedRow != null && Arrays.asList(nestedRow.schema().fieldNames()).contains("[getPhysicalName(child)/]")) {
 	[if (child.ancestors(LongField) -> size() = 0)]
 	[comment shortField or bracketfield/]
 	if(nestedRow.getAs("[getPhysicalName(child)/]")==null)
-		[rel.name.toLowerFirst() /][level/]._get[rel.roles->select(role : Role | role.entity = entity )->any(true).name.toUpperFirst() /]().set[attr.name.toUpperFirst() /](null);
+		[rel.name.toLowerFirst() /][level/].get[rel.roles->select(role : Role | role.entity = entity )->any(true).name.toUpperFirst() /]().set[attr.name.toUpperFirst() /](null);
 	else{
-		[rel.name.toLowerFirst() /][level/]._get[rel.roles->select(role : Role | role.entity = entity )->any(true).name.toUpperFirst() /]().set[attr.name.toUpperFirst() /](([generateJavaType(attr.type)/])nestedRow.getAs("[getPhysicalName(child)/]"));
+		[rel.name.toLowerFirst() /][level/].get[rel.roles->select(role : Role | role.entity = entity )->any(true).name.toUpperFirst() /]().set[attr.name.toUpperFirst() /](([generateJavaType(attr.type)/])nestedRow.getAs("[getPhysicalName(child)/]"));
 		toAdd[level/] = true;					
 		}
 	[else]
 		[if (child.ancestors(LongField) -> first().oclAsType(LongField).pattern->size() = 1)][comment if you encounter a "short" long field. E.g., rate: rating  /]
 	if(nestedRow.getAs("[getPhysicalName(child.ancestors(LongField) -> first().oclAsType(LongField)) /]")==null)
-		[rel.name.toLowerFirst() /][level/]._get[rel.roles->select(role : Role | role.entity = entity )->any(true).name.toUpperFirst() /]().set[attr.name.toUpperFirst() /](null)
+		[rel.name.toLowerFirst() /][level/].get[rel.roles->select(role : Role | role.entity = entity )->any(true).name.toUpperFirst() /]().set[attr.name.toUpperFirst() /](null)
 	else{
-		[rel.name.toLowerFirst() /][level/]._get[rel.roles->select(role : Role | role.entity = entity )->any(true).name.toUpperFirst() /]().set[attr.name.toUpperFirst() /](([generateJavaType(attr.type)/]) nestedRow.getAs("[getPhysicalName(child.ancestors(LongField) -> first().oclAsType(LongField)) /]"));
+		[rel.name.toLowerFirst() /][level/].get[rel.roles->select(role : Role | role.entity = entity )->any(true).name.toUpperFirst() /]().set[attr.name.toUpperFirst() /](([generateJavaType(attr.type)/]) nestedRow.getAs("[getPhysicalName(child.ancestors(LongField) -> first().oclAsType(LongField)) /]"));
 		toAdd[level/] = true;	
 		}
 		[else]
@@ -269,7 +269,7 @@ if(nestedRow != null) {
 	matches = m.find();
 	if(matches) {
 		String [attr.name.toLowerFirst()/] = m.group(groupIndex.intValue());
-		[rel.name.toLowerFirst() /][level/]._get[rel.roles->select(role : Role | role.entity = entity )->any(true).name.toUpperFirst() /]().set[attr.name.toUpperFirst()/]([generateParsingFunctionJavaType(attr.type, attr.name.toLowerFirst())/]);
+		[rel.name.toLowerFirst() /][level/].get[rel.roles->select(role : Role | role.entity = entity )->any(true).name.toUpperFirst() /]().set[attr.name.toUpperFirst()/]([generateParsingFunctionJavaType(attr.type, attr.name.toLowerFirst())/]);
 		toAdd[level/] = true;
 	} else {
 		throw new Exception("Cannot retrieve value for [entity.name /].[attr.name /] attribute stored in db [db.name/]. Probably due to an ambiguous regex.");
@@ -295,7 +295,7 @@ if(array[level /]!= null) {
 }
 
 if(toAdd[level /]) {
-	[if (level > 1)]if([for (role : Role | rel.roles) separator('&&')]([role.name/]_condition == null || [role.name/]_condition.evaluate([rel.name.toLowerFirst() /][level /]._get[role.name.toUpperFirst()/]()))[/for])[/if]
+	[if (level > 1)]if([for (role : Role | rel.roles) separator('&&')]([role.name/]_condition == null || [role.name/]_condition.evaluate([rel.name.toLowerFirst() /][level /].get[role.name.toUpperFirst()/]()))[/for])[/if]
 		list_res.add([rel.name.toLowerFirst() /][level /]);
 	addedInList = true;
 } 
@@ -305,7 +305,7 @@ if(toAdd[level /]) {
 [/for]
 [else]
 if(toAdd[level /]) {
-	[if (level > 1)]if([for (role : Role | rel.roles) separator('&&')]([role.name/]_condition == null || [role.name/]_condition.evaluate([rel.name.toLowerFirst() /][level /]._get[role.name.toUpperFirst()/]()))[/for])[/if]
+	[if (level > 1)]if([for (role : Role | rel.roles) separator('&&')]([role.name/]_condition == null || [role.name/]_condition.evaluate([rel.name.toLowerFirst() /][level /].get[role.name.toUpperFirst()/]()))[/for])[/if]
 	list_res.add([rel.name.toLowerFirst() /][level /]);
 	addedInList = true;
 } 
@@ -331,7 +331,7 @@ nestedRow =  r[level /];
 nestedRow = (nestedRow == null) ? null : (Row) nestedRow.getAs("[getPhysicalName(anc)/]");
 [/for]
 [/let]
-if(nestedRow != null) {
+if(nestedRow != null && Arrays.asList(nestedRow.schema().fieldNames()).contains("[getPhysicalName(child)/]")) {
 	[if (child.ancestors(LongField) -> size() = 0)]
 	[comment shortField or bracketfield/]
 	if(nestedRow.getAs("[getPhysicalName(child)/]")==null)
@@ -345,8 +345,10 @@ if(nestedRow != null) {
 	if(nestedRow.getAs("[getPhysicalName(child.ancestors(LongField) -> first().oclAsType(LongField)) /]")==null)
 		[pojoName.toLowerFirst() /][level/].set[attr.name.toUpperFirst() /](null)
 	else{
-		[pojoName.toLowerFirst() /][level/].set[attr.name.toUpperFirst() /](([generateJavaType(attr.type)/]) nestedRow.getAs("[getPhysicalName(child.ancestors(LongField) -> first().oclAsType(LongField)) /]"));
-		toAdd[level/] = true;	
+		if(Arrays.asList(nestedRow.schema().fieldNames()).contains("[getPhysicalName(child.ancestors(LongField) -> first().oclAsType(LongField)) /]")){
+			[pojoName.toLowerFirst() /][level/].set[attr.name.toUpperFirst() /](([generateJavaType(attr.type)/]) nestedRow.getAs("[getPhysicalName(child.ancestors(LongField) -> first().oclAsType(LongField)) /]"));
+			toAdd[level/] = true;	
+			}
 		}
 		[else]
 	[comment LongField /]
@@ -421,7 +423,7 @@ nestedRow =  r[level /];
 nestedRow = (nestedRow == null) ? null : (Row) nestedRow.getAs("[getPhysicalName(anc)/]");
 [/for]
 [/let]
-if(nestedRow != null) {
+if(nestedRow != null && Arrays.asList(nestedRow.schema().fieldNames()).contains("[getPhysicalName(child) /]")) {
 	[if (child.ancestors(LongField) -> size() = 0)]
 	[comment shortField or bracketfield/]
 	if(nestedRow.getAs("[getPhysicalName(child)/]") == null){
