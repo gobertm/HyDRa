@@ -121,6 +121,27 @@ public [entity.name.toUpperFirst() /] get[entity.name.toUpperFirst() /]([entity.
 	return null;
 }
 	[/if]
+
+public Dataset<[entity.name.toUpperFirst() /]> get[entity.name.toUpperFirst() /]List([entity.name.toUpperFirst() /].[rel.name/] role, Condition<[entity.name.toUpperFirst() /]Attribute> condition) {
+	if(role != null) {
+		if(role.equals([entity.name.toUpperFirst() /].[rel.name/].[role1.name /]))
+			return get[role1.name.toUpperFirst()/]ListIn[rel.name.toUpperFirst()/]By[role2.name.toUpperFirst()/]Condition(condition);
+		if(role.equals([entity.name.toUpperFirst() /].[rel.name/].[role2.name /]))
+			return get[role2.name.toUpperFirst()/]ListIn[rel.name.toUpperFirst()/]By[role1.name.toUpperFirst()/]Condition(condition);
+	}
+	return null;
+}
+
+public Dataset<[entity.name.toUpperFirst() /]> get[entity.name.toUpperFirst() /]List([entity.name.toUpperFirst() /].[rel.name/] role, Condition<[entity.name.toUpperFirst() /]Attribute> condition1, Condition<[entity.name.toUpperFirst() /]Attribute> condition2) {
+	if(role != null) {
+		if(role.equals([entity.name.toUpperFirst() /].[rel.name/].[role1.name /]))
+			return get[role1.name.toUpperFirst()/]ListIn[rel.name.toUpperFirst()/](condition1, condition2);
+		if(role.equals([entity.name.toUpperFirst() /].[rel.name/].[role2.name /]))
+			return get[role2.name.toUpperFirst()/]ListIn[rel.name.toUpperFirst()/](condition1, condition2);
+	}
+	return null;
+}
+
 [else]
 [let concernedRole : Role = Sequence{role1, role2}->select(role: Role | role.entity = entity)->any(true)]
 [let opposite : Role = concernedRole.getOppositeRoles()->any(true)]
@@ -131,6 +152,24 @@ public [if (opposite.isMaxOne() = false)]Dataset<[entity.name.toUpperFirst() /]>
 	}
 	return null;
 }
+
+public Dataset<[entity.name.toUpperFirst() /]> get[entity.name.toUpperFirst() /]List([entity.name.toUpperFirst() /].[rel.name/] role, Condition<[opposite.entity.name.toUpperFirst() /]Attribute> condition) {
+	if(role != null) {
+		if(role.equals([entity.name.toUpperFirst() /].[rel.name/].[concernedRole.name/]))
+			return get[concernedRole.name.toUpperFirst()/]ListIn[rel.name.toUpperFirst()/]By[opposite.name.toUpperFirst()/]Condition(condition);
+	}
+	return null;
+}
+
+public Dataset<[entity.name.toUpperFirst() /]> get[entity.name.toUpperFirst() /]List([entity.name.toUpperFirst() /].[rel.name/] role, Condition<[rel.roles->first().entity.name.toUpperFirst() /]Attribute> condition1, Condition<[rel.roles->first().getOppositeRoles()->any(true).entity.name.toUpperFirst() /]Attribute> condition2) {
+	if(role != null) {
+		if(role.equals([entity.name.toUpperFirst() /].[rel.name/].[concernedRole.name/]))
+			return get[concernedRole.name.toUpperFirst()/]ListIn[rel.name.toUpperFirst()/](condition1, condition2);
+	}
+	return null;
+}
+
+
 [/let]
 [/let]
 [/if]

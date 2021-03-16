@@ -25,6 +25,7 @@ import org.apache.commons.lang.mutable.MutableBoolean;
 import conditions.Condition;
 import conditions.Operator;
 [for (role: Role | getRolesFromEntityType(entityType, conceptualSchema))]
+import conditions.[role.entity.name.toUpperFirst()/]Attribute;
 [for (oppositeRole : Role | role.getOppositeRoles())]
 import conditions.[oppositeRole.entity.name.toUpperFirst()/]Attribute;
 import pojo.[oppositeRole.entity.name.toUpperFirst()/];
