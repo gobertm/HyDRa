@@ -33,6 +33,11 @@ public class [entityType.name.toUpperFirst() /] extends LoggingPojo {
 	[/for]
 
 	[for (rel: RelationshipType | getConcernedRelationshipTypes(entityType, conceptualSchema))]
+		[if (rel.roles->size() = 2 and rel.attributes->size() = 0)]
+	public enum [rel.name/] {
+		[for (role : Role | rel.getConcernedRoles(entityType)) separator(', ')][role.name/][/for]
+	}
+		[/if]
 		[for (r : Role | rel.roles) ]
 			[if (r.entity = entityType and isRelationshipTypeComplex(rel))]
 				[if (r.cardinality = pml::Cardinality::ZERO_MANY or r.cardinality = pml::Cardinality::ONE_MANY)]

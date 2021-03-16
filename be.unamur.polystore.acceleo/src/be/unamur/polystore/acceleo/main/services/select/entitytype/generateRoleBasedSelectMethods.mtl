@@ -4,6 +4,7 @@
 [import be::unamur::polystore::acceleo::main::impl::select::entitytype::generateRoleBasedSelectMethodsImpl /]
 
 [template public generateRoleBasedSelectMethods(entity: EntityType, conceptualSchema: ConceptualSchema, override: Boolean)]
+[if (override = false)][generateShorterMethodNames(entity, conceptualSchema)/][/if]
 [for (role: Role | getRolesFromEntityType(entity, conceptualSchema))]
 public [if (override = false)]abstract [/if]Dataset<[entity.name.toUpperFirst() /]> get[role.name.toUpperFirst() /]ListIn[getRelationShipType(role).name.toUpperFirst() /]([for (role2: Role | getRelationShipType(role).roles)][if (i > 1)],[/if]conditions.Condition<conditions.[role2.entity.name.toUpperFirst() /]Attribute> [role2.name/]_condition[/for][if (getRelationShipType(role).attributes->size() > 0)], conditions.Condition<conditions.[getRelationShipType(role).name.toUpperFirst() /]Attribute> [getRelationShipType(role).name /]_condition[/if])[if (override = false)];
 [else]		[generateRoleBasedSelectMethodsImpl(entity, role, conceptualSchema) /][/if]
@@ -56,4 +57,86 @@ public Dataset<[entity.name.toUpperFirst() /]> get[role.name.toUpperFirst() /]Li
 }
 [/if]
 [/for]
+[/template]
+
+[template private generateShorterMethodNames(entity : EntityType, schema : ConceptualSchema)]
+
+[for (rel : RelationshipType | schema.relationships->select(rel : RelationshipType | rel.attributes->size() = 0 and rel.roles -> size() = 2))]
+[let role1 : Role = rel.roles->first()]
+[let role2 : Role = role1.getOppositeRoles()->any(true)]
+[if (role1.entity = entity and role2.entity = entity)]
+	[if (role1.isMaxOne() and role2.isMaxOne())]
+public [entity.name.toUpperFirst() /] get[entity.name.toUpperFirst() /]([entity.name.toUpperFirst() /].[rel.name/] role, [entity.name.toUpperFirst() /] [entity.name.toLowerFirst() /]) {
+	if(role != null) {
+		if(role.equals([entity.name.toUpperFirst() /].[rel.name/].[role1.name /]))
+			return get[role1.name.toUpperFirst()/]In[rel.name.toUpperFirst()/]By[role2.name.toUpperFirst()/]([entity.name.toLowerFirst() /]);
+		if(role.equals([entity.name.toUpperFirst() /].[rel.name/].[role2.name /]))
+			return get[role2.name.toUpperFirst()/]In[rel.name.toUpperFirst()/]By[role1.name.toUpperFirst()/]([entity.name.toLowerFirst() /]);
+	}
+	return null;
+}
+	[/if]
+	[if (role1.isMaxOne() = false and role2.isMaxOne() = false)]
+public Dataset<[entity.name.toUpperFirst() /]> get[entity.name.toUpperFirst() /]List([entity.name.toUpperFirst() /].[rel.name/] role, [entity.name.toUpperFirst() /] [entity.name.toLowerFirst() /]) {
+	if(role != null) {
+		if(role.equals([entity.name.toUpperFirst() /].[rel.name/].[role1.name /]))
+			return get[role1.name.toUpperFirst()/]ListIn[rel.name.toUpperFirst()/]By[role2.name.toUpperFirst()/]([entity.name.toLowerFirst() /]);
+		if(role.equals([entity.name.toUpperFirst() /].[rel.name/].[role2.name /]))
+			return get[role2.name.toUpperFirst()/]ListIn[rel.name.toUpperFirst()/]By[role1.name.toUpperFirst()/]([entity.name.toLowerFirst() /]);
+	}
+	return null;
+}
+	[/if]
+	[if (role1.isMaxOne() and role2.isMaxOne() = false)]
+public Dataset<[entity.name.toUpperFirst() /]> get[entity.name.toUpperFirst() /]List([entity.name.toUpperFirst() /].[rel.name/] role, [entity.name.toUpperFirst() /] [entity.name.toLowerFirst() /]) {
+	if(role != null) {
+		if(role.equals([entity.name.toUpperFirst() /].[rel.name/].[role1.name /]))
+			return get[role1.name.toUpperFirst()/]ListIn[rel.name.toUpperFirst()/]By[role2.name.toUpperFirst()/]([entity.name.toLowerFirst() /]);
+	}
+	return null;
+}
+
+public [entity.name.toUpperFirst() /] get[entity.name.toUpperFirst() /]([entity.name.toUpperFirst() /].[rel.name/] role, [entity.name.toUpperFirst() /] [entity.name.toLowerFirst() /]) {
+	if(role != null) {
+		if(role.equals([entity.name.toUpperFirst() /].[rel.name/].[role2.name /]))
+			return get[role2.name.toUpperFirst()/]In[rel.name.toUpperFirst()/]By[role1.name.toUpperFirst()/]([entity.name.toLowerFirst() /]);
+	}
+	return null;
+}
+	[/if]
+	[if (role1.isMaxOne() = false and role2.isMaxOne())]
+public Dataset<[entity.name.toUpperFirst() /]> get[entity.name.toUpperFirst() /]List([entity.name.toUpperFirst() /].[rel.name/] role, [entity.name.toUpperFirst() /] [entity.name.toLowerFirst() /]) {
+	if(role != null) {
+		if(role.equals([entity.name.toUpperFirst() /].[rel.name/].[role2.name /]))
+			return get[role2.name.toUpperFirst()/]ListIn[rel.name.toUpperFirst()/]By[role1.name.toUpperFirst()/]([entity.name.toLowerFirst() /]);
+	}
+	return null;
+}
+
+public [entity.name.toUpperFirst() /] get[entity.name.toUpperFirst() /]([entity.name.toUpperFirst() /].[rel.name/] role, [entity.name.toUpperFirst() /] [entity.name.toLowerFirst() /]) {
+	if(role != null) {
+		if(role.equals([entity.name.toUpperFirst() /].[rel.name/].[role2.name /]))
+			return get[role1.name.toUpperFirst()/]In[rel.name.toUpperFirst()/]By[role2.name.toUpperFirst()/]([entity.name.toLowerFirst() /]);
+	}
+	return null;
+}
+	[/if]
+[else]
+[let concernedRole : Role = Sequence{role1, role2}->select(role: Role | role.entity = entity)->any(true)]
+[let opposite : Role = concernedRole.getOppositeRoles()->any(true)]
+public [if (opposite.isMaxOne() = false)]Dataset<[entity.name.toUpperFirst() /]>[else][entity.name.toUpperFirst() /][/if] get[entity.name.toUpperFirst() /][if (opposite.isMaxOne() = false)]List[/if]([entity.name.toUpperFirst() /].[rel.name/] role, [opposite.entity.name.toUpperFirst()/] [opposite.entity.name.toLowerFirst()/]) {
+	if(role != null) {
+		if(role.equals([entity.name.toUpperFirst() /].[rel.name/].[concernedRole.name/]))
+			return get[concernedRole.name.toUpperFirst()/][if (opposite.isMaxOne() = false)]List[/if]In[rel.name.toUpperFirst()/]By[opposite.name.toUpperFirst()/]([opposite.entity.name.toLowerFirst() /]);
+	}
+	return null;
+}
+[/let]
+[/let]
+[/if]
+
+[/let]
+[/let]
+[/for]
+
 [/template]

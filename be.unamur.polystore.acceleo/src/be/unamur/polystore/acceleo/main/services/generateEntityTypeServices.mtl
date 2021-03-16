@@ -27,6 +27,7 @@ import conditions.Operator;
 [for (role: Role | getRolesFromEntityType(entityType, conceptualSchema))]
 [for (oppositeRole : Role | role.getOppositeRoles())]
 import conditions.[oppositeRole.entity.name.toUpperFirst()/]Attribute;
+import pojo.[oppositeRole.entity.name.toUpperFirst()/];
 [/for]
 [/for]
 

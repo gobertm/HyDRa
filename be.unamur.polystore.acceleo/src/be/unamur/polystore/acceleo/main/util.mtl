@@ -28,6 +28,11 @@
 [if (type.oclIsTypeOf(pml::DatetimeType))]TODO[/if]
 [/template]
 
+[query public getConcernedRoles(rel : RelationshipType, ent : EntityType) : Collection(Role) =  
+	rel.roles->select(role : pml::Role | role.entity = ent)
+/]
+
+
 
 [query public getRolesFromEntityType(entityType: EntityType, conceptualSchema: ConceptualSchema) : Collection(pml::Role) = 
 	conceptualSchema.eAllContents(pml::Role)->select(role: pml::Role | role.entity = entityType)
@@ -144,6 +149,8 @@ field.eContainer(AbstractPhysicalSchema).name + '_' + field.getAbstractPhysicalS
 [query public getPhysicalFieldAbsolutePath(field : PhysicalField) : String =  
 invoke('be.unamur.polystore.acceleo.main.utils.Util', 'getPhysicalFieldAbsolutePath(be.unamur.polystore.pml.PhysicalField)', Sequence{field})
 /]
+
+
 
 
 

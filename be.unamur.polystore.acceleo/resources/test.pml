@@ -37,11 +37,11 @@ conceptual schema conceptualSchema{
 	   
     relationship type movieDirector{
 		directed_movie[0-N]: Movie,
-		director[0-N] : Director
+		test[0-1]: Movie
 	}
 	relationship type movieActor{
-		character[0-N]: Actor,
-		movie[0-N] : Movie
+		character[0-1]: Actor,
+		movie[0-1] : Movie
 	}    
 }
 physical schemas { 
