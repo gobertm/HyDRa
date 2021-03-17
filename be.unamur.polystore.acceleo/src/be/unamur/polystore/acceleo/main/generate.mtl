@@ -13,9 +13,6 @@
 
 [template public generateElement(conceptualSchema : ConceptualSchema)]
 [comment @main/]
-
-[comment][disableParsingMode() /][/comment]
-
 [generateGenericClasses(conceptualSchema) /]
 [generateDBConnectionClasses(conceptualSchema) /]
 [generateIPojo() /]
@@ -31,37 +28,4 @@
 	[generateRelationshipTypeTechnicalDataObjectsClass(rel, conceptualSchema) /]
 	[ generateAllLevelsRelationshipTypeClass(rel, conceptualSchema) /]
 [/for]
-[/template]
-
-[template private generateIPojo()]
-[file ('src/main/java/pojo/IPojo.java', false, 'UTF-8')]
-package pojo;
-
-public interface IPojo {}
-[/file]
-[/template]
-
-[template private generateLoggingPojo()]
-[file ('src/main/java/pojo/LoggingPojo.java', false, 'UTF-8')]
-package pojo;
-import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.List;
-
-public abstract class LoggingPojo implements Serializable, Cloneable, IPojo {
-	protected List<String> logEvents = new ArrayList<String>();
-
-	public List<String> getLogEvents() {
-		return this.logEvents;
-	}
-
-	public void setLogEvents(List<String> logEvents) {
-		this.logEvents = logEvents;
-	}
-
-	public void addLogEvent(String logEvent) {
-		this.logEvents.add(logEvent);
-	}
-}
-[/file]
 [/template]
