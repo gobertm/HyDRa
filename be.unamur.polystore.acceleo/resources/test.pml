@@ -41,7 +41,7 @@ conceptual schema conceptualSchema{
 	}
 	relationship type movieActor{
 		character[0-1]: Actor,
-		movie[0-1] : Movie
+		movie[0-N] : Movie
 	}    
 }
 physical schemas { 
@@ -53,6 +53,7 @@ physical schemas {
 				fullname,
 				birthyear,
 				deathyear,
+				movieId,
 				movies[0-N]{
 					id,
 					title,
@@ -61,6 +62,10 @@ physical schemas {
 						numberofvotes
 					}
 				}
+			}
+			
+			references {
+			 myfk: movieId -> movieRedis.movieKV.id
 			}
 		}
 		
@@ -114,7 +119,7 @@ physical schemas {
 
 mapping rules{
 	conceptualSchema.Actor(id,fullName,yearOfBirth) -> IMDB_Mongo.actorCollection(id,fullname,birthyear),
-	conceptualSchema.movieActor.character-> IMDB_Mongo.actorCollection.movies(),
+	conceptualSchema.movieActor.character-> IMDB_Mongo.actorCollection.myfk,
 	conceptualSchema.Movie(id, primaryTitle) -> IMDB_Mongo.actorCollection.movies(id,title),
 	conceptualSchema.Movie(averageRating,numVotes) -> IMDB_Mongo.actorCollection.movies.rating(rate,numberofvotes)
 }

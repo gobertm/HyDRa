@@ -30,7 +30,15 @@
 	[/let]
 	[/if]
 	[if (isHostedInJoinPhysicalStructureServing(role2, ref.getAbstractPhysicalStructureNotEmbeddedObject()) = false)]
-	
+
+	[let struct1 : AbstractPhysicalStructure = ref.getAbstractPhysicalStructureNotEmbeddedObject()]
+	[let struct2 : AbstractPhysicalStructure = ref.targetField->first().getAbstractPhysicalStructureNotEmbeddedObject()]
+	[let db1 : Database = struct1.getConcernedDatabases(struct1.ancestors(Domainmodel)->first())->any(true)]
+	[let db2 : Database = struct2.getConcernedDatabases(struct2.ancestors(Domainmodel)->first())->any(true)]
+	[if (db1 = db2 and db1.dbType.isRelational())]
+	Dataset<[role.getRelationShipType().name.toUpperFirst()/]> res_[ref.name/] = [role.getRelationShipType().name.toLowerFirst()/]Service.get[role.name.toUpperFirst()/]And[role.getOppositeRoles()->any(true).name.toUpperFirst()/]ListIn[ref.name.toUpperFirst()/]In[struct1.name.toUpperFirst()/]From[db1.name.toUpperFirst()/]([role.getRelationShipType().roles->first().name/]_condition, [role.getRelationShipType().roles->first().getOppositeRoles()->any(true).name/]_condition);
+	Dataset<[entity.name.toUpperFirst()/]> res_[entity.name/]_[ref.name/] = res_[ref.name/].map((MapFunction<[role.getRelationShipType().name.toUpperFirst()/],[entity.name.toUpperFirst()/]>) r -> r.get[role.name.toUpperFirst()/](), Encoders.bean([entity.name.toUpperFirst()/].class));
+	[else]
 	// For role '[role.name/]' in reference '[ref.name/]' 
 	Dataset<[entity.name.toUpperFirst()/]TDO> [entity.name.toLowerFirst()/]TDO[ref.name/][role.name/] = [role.getRelationShipType().name.toLowerFirst()/]Service.get[entity.name.toUpperFirst()/]TDOList[role.name.toUpperFirst() /]In[ref.name.toUpperFirst()/]In[ref.getAbstractPhysicalStructureNotEmbeddedObject().name.toUpperFirst() /]From[ref.getPhysicalSchema().name.toUpperFirst()/]([role.name/]_condition);
 	Dataset<[role2.entity.name.toUpperFirst()/]TDO> [role2.entity.name.toLowerFirst()/]TDO[ref.name/][role2.name/] = [role.getRelationShipType().name.toLowerFirst()/]Service.get[role2.entity.name.toUpperFirst()/]TDOList[role2.name.toUpperFirst() /]In[ref.name.toUpperFirst()/]In[ref.getAbstractPhysicalStructureNotEmbeddedObject().name.toUpperFirst() /]From[ref.getPhysicalSchema().name.toUpperFirst()/]([role2.name/]_condition);
@@ -42,13 +50,27 @@
 			.withColumnRenamed("logEvents", "[role2.entity.name/]_logEvents"),
 			[entity.name.toLowerFirst()/]TDO[ref.name/][role.name/].col("[getJavaAbsolutePath(ref) /]_[ref.sourceField->first().getPhysicalName()/]").equalTo([role2.entity.name.toLowerFirst()/]TDO[ref.name/][role2.name/].col("[getJavaAbsolutePath(ref) /]_[ref.targetField->first().getPhysicalName()/]")));
 	Dataset<[entity.name.toUpperFirst()/]> res_[entity.name/]_[ref.name/] = res_[ref.name/].select([for (attr : Attribute | entity.attributes)] "[attr.name/]",[/for] "logEvents").as(Encoders.bean([entity.name.toUpperFirst()/].class));
+	
+	[/if]
 	datasetsPOJO.add(res_[entity.name/]_[ref.name/]);
+	[/let]
+	[/let]
+	[/let]
+	[/let]
 	[/if]
 	[/for]
 	
 	[for (ref: Reference | getMappedReferences(role2, conceptualSchema.getMappingRules()))]
 	[if (hasMappedReferenceInSamePhysicalStructureForOppoisteRole(role, ref.getAbstractPhysicalStructureNotEmbeddedObject()) = false)]
-	
+	[comment reference mapped to a conceptual role. /]
+	[comment optimization possible when the 2 physical structures to join are stored in the same database (ex: a SQL join is possible instead of a brute-force Spark join /]
+	[let struct1 : AbstractPhysicalStructure = ref.getAbstractPhysicalStructureNotEmbeddedObject()]
+	[let struct2 : AbstractPhysicalStructure = ref.targetField->first().getAbstractPhysicalStructureNotEmbeddedObject()]
+	[let db1 : Database = struct1.getConcernedDatabases(struct1.ancestors(Domainmodel)->first())->any(true)]
+	[let db2 : Database = struct2.getConcernedDatabases(struct2.ancestors(Domainmodel)->first())->any(true)]
+	[if (db1 = db2 and db1.dbType.isRelational())]
+	Dataset<[role.getRelationShipType().name.toUpperFirst()/]> res_[ref.name/] = [role.getRelationShipType().name.toLowerFirst()/]Service.get[role.getOppositeRoles()->any(true).name.toUpperFirst()/]And[role.name.toUpperFirst()/]ListIn[ref.name.toUpperFirst()/]In[struct1.name.toUpperFirst()/]From[db1.name.toUpperFirst()/]([role.getRelationShipType().roles->first().name/]_condition, [role.getRelationShipType().roles->first().getOppositeRoles()->any(true).name/]_condition);
+	[else]
 	// For role '[role2.name/]' in reference '[ref.name/]' 
 	Dataset<[role2.entity.name.toUpperFirst()/]TDO> [role2.entity.name.toLowerFirst()/]TDO[ref.name/][role2.name/] = [role.getRelationShipType().name.toLowerFirst()/]Service.get[role2.entity.name.toUpperFirst()/]TDOList[role2.name.toUpperFirst() /]In[ref.name.toUpperFirst()/]In[ref.getAbstractPhysicalStructureNotEmbeddedObject().name.toUpperFirst() /]From[ref.getPhysicalSchema().name.toUpperFirst()/]([role2.name/]_condition);
 	Dataset<[entity.name.toUpperFirst()/]TDO> [entity.name.toLowerFirst()/]TDO[ref.name/][role.name /] = [role.getRelationShipType().name.toLowerFirst()/]Service.get[entity.name.toUpperFirst()/]TDOList[role.name.toUpperFirst() /]In[ref.name.toUpperFirst()/]In[ref.getAbstractPhysicalStructureNotEmbeddedObject().name.toUpperFirst() /]From[ref.getPhysicalSchema().name.toUpperFirst()/]([role.name/]_condition);
@@ -61,6 +83,11 @@
 			[entity.name.toLowerFirst()/]TDO[ref.name/][role.name/].col("[getJavaAbsolutePath(ref) /]_[ref.targetField->first().getPhysicalName()/]").equalTo([role2.entity.name.toLowerFirst()/]TDO[ref.name/][role2.name/].col("[getJavaAbsolutePath(ref) /]_[ref.sourceField->first().getPhysicalName()/]")));
 	Dataset<[entity.name.toUpperFirst()/]> res_[entity.name/]_[ref.name/] = res_[ref.name/].select([for (attr : Attribute | entity.attributes)] "[attr.name/]",[/for] "logEvents").as(Encoders.bean([entity.name.toUpperFirst()/].class));
 	datasetsPOJO.add(res_[entity.name/]_[ref.name/]);
+	[/if]
+	[/let]
+	[/let]
+	[/let]
+	[/let]
 	[/if]
 	[/for]
 	

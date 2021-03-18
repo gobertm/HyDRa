@@ -150,6 +150,10 @@
 
 [template public generateGetSQLWhereClauseMethod(pojoName : String, pojoAttributes : Collection(Attribute), struct: AbstractPhysicalStructure, db : Database)]
 public static Pair<String, List<String>> getSQLWhereClauseIn[struct.name.toUpperFirst()/]From[db.name.toUpperFirst() /](Condition<[pojoName.toUpperFirst() /]Attribute> condition, MutableBoolean refilterFlag) {
+	return getSQLWhereClauseIn[struct.name.toUpperFirst()/]From[db.name.toUpperFirst() /]WithTableAlias(condition, refilterFlag, "");
+}
+
+public static Pair<String, List<String>> getSQLWhereClauseIn[struct.name.toUpperFirst()/]From[db.name.toUpperFirst() /]WithTableAlias(Condition<[pojoName.toUpperFirst() /]Attribute> condition, MutableBoolean refilterFlag, String tableAlias) {
 	String where = null;	
 	List<String> preparedValues = new java.util.ArrayList<String>();
 	if(condition != null) {
@@ -199,7 +203,7 @@ public static Pair<String, List<String>> getSQLWhereClauseIn[struct.name.toUpper
 					preparedValue = preparedValue.replaceAll("[getPatternValue() /]", valueString).replaceAll("[getPatternOtherValue() /]", "%");
 					[/if]
 					
-					where = "[getPhysicalName(field)/] " + sqlOp + " ?";
+					where = tableAlias + "[getPhysicalName(field)/] " + sqlOp + " ?";
 					preparedValues.add(preparedValue);
 				}
 				[/if]

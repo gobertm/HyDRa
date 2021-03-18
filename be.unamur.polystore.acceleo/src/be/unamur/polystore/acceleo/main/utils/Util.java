@@ -29,7 +29,7 @@ import be.unamur.polystore.pml.ShortField;
 import be.unamur.polystore.pml.TerminalExpression;
 
 public class Util {
-
+	
 	public static String getJavaRegexFromLongField(LongField field) {
 		if (field == null)
 			return null;

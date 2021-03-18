@@ -14,7 +14,9 @@
 package dao.services;
 
 import org.apache.spark.sql.Dataset;
+import org.apache.spark.sql.Row;
 import conditions.Condition;
+import pojo.[rel.name.toUpperFirst()/];
 [for (role : Role | rel.roles)]
 import tdo.[role.entity.name.toUpperFirst() /]TDO;
 import tdo.[rel.name.toUpperFirst()/]TDO;
