@@ -79,6 +79,41 @@ public class Util {
 [/file]
 [/template]
 
+
+[template public generateIPojo()]
+[file ('src/main/java/pojo/IPojo.java', false, 'UTF-8')]
+package pojo;
+
+public interface IPojo {}
+[/file]
+[/template]
+
+[template public generateLoggingPojo()]
+[file ('src/main/java/pojo/LoggingPojo.java', false, 'UTF-8')]
+package pojo;
+import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.List;
+
+public abstract class LoggingPojo implements Serializable, Cloneable, IPojo {
+	protected List<String> logEvents = new ArrayList<String>();
+
+	public List<String> getLogEvents() {
+		return this.logEvents;
+	}
+
+	public void setLogEvents(List<String> logEvents) {
+		this.logEvents = logEvents;
+	}
+
+	public void addLogEvent(String logEvent) {
+		this.logEvents.add(logEvent);
+	}
+}
+[/file]
+[/template]
+
+
 [template public generateLoadingClass()]
 [file ('src/main/java/loading/Loading.java', false, 'UTF-8')]
 package loading;
