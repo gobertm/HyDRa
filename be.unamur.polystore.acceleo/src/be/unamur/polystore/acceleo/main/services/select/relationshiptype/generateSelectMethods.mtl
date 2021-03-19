@@ -261,6 +261,9 @@ public [if (override = false)]abstract[/if] Dataset<[roleSource.getRelationShipT
 	
 	Dataset<[roleSource.getRelationShipType().name.toUpperFirst() /]> res = d.map((MapFunction<Row, [roleSource.getRelationShipType().name.toUpperFirst()/]>) r -> {
 				[roleSource.getRelationShipType().name.toUpperFirst() /] [roleSource.getRelationShipType().name.toLowerFirst() /]_res = new [roleSource.getRelationShipType().name.toUpperFirst() /]();
+				[roleSource.getRelationShipType().name.toLowerFirst() /]_res.set[roleSource.name.toUpperFirst()/](new [roleSource.entity.name.toUpperFirst()/]());
+				[roleSource.getRelationShipType().name.toLowerFirst() /]_res.set[roleTarget.name.toUpperFirst()/](new [roleTarget.entity.name.toUpperFirst()/]());
+				
 				Integer groupIndex = null;
 				String regex = null;
 				String value = null;
