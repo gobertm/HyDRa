@@ -13,20 +13,8 @@
 	[if (isHostedInJoinPhysicalStructureServing(role2, ref.getAbstractPhysicalStructureNotEmbeddedObject()))]
 	[let ref2 : Reference = getMappedReferenceInSamePhysicalStructureForOppositeRole(role2, ref.getAbstractPhysicalStructureNotEmbeddedObject())]
 	// join physical structure
-	Dataset<[entity.name.toUpperFirst()/]TDO> [entity.name.toLowerFirst()/]TDO[ref.name/][role.name/] = [role.getRelationShipType().name.toLowerFirst()/]Service.get[entity.name.toUpperFirst()/]TDOList[role.name.toUpperFirst() /]In[ref.name.toUpperFirst()/]In[ref.targetField->first().getAbstractPhysicalStructureNotEmbeddedObject().name.toUpperFirst() /]From[ref.targetField->first().getPhysicalSchema().name.toUpperFirst()/]([role.name/]_condition);
-	Dataset<[role.getRelationShipType().name.toUpperFirst()/]TDO> [role.getRelationShipType().name.toLowerFirst()/]TDO[ref.name/]_[ref2.name/] = [role.getRelationShipType().name.toLowerFirst()/]Service.get[role.getRelationShipType().name.toUpperFirst()/]TDOListIn[role.ancestors(RelationshipType)->any(true).name.toUpperFirst()/]_[ref.name.toUpperFirst()/]_[ref2.name.toUpperFirst()/]In[ref.getAbstractPhysicalStructureNotEmbeddedObject().name.toUpperFirst() /]From[ref.getPhysicalSchema().name.toUpperFirst()/]();
-	Dataset<[role2.entity.name.toUpperFirst()/]TDO> [role2.entity.name.toLowerFirst()/]TDO[ref.name/][role2.name/] = [role.getRelationShipType().name.toLowerFirst()/]Service.get[role2.entity.name.toUpperFirst()/]TDOList[role2.name.toUpperFirst() /]In[ref2.name.toUpperFirst()/]In[ref2.targetField->first().getAbstractPhysicalStructureNotEmbeddedObject().name.toUpperFirst() /]From[ref2.targetField->first().getPhysicalSchema().name.toUpperFirst()/]([role2.name/]_condition);
-	
-	Dataset<Row> res_[ref.name/] = [entity.name.toLowerFirst()/]TDO[ref.name/][role.name/].join([role.getRelationShipType().name.toLowerFirst()/]TDO[ref.name/]_[ref2.name/].withColumnRenamed("logEvents", "[role.getRelationShipType().name/]_logEvents"),
-			[entity.name.toLowerFirst()/]TDO[ref.name/][role.name/].col("[getJavaAbsolutePath(ref) /]_[ref.targetField->first().getPhysicalName()/]").equalTo([role.getRelationShipType().name.toLowerFirst()/]TDO[ref.name/]_[ref2.name/].col("[getJavaAbsolutePath(ref) /]_[ref.sourceField->first().getPhysicalName()/]")));
-	res_[ref.name/] = res_[ref.name/].join([role2.entity.name.toLowerFirst()/]TDO[ref.name/][role2.name/]
-	[for (attr : Attribute | role2.entity.attributes)]
-			.withColumnRenamed("[attr.name.toLowerFirst() /]", "[role2.entity.name/]_[attr.name.toLowerFirst() /]")
-	[/for]
-			.withColumnRenamed("logEvents", "[role2.entity.name/]_logEvents"),
-			[role2.entity.name.toLowerFirst()/]TDO[ref.name/][role2.name/].col("[getJavaAbsolutePath(ref2) /]_[ref2.targetField->first().getPhysicalName()/]").equalTo(res_[ref.name/].col("[getJavaAbsolutePath(ref2) /]_[ref2.sourceField->first().getPhysicalName()/]")));
-	Dataset<[entity.name.toUpperFirst()/]> res_[entity.name/]_[ref.name/] = res_[ref.name/].select([for (attr : Attribute | entity.attributes)] "[attr.name/]",[/for] "logEvents").dropDuplicates(new String [ '[' /][ ']' /] {[for (attr : Attribute | entity.identifier.attributes) separator(',')]"[attr.name/]"[/for]}).as(Encoders.bean([entity.name.toUpperFirst()/].class));
-	datasetsPOJO.add(res_[entity.name/]_[ref.name/]);
+
+	[generateCodeForJoinPhysicalStructure(entity, role, ref, role2, ref2)/]
 	[/let]
 	[/if]
 	[if (isHostedInJoinPhysicalStructureServing(role2, ref.getAbstractPhysicalStructureNotEmbeddedObject()) = false)]
@@ -174,4 +162,46 @@
 			d = d.union(datasetsPOJO.get(i));
 		return d;
 		[/if]
+[/template]
+
+[template private generateCodeForJoinPhysicalStructure(entity: EntityType, role: Role, ref: Reference, role2 : Role, ref2: Reference)]
+[let table : AbstractPhysicalStructure = ref.targetField->first().getAbstractPhysicalStructureNotEmbeddedObject() ]
+[let table2 : AbstractPhysicalStructure = ref2.targetField->first().getAbstractPhysicalStructureNotEmbeddedObject() ]
+[let jointable : AbstractPhysicalStructure = ref2.getAbstractPhysicalStructureNotEmbeddedObject() ]
+[let db1 : Database = table.getConcernedDatabases(ref.ancestors(Domainmodel)->any(true))->any(true)]
+[let db2 : Database = table2.getConcernedDatabases(ref.ancestors(Domainmodel)->any(true))->any(true)]
+[let joindb : Database = jointable.getConcernedDatabases(ref.ancestors(Domainmodel)->any(true))->any(true)]
+[if (db1 = db2 and db2 = joindb and db1.dbType.isRelational() )]
+//join between 3 SQL tables stored in same db
+Dataset<[role.getRelationShipType().name.toUpperFirst()/]> res_[entity.name/]_[ref.name/]_[ref2.name/] = [role.getRelationShipType().name.toLowerFirst()/]Service.get[role.getRelationShipType().name.toUpperFirst()/]ListIn[table.name/]And[jointable.name/]And[table2.name/]From[db1.name/]([role.name/]_condition, [role2.name/]_condition);
+Dataset<[entity.name.toUpperFirst()/]> res_[entity.name/]_[ref.name/] = res_[entity.name/]_[ref.name/]_[ref2.name/].map((MapFunction<[role.getRelationShipType().name.toUpperFirst()/],[entity.name.toUpperFirst()/]>) r -> r.get[role.name.toUpperFirst()/](), Encoders.bean([entity.name.toUpperFirst()/].class)).dropDuplicates(new String[ '[' /][ ']' /] {[if (entity.identifier.oclIsUndefined() = false)][for (attr : Attribute | entity.identifier.attributes) separator(',')]"[attr.name/]"[/for][/if]});
+	
+[elseif (db1 = joindb and db1.dbType.isRelational())]
+//join between 2 SQL tables and a non-relational structure
+TODO
+[elseif (db2 = joindb and db2.dbType.isRelational())]
+//join between 2 SQL tables and a non-relational structure
+TODO
+[else]
+Dataset<[entity.name.toUpperFirst()/]TDO> [entity.name.toLowerFirst()/]TDO[ref.name/][role.name/] = [role.getRelationShipType().name.toLowerFirst()/]Service.get[entity.name.toUpperFirst()/]TDOList[role.name.toUpperFirst() /]In[ref.name.toUpperFirst()/]In[ref.targetField->first().getAbstractPhysicalStructureNotEmbeddedObject().name.toUpperFirst() /]From[ref.targetField->first().getPhysicalSchema().name.toUpperFirst()/]([role.name/]_condition);
+Dataset<[role.getRelationShipType().name.toUpperFirst()/]TDO> [role.getRelationShipType().name.toLowerFirst()/]TDO[ref.name/]_[ref2.name/] = [role.getRelationShipType().name.toLowerFirst()/]Service.get[role.getRelationShipType().name.toUpperFirst()/]TDOListIn[role.ancestors(RelationshipType)->any(true).name.toUpperFirst()/]_[ref.name.toUpperFirst()/]_[ref2.name.toUpperFirst()/]In[ref.getAbstractPhysicalStructureNotEmbeddedObject().name.toUpperFirst() /]From[ref.getPhysicalSchema().name.toUpperFirst()/]();
+Dataset<[role2.entity.name.toUpperFirst()/]TDO> [role2.entity.name.toLowerFirst()/]TDO[ref.name/][role2.name/] = [role.getRelationShipType().name.toLowerFirst()/]Service.get[role2.entity.name.toUpperFirst()/]TDOList[role2.name.toUpperFirst() /]In[ref2.name.toUpperFirst()/]In[ref2.targetField->first().getAbstractPhysicalStructureNotEmbeddedObject().name.toUpperFirst() /]From[ref2.targetField->first().getPhysicalSchema().name.toUpperFirst()/]([role2.name/]_condition);
+	
+Dataset<Row> res_[ref.name/] = [entity.name.toLowerFirst()/]TDO[ref.name/][role.name/].join([role.getRelationShipType().name.toLowerFirst()/]TDO[ref.name/]_[ref2.name/].withColumnRenamed("logEvents", "[role.getRelationShipType().name/]_logEvents"),
+[entity.name.toLowerFirst()/]TDO[ref.name/][role.name/].col("[getJavaAbsolutePath(ref) /]_[ref.targetField->first().getPhysicalName()/]").equalTo([role.getRelationShipType().name.toLowerFirst()/]TDO[ref.name/]_[ref2.name/].col("[getJavaAbsolutePath(ref) /]_[ref.sourceField->first().getPhysicalName()/]")));
+res_[ref.name/] = res_[ref.name/].join([role2.entity.name.toLowerFirst()/]TDO[ref.name/][role2.name/]
+[for (attr : Attribute | role2.entity.attributes)]
+	.withColumnRenamed("[attr.name.toLowerFirst() /]", "[role2.entity.name/]_[attr.name.toLowerFirst() /]")
+[/for]
+	.withColumnRenamed("logEvents", "[role2.entity.name/]_logEvents"),
+[role2.entity.name.toLowerFirst()/]TDO[ref.name/][role2.name/].col("[getJavaAbsolutePath(ref2) /]_[ref2.targetField->first().getPhysicalName()/]").equalTo(res_[ref.name/].col("[getJavaAbsolutePath(ref2) /]_[ref2.sourceField->first().getPhysicalName()/]")));
+Dataset<[entity.name.toUpperFirst()/]> res_[entity.name/]_[ref.name/] = res_[ref.name/].select([for (attr : Attribute | entity.attributes)] "[attr.name/]",[/for] "logEvents").dropDuplicates(new String [ '[' /][ ']' /] {[for (attr : Attribute | entity.identifier.attributes) separator(',')]"[attr.name/]"[/for]}).as(Encoders.bean([entity.name.toUpperFirst()/].class));
+[/if]
+datasetsPOJO.add(res_[entity.name/]_[ref.name/]);	
+[/let]
+[/let]	
+[/let]	
+[/let]
+[/let]
+[/let]
 [/template]
