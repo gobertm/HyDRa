@@ -480,7 +480,7 @@ nestedRow = (nestedRow == null) ? null : (Row) nestedRow.getAs("[getPhysicalName
 if(nestedRow != null) {
 	[if (child.ancestors(LongField) -> size() = 0)]
 	[comment shortField or bracketfield/]
-	[pojoName.toLowerFirst() /][level/].set[getJavaAbsolutePath(ref).toUpperFirst() /]_[refField.getPhysicalName() /](nestedRow.getAs("[refField.getPhysicalName() /]"));
+	[pojoName.toLowerFirst() /][level/].set[getJavaAbsolutePath(ref).toUpperFirst() /]_[refField.getPhysicalName() /](nestedRow.getAs("[refField.getPhysicalName() /]") == null ? null : nestedRow.getAs("[refField.getPhysicalName() /]").toString());
 	toAdd[level/] = true;					
 	[else]
 		[if (child.ancestors(LongField) -> first().oclAsType(LongField).pattern->size() = 1)][comment if you encounter a "short" long field. E.g., rate: rating  /]
