@@ -159,10 +159,10 @@ return null;
 [let joindb : Database = joinTable.getConcernedDatabases(joinTable.ancestors(Domainmodel)->first())->any(true)]
 [if (db1 = db2 and db2 = joindb and db1.dbType.isRelational())]
 [generateDoubleSQLJoin(ref, ref2, override, roleSource, roleTarget)/]
-[comment][elseif (db1 = joindb and db1.dbType.isRelational())]
+[elseif (db1 = joindb and db1.dbType.isRelational())]
 [generateSQLJoinBetweenTableAndJoinTable(ref, roleSource, override, roleTarget, ref2, table2)/]
 [comment][elseif (db2 = joindb and db2.dbType.isRelational())][/comment]
-[comment][generateSQLJoinBetweenTableAndJoinTable(ref2, roleTarget, override)/]	[/comment][/comment]
+[comment][generateSQLJoinBetweenTableAndJoinTable(ref2, roleTarget, override)/]	[/comment]
 [else]
 //join structure
 // Left side '[ref.sourceField->first().getPhysicalName()/]' of reference [ '['/][ref.name/] [ ']'/]
