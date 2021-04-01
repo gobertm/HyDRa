@@ -4,6 +4,10 @@
 [import be::unamur::polystore::acceleo::main::impl::select::entitytype::generateRoleBasedSelectMethodsImpl /]
 
 [template public generateRoleBasedSelectMethods(entity: EntityType, conceptualSchema: ConceptualSchema, override: Boolean)]
+[if (override = false)]
+[generateOuterJoinsMethods(entity)/]
+[/if]
+
 [if (override = false)][generateShorterMethodNames(entity, conceptualSchema)/][/if]
 [for (role: Role | getRolesFromEntityType(entity, conceptualSchema))]
 public [if (override = false)]abstract [/if]Dataset<[entity.name.toUpperFirst() /]> get[role.name.toUpperFirst() /]ListIn[getRelationShipType(role).name.toUpperFirst() /]([for (role2: Role | getRelationShipType(role).roles)][if (i > 1)],[/if]conditions.Condition<conditions.[role2.entity.name.toUpperFirst() /]Attribute> [role2.name/]_condition[/for][if (getRelationShipType(role).attributes->size() > 0)], conditions.Condition<conditions.[getRelationShipType(role).name.toUpperFirst() /]Attribute> [getRelationShipType(role).name /]_condition[/if])[if (override = false)];

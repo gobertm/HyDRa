@@ -346,5 +346,29 @@ public class MappingRuleService {
 			}
 		return res;
 	}
+	
+	public static Set<AbstractPhysicalStructure> getMappedStructuresNotConcernedByRelationshipType(EntityType ent, RelationshipType rel, MappingRules rules) {
+		Set<AbstractPhysicalStructure> res = new HashSet<AbstractPhysicalStructure>();
+		
+		Set<AbstractPhysicalStructure> exclusion = new HashSet<AbstractPhysicalStructure>();
+		for(Role role : rel.getRoles()) {
+			for(EmbeddedObject o : getMappedEmbeddedObjects(role, rules))
+				exclusion.add(getPhysicalStructureNotEmbeddedObject(o));
+			for(Reference ref : getMappedReferences(role, rules)) {
+				exclusion.add(getPhysicalStructureNotEmbeddedObject(ref.getSourceField().get(0)));
+				exclusion.add(getPhysicalStructureNotEmbeddedObject(ref.getTargetField().get(0)));
+			}
+		}
+		
+		for(Attribute attr : ent.getAttributes())
+			for(PhysicalField field : getMappedPhysicalFields(attr, rules)) {
+				AbstractPhysicalStructure struct = getPhysicalStructureNotEmbeddedObject(field);
+				if(!exclusion.contains(struct))
+					res.add(struct);
+			}
+				
+		
+		return res;
+	}
 
 }

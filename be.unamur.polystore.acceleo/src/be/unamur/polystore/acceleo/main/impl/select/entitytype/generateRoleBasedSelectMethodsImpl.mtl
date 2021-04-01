@@ -99,16 +99,27 @@
 	[/for]
 	[/let]
 	
-	[/let]
+	
 	//Join datasets or return 
-	if(datasetsPOJO.size() == 0)
-			return null;
-	if(datasetsPOJO.size() == 1)
-		return datasetsPOJO.get(0);
-	if(datasetsPOJO.size() > 1) {
-		[generateJoinDatasets(entity)/]
+	Dataset<[entity.name.toUpperFirst()/]> res = fullOuterJoins[entity.name.toUpperFirst()/](datasetsPOJO);
+	if(res == null)
+		return null;
+
+	[let structures : Set(AbstractPhysicalStructure) = getMappedStructuresNotConcernedByRelationshipType(entity, role.getRelationShipType(), conceptualSchema.getMappingRules())]
+	[if (structures->size() > 0)]
+	List<Dataset<[entity.name.toUpperFirst()/]>> lonely[entity.name/]List = new ArrayList<Dataset<[entity.name.toUpperFirst()/]>>();
+	[for (struct : AbstractPhysicalStructure | structures)]
+	lonely[entity.name/]List.add(get[entity.name.toUpperFirst()/]ListIn[struct.name.toUpperFirst()/]From[getConcernedDatabases(struct, struct.ancestors(Domainmodel)->first())->any(true).name.toUpperFirst()/]([role.name/]_condition, new MutableBoolean(false)));
+	[/for]
+	Dataset<[entity.name.toUpperFirst()/]> lonely[entity.name.toUpperFirst()/] = fullOuterJoins[entity.name.toUpperFirst()/](lonely[entity.name/]List);
+	if(lonely[entity.name.toUpperFirst()/] != null) {
+		res = fullLeftOuterJoins[entity.name.toUpperFirst()/](Arrays.asList(res, lonely[entity.name.toUpperFirst()/]));
 	}
-	return null;
+	[/if]
+	[/let]
+
+	return res;
+	[/let]
 	[else]
 	// Not implemented yet for > 2 roles
 	return null;
@@ -116,7 +127,21 @@
 	}
 [/template]
 
-[template public generateJoinDatasets(entityType : EntityType)]
+[template public generateOuterJoinsMethods(entityType : EntityType)]
+
+protected static Dataset<[entityType.name.toUpperFirst()/]> fullOuterJoins[entityType.name.toUpperFirst()/](List<Dataset<[entityType.name.toUpperFirst()/]>> datasetsPOJO) {
+	return fullOuterJoins[entityType.name.toUpperFirst()/](datasetsPOJO, "fullouter");
+}
+
+protected static Dataset<[entityType.name.toUpperFirst()/]> fullLeftOuterJoins[entityType.name.toUpperFirst()/](List<Dataset<[entityType.name.toUpperFirst()/]>> datasetsPOJO) {
+	return fullOuterJoins[entityType.name.toUpperFirst()/](datasetsPOJO, "leftouter");
+}
+
+private static Dataset<[entityType.name.toUpperFirst()/]> fullOuterJoins[entityType.name.toUpperFirst()/](List<Dataset<[entityType.name.toUpperFirst()/]>> datasetsPOJO, String joinMode) {
+	if(datasetsPOJO.size() == 0)
+			return null;
+	if(datasetsPOJO.size() == 1)
+		return datasetsPOJO.get(0);
 	Dataset<[entityType.name.toUpperFirst()/]> d = datasetsPOJO.get(0);
 	[if (entityType.identifier.oclIsUndefined() = false and entityType.identifier.attributes-> size() > 0)]
 		List<String> idFields = new ArrayList<String>();
@@ -127,12 +152,12 @@
 		Dataset<Row> res = d.join(datasetsPOJO.get(1)
 	[for (attr : Attribute | entityType.attributes)][if (entityType.identifier.attributes->includes(attr) = false)]
 							.withColumnRenamed("[attr.name.toLowerFirst() /]", "[attr.name.toLowerFirst() /]_1")
-	[/if][/for]						, seq, "fullouter");
+	[/if][/for]						, seq, joinMode);
 		for(int i = 2; i < datasetsPOJO.size(); i++) {
 			res = res.join(datasetsPOJO.get(i)
 	[for (attr : Attribute | entityType.attributes)][if (entityType.identifier.attributes->includes(attr) = false)]
 							.withColumnRenamed("[attr.name.toLowerFirst() /]", "[attr.name.toLowerFirst() /]_" + i)
-	[/if][/for]						, seq, "fullouter");
+	[/if][/for]						, seq, joinMode);
 		} 
 		d = res.map((MapFunction<Row, [entityType.name.toUpperFirst() /]>) r -> {
 				[entityType.name.toUpperFirst() /] [entityType.name.toLowerFirst() /]_res = new [entityType.name.toUpperFirst() /]();
@@ -162,6 +187,7 @@
 			d = d.union(datasetsPOJO.get(i));
 		return d;
 		[/if]
+}
 [/template]
 
 [template private generateCodeForJoinPhysicalStructure(entity: EntityType, role: Role, ref: Reference, role2 : Role, ref2: Reference)]
