@@ -295,7 +295,7 @@ if(array[level /]!= null) {
 }
 
 if(toAdd[level /]) {
-	[if (level > 1)]if([for (role : Role | rel.roles) separator('&&')]([role.name/]_condition == null || [role.name/]_condition.evaluate([rel.name.toLowerFirst() /][level /].get[role.name.toUpperFirst()/]()))[/for])[/if]
+	[if (level > 1)]if([for (role : Role | rel.roles) separator('&&')]([role.name/]_condition == null || refilterFlag.booleanValue() || [role.name/]_condition.evaluate([rel.name.toLowerFirst() /][level /].get[role.name.toUpperFirst()/]()))[/for])[/if]
 		list_res.add([rel.name.toLowerFirst() /][level /]);
 	addedInList = true;
 } 
@@ -305,7 +305,7 @@ if(toAdd[level /]) {
 [/for]
 [else]
 if(toAdd[level /]) {
-	[if (level > 1)]if([for (role : Role | rel.roles) separator('&&')]([role.name/]_condition == null || [role.name/]_condition.evaluate([rel.name.toLowerFirst() /][level /].get[role.name.toUpperFirst()/]()))[/for])[/if]
+	[if (level > 1)]if([for (role : Role | rel.roles) separator('&&')]([role.name/]_condition == null || refilterFlag.booleanValue() || [role.name/]_condition.evaluate([rel.name.toLowerFirst() /][level /].get[role.name.toUpperFirst()/]()))[/for])[/if]
 	list_res.add([rel.name.toLowerFirst() /][level /]);
 	addedInList = true;
 } 
@@ -388,7 +388,7 @@ if(array[level /]!= null) {
 }
 
 if(toAdd[level /]) {
-	[if (level > 1)]if(condition == null || condition.evaluate([pojoName.toLowerFirst() /][level /]))[/if]
+	[if (level > 1)]if(condition == null || refilterFlag.booleanValue() || condition.evaluate([pojoName.toLowerFirst() /][level /]))[/if]
 		list_res.add([pojoName.toLowerFirst() /][level /]);
 	addedInList = true;
 } 
@@ -398,7 +398,7 @@ if(toAdd[level /]) {
 [/for]
 [else]
 if(toAdd[level /]) {
-	[if (level > 1)]if(condition ==null || condition.evaluate([pojoName.toLowerFirst() /][level /]))[/if]
+	[if (level > 1)]if(condition ==null || refilterFlag.booleanValue() || condition.evaluate([pojoName.toLowerFirst() /][level /]))[/if]
 	list_res.add([pojoName.toLowerFirst() /][level /]);
 	addedInList = true;
 } 
@@ -535,7 +535,7 @@ if(array[level /]!= null) {
 }
 
 if(toAdd[level /]) {
-	[if (level > 1)]if(condition == null || condition.evaluate([pojoName.toLowerFirst() /][level /]))[/if]
+	[if (level > 1)]if(condition == null || refilterFlag.booleanValue() || condition.evaluate([pojoName.toLowerFirst() /][level /]))[/if]
 		list_res.add([pojoName.toLowerFirst() /][level /]);
 	addedInList = true;
 } 
@@ -545,7 +545,7 @@ if(toAdd[level /]) {
 [/for]
 [else]
 if(toAdd[level /]) {
-	[if (level > 1)]if(condition ==null || condition.evaluate([pojoName.toLowerFirst() /][level /]))[/if]
+	[if (level > 1)]if(condition ==null || refilterFlag.booleanValue() || condition.evaluate([pojoName.toLowerFirst() /][level /]))[/if]
 	list_res.add([pojoName.toLowerFirst() /][level /]);
 	addedInList = true;
 } 

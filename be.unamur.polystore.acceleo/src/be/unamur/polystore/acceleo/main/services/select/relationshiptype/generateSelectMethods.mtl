@@ -93,13 +93,12 @@ public java.util.List<pojo.[rel.name.toUpperFirst() /]> get[rel.name.toUpperFirs
 
 [comment left side of reference /]
 // Left side '[ref.sourceField->first().getPhysicalName()/]' of reference [ '['/][ref.name/] [ ']'/]
-public [if (override = false)]abstract [/if]Dataset<[roleSource.entity.name.toUpperFirst() /]TDO> get[roleSource.entity.name.toUpperFirst()/]TDOList[roleSource.name.toUpperFirst() /]In[ref.name.toUpperFirst()/]In[ref.getAbstractPhysicalStructureNotEmbeddedObject().name.toUpperFirst() /]From[ref.getPhysicalSchema().name.toUpperFirst()/](Condition<[roleSource.entity.name.toUpperFirst()/]Attribute> condition)[if (override = false)];[else]{	
+public [if (override = false)]abstract [/if]Dataset<[roleSource.entity.name.toUpperFirst() /]TDO> get[roleSource.entity.name.toUpperFirst()/]TDOList[roleSource.name.toUpperFirst() /]In[ref.name.toUpperFirst()/]In[ref.getAbstractPhysicalStructureNotEmbeddedObject().name.toUpperFirst() /]From[ref.getPhysicalSchema().name.toUpperFirst()/](Condition<[roleSource.entity.name.toUpperFirst()/]Attribute> condition, MutableBoolean refilterFlag)[if (override = false)];[else]{	
 [comment TODO Implemented multi composed ref. Currently Apply only to single attribute reference /]
 [let dbs : Set(Database) = ref.sourceField->first().getAbstractPhysicalStructureNotEmbeddedObject().getConcernedDatabases(ref.ancestors(Domainmodel)->any(true))]
 [if (dbs->size() = 0)]
 return null;
 [else]
-	MutableBoolean refilterFlag = new MutableBoolean(false);
 [let db : Database = dbs->any(true)]
 [if (db.dbType = pml::DatabaseType::MARIADB or db.dbType = pml::DatabaseType::SQLITE)]
 [comment TODO change here if needed to handle multi composed refrences/]
@@ -120,13 +119,12 @@ return null;
 // Right side '[ref.targetField->first().getPhysicalName()/]' of reference [ '['/][ref.name/] [ ']'/]
 [comment right side of reference /]
 [comment TODO Apply only to single attribute reference /]
-public [if (override = false)]abstract [/if]Dataset<[roleTarget.entity.name.toUpperFirst() /]TDO> get[roleTarget.entity.name.toUpperFirst()/]TDOList[roleTarget.name.toUpperFirst() /]In[ref.name.toUpperFirst()/]In[ref.getAbstractPhysicalStructureNotEmbeddedObject().name.toUpperFirst() /]From[ref.getPhysicalSchema().name.toUpperFirst()/](Condition<[roleTarget.entity.name.toUpperFirst()/]Attribute> condition)[if (override = false)];[else]{
+public [if (override = false)]abstract [/if]Dataset<[roleTarget.entity.name.toUpperFirst() /]TDO> get[roleTarget.entity.name.toUpperFirst()/]TDOList[roleTarget.name.toUpperFirst() /]In[ref.name.toUpperFirst()/]In[ref.getAbstractPhysicalStructureNotEmbeddedObject().name.toUpperFirst() /]From[ref.getPhysicalSchema().name.toUpperFirst()/](Condition<[roleTarget.entity.name.toUpperFirst()/]Attribute> condition, MutableBoolean refilterFlag)[if (override = false)];[else]{
 [let dbs : Set(Database) = ref.targetField->first().getAbstractPhysicalStructureNotEmbeddedObject().getConcernedDatabases(ref.ancestors(Domainmodel)->any(true))]
 [if (dbs->size() = 0)]
 return null;
 [else]
 [let db : Database = dbs->any(true)]
-	MutableBoolean refilterFlag = new MutableBoolean(false);
 [if (db.dbType = pml::DatabaseType::MARIADB or db.dbType = pml::DatabaseType::SQLITE)]
 [generateSimpleSelectFromGivenRelationalTable(roleTarget.entity, ref.targetField->any(true).getAbstractPhysicalStructureNotEmbeddedObject(), db, Sequence{Sequence{ref, ref.targetField}})/][/if]
 [if (db.dbType = pml::DatabaseType::MONGODB)] 
@@ -166,13 +164,12 @@ return null;
 [else]
 //join structure
 // Left side '[ref.sourceField->first().getPhysicalName()/]' of reference [ '['/][ref.name/] [ ']'/]
-public [if (override = false)]abstract [/if]Dataset<[roleSource.entity.name.toUpperFirst() /]TDO> get[roleSource.entity.name.toUpperFirst()/]TDOList[roleSource.name.toUpperFirst() /]In[ref.name.toUpperFirst()/]In[ref.targetField->first().getAbstractPhysicalStructureNotEmbeddedObject().name.toUpperFirst() /]From[ref.targetField->first().getPhysicalSchema().name.toUpperFirst()/](Condition<[roleSource.entity.name.toUpperFirst()/]Attribute> condition)[if (override = false)];[else]{	
+public [if (override = false)]abstract [/if]Dataset<[roleSource.entity.name.toUpperFirst() /]TDO> get[roleSource.entity.name.toUpperFirst()/]TDOList[roleSource.name.toUpperFirst() /]In[ref.name.toUpperFirst()/]In[ref.targetField->first().getAbstractPhysicalStructureNotEmbeddedObject().name.toUpperFirst() /]From[ref.targetField->first().getPhysicalSchema().name.toUpperFirst()/](Condition<[roleSource.entity.name.toUpperFirst()/]Attribute> condition, MutableBoolean refilterFlag)[if (override = false)];[else]{	
 [comment TODO Implemented multi composed ref. Currently Apply only to single attribute reference /]
 [let dbs : Set(Database) = ref.targetField->first().getAbstractPhysicalStructureNotEmbeddedObject().getConcernedDatabases(ref.ancestors(Domainmodel)->any(true))]
 [if (dbs->size() = 0)]
 return null;
 [else]
-	MutableBoolean refilterFlag = new MutableBoolean(false);
 [let db : Database = dbs->any(true)]
 [if (db.dbType = pml::DatabaseType::MARIADB or db.dbType = pml::DatabaseType::SQLITE)]
 [comment TODO change here if needed to handle multi composed refrences/]
@@ -239,12 +236,11 @@ return null;
 
 [template private generateEmbeddedObjectMappedToRoleMethod(role : Role, embedded : EmbeddedObject, opposite : Role, override : Boolean)]
 // method accessing the embedded object [embedded.name/] mapped to role [role.name /]
-public [if (override = false)]abstract [/if]Dataset<pojo.[role.getRelationShipType().name.toUpperFirst() /]> get[role.getRelationShipType().name.toUpperFirst()/]ListIn[ getPhysicalFieldAbsolutePath(embedded) /](Condition<[role.entity.name.toUpperFirst()/]Attribute> [role.name /]_condition, Condition<[opposite.entity.name.toUpperFirst()/]Attribute> [opposite.name /]_condition)[if (override = false)];[else]{	
+public [if (override = false)]abstract [/if]Dataset<pojo.[role.getRelationShipType().name.toUpperFirst() /]> get[role.getRelationShipType().name.toUpperFirst()/]ListIn[ getPhysicalFieldAbsolutePath(embedded) /](Condition<[role.entity.name.toUpperFirst()/]Attribute> [role.name /]_condition, Condition<[opposite.entity.name.toUpperFirst()/]Attribute> [opposite.name /]_condition, MutableBoolean refilterFlag)[if (override = false)];[else]{	
 [let dbs : Set(Database) = embedded.getAbstractPhysicalStructureNotEmbeddedObject().getConcernedDatabases(embedded.ancestors(Domainmodel)->any(true))]
 [if (dbs->size() = 0)]
 	return null;
 [else]
-	MutableBoolean refilterFlag = new MutableBoolean(false);
 [let db : Database = dbs->any(true)]
 [if (db.dbType = pml::DatabaseType::MONGODB)] 
 	[generateSelectFromGivenHybridDocumentCollection(role.ancestors(RelationshipType)->any(true), embedded.getAbstractPhysicalStructureNotEmbeddedObject(), db) /]
@@ -394,8 +390,7 @@ Dataset<[role.getRelationShipType().name.toUpperFirst() /]TDO> res = d.map((MapF
 [let table : AbstractPhysicalStructure = ref.targetField->first().getAbstractPhysicalStructureNotEmbeddedObject()]
 [let db : Database = table.getConcernedDatabases(table.ancestors(Domainmodel)->any(true))->any(true)]
 [let joinTable : AbstractPhysicalStructure = ref.sourceField->first().getAbstractPhysicalStructureNotEmbeddedObject()]
-public [if (override = false)]abstract [/if]Dataset<[role.getRelationShipType().name.toUpperFirst()/]TDO> get[role.getRelationShipType().name.toUpperFirst()/]TDOListIn[table.name/]And[joinTable.name/]From[db.name/](Condition<[role.entity.name.toUpperFirst()/]Attribute> [role.name/]_cond)[if (override = true)] {
-	MutableBoolean refilterFlag = new MutableBoolean(false);
+public [if (override = false)]abstract [/if]Dataset<[role.getRelationShipType().name.toUpperFirst()/]TDO> get[role.getRelationShipType().name.toUpperFirst()/]TDOListIn[table.name/]And[joinTable.name/]From[db.name/](Condition<[role.entity.name.toUpperFirst()/]Attribute> [role.name/]_cond, MutableBoolean refilterFlag)[if (override = true)] {
 	Pair<String, List<String>> whereClause = [role.entity.name.toUpperFirst()/]ServiceImpl.getSQLWhereClauseIn[table.name.toUpperFirst()/]From[db.name.toUpperFirst() /]WithTableAlias([role.name/]_cond, refilterFlag, "[table.name/].");
 	
 	String where = whereClause.getKey();
@@ -421,8 +416,7 @@ public [if (override = false)]abstract [/if]Dataset<[role.getRelationShipType().
 [let table1 : AbstractPhysicalStructure = ref1.targetField->first().getAbstractPhysicalStructureNotEmbeddedObject()]
 [let table2 : AbstractPhysicalStructure = ref2.targetField->first().getAbstractPhysicalStructureNotEmbeddedObject()]
 [let db : Database = table1.getConcernedDatabases(table1.ancestors(Domainmodel)->first())->any(true)]
-public [if (override = false)]abstract [/if]Dataset<[role1.getRelationShipType().name.toUpperFirst()/]> get[role1.getRelationShipType().name.toUpperFirst()/]ListIn[table1.name/]And[joinTable.name/]And[table2.name/]From[db.name/](Condition<[role1.entity.name.toUpperFirst()/]Attribute> [role1.name/]_cond, Condition<[role2.entity.name.toUpperFirst()/]Attribute> [role2.name/]_cond)[if (override = true)]{
-	MutableBoolean refilterFlag = new MutableBoolean(false);
+public [if (override = false)]abstract [/if]Dataset<[role1.getRelationShipType().name.toUpperFirst()/]> get[role1.getRelationShipType().name.toUpperFirst()/]ListIn[table1.name/]And[joinTable.name/]And[table2.name/]From[db.name/](Condition<[role1.entity.name.toUpperFirst()/]Attribute> [role1.name/]_cond, Condition<[role2.entity.name.toUpperFirst()/]Attribute> [role2.name/]_cond, MutableBoolean refilterFlag)[if (override = true)]{
 	Pair<String, List<String>> whereClause1 = [role1.entity.name.toUpperFirst()/]ServiceImpl.getSQLWhereClauseIn[table1.name.toUpperFirst()/]From[db.name.toUpperFirst() /]WithTableAlias([role1.name/]_cond, refilterFlag, "[table1.name/].");
 	Pair<String, List<String>> whereClause2 = [role2.entity.name.toUpperFirst()/]ServiceImpl.getSQLWhereClauseIn[table2.name.toUpperFirst()/]From[db.name.toUpperFirst() /]WithTableAlias([role2.name/]_cond, refilterFlag, "[table2.name/].");
 	
@@ -455,8 +449,7 @@ public [if (override = false)]abstract [/if]Dataset<[role1.getRelationShipType()
 [let table : AbstractPhysicalStructure = ref.getAbstractPhysicalStructureNotEmbeddedObject()]
 [let table2 : AbstractPhysicalStructure = ref.targetField->first().getAbstractPhysicalStructureNotEmbeddedObject()]
 [let db : Database = table.getConcernedDatabases(table.ancestors(Domainmodel)->first())->any(true)]
-public [if (override = false)]abstract[/if] Dataset<[roleSource.getRelationShipType().name.toUpperFirst() /]> get[roleSource.name.toUpperFirst()/]And[roleTarget.name.toUpperFirst()/]ListIn[ref.name.toUpperFirst()/]In[table.name.toUpperFirst()/]From[db.name.toUpperFirst()/](Condition<[roleSource.getRelationShipType().roles->first().entity.name.toUpperFirst()/]Attribute> [roleSource.getRelationShipType().roles->first().name/]_cond, Condition<[roleSource.getRelationShipType().roles->first().getOppositeRoles()->any(true).entity.name.toUpperFirst()/]Attribute> [roleSource.getRelationShipType().roles->first().getOppositeRoles()->any(true).name/]_cond)[if (override = false)];[else] {
-	MutableBoolean refilterFlag = new MutableBoolean(false);
+public [if (override = false)]abstract[/if] Dataset<[roleSource.getRelationShipType().name.toUpperFirst() /]> get[roleSource.name.toUpperFirst()/]And[roleTarget.name.toUpperFirst()/]ListIn[ref.name.toUpperFirst()/]In[table.name.toUpperFirst()/]From[db.name.toUpperFirst()/](Condition<[roleSource.getRelationShipType().roles->first().entity.name.toUpperFirst()/]Attribute> [roleSource.getRelationShipType().roles->first().name/]_cond, Condition<[roleSource.getRelationShipType().roles->first().getOppositeRoles()->any(true).entity.name.toUpperFirst()/]Attribute> [roleSource.getRelationShipType().roles->first().getOppositeRoles()->any(true).name/]_cond, MutableBoolean refilterFlag)[if (override = false)];[else] {
 	Pair<String, List<String>> whereClause1 = [roleSource.entity.name.toUpperFirst()/]ServiceImpl.getSQLWhereClauseIn[table.name.toUpperFirst()/]From[db.name.toUpperFirst() /]WithTableAlias([roleSource.name/]_cond, refilterFlag, "[table.name/].");
 	Pair<String, List<String>> whereClause2 = [roleTarget.entity.name.toUpperFirst()/]ServiceImpl.getSQLWhereClauseIn[table2.name.toUpperFirst()/]From[db.name.toUpperFirst() /]WithTableAlias([roleTarget.name/]_cond, refilterFlag, "[table2.name/].");
 	

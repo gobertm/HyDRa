@@ -22,6 +22,7 @@ import tdo.[role.entity.name.toUpperFirst() /]TDO;
 import tdo.[rel.name.toUpperFirst()/]TDO;
 import pojo.[role.entity.name.toUpperFirst() /];
 import conditions.[role.entity.name.toUpperFirst() /]Attribute;
+import org.apache.commons.lang.mutable.MutableBoolean;
 [/for]
 
 

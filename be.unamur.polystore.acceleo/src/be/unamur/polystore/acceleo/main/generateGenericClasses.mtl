@@ -413,6 +413,16 @@ public enum Operator {
 					return true;	
 				return !testValue.equals(objectValue);
 			}
+
+			if(testValue == null && objectValue == null) {
+				if(this == Operator.GTE || this == Operator.LTE || this == Operator.CONTAINS)
+					return true;
+				return false;
+			}
+			
+			if(objectValue == null)
+				return false;
+
 			if(this == Operator.GT) {
 				return ((Comparable) testValue).compareTo(objectValue) < 0;
 			}
