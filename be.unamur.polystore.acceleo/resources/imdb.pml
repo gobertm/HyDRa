@@ -28,7 +28,7 @@ conceptual schema conceptualSchema{
 		isAdult : bool,
 		startYear : int,
 		runtimeMinutes: int,
-		averageRating : string,
+		averageRating : float,
 		numVotes : int
 		identifier{
 			id
@@ -61,15 +61,6 @@ physical schemas {
 						numberofvotes
 					}
 				}
-			}
-		}
-		
-		collection topMovies {
-			fields {
-				id,
-				title,
-				rate,
-				numberofvotes
 			}
 		}
 	}
@@ -121,7 +112,6 @@ mapping rules{
 	conceptualSchema.movieDirector.directed_movie -> myRelSchema.directed.movie_info,
 	conceptualSchema.Movie(id, primaryTitle) -> IMDB_Mongo.actorCollection.movies(id,title),
 	conceptualSchema.Movie(averageRating,numVotes) -> IMDB_Mongo.actorCollection.movies.rating(rate,numberofvotes),
-	conceptualSchema.Movie(id,primaryTitle,averageRating,numVotes) -(averageRating > 9)-> IMDB_Mongo.topMovies(id,title,rate,numberofvotes),
 	conceptualSchema.Movie(id) -> movieRedis.movieKV(id),
 	conceptualSchema.Movie(primaryTitle,originalTitle,isAdult,startYear,runtimeMinutes) ->movieRedis.movieKV.attr(title,originalTitle,isAdult,startYear,runtimeMinutes) 
 }
