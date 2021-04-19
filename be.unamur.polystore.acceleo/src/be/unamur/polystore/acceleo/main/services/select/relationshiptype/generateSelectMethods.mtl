@@ -44,6 +44,10 @@
 [generateEmbeddedObjectMappedToRoleMethod(role1, embedded, role2, override) /]
 [/for]
 
+[for (embedded : EmbeddedObject | getMappedEmbeddedObjects(role2, role2.getMappingRules()))]
+[generateEmbeddedObjectMappedToRoleMethod(role2, embedded, role1, override) /]
+[/for]
+
 [/let]
 [/let]
 [else]
@@ -236,7 +240,7 @@ return null;
 
 [template private generateEmbeddedObjectMappedToRoleMethod(role : Role, embedded : EmbeddedObject, opposite : Role, override : Boolean)]
 // method accessing the embedded object [embedded.name/] mapped to role [role.name /]
-public [if (override = false)]abstract [/if]Dataset<pojo.[role.getRelationShipType().name.toUpperFirst() /]> get[role.getRelationShipType().name.toUpperFirst()/]ListIn[ getPhysicalFieldAbsolutePath(embedded) /](Condition<[role.entity.name.toUpperFirst()/]Attribute> [role.name /]_condition, Condition<[opposite.entity.name.toUpperFirst()/]Attribute> [opposite.name /]_condition, MutableBoolean refilterFlag)[if (override = false)];[else]{	
+public [if (override = false)]abstract [/if]Dataset<pojo.[role.getRelationShipType().name.toUpperFirst() /]> get[role.getRelationShipType().name.toUpperFirst()/]ListIn[ getPhysicalFieldAbsolutePath(embedded) /](Condition<[role.entity.name.toUpperFirst()/]Attribute> [role.name /]_condition, Condition<[opposite.entity.name.toUpperFirst()/]Attribute> [opposite.name /]_condition, MutableBoolean [role.name/]_refilter, MutableBoolean [opposite.name/]_refilter)[if (override = false)];[else]{	
 [let dbs : Set(Database) = embedded.getAbstractPhysicalStructureNotEmbeddedObject().getConcernedDatabases(embedded.ancestors(Domainmodel)->any(true))]
 [if (dbs->size() = 0)]
 	return null;
@@ -449,9 +453,9 @@ public [if (override = false)]abstract [/if]Dataset<[role1.getRelationShipType()
 [let table : AbstractPhysicalStructure = ref.getAbstractPhysicalStructureNotEmbeddedObject()]
 [let table2 : AbstractPhysicalStructure = ref.targetField->first().getAbstractPhysicalStructureNotEmbeddedObject()]
 [let db : Database = table.getConcernedDatabases(table.ancestors(Domainmodel)->first())->any(true)]
-public [if (override = false)]abstract[/if] Dataset<[roleSource.getRelationShipType().name.toUpperFirst() /]> get[roleSource.name.toUpperFirst()/]And[roleTarget.name.toUpperFirst()/]ListIn[ref.name.toUpperFirst()/]In[table.name.toUpperFirst()/]From[db.name.toUpperFirst()/](Condition<[roleSource.getRelationShipType().roles->first().entity.name.toUpperFirst()/]Attribute> [roleSource.getRelationShipType().roles->first().name/]_cond, Condition<[roleSource.getRelationShipType().roles->first().getOppositeRoles()->any(true).entity.name.toUpperFirst()/]Attribute> [roleSource.getRelationShipType().roles->first().getOppositeRoles()->any(true).name/]_cond, MutableBoolean refilterFlag)[if (override = false)];[else] {
-	Pair<String, List<String>> whereClause1 = [roleSource.entity.name.toUpperFirst()/]ServiceImpl.getSQLWhereClauseIn[table.name.toUpperFirst()/]From[db.name.toUpperFirst() /]WithTableAlias([roleSource.name/]_cond, refilterFlag, "[table.name/].");
-	Pair<String, List<String>> whereClause2 = [roleTarget.entity.name.toUpperFirst()/]ServiceImpl.getSQLWhereClauseIn[table2.name.toUpperFirst()/]From[db.name.toUpperFirst() /]WithTableAlias([roleTarget.name/]_cond, refilterFlag, "[table2.name/].");
+public [if (override = false)]abstract[/if] Dataset<[roleSource.getRelationShipType().name.toUpperFirst() /]> get[roleSource.name.toUpperFirst()/]And[roleTarget.name.toUpperFirst()/]ListIn[ref.name.toUpperFirst()/]In[table.name.toUpperFirst()/]From[db.name.toUpperFirst()/](Condition<[roleSource.getRelationShipType().roles->first().entity.name.toUpperFirst()/]Attribute> [roleSource.getRelationShipType().roles->first().name/]_cond, Condition<[roleSource.getRelationShipType().roles->first().getOppositeRoles()->any(true).entity.name.toUpperFirst()/]Attribute> [roleSource.getRelationShipType().roles->first().getOppositeRoles()->any(true).name/]_cond, MutableBoolean [roleSource.getRelationShipType().roles->first().name/]_refilter, MutableBoolean [roleSource.getRelationShipType().roles->first().getOppositeRoles()->any(true).name/]_refilter)[if (override = false)];[else] {
+	Pair<String, List<String>> whereClause1 = [roleSource.entity.name.toUpperFirst()/]ServiceImpl.getSQLWhereClauseIn[table.name.toUpperFirst()/]From[db.name.toUpperFirst() /]WithTableAlias([roleSource.name/]_cond, [roleSource.name/]_refilter, "[table.name/].");
+	Pair<String, List<String>> whereClause2 = [roleTarget.entity.name.toUpperFirst()/]ServiceImpl.getSQLWhereClauseIn[table2.name.toUpperFirst()/]From[db.name.toUpperFirst() /]WithTableAlias([roleTarget.name/]_cond, [roleTarget.name/]_refilter, "[table2.name/].");
 	
 	String where1 = whereClause1.getKey();
 	List<String> preparedValues = whereClause1.getValue();

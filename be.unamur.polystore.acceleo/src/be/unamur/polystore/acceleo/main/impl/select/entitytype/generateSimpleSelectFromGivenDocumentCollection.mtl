@@ -25,7 +25,7 @@
 	List<String> bsons = new ArrayList<String>();
 	String bson = null;
 	[for (role : Role | rel.roles)]
-	bson = [role.entity.name.toUpperFirst()/]ServiceImpl.getBSONMatchQueryIn[struct.name.toUpperFirst()/]From[db.name.toUpperFirst() /]([role.name + '_condition' /] ,refilterFlag);
+	bson = [role.entity.name.toUpperFirst()/]ServiceImpl.getBSONMatchQueryIn[struct.name.toUpperFirst()/]From[db.name.toUpperFirst() /]([role.name + '_condition' /] ,[role.name/]_refilter);
 	if(bson != null)
 		bsons.add("{" + bson + "}");
 	[/for]
@@ -295,7 +295,7 @@ if(array[level /]!= null) {
 }
 
 if(toAdd[level /]) {
-	[if (level > 1)]if([for (role : Role | rel.roles) separator('&&')]([role.name/]_condition == null || refilterFlag.booleanValue() || [role.name/]_condition.evaluate([rel.name.toLowerFirst() /][level /].get[role.name.toUpperFirst()/]()))[/for])[/if]
+	[if (level > 1)]if([for (role : Role | rel.roles) separator('&&')]([role.name/]_condition == null || [role.name/]_refilter.booleanValue() || [role.name/]_condition.evaluate([rel.name.toLowerFirst() /][level /].get[role.name.toUpperFirst()/]()))[/for])[/if]
 		list_res.add([rel.name.toLowerFirst() /][level /]);
 	addedInList = true;
 } 
@@ -305,7 +305,7 @@ if(toAdd[level /]) {
 [/for]
 [else]
 if(toAdd[level /]) {
-	[if (level > 1)]if([for (role : Role | rel.roles) separator('&&')]([role.name/]_condition == null || refilterFlag.booleanValue() || [role.name/]_condition.evaluate([rel.name.toLowerFirst() /][level /].get[role.name.toUpperFirst()/]()))[/for])[/if]
+	[if (level > 1)]if([for (role : Role | rel.roles) separator('&&')]([role.name/]_condition == null || [role.name/]_refilter.booleanValue() || [role.name/]_condition.evaluate([rel.name.toLowerFirst() /][level /].get[role.name.toUpperFirst()/]()))[/for])[/if]
 	list_res.add([rel.name.toLowerFirst() /][level /]);
 	addedInList = true;
 } 
