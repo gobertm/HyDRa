@@ -191,29 +191,30 @@ return null;
 }[/if]
 
 // return join values
-[comment]public [if (override = false)]abstract [/if]Dataset<[roleSource.ancestors(RelationshipType)->any(true).name.toUpperFirst() /]TDO> get[roleSource.ancestors(RelationshipType)->any(true).name.toUpperFirst()/]TDOListIn[roleSource.ancestors(pml::RelationshipType)->any(true).name.toUpperFirst()/]_[ref.name.toUpperFirst()/]_[ref2.name.toUpperFirst()/]In[ref.sourceField->first().getAbstractPhysicalStructureNotEmbeddedObject().name.toUpperFirst() /]From[ref.sourceField->first().getPhysicalSchema().name.toUpperFirst()/]()[if (override = false)];[else]{	[/comment]
+[comment used in case of A--AB--B, with AB being a join structure hosted in db different from A and B /]
+public [if (override = false)]abstract [/if]Dataset<[roleSource.ancestors(RelationshipType)->any(true).name.toUpperFirst() /]TDO> get[roleSource.ancestors(RelationshipType)->any(true).name.toUpperFirst()/]TDOListIn[roleSource.ancestors(pml::RelationshipType)->any(true).name.toUpperFirst()/]_[ref.name.toUpperFirst()/]_[ref2.name.toUpperFirst()/]In[ref.sourceField->first().getAbstractPhysicalStructureNotEmbeddedObject().name.toUpperFirst() /]From[ref.sourceField->first().getPhysicalSchema().name.toUpperFirst()/]()[if (override = false)];[else]{	
 [comment TODO Implemented multi composed ref. Currently Apply only to single attribute reference /]
-[comment]	Condition condition = null;[/comment]
-[comment][let dbs : Set(Database) = ref.sourceField->first().getAbstractPhysicalStructureNotEmbeddedObject().getConcernedDatabases(ref.ancestors(Domainmodel)->any(true))][/comment]
-[comment][if (dbs->size() = 0)][/comment]
-[comment]return null;[/comment]
-[comment][else][/comment]
-[comment]	MutableBoolean refilterFlag = new MutableBoolean(false);[/comment]
-[comment][let db : Database = dbs->any(true)][/comment]
-[comment][if (db.dbType = pml::DatabaseType::MARIADB or db.dbType = pml::DatabaseType::SQLITE)][/comment]
+	Condition condition = null;
+[let dbs : Set(Database) = ref.sourceField->first().getAbstractPhysicalStructureNotEmbeddedObject().getConcernedDatabases(ref.ancestors(Domainmodel)->any(true))]
+[if (dbs->size() = 0)]
+return null;
+[else]
+	MutableBoolean refilterFlag = new MutableBoolean(false);
+[let db : Database = dbs->any(true)]
+[if (db.dbType = pml::DatabaseType::MARIADB or db.dbType = pml::DatabaseType::SQLITE)]
 [comment TODO change here if needed to handle multi composed refrences/]
-[comment][generateSimpleSelectFromGivenRelationalTable(roleSource.ancestors(RelationshipType)->any(true), ref.sourceField->first().getAbstractPhysicalStructureNotEmbeddedObject(), db, Sequence{Sequence{ref, ref.sourceField}, Sequence{ref2, ref2.sourceField}})/][/comment]
-[comment][/if][/comment]
-[comment][if (db.dbType = pml::DatabaseType::MONGODB)] [/comment]
-[comment][generateSimpleSelectFromGivenDocumentCollection(roleSource.ancestors(RelationshipType)->any(true), ref.sourceField->any(true).getAbstractPhysicalStructureNotEmbeddedObject(), db, Sequence{Sequence{ref, ref.sourceField}, Sequence{ref2, ref2.sourceField}}) /][/comment]
-[comment][/if][/comment]
-[comment][if (db.dbType = pml::DatabaseType::REDIS)][/comment]
-[comment][generateSelectKeyValue(roleSource.ancestors(RelationshipType)->any(true), ref.sourceField->any(true).getAbstractPhysicalStructureNotEmbeddedObject().oclAsType(pml::KeyValuePair), db, Sequence{Sequence{ref, ref.sourceField}, Sequence{ref2, ref2.sourceField}})/][/comment]
-[comment][/if][/comment]
-[comment][/let][/comment]
-[comment][/if][/comment]
-[comment][/let]		[/comment]
-[comment]}[/if][/comment]
+[generateSimpleSelectFromGivenRelationalTable(roleSource.ancestors(RelationshipType)->any(true), ref.sourceField->first().getAbstractPhysicalStructureNotEmbeddedObject(), db, Sequence{Sequence{ref, ref.sourceField}, Sequence{ref2, ref2.sourceField}})/]
+[/if]
+[if (db.dbType = pml::DatabaseType::MONGODB)]
+[generateSimpleSelectFromGivenDocumentCollection(roleSource.ancestors(RelationshipType)->any(true), ref.sourceField->any(true).getAbstractPhysicalStructureNotEmbeddedObject(), db, Sequence{Sequence{ref, ref.sourceField}, Sequence{ref2, ref2.sourceField}}) /]
+[/if]
+[if (db.dbType = pml::DatabaseType::REDIS)]
+[generateSelectKeyValue(roleSource.ancestors(RelationshipType)->any(true), ref.sourceField->any(true).getAbstractPhysicalStructureNotEmbeddedObject().oclAsType(pml::KeyValuePair), db, Sequence{Sequence{ref, ref.sourceField}, Sequence{ref2, ref2.sourceField}})/]
+[/if]
+[/let]
+[/if]
+[/let]
+}[/if]
 
 [if (ref.name < ref2.name)][comment this weird condition only makes sure that the generated method is not generated twice/]
 [let struct : AbstractPhysicalStructure = ref.sourceField->first().getAbstractPhysicalStructureNotEmbeddedObject()]
@@ -420,9 +421,9 @@ public [if (override = false)]abstract [/if]Dataset<[role.getRelationShipType().
 [let table1 : AbstractPhysicalStructure = ref1.targetField->first().getAbstractPhysicalStructureNotEmbeddedObject()]
 [let table2 : AbstractPhysicalStructure = ref2.targetField->first().getAbstractPhysicalStructureNotEmbeddedObject()]
 [let db : Database = table1.getConcernedDatabases(table1.ancestors(Domainmodel)->first())->any(true)]
-public [if (override = false)]abstract [/if]Dataset<[role1.getRelationShipType().name.toUpperFirst()/]> get[role1.getRelationShipType().name.toUpperFirst()/]ListIn[table1.name/]And[joinTable.name/]And[table2.name/]From[db.name/](Condition<[role1.entity.name.toUpperFirst()/]Attribute> [role1.name/]_cond, Condition<[role2.entity.name.toUpperFirst()/]Attribute> [role2.name/]_cond, MutableBoolean refilterFlag)[if (override = true)]{
-	Pair<String, List<String>> whereClause1 = [role1.entity.name.toUpperFirst()/]ServiceImpl.getSQLWhereClauseIn[table1.name.toUpperFirst()/]From[db.name.toUpperFirst() /]WithTableAlias([role1.name/]_cond, refilterFlag, "[table1.name/].");
-	Pair<String, List<String>> whereClause2 = [role2.entity.name.toUpperFirst()/]ServiceImpl.getSQLWhereClauseIn[table2.name.toUpperFirst()/]From[db.name.toUpperFirst() /]WithTableAlias([role2.name/]_cond, refilterFlag, "[table2.name/].");
+public [if (override = false)]abstract [/if]Dataset<[role1.getRelationShipType().name.toUpperFirst()/]> get[role1.getRelationShipType().name.toUpperFirst()/]ListIn[table1.name/]And[joinTable.name/]And[table2.name/]From[db.name/](Condition<[role1.entity.name.toUpperFirst()/]Attribute> [role1.name/]_cond, Condition<[role2.entity.name.toUpperFirst()/]Attribute> [role2.name/]_cond, MutableBoolean [role1.name/]_refilter, MutableBoolean [role2.name/]_refilter)[if (override = true)]{
+	Pair<String, List<String>> whereClause1 = [role1.entity.name.toUpperFirst()/]ServiceImpl.getSQLWhereClauseIn[table1.name.toUpperFirst()/]From[db.name.toUpperFirst() /]WithTableAlias([role1.name/]_cond, [role1.name/]_refilter, "[table1.name/].");
+	Pair<String, List<String>> whereClause2 = [role2.entity.name.toUpperFirst()/]ServiceImpl.getSQLWhereClauseIn[table2.name.toUpperFirst()/]From[db.name.toUpperFirst() /]WithTableAlias([role2.name/]_cond, [role2.name/]_refilter, "[table2.name/].");
 	
 	String where1 = whereClause1.getKey();
 	List<String> preparedValues = whereClause1.getValue();
