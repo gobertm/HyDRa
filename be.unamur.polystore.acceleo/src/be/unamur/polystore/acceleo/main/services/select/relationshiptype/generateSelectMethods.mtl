@@ -190,7 +190,8 @@ return null;
 [/let]		
 }[/if]
 
-// return join values
+[if (joindb <> db1 and joindb <> db2)]
+// return join values [ref.name /] [ref2.name/]
 [comment used in case of A--AB--B, with AB being a join structure hosted in db different from A and B /]
 public [if (override = false)]abstract [/if]Dataset<[roleSource.ancestors(RelationshipType)->any(true).name.toUpperFirst() /]TDO> get[roleSource.ancestors(RelationshipType)->any(true).name.toUpperFirst()/]TDOListIn[roleSource.ancestors(pml::RelationshipType)->any(true).name.toUpperFirst()/]_[ref.name.toUpperFirst()/]_[ref2.name.toUpperFirst()/]In[ref.sourceField->first().getAbstractPhysicalStructureNotEmbeddedObject().name.toUpperFirst() /]From[ref.sourceField->first().getPhysicalSchema().name.toUpperFirst()/]()[if (override = false)];[else]{	
 [comment TODO Implemented multi composed ref. Currently Apply only to single attribute reference /]
@@ -215,6 +216,7 @@ return null;
 [/if]
 [/let]
 }[/if]
+[/if]
 
 [if (ref.name < ref2.name)][comment this weird condition only makes sure that the generated method is not generated twice/]
 [let struct : AbstractPhysicalStructure = ref.sourceField->first().getAbstractPhysicalStructureNotEmbeddedObject()]
