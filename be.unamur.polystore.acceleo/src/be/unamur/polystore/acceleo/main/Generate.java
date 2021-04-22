@@ -37,7 +37,7 @@ public class Generate extends AbstractAcceleoGenerator {
      *
      * @generated
      */
-    public static final String MODULE_FILE_NAME = "/be/unamur/polystore/acceleo/main/generate";
+    public static final String MODULE_FILE_NAME = "bin/be/unamur/polystore/acceleo/main/generate";
     
     /**
      * The name of the templates that are to be generated.
