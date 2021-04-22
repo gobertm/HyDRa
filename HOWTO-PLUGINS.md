@@ -19,3 +19,4 @@ Build of plugin is complete.
 ### Potential errors
 -  Failed to install plugin "Cannot perform operation" , "missing requirement ... Vérfier qu'une ancienne version foirée du feature project, portant le même nom n'existe pas dans le dossier.
 - Impossible de lancer un Runtime Eclipse Application. Vérifier dans Run Configuration que elle se lance avec une bonne version java. 
+- Java bundle incompatibilities in underlying projects (ide,ui,...)
