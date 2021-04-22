@@ -10,6 +10,6 @@ Require-Bundle: be.unamur.polystore,
  org.eclipse.xtext.ide,
  org.eclipse.xtext.xbase.ide,
  org.antlr.runtime;bundle-version="[3.2.0,3.2.1)"
-Bundle-RequiredExecutionEnvironment: JavaSE-11
+Bundle-RequiredExecutionEnvironment: JavaSE-14
 Export-Package: be.unamur.polystore.ide.contentassist.antlr,
  be.unamur.polystore.ide.contentassist.antlr.internal

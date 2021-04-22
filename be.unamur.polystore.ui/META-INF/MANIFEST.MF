@@ -17,8 +17,9 @@ Require-Bundle: be.unamur.polystore,
  org.eclipse.compare,
  org.eclipse.xtext.builder
 Import-Package: org.apache.log4j
-Bundle-RequiredExecutionEnvironment: JavaSE-11
+Bundle-RequiredExecutionEnvironment: JavaSE-14
 Export-Package: be.unamur.polystore.ui.quickfix,
  be.unamur.polystore.ui.internal,
  be.unamur.polystore.ui.contentassist
 Bundle-Activator: be.unamur.polystore.ui.internal.PolystoreActivator
+ 
