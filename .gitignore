@@ -20,3 +20,4 @@ be.unamur.polystore.dbinitialization/src/main/resources/imdb/mydb_directed.sql
 be.unamur.polystore.dbinitialization/src/main/resources/imdb/mydb_directorTable.sql
 be.unamur.polystore.dbinitialization/src/main/resources/imdb/dump.rdb
 be.unamur.polystore.dbinitialization/src/main/resources/imdb/dump.rdb
+be.unamur.polystore.feature/.project

@@ -349,7 +349,7 @@ public class MongoDataInit {
                 titleId = titleId.replaceAll("\\\\N", "NoID");
                 seed = Long.parseLong(titleId,36);
                 random.setSeed(seed);
-                Document rating = new Document("rate", String.format("%.1f", random.nextFloat()*10) + "/10")
+                Document rating = new Document("rate", RandomUtils.nextInt(0,9)+"."+RandomUtils.nextInt(0,9) + "/10")
                         .append("numberofvotes", random.nextInt());
                 Document movie = new Document("id", titleId)
                         .append("title",title )
