@@ -15,4 +15,4 @@ HyDRa (Hybrid Data RepresentAtion) is a hybrid polystore management framework pr
         
         or
     -   Put the desired .pml HyDRa model file at the root of the project.
--   Generate API Code by right clicking on a .pml file > HyDRa API Generation > Generate HyDRa Conceptual API
+-   Generate API Code by right clicking on a .pml file > HyDRa API Generation > Generate HyDRa Conceptual API. Note that if no files are generated it may be necessary to restart Eclipse.

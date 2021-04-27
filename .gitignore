@@ -1,2 +1,5 @@
 data/backup/*
 APIs/IMDB/.classpath
+/.idea/*
+Use-Cases/data-inconsistency/API/.idea/*
+Use-Cases/imdb/API/IMDB/.classpath
