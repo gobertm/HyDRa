@@ -339,7 +339,7 @@ Dataset<[role.getRelationShipType().name.toUpperFirst() /]TDO> res = d.map((MapF
 					logger.warn("Cannot retrieve value for [role1.entity.name /].[attr.name /] attribute stored in db [db.name/]. Probably due to an ambiguous regex.");
 					throw new Exception("Cannot retrieve value for [role1.entity.name /].[attr.name /] attribute stored in db [db.name/]. Probably due to an ambiguous regex.");
 				}
-				value = r.getAs("[table1.name/].[field.ancestors(LongField) -> first().oclAsType(LongField).physicalName /]");
+				value = r.getAs("[table1.name/]_[field.ancestors(LongField) -> first().oclAsType(LongField).physicalName /]");
 				p = Pattern.compile(regex);
 				m = p.matcher(value);
 				matches = m.find();
