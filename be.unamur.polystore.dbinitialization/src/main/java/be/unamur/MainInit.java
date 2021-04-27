@@ -61,12 +61,12 @@ public class MainInit {
     }
 
     private void initIMDB() {
-        mongoDataInit.deleteAll("actorCollection");
-//        redisDataInit.deleteAll();
+//        mongoDataInit.deleteAll("actorCollection");
+        redisDataInit.deleteAll();
 //        sqlDataInit.deleteDataImdb("directorTable","directed");
 //        sqlDataInit.initIMDBStructure("directorTable","directed");
-//        processTitleBasicsFile("src/main/resources/imdb/title-basics.tsv","directorCollection");
-        processNamesFile("src/main/resources/imdb/name-basics.tsv", "actorCollection", "directorTable","directed");
+        processTitleBasicsFile("src/main/resources/imdb/title-basics.tsv");
+//        processNamesFile("src/main/resources/imdb/name-basics.tsv", "actorCollection", "directorTable","directed");
     }
 
 
@@ -90,8 +90,8 @@ public class MainInit {
                 if(i%50000==0)
                     logger.debug("Processed {} lines",i);
             }
-            mongoDataInit.addActors(actors,actorCollection);
-//            sqlDataInit.addPersonToTable(directors, directorTable, joinTable);
+//            mongoDataInit.addActors(actors,actorCollection);
+            sqlDataInit.addPersonToTable(directors, directorTable, joinTable);
             logger.info("Inserted data director, actor and work of director.");
         } catch (FileNotFoundException e) {
             logger.error("Can't open file ");
@@ -103,7 +103,7 @@ public class MainInit {
 
     }
 
-    private void processTitleBasicsFile(String path, String collectionWithMovies) {
+    private void processTitleBasicsFile(String path) {
         logger.info("Starting initialise of IMDB data. Movies");
         try {
             BufferedReader tsv = new BufferedReader(new FileReader(path));
@@ -115,13 +115,14 @@ public class MainInit {
             List<String[]> movies = new ArrayList<>();
             for (String movieLine : titleFile) {
                 lineItems = movieLine.split("\t");
-                if (lineItems[1].contains("movie")) {
+                if (lineItems[1].contains("movie") && lineItems[5].equals("2010")) {
                     movies.add(lineItems);
                     i++;
                 }
             }
             logger.debug("Found {} movies ",i);
             redisDataInit.addMovie(movies);
+//            sqlDataInit.addMovies(movies,"movies");
         } catch (FileNotFoundException e) {
             logger.error("Error opening file");
             e.printStackTrace();

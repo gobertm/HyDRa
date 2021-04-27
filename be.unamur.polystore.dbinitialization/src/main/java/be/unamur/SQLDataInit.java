@@ -174,6 +174,35 @@ public class SQLDataInit {
         }
     }
 
+
+    public void addMovies(List<String[]> movies, String movieTable) {
+        if(connection==null)
+            initConnection();
+        try {
+            connection.setAutoCommit(false);
+            PreparedStatement statement = connection.prepareStatement("INSERT INTO " + movieTable + " (id) VALUES (?)");
+            int count = 0;
+            int batchSize = 20000;
+            for (String[] movie : movies) {
+                count++;
+                statement.setObject(1,movie[0]);
+                statement.addBatch();
+                statement.clearParameters();
+                if (count % batchSize == 0) {
+                    int[] result = statement.executeBatch();
+                    logger.info("Partial insert into {} : {}",movieTable, result.length);
+                    connection.commit();
+                }
+            }
+            int[] result = statement.executeBatch();
+            logger.info("Final insert into {} : {}",movieTable, result.length);
+            connection.commit();
+        } catch (SQLException e) {
+            logger.error("SQLException");
+            e.printStackTrace();
+        }
+    }
+
     public void addPersonToTable(List<String[]> persons, String personTable, String worksJoinTable) {
         if(connection==null)
             initConnection();
