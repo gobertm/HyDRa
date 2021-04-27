@@ -8,7 +8,7 @@ public class Movie extends LoggingPojo {
 	private Boolean isAdult;
 	private Integer startYear;
 	private Integer runtimeMinutes;
-	private Double averageRating;
+	private String averageRating;
 	private Integer numVotes;
 
 	public enum movieDirector {
@@ -72,11 +72,11 @@ public class Movie extends LoggingPojo {
 	public void setRuntimeMinutes(Integer runtimeMinutes) {
 		this.runtimeMinutes = runtimeMinutes;
 	}
-	public Double getAverageRating() {
+	public String getAverageRating() {
 		return averageRating;
 	}
 
-	public void setAverageRating(Double averageRating) {
+	public void setAverageRating(String averageRating) {
 		this.averageRating = averageRating;
 	}
 	public Integer getNumVotes() {

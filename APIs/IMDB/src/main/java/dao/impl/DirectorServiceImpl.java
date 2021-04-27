@@ -380,14 +380,14 @@ public class DirectorServiceImpl extends DirectorService {
 	public void insertDirectorInDirectorTableFromMydb(Director director){
 		//Read mapping rules and find attributes of the POJO that are mapped to the corresponding AbstractPhysicalStructure
 		// Insert in SQL DB 
-	String query = "INSERT INTO directorTable(fullname,death,fullname,birth,id) VALUES (?,?,?,?,?)";
+	String query = "INSERT INTO directorTable(fullname,death,id,birth,fullname) VALUES (?,?,?,?,?)";
 	
 	List<Object> inputs = new ArrayList<>();
-	inputs.add(director.getLastName());
-	inputs.add(director.getYearOfDeath());
 	inputs.add(director.getFirstName());
-	inputs.add(director.getYearOfBirth());
+	inputs.add(director.getYearOfDeath());
 	inputs.add(director.getId());
+	inputs.add(director.getYearOfBirth());
+	inputs.add(director.getLastName());
 	// Get the reference attribute. Either via a TDO Object or using the Pojo reference TODO
 	DBConnectionMgr.getMapDB().get("mydb").insertOrUpdateOrDelete(query,inputs);
 	}

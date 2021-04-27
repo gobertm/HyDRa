@@ -320,7 +320,7 @@ public class MovieServiceImpl extends MovieService {
 								matches = m.find();
 								if(matches) {
 									String averageRating = m.group(groupIndex.intValue());
-									movie2.setAverageRating(Double.parseDouble(averageRating));
+									movie2.setAverageRating(averageRating);
 									toAdd2 = true;
 								} else {
 									throw new Exception("Cannot retrieve value for Movie.averageRating attribute stored in db mymongo. Probably due to an ambiguous regex.");
@@ -390,7 +390,7 @@ public class MovieServiceImpl extends MovieService {
 		return getMovieList(conditions.Condition.simple(conditions.MovieAttribute.runtimeMinutes, conditions.Operator.EQUALS, runtimeMinutes));
 	}
 	
-	public Dataset<Movie> getMovieListByAverageRating(Double averageRating) {
+	public Dataset<Movie> getMovieListByAverageRating(String averageRating) {
 		return getMovieList(conditions.Condition.simple(conditions.MovieAttribute.averageRating, conditions.Operator.EQUALS, averageRating));
 	}
 	

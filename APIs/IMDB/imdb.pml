@@ -28,7 +28,7 @@ conceptual schema conceptualSchema{
 		isAdult : bool,
 		startYear : int,
 		runtimeMinutes: int,
-		averageRating : float,
+		averageRating : string,
 		numVotes : int
 		identifier{
 			id

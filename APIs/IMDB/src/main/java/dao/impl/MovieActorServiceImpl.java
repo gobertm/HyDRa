@@ -158,7 +158,7 @@ public class MovieActorServiceImpl extends dao.services.MovieActorService {
 								matches = m.find();
 								if(matches) {
 									String averageRating = m.group(groupIndex.intValue());
-									movieActor2.getMovie().setAverageRating(Double.parseDouble(averageRating));
+									movieActor2.getMovie().setAverageRating(averageRating);
 									toAdd2 = true;
 								} else {
 									throw new Exception("Cannot retrieve value for Movie.averageRating attribute stored in db mymongo. Probably due to an ambiguous regex.");

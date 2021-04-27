@@ -80,10 +80,10 @@ public abstract class MovieService {
 		MutableBoolean refilterFlag = new MutableBoolean(false);
 		List<Dataset<Movie>> datasets = new ArrayList<Dataset<Movie>>();
 		Dataset<Movie> d = null;
-		d = getMovieListInMovieKVFromMyredis(condition, refilterFlag);
+		d = getMovieListInActorCollectionFromMymongo(condition, refilterFlag);
 		if(d != null)
 			datasets.add(d);
-		d = getMovieListInActorCollectionFromMymongo(condition, refilterFlag);
+		d = getMovieListInMovieKVFromMyredis(condition, refilterFlag);
 		if(d != null)
 			datasets.add(d);
 		
@@ -195,9 +195,9 @@ public abstract class MovieService {
 					movie_res.setRuntimeMinutes(firstNotNull_runtimeMinutes);
 					
 					// attribute 'Movie.averageRating'
-					Double firstNotNull_averageRating = r.getAs("averageRating");
+					String firstNotNull_averageRating = r.getAs("averageRating");
 					for (int i = 1; i < datasets.size(); i++) {
-						Double averageRating2 = r.getAs("averageRating_" + i);
+						String averageRating2 = r.getAs("averageRating_" + i);
 						if (firstNotNull_averageRating != null && averageRating2 != null && !firstNotNull_averageRating.equals(averageRating2)) {
 							movie_res.addLogEvent("Data consistency problem: duplicate values found for attribute 'Movie.averageRating': " + firstNotNull_averageRating + " and " + averageRating2 + "." );
 							logger.warn("data consistency problem: duplicate values for attribute : 'Movie.averageRating' ==> " + firstNotNull_averageRating + " and " + averageRating2);
@@ -266,7 +266,7 @@ public abstract class MovieService {
 		return getMovieList(conditions.Condition.simple(conditions.MovieAttribute.runtimeMinutes, conditions.Operator.EQUALS, runtimeMinutes));
 	}
 	
-	public Dataset<Movie> getMovieListByAverageRating(Double averageRating) {
+	public Dataset<Movie> getMovieListByAverageRating(String averageRating) {
 		return getMovieList(conditions.Condition.simple(conditions.MovieAttribute.averageRating, conditions.Operator.EQUALS, averageRating));
 	}
 	
@@ -391,9 +391,9 @@ public abstract class MovieService {
 					movie_res.setRuntimeMinutes(firstNotNull_runtimeMinutes);
 					
 					// attribute 'Movie.averageRating'
-					Double firstNotNull_averageRating = r.getAs("averageRating");
+					String firstNotNull_averageRating = r.getAs("averageRating");
 					for (int i = 1; i < datasetsPOJO.size(); i++) {
-						Double averageRating2 = r.getAs("averageRating_" + i);
+						String averageRating2 = r.getAs("averageRating_" + i);
 						if (firstNotNull_averageRating != null && averageRating2 != null && !firstNotNull_averageRating.equals(averageRating2)) {
 							movie_res.addLogEvent("Data consistency problem: duplicate values found for attribute 'Movie.averageRating': " + firstNotNull_averageRating + " and " + averageRating2 + "." );
 							logger.warn("data consistency problem: duplicate values for attribute : 'Movie.averageRating' ==> " + firstNotNull_averageRating + " and " + averageRating2);
