@@ -74,6 +74,17 @@ public class RedisDataInit {
 
         }
 
+        if (model == PmlModelEnum.DATAINCONS) {
+            for (int i = 0; i < numberofrecords; i++) {
+                key = "PRODUCT:"+productid+i+":PRICE";
+                value = "00000";
+                jedis.set(key, value);
+                added++;
+            }
+            logger.info("Generated and inserted [{}] key/value pairs in [{}]", added, host);
+
+        }
+
         if (model == PmlModelEnum.KVEMBEDDED) {
             String keyproduct;
             Map<String, String> hash = new HashMap<>();

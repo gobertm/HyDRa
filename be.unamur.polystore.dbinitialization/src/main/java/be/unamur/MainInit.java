@@ -31,17 +31,17 @@ public class MainInit {
         redisUrl="localhost";
         sqlUrl = "localhost";
         mongoUrl = "localhost";
-        String mongodbname = "mymongo";
+        String mongodbname = "mymongo2";
         // Init IMDB
-        redisport=6379;
-        mongoport=27100;
-        sqlport=3307;
+        redisport=6363;
+        mongoport=27000;
+        sqlport=3310;
         // Init other
 //        redisport = 6363;
 //        mongoport=27000;
 //        sqlport=3310;
         RedisDataInit redisDataInit = new RedisDataInit(redisUrl, redisport);
-        SQLDataInit sqlinit = new SQLDataInit(sqlUrl,""+sqlport,"mydb","root","password");
+        SQLDataInit sqlinit = new SQLDataInit(sqlUrl,""+sqlport,"myproductdb","root","password");
         MongoDataInit mongoDataInit2 = new MongoDataInit(mongodbname, mongoUrl, mongoport, 20);
         mongoDataInit2.setSqlDB(sqlinit);
         mongoDataInit2.setRedis(redisDataInit);
@@ -56,8 +56,10 @@ public class MainInit {
         //'kv-manytoone.pml'
 //        mainInit.initKVManytoone();
 
+        // data-inconsistencies.pml
+        mainInit.initDataInconsistencies();
         // 'imdb.pml' constructed based on files taken from https://www.imdb.com/interfaces/
-        mainInit.initIMDB();
+//        mainInit.initIMDB();
     }
 
     private void initIMDB() {
@@ -155,15 +157,20 @@ public class MainInit {
         redisDataInit.deleteAll();
         redisDataInit.persistData(PmlModelEnum.ALLDBS,10);
 
-//        sqlDataInit.deleteAll("mydb");
-//        sqlDataInit.createDatabase("mydb");
-        sqlDataInit.initStructure(PmlModelEnum.ALLDBS,"mydb");
-        sqlDataInit.persistData(30,PmlModelEnum.ALLDBS);
-        sqlDataInit.getConnection().close();
+//        sqlDataInit.deleteAll("myproductdb");
+//        sqlDataInit.createDatabase("myproductdb");
+//        sqlDataInit.initStructure(PmlModelEnum.ALLDBS,"myproductdb");
+//        sqlDataInit.persistData(30,PmlModelEnum.ALLDBS);
+//        sqlDataInit.getConnection().close();
 
         // Mongo DB 2
-        mongoDataInit.dropDatabase();
-        mongoDataInit.persistDataPmlModel(2,false,null);
+//        mongoDataInit.dropDatabase();
+//        mongoDataInit.persistDataPmlModel(2,false,null);
 
+    }
+
+    private void initDataInconsistencies() throws SQLException {
+        init3DBMS();
+        redisDataInit.persistData(PmlModelEnum.DATAINCONS,10);
     }
 }

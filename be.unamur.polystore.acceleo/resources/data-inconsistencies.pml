@@ -17,10 +17,15 @@ physical schemas {
 		kvpairs KVProdPhotos {
 			key:"PRODUCT:"[prodID]":PHOTO",
 			value:photo
+		}
+		
+		kvpairs KVProdPrice {
+			key:"PRODUCT:"[prodID]":PRICE",
+			value:price
 		}    
 	}
 	
-	relational schema myRelSchema : mydb {
+	relational schema myRelSchema : myproductdb {
 		table ProductCatalogTable {
 			columns {
 				product_id,
@@ -47,6 +52,7 @@ physical schemas {
 
 mapping rules{
 	conceptualSchema.Product(id,photo) -> KVSchema.KVProdPhotos(prodID,photo),
+	conceptualSchema.Product(id, price) -> KVSchema.KVProdPrice(prodID,price),
 	conceptualSchema.Product(id,price, description) -> myRelSchema.ProductCatalogTable(product_id,price,description),
 	conceptualSchema.Product(category) -> categorySchema.categoryCollection(categoryname),
 	//Nested attributes of Product
@@ -59,7 +65,7 @@ databases {
 		port:6363
 	}
 	
-	mariadb mydb {
+	mariadb myproductdb {
 		host: "localhost"
 		port: 3310
 		dbname : "myproductdb"

@@ -3,6 +3,8 @@ version: "3"
 services:
   redisdb:
     image: redis:latest
+    volumes :
+      - "./src/main/resources/imdb/:/data/"
     ports: 
       - 6379:6379
       

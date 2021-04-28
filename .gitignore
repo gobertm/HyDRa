@@ -21,5 +21,3 @@ be.unamur.polystore.dbinitialization/src/main/resources/imdb/mydb_directorTable.
 be.unamur.polystore.dbinitialization/src/main/resources/imdb/dump.rdb
 be.unamur.polystore.dbinitialization/src/main/resources/imdb/dump.rdb
 be.unamur.polystore.feature/.project
-be.unamur.polystore.updatesite/features/*.jar
-be.unamur.polystore.updatesite/plugins/*.jar

@@ -199,9 +199,9 @@ mapping rules {
 	  cs.Review(content,rating) -> myDocSchema.productCollection.review(content,rate),
 	  cs.Review(rating) -> myDocSchema.productCollection.review(rate2),
 	  cs.reviewClient.review -> myDocSchema.productCollection.poster,
-	  cs.productReview.reviews -> myDocSchema.productCollection(review), // a voir à quoi sert concretement ce mapping.
+	  cs.productReview.reviews -> myDocSchema.productCollection.review(),
 	  cs.CreditCard(id,number, expirymonth) -> myRelSchema.CreditCard(id,number,expiryDate),
-	  cs.orderCreditCard.order -> myRelSchema.Order.paid_with,  // ?? revoir la cohérence des mappings. 
+	  cs.orderCreditCard.order -> myRelSchema.Order.paid_with,
 	  cs.Order(id, orderDate) -> myRelSchema.Order(id,dateOrder),
 	  cs.Order(id, orderDate) -(orderDate < "2019")-> myRelSchema.ArchiveOrder(id,dateOrder),
 	  cs.Order(id) -> myGraphSchema.Order(orderid),

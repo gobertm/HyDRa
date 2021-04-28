@@ -7,5 +7,6 @@ public enum PmlModelEnum {
     ALLDBS, //'3dbs.pml'
     SIMPLEKEYVALUE,
     KVEMBEDDED,
-    KVMANYTOONE;
+    KVMANYTOONE,
+    DATAINCONS;
 }

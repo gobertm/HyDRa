@@ -29,7 +29,6 @@ import be.unamur.polystore.PmlStandaloneSetup;
 /**
  * Entry point of the 'Generate' generation module.
  *
- * @generated
  */
 public class Generate extends AbstractAcceleoGenerator {
     /**
