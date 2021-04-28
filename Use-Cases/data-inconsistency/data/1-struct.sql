@@ -1,6 +1,5 @@
-create schema myproductdb collate utf8mb4_0900_ai_ci;
 
-create table ProductCatalogTable
+create table if not exists ProductCatalogTable
 (
 	product_id char(36) not null
 		primary key,

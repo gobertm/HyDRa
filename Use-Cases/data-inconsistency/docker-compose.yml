@@ -29,6 +29,8 @@ services:
     environment:
       - MYSQL_ROOT_PASSWORD=password
       - MYSQL_DATABASE=myproductdb
+      - LANG=C.UTF-8
     volumes: 
       - "./data/1-struct.sql:/docker-entrypoint-initdb.d/1-struct.sql"
       - "./data/ProductCatalogTable.sql:/docker-entrypoint-initdb.d/2-data.sql"
+    command: ['mysqld', '--character-set-server=utf8mb4', '--collation-server=utf8mb4_unicode_ci']
