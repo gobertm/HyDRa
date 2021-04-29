@@ -3,3 +3,13 @@ APIs/IMDB/.classpath
 /.idea/*
 Use-Cases/data-inconsistency/API/.idea/*
 Use-Cases/imdb/API/IMDB/.classpath
+Use-Cases/.settings/org.eclipse.m2e.core.prefs
+Use-Cases/uc1-imdb/.classpath
+Use-Cases/uc2-datainconsistency/.classpath
+Use-Cases/uc2-datainconsistency/.settings/org.eclipse.jdt.core.prefs
+Use-Cases/uc2-datainconsistency/.settings/org.eclipse.m2e.core.prefs
+Use-Cases/uc1-imdb/.settings/org.eclipse.jdt.core.prefs
+Use-Cases/uc1-imdb/.settings/org.eclipse.m2e.core.prefs
+Use-Cases/uc3-hybridrelation/.classpath
+Use-Cases/uc3-hybridrelation/.settings/org.eclipse.jdt.core.prefs
+Use-Cases/uc3-hybridrelation/.settings/org.eclipse.m2e.core.prefs
