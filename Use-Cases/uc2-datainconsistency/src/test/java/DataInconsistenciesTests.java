@@ -12,6 +12,6 @@ public class DataInconsistenciesTests {
 	@Test
 	public void getAllProducts() {
 		productDataset = productService.getProductList(null);
-		productDataset.show();
+		productDataset.show(false);
 	}
 }
