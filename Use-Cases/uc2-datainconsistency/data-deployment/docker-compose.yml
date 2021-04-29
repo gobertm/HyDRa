@@ -1,0 +1,36 @@
+version: "3"
+
+services:
+  myredis:
+    image: redis:latest
+    ports: 
+      - 6363:6379
+    volumes :
+      - "./data/redis-seed/:/data"
+
+  mymongo2:
+    image: mongo:latest
+    ports: 
+      - 27000:27017
+
+  mongo-seed:
+    image: mongo:latest
+    links:
+        - mymongo2
+    volumes:
+        - ./data/mongo-seed:/mongo-seed
+    command:
+        /mongo-seed/import.sh
+
+  mysql:
+    image: mysql:latest
+    ports: 
+      - 3310:3306
+    environment:
+      - MYSQL_ROOT_PASSWORD=password
+      - MYSQL_DATABASE=myproductdb
+      - LANG=C.UTF-8
+    volumes: 
+      - "./data/1-struct.sql:/docker-entrypoint-initdb.d/1-struct.sql"
+      - "./data/ProductCatalogTable.sql:/docker-entrypoint-initdb.d/2-data.sql"
+    command: ['mysqld', '--character-set-server=utf8mb4', '--collation-server=utf8mb4_unicode_ci']

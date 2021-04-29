@@ -1,0 +1,35 @@
+version: "3"
+
+services:
+  redisdb:
+    image: redis:latest
+    ports: 
+      - 6379:6379
+    volumes :
+      - "./data/redis-seed/:/data"
+
+  mymongo:
+    image: mongo:latest
+    ports: 
+      - 27100:27017
+
+  mongo-seed:
+    image: mongo:latest
+    links:
+        - mymongo
+    volumes:
+        - ./data/mongo-seed:/mongo-seed
+    command:
+        /mongo-seed/import.sh
+
+  mysql:
+    image: mysql:latest
+    ports: 
+      - 3307:3306
+    environment:
+      - MYSQL_ROOT_PASSWORD=password
+      - MYSQL_DATABASE=mydb
+    volumes: 
+      - "./data/sqlTables.sql:/docker-entrypoint-initdb.d/1-structure.sql"
+      - "./data/directed.sql:/docker-entrypoint-initdb.d/2-directedTable.sql:delegated"
+      - "./data/directorTable.sql:/docker-entrypoint-initdb.d/3-directorTable.sql:delegated"
