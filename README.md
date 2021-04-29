@@ -6,10 +6,12 @@ HyDRa (Hybrid Data RepresentAtion) is a hybrid polystore management framework pr
 -   Make sure to have Java 14 installed
 -   Run Eclipse and install HyDRa plugins
     -   Help > Install New Software > Add > https://staff.info.unamur.be/gobertm/
+-   Restart Eclipse. (Note that in some cases the API generation need a second Eclipse restart)
 
 ## Usage
 -   Create New Maven project or import pre existing ones in APIs folder.
-    -   Please make sure to use Java 14 compiler. Properties > Build path > Select Java 14 JRE.
+    -   Please make sure to use Java 14 compiler. Properties > Build path > Select Java 14 JRE. 
+    And Properties > Java Compiler > Compiler Compliance Level.
 -   Design HyDRa Polystore schema.
     -   Create an empty pml file and open it with the PML Editor.
         
