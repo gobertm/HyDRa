@@ -70,16 +70,16 @@ public abstract class ProductService {
 		MutableBoolean refilterFlag = new MutableBoolean(false);
 		List<Dataset<Product>> datasets = new ArrayList<Dataset<Product>>();
 		Dataset<Product> d = null;
-		d = getProductListInProductCatalogTableFromMyproductdb(condition, refilterFlag);
+		d = getProductListInKVProdPhotosFromMyredis(condition, refilterFlag);
 		if(d != null)
 			datasets.add(d);
-		d = getProductListInKVProdPhotosFromMyredis(condition, refilterFlag);
+		d = getProductListInCategoryCollectionFromMymongo2(condition, refilterFlag);
 		if(d != null)
 			datasets.add(d);
 		d = getProductListInKVProdPriceFromMyredis(condition, refilterFlag);
 		if(d != null)
 			datasets.add(d);
-		d = getProductListInCategoryCollectionFromMymongo2(condition, refilterFlag);
+		d = getProductListInProductCatalogTableFromMyproductdb(condition, refilterFlag);
 		if(d != null)
 			datasets.add(d);
 		
@@ -99,6 +99,7 @@ public abstract class ProductService {
 								.withColumnRenamed("price", "price_1")
 								.withColumnRenamed("description", "description_1")
 								.withColumnRenamed("category", "category_1")
+								.withColumnRenamed("logEvents", "logEvents_1")
 							, seq, "fullouter");
 			for(int i = 2; i < datasets.size(); i++) {
 				res = res.join(datasets.get(i)
@@ -107,6 +108,7 @@ public abstract class ProductService {
 								.withColumnRenamed("price", "price_" + i)
 								.withColumnRenamed("description", "description_" + i)
 								.withColumnRenamed("category", "category_" + i)
+								.withColumnRenamed("logEvents", "logEvents_" + i)
 							, seq, "fullouter");
 			} 
 			d = res.map((MapFunction<Row, Product>) r -> {
@@ -185,6 +187,21 @@ public abstract class ProductService {
 						}
 					}
 					product_res.setCategory(firstNotNull_category);
+					
+					scala.collection.mutable.WrappedArray<String> logEvents = r.getAs("logEvents");
+					if(logEvents != null)
+						for (int i = 0; i < logEvents.size(); i++){
+							product_res.addLogEvent(logEvents.apply(i));
+						}
+		
+					for (int i = 1; i < datasets.size(); i++) {
+						logEvents = r.getAs("logEvents_" + i);
+						if(logEvents != null)
+						for (int j = 0; j < logEvents.size(); j++){
+							product_res.addLogEvent(logEvents.apply(j));
+						}
+					}
+					
 					return product_res;
 				}, Encoders.bean(Product.class));
 		}
@@ -196,12 +213,12 @@ public abstract class ProductService {
 	
 	
 	
-	public abstract Dataset<Product> getProductListInProductCatalogTableFromMyproductdb(conditions.Condition<conditions.ProductAttribute> condition, MutableBoolean refilterFlag);
-	
-	
-	
-	
 	public abstract Dataset<Product> getProductListInKVProdPhotosFromMyredis(conditions.Condition<conditions.ProductAttribute> condition, MutableBoolean refilterFlag);
+	
+	
+	
+	
+	public abstract Dataset<Product> getProductListInCategoryCollectionFromMymongo2(conditions.Condition<conditions.ProductAttribute> condition, MutableBoolean refilterFlag);
 	
 	
 	
@@ -211,7 +228,7 @@ public abstract class ProductService {
 	
 	
 	
-	public abstract Dataset<Product> getProductListInCategoryCollectionFromMymongo2(conditions.Condition<conditions.ProductAttribute> condition, MutableBoolean refilterFlag);
+	public abstract Dataset<Product> getProductListInProductCatalogTableFromMyproductdb(conditions.Condition<conditions.ProductAttribute> condition, MutableBoolean refilterFlag);
 	
 	
 	// TODO get based on id(s). Ex:public Client getClientById(Long id)
@@ -363,7 +380,7 @@ public abstract class ProductService {
 	public abstract void insertProductAndLinkedItems(Product product);
 	public abstract void insertProduct(Product product);
 	
-	public abstract void insertProductInProductCatalogTableFromMyproductdb(Product product); public abstract void insertProductInKVProdPhotosFromMyredis(Product product); public abstract void insertProductInKVProdPriceFromMyredis(Product product); public abstract void insertProductInCategoryCollectionFromMymongo2(Product product); 
+	public abstract void insertProductInKVProdPhotosFromMyredis(Product product); public abstract void insertProductInCategoryCollectionFromMymongo2(Product product); public abstract void insertProductInKVProdPriceFromMyredis(Product product); public abstract void insertProductInProductCatalogTableFromMyproductdb(Product product); 
 	public abstract void updateProductList(conditions.Condition<conditions.ProductAttribute> condition, conditions.SetClause<conditions.ProductAttribute> set);
 	
 	public void updateProduct(pojo.Product product) {

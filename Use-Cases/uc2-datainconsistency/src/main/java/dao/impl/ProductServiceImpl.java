@@ -33,191 +33,6 @@ public class ProductServiceImpl extends ProductService {
 	static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ProductServiceImpl.class);
 	
 	
-	public static Pair<String, List<String>> getSQLWhereClauseInProductCatalogTableFromMyproductdb(Condition<ProductAttribute> condition, MutableBoolean refilterFlag) {
-		return getSQLWhereClauseInProductCatalogTableFromMyproductdbWithTableAlias(condition, refilterFlag, "");
-	}
-	
-	public static Pair<String, List<String>> getSQLWhereClauseInProductCatalogTableFromMyproductdbWithTableAlias(Condition<ProductAttribute> condition, MutableBoolean refilterFlag, String tableAlias) {
-		String where = null;	
-		List<String> preparedValues = new java.util.ArrayList<String>();
-		if(condition != null) {
-			
-			if(condition instanceof SimpleCondition) {
-				ProductAttribute attr = ((SimpleCondition<ProductAttribute>) condition).getAttribute();
-				Operator op = ((SimpleCondition<ProductAttribute>) condition).getOperator();
-				Object value = ((SimpleCondition<ProductAttribute>) condition).getValue();
-				if(value != null) {
-					boolean isConditionAttrEncountered = false;
-					if(attr == ProductAttribute.id ) {
-						isConditionAttrEncountered = true;
-						String valueString = Util.transformSQLValue(value);
-						String sqlOp = op.getSQLOperator();
-						String preparedValue = valueString;
-						if(op == Operator.CONTAINS && valueString != null) {
-							preparedValue = "%" + Util.escapeReservedCharSQL(valueString)  + "%";
-						}
-						
-						where = tableAlias + "product_id " + sqlOp + " ?";
-						preparedValues.add(preparedValue);
-					}
-					if(attr == ProductAttribute.price ) {
-						isConditionAttrEncountered = true;
-						String valueString = Util.transformSQLValue(value);
-						String sqlOp = op.getSQLOperator();
-						String preparedValue = "@VAR@$";
-						Boolean like_op = false;
-						if(op == Operator.EQUALS && valueString != null && preparedValue.contains("@OTHERVAR@")) {
-							//ex: @@VAR@@' '@@OTHERVAR@@"=> more than one vars in LongField: we shall use regex
-							like_op = true;
-							sqlOp = "LIKE";
-							preparedValue = "@VAR@$";
-						} else {
-							if(op == Operator.NOT_EQUALS && valueString != null && preparedValue.contains("@OTHERVAR@")) {
-								//ex: @@VAR@@' '@@OTHERVAR@@"=> more than one vars in LongField: we shall use regex
-								sqlOp = "NOT LIKE";
-								like_op = true;
-								preparedValue = "@VAR@$";
-							}
-						}
-						if(op == Operator.CONTAINS && valueString != null) {
-							like_op = true;
-							preparedValue = "@VAR@$";
-							preparedValue = preparedValue.replaceAll("@VAR@", "%@VAR@%");
-						}
-						
-						if(like_op)
-							valueString = Util.escapeReservedCharSQL(valueString);
-						preparedValue = preparedValue.replaceAll("@VAR@", valueString).replaceAll("@OTHERVAR@", "%");
-						
-						where = tableAlias + "europrice " + sqlOp + " ?";
-						preparedValues.add(preparedValue);
-					}
-					if(attr == ProductAttribute.description ) {
-						isConditionAttrEncountered = true;
-						String valueString = Util.transformSQLValue(value);
-						String sqlOp = op.getSQLOperator();
-						String preparedValue = valueString;
-						if(op == Operator.CONTAINS && valueString != null) {
-							preparedValue = "%" + Util.escapeReservedCharSQL(valueString)  + "%";
-						}
-						
-						where = tableAlias + "description " + sqlOp + " ?";
-						preparedValues.add(preparedValue);
-					}
-					if(!isConditionAttrEncountered) {
-						refilterFlag.setValue(true);
-						where = "1 = 1";
-					}
-				}
-			}
-	
-			if(condition instanceof AndCondition) {
-				Pair<String, List<String>> pairLeft = getSQLWhereClauseInProductCatalogTableFromMyproductdb(((AndCondition) condition).getLeftCondition(), refilterFlag);
-				Pair<String, List<String>> pairRight = getSQLWhereClauseInProductCatalogTableFromMyproductdb(((AndCondition) condition).getRightCondition(), refilterFlag);
-				String whereLeft = pairLeft.getKey();
-				String whereRight = pairRight.getKey();
-				List<String> leftValues = pairLeft.getValue();
-				List<String> rightValues = pairRight.getValue();
-				if(whereLeft != null || whereRight != null) {
-					if(whereLeft == null)
-						where = whereRight;
-					else
-						if(whereRight == null)
-							where = whereLeft;
-						else
-							where = "(" + whereLeft + " AND " + whereRight + ")";
-					preparedValues.addAll(leftValues);
-					preparedValues.addAll(rightValues);
-				}
-			}
-	
-			if(condition instanceof OrCondition) {
-				Pair<String, List<String>> pairLeft = getSQLWhereClauseInProductCatalogTableFromMyproductdb(((OrCondition) condition).getLeftCondition(), refilterFlag);
-				Pair<String, List<String>> pairRight = getSQLWhereClauseInProductCatalogTableFromMyproductdb(((OrCondition) condition).getRightCondition(), refilterFlag);
-				String whereLeft = pairLeft.getKey();
-				String whereRight = pairRight.getKey();
-				List<String> leftValues = pairLeft.getValue();
-				List<String> rightValues = pairRight.getValue();
-				if(whereLeft != null || whereRight != null) {
-					if(whereLeft == null)
-						where = whereRight;
-					else
-						if(whereRight == null)
-							where = whereLeft;
-						else
-							where = "(" + whereLeft + " OR " + whereRight + ")";
-					preparedValues.addAll(leftValues);
-					preparedValues.addAll(rightValues);
-				}
-			}
-	
-		}
-	
-		return new ImmutablePair<String, List<String>>(where, preparedValues);
-	}
-	
-	
-	public Dataset<Product> getProductListInProductCatalogTableFromMyproductdb(conditions.Condition<conditions.ProductAttribute> condition, MutableBoolean refilterFlag){
-	
-		Pair<String, List<String>> whereClause = ProductServiceImpl.getSQLWhereClauseInProductCatalogTableFromMyproductdb(condition, refilterFlag);
-		String where = whereClause.getKey();
-		List<String> preparedValues = whereClause.getValue();
-		for(String preparedValue : preparedValues) {
-			where = where.replaceFirst("\\?", "'" + Util.escapeQuote(preparedValue) + "'");
-		}
-		
-		Dataset<Row> d = dbconnection.SparkConnectionMgr.getDataset("myproductdb", "ProductCatalogTable");
-		if(where != null) {
-			d = d.where(where);
-		}
-	
-		Dataset<Product> res = d.map((MapFunction<Row, Product>) r -> {
-					Product product_res = new Product();
-					Integer groupIndex = null;
-					String regex = null;
-					String value = null;
-					Pattern p = null;
-					Matcher m = null;
-					boolean matches = false;
-					
-					// attribute [Product.Id]
-					String id = r.getAs("product_id");
-					product_res.setId(id);
-					
-					// attribute [Product.Price]
-					regex = "(.*)(\\$)";
-					groupIndex = 1;
-					if(groupIndex == null) {
-						logger.warn("Cannot retrieve value for Productprice attribute stored in db myproductdb. Probably due to an ambiguous regex.");
-						product_res.addLogEvent("Cannot retrieve value for Productprice attribute stored in db myproductdb. Probably due to an ambiguous regex.");
-					}
-					value = r.getAs("europrice");
-					p = Pattern.compile(regex);
-					m = p.matcher(value);
-					matches = m.find();
-					String price = null;
-					if(matches) {
-						price = m.group(groupIndex.intValue());
-					} else {
-						logger.warn("Cannot retrieve value for Productprice attribute stored in db myproductdb. Probably due to an ambiguous regex.");
-						product_res.addLogEvent("Cannot retrieve value for Product.price attribute stored in db myproductdb. Probably due to an ambiguous regex.");
-					}
-					product_res.setPrice(price == null ? null : Integer.parseInt(price));
-					
-					// attribute [Product.Description]
-					String description = r.getAs("description");
-					product_res.setDescription(description);
-	
-	
-	
-					return product_res;
-				}, Encoders.bean(Product.class));
-	
-	
-		return res;
-		
-	}
-	
 	
 	
 	//TODO redis
@@ -274,71 +89,6 @@ public class ProductServiceImpl extends ProductService {
 					value = r.getAs("value");
 					String photo = value == null ? null : value;
 					product_res.setPhoto(photo);
-					
-						
-					return product_res;
-				}, Encoders.bean(Product.class));
-		return res;
-	
-		
-	}
-	
-	
-	
-	//TODO redis
-	public Dataset<Product> getProductListInKVProdPriceFromMyredis(conditions.Condition<conditions.ProductAttribute> condition, MutableBoolean refilterFlag){
-		// As we cannot filter on the values in a Redis DB, we always put the refilterflag to true.
-		refilterFlag.setValue(true);
-		// Build the key pattern
-		//  - If the condition attribute is in the key pattern, replace by the value. Only if operator is EQUALS.
-		//  - Replace all other fields of key pattern by a '*' 
-		String keypattern= "";
-		String finalKeypattern;
-		List<String> fieldsListInKey = new ArrayList<>();
-		keypattern=keypattern.concat("PRODUCT:");
-		keypattern=keypattern.concat("*");
-		fieldsListInKey.add("prodID");
-		keypattern=keypattern.concat(":PRICE");
-			
-		// Find the type of query to perform in order to retrieve a Dataset<Row>
-		// Based on the type of the value. Is a it a simple string or a hash or a list... 
-		Dataset<Row> rows;
-		rows = SparkConnectionMgr.getRowsFromKeyValue("myredis",keypattern);
-		// Transform to POJO. Based on Row containing (String key, String value)
-		finalKeypattern = keypattern;
-		Dataset<Product> res = rows.map((MapFunction<Row, Product>) r -> {
-					Product product_res = new Product();
-					Integer groupindex = null;
-					String regex = null;
-					String value = null;
-					Pattern p, pattern = null;
-					Matcher m, match = null;
-	
-					boolean matches = false;
-					// attribute [Product.Id]
-					// Attribute mapped in a key.
-					String key = r.getAs("key");
-					regex = finalKeypattern.replaceAll("\\*","(.*)");
-					groupindex = fieldsListInKey.indexOf("prodID")+1;
-					if(groupindex==null) {
-						logger.warn("Attribute of 'Product' mapped physical field 'prodID' found in key but can't get index in build keypattern '{}'.", finalKeypattern);
-					}
-					p = Pattern.compile(regex);
-					m = p.matcher(key);
-					matches = m.find();
-					String id = null;
-					if(matches) {
-						id = m.group(groupindex.intValue());
-					} else {
-						logger.warn("Cannot retrieve value for Productid attribute stored in db myredis. Probably due to an ambiguous regex.");
-						product_res.addLogEvent("Cannot retrieve value for Product.id attribute stored in db myredis. Probably due to an ambiguous regex.");
-					}
-					product_res.setId(id == null ? null : id);
-					// attribute [Product.Price]
-					// Attribute mapped in value part.
-					value = r.getAs("value");
-					Integer price = value == null ? null : Integer.parseInt(value);
-					product_res.setPrice(price);
 					
 						
 					return product_res;
@@ -531,6 +281,256 @@ public class ProductServiceImpl extends ProductService {
 	}
 	
 	
+	
+	//TODO redis
+	public Dataset<Product> getProductListInKVProdPriceFromMyredis(conditions.Condition<conditions.ProductAttribute> condition, MutableBoolean refilterFlag){
+		// As we cannot filter on the values in a Redis DB, we always put the refilterflag to true.
+		refilterFlag.setValue(true);
+		// Build the key pattern
+		//  - If the condition attribute is in the key pattern, replace by the value. Only if operator is EQUALS.
+		//  - Replace all other fields of key pattern by a '*' 
+		String keypattern= "";
+		String finalKeypattern;
+		List<String> fieldsListInKey = new ArrayList<>();
+		keypattern=keypattern.concat("PRODUCT:");
+		keypattern=keypattern.concat("*");
+		fieldsListInKey.add("prodID");
+		keypattern=keypattern.concat(":PRICE");
+			
+		// Find the type of query to perform in order to retrieve a Dataset<Row>
+		// Based on the type of the value. Is a it a simple string or a hash or a list... 
+		Dataset<Row> rows;
+		rows = SparkConnectionMgr.getRowsFromKeyValue("myredis",keypattern);
+		// Transform to POJO. Based on Row containing (String key, String value)
+		finalKeypattern = keypattern;
+		Dataset<Product> res = rows.map((MapFunction<Row, Product>) r -> {
+					Product product_res = new Product();
+					Integer groupindex = null;
+					String regex = null;
+					String value = null;
+					Pattern p, pattern = null;
+					Matcher m, match = null;
+	
+					boolean matches = false;
+					// attribute [Product.Id]
+					// Attribute mapped in a key.
+					String key = r.getAs("key");
+					regex = finalKeypattern.replaceAll("\\*","(.*)");
+					groupindex = fieldsListInKey.indexOf("prodID")+1;
+					if(groupindex==null) {
+						logger.warn("Attribute of 'Product' mapped physical field 'prodID' found in key but can't get index in build keypattern '{}'.", finalKeypattern);
+					}
+					p = Pattern.compile(regex);
+					m = p.matcher(key);
+					matches = m.find();
+					String id = null;
+					if(matches) {
+						id = m.group(groupindex.intValue());
+					} else {
+						logger.warn("Cannot retrieve value for Productid attribute stored in db myredis. Probably due to an ambiguous regex.");
+						product_res.addLogEvent("Cannot retrieve value for Product.id attribute stored in db myredis. Probably due to an ambiguous regex.");
+					}
+					product_res.setId(id == null ? null : id);
+					// attribute [Product.Price]
+					// Attribute mapped in value part.
+					value = r.getAs("value");
+					Integer price = value == null ? null : Integer.parseInt(value);
+					product_res.setPrice(price);
+					
+						
+					return product_res;
+				}, Encoders.bean(Product.class));
+		return res;
+	
+		
+	}
+	
+	public static Pair<String, List<String>> getSQLWhereClauseInProductCatalogTableFromMyproductdb(Condition<ProductAttribute> condition, MutableBoolean refilterFlag) {
+		return getSQLWhereClauseInProductCatalogTableFromMyproductdbWithTableAlias(condition, refilterFlag, "");
+	}
+	
+	public static Pair<String, List<String>> getSQLWhereClauseInProductCatalogTableFromMyproductdbWithTableAlias(Condition<ProductAttribute> condition, MutableBoolean refilterFlag, String tableAlias) {
+		String where = null;	
+		List<String> preparedValues = new java.util.ArrayList<String>();
+		if(condition != null) {
+			
+			if(condition instanceof SimpleCondition) {
+				ProductAttribute attr = ((SimpleCondition<ProductAttribute>) condition).getAttribute();
+				Operator op = ((SimpleCondition<ProductAttribute>) condition).getOperator();
+				Object value = ((SimpleCondition<ProductAttribute>) condition).getValue();
+				if(value != null) {
+					boolean isConditionAttrEncountered = false;
+					if(attr == ProductAttribute.id ) {
+						isConditionAttrEncountered = true;
+						String valueString = Util.transformSQLValue(value);
+						String sqlOp = op.getSQLOperator();
+						String preparedValue = valueString;
+						if(op == Operator.CONTAINS && valueString != null) {
+							preparedValue = "%" + Util.escapeReservedCharSQL(valueString)  + "%";
+						}
+						
+						where = tableAlias + "product_id " + sqlOp + " ?";
+						preparedValues.add(preparedValue);
+					}
+					if(attr == ProductAttribute.price ) {
+						isConditionAttrEncountered = true;
+						String valueString = Util.transformSQLValue(value);
+						String sqlOp = op.getSQLOperator();
+						String preparedValue = "@VAR@$";
+						Boolean like_op = false;
+						if(op == Operator.EQUALS && valueString != null && preparedValue.contains("@OTHERVAR@")) {
+							//ex: @@VAR@@' '@@OTHERVAR@@"=> more than one vars in LongField: we shall use regex
+							like_op = true;
+							sqlOp = "LIKE";
+							preparedValue = "@VAR@$";
+						} else {
+							if(op == Operator.NOT_EQUALS && valueString != null && preparedValue.contains("@OTHERVAR@")) {
+								//ex: @@VAR@@' '@@OTHERVAR@@"=> more than one vars in LongField: we shall use regex
+								sqlOp = "NOT LIKE";
+								like_op = true;
+								preparedValue = "@VAR@$";
+							}
+						}
+						if(op == Operator.CONTAINS && valueString != null) {
+							like_op = true;
+							preparedValue = "@VAR@$";
+							preparedValue = preparedValue.replaceAll("@VAR@", "%@VAR@%");
+						}
+						
+						if(like_op)
+							valueString = Util.escapeReservedCharSQL(valueString);
+						preparedValue = preparedValue.replaceAll("@VAR@", valueString).replaceAll("@OTHERVAR@", "%");
+						
+						where = tableAlias + "europrice " + sqlOp + " ?";
+						preparedValues.add(preparedValue);
+					}
+					if(attr == ProductAttribute.description ) {
+						isConditionAttrEncountered = true;
+						String valueString = Util.transformSQLValue(value);
+						String sqlOp = op.getSQLOperator();
+						String preparedValue = valueString;
+						if(op == Operator.CONTAINS && valueString != null) {
+							preparedValue = "%" + Util.escapeReservedCharSQL(valueString)  + "%";
+						}
+						
+						where = tableAlias + "description " + sqlOp + " ?";
+						preparedValues.add(preparedValue);
+					}
+					if(!isConditionAttrEncountered) {
+						refilterFlag.setValue(true);
+						where = "1 = 1";
+					}
+				}
+			}
+	
+			if(condition instanceof AndCondition) {
+				Pair<String, List<String>> pairLeft = getSQLWhereClauseInProductCatalogTableFromMyproductdb(((AndCondition) condition).getLeftCondition(), refilterFlag);
+				Pair<String, List<String>> pairRight = getSQLWhereClauseInProductCatalogTableFromMyproductdb(((AndCondition) condition).getRightCondition(), refilterFlag);
+				String whereLeft = pairLeft.getKey();
+				String whereRight = pairRight.getKey();
+				List<String> leftValues = pairLeft.getValue();
+				List<String> rightValues = pairRight.getValue();
+				if(whereLeft != null || whereRight != null) {
+					if(whereLeft == null)
+						where = whereRight;
+					else
+						if(whereRight == null)
+							where = whereLeft;
+						else
+							where = "(" + whereLeft + " AND " + whereRight + ")";
+					preparedValues.addAll(leftValues);
+					preparedValues.addAll(rightValues);
+				}
+			}
+	
+			if(condition instanceof OrCondition) {
+				Pair<String, List<String>> pairLeft = getSQLWhereClauseInProductCatalogTableFromMyproductdb(((OrCondition) condition).getLeftCondition(), refilterFlag);
+				Pair<String, List<String>> pairRight = getSQLWhereClauseInProductCatalogTableFromMyproductdb(((OrCondition) condition).getRightCondition(), refilterFlag);
+				String whereLeft = pairLeft.getKey();
+				String whereRight = pairRight.getKey();
+				List<String> leftValues = pairLeft.getValue();
+				List<String> rightValues = pairRight.getValue();
+				if(whereLeft != null || whereRight != null) {
+					if(whereLeft == null)
+						where = whereRight;
+					else
+						if(whereRight == null)
+							where = whereLeft;
+						else
+							where = "(" + whereLeft + " OR " + whereRight + ")";
+					preparedValues.addAll(leftValues);
+					preparedValues.addAll(rightValues);
+				}
+			}
+	
+		}
+	
+		return new ImmutablePair<String, List<String>>(where, preparedValues);
+	}
+	
+	
+	public Dataset<Product> getProductListInProductCatalogTableFromMyproductdb(conditions.Condition<conditions.ProductAttribute> condition, MutableBoolean refilterFlag){
+	
+		Pair<String, List<String>> whereClause = ProductServiceImpl.getSQLWhereClauseInProductCatalogTableFromMyproductdb(condition, refilterFlag);
+		String where = whereClause.getKey();
+		List<String> preparedValues = whereClause.getValue();
+		for(String preparedValue : preparedValues) {
+			where = where.replaceFirst("\\?", "'" + Util.escapeQuote(preparedValue) + "'");
+		}
+		
+		Dataset<Row> d = dbconnection.SparkConnectionMgr.getDataset("myproductdb", "ProductCatalogTable");
+		if(where != null) {
+			d = d.where(where);
+		}
+	
+		Dataset<Product> res = d.map((MapFunction<Row, Product>) r -> {
+					Product product_res = new Product();
+					Integer groupIndex = null;
+					String regex = null;
+					String value = null;
+					Pattern p = null;
+					Matcher m = null;
+					boolean matches = false;
+					
+					// attribute [Product.Id]
+					String id = r.getAs("product_id");
+					product_res.setId(id);
+					
+					// attribute [Product.Price]
+					regex = "(.*)(\\$)";
+					groupIndex = 1;
+					if(groupIndex == null) {
+						logger.warn("Cannot retrieve value for Productprice attribute stored in db myproductdb. Probably due to an ambiguous regex.");
+						product_res.addLogEvent("Cannot retrieve value for Productprice attribute stored in db myproductdb. Probably due to an ambiguous regex.");
+					}
+					value = r.getAs("europrice");
+					p = Pattern.compile(regex);
+					m = p.matcher(value);
+					matches = m.find();
+					String price = null;
+					if(matches) {
+						price = m.group(groupIndex.intValue());
+					} else {
+						logger.warn("Cannot retrieve value for Productprice attribute stored in db myproductdb. Probably due to an ambiguous regex.");
+						product_res.addLogEvent("Cannot retrieve value for Product.price attribute stored in db myproductdb. Probably due to an ambiguous regex.");
+					}
+					product_res.setPrice(price == null ? null : Integer.parseInt(price));
+					
+					// attribute [Product.Description]
+					String description = r.getAs("description");
+					product_res.setDescription(description);
+	
+	
+	
+					return product_res;
+				}, Encoders.bean(Product.class));
+	
+	
+		return res;
+		
+	}
+	
+	
 	// TODO get based on id(s). Ex:public Client getClientById(Long id)
 	
 	public Dataset<Product> getProductListById(String id) {
@@ -566,33 +566,33 @@ public class ProductServiceImpl extends ProductService {
 	}
 	public void insertProduct(Product product){
 		// Insert into all mapped AbstractPhysicalStructure 
-			insertProductInProductCatalogTableFromMyproductdb(product);
 			insertProductInKVProdPhotosFromMyredis(product);
-			insertProductInKVProdPriceFromMyredis(product);
 			insertProductInCategoryCollectionFromMymongo2(product);
+			insertProductInKVProdPriceFromMyredis(product);
+			insertProductInProductCatalogTableFromMyproductdb(product);
 	}
 	
-	public void insertProductInProductCatalogTableFromMyproductdb(Product product){
-		//Read mapping rules and find attributes of the POJO that are mapped to the corresponding AbstractPhysicalStructure
-		// Insert in SQL DB 
-	String query = "INSERT INTO ProductCatalogTable(description,europrice,product_id) VALUES (?,?,?)";
-	
-	List<Object> inputs = new ArrayList<>();
-	inputs.add(product.getDescription());
-	inputs.add(product.getPrice());
-	inputs.add(product.getId());
-	// Get the reference attribute. Either via a TDO Object or using the Pojo reference TODO
-	DBConnectionMgr.getMapDB().get("myproductdb").insertOrUpdateOrDelete(query,inputs);
-	}
 	public void insertProductInKVProdPhotosFromMyredis(Product product)	{
-			//other databases to implement
-		}
-	public void insertProductInKVProdPriceFromMyredis(Product product)	{
 			//other databases to implement
 		}
 	public void insertProductInCategoryCollectionFromMymongo2(Product product){
 		//Read mapping rules and find attributes of the POJO that are mapped to the corresponding AbstractPhysicalStructure
 		// Insert in MongoDB
+	}
+	public void insertProductInKVProdPriceFromMyredis(Product product)	{
+			//other databases to implement
+		}
+	public void insertProductInProductCatalogTableFromMyproductdb(Product product){
+		//Read mapping rules and find attributes of the POJO that are mapped to the corresponding AbstractPhysicalStructure
+		// Insert in SQL DB 
+	String query = "INSERT INTO ProductCatalogTable(product_id,europrice,description) VALUES (?,?,?)";
+	
+	List<Object> inputs = new ArrayList<>();
+	inputs.add(product.getId());
+	inputs.add(product.getPrice());
+	inputs.add(product.getDescription());
+	// Get the reference attribute. Either via a TDO Object or using the Pojo reference TODO
+	DBConnectionMgr.getMapDB().get("myproductdb").insertOrUpdateOrDelete(query,inputs);
 	}
 	
 	public void updateProductList(conditions.Condition<conditions.ProductAttribute> condition, conditions.SetClause<conditions.ProductAttribute> set){
