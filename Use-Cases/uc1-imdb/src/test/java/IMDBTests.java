@@ -43,16 +43,18 @@ public class IMDBTests {
 
         //Get Director
         Dataset<Director> directors = directorService.getDirectorList(directorCondition);
-        Director nolan = directors.collectAsList().get(0);
-        // Get Movie of role 'directed_movie' in relationship 'movieDirector' based on Director
-        Dataset<Movie> movies = movieService.getMovieList(Movie.movieDirector.directed_movie, nolan);
-//        movies.show();
-        Set<Actor> actorSet = new HashSet<>();
-        movies.collectAsList().forEach(m -> {
-        	List<Actor> actors = actorService.getActorList(Actor.movieActor.character,m).collectAsList(); 
-            actorSet.addAll(actors);
-        });
-        actorSet.forEach(System.out::println);
+        if(!directors.isEmpty()) {
+        	Director nolan = directors.collectAsList().get(0);
+        	// Get Movie of role 'directed_movie' in relationship 'movieDirector' based on Director
+	        Dataset<Movie> movies = movieService.getMovieList(Movie.movieDirector.directed_movie, nolan);
+	        movies.show();
+	        Set<Actor> actorSet = new HashSet<>();
+	        movies.collectAsList().forEach(m -> {
+	        	List<Actor> actors = actorService.getActorList(Actor.movieActor.character,m).collectAsList(); 
+	            actorSet.addAll(actors);
+	        });
+	        actorSet.forEach(System.out::println);
+        }
     }
 
 }

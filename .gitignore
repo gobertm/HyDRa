@@ -13,3 +13,8 @@ Use-Cases/uc1-imdb/.settings/org.eclipse.m2e.core.prefs
 Use-Cases/uc3-hybridrelation/.classpath
 Use-Cases/uc3-hybridrelation/.settings/org.eclipse.jdt.core.prefs
 Use-Cases/uc3-hybridrelation/.settings/org.eclipse.m2e.core.prefs
+Use-Cases/.idea/
+Use-Cases/uc2-datainconsistency/uc2.iml
+Use-Cases/uc3-hybridrelation/uc3.iml
+Use-Cases/uc1-imdb/uc1.iml
+Use-Cases/usecases.iml
