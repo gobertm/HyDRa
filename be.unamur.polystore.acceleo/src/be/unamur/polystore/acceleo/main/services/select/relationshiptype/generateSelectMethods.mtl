@@ -152,7 +152,6 @@ return null;
 [template private generateRefRelatedMethodsInJoinPhysicalStructure(ref : Reference, ref2 : Reference, override : Boolean, roleSource : Role, roleTarget : Role)]
 [comment left side of reference /]
 
-
 [let joinTable : AbstractPhysicalStructure = ref.getAbstractPhysicalStructureNotEmbeddedObject()]
 [let table1 : AbstractPhysicalStructure = ref.targetField->first().getAbstractPhysicalStructureNotEmbeddedObject()]
 [let table2 : AbstractPhysicalStructure = ref2.targetField->first().getAbstractPhysicalStructureNotEmbeddedObject()]
@@ -258,7 +257,7 @@ public [if (override = false)]abstract [/if]Dataset<pojo.[role.getRelationShipTy
 }[/if]
 [/template]
 
-[template private generateRowToRelationshipTypeTDOMapper(role : Role, table : AbstractPhysicalStructure, joinTable : AbstractPhysicalStructure, db : Database, sndRole : Role, sndRef : Reference, sndStruct : AbstractPhysicalStructure)]
+[template private generateRowToRelationshipTypeTDOMapper(role : Role, table : AbstractPhysicalStructure, joinTable : AbstractPhysicalStructure, db : Database, sndRole : Role, sndRefs : Set(Reference))]
 Dataset<[role.getRelationShipType().name.toUpperFirst() /]TDO> res = d.map((MapFunction<Row, [role.getRelationShipType().name.toUpperFirst()/]TDO>) r -> {
 			[role.getRelationShipType().name.toUpperFirst() /]TDO [role.getRelationShipType().name.toLowerFirst() /]_res = new [role.getRelationShipType().name.toUpperFirst() /]TDO();
 			[role.getRelationShipType().name.toLowerFirst() /]_res.set[role.name.toUpperFirst()/](new [role.entity.name.toUpperFirst()/]());
@@ -301,11 +300,14 @@ Dataset<[role.getRelationShipType().name.toUpperFirst() /]TDO> res = d.map((MapF
 			[/if]
 			[/let]
 			[/for]
-
-			[for (field : PhysicalField | sndRef.sourceField)]
+			
+			[for (sndRef : Reference | sndRefs)]
+				[for (field : PhysicalField | sndRef.sourceField)]
 			String [sndRef.name/]_[field.getPhysicalName()/] = r.getAs("[joinTable.name/]_[field.getPhysicalName()/]") == null ? null : r.getAs("[joinTable.name/]_[field.getPhysicalName()/]").toString();
 			[role.getRelationShipType().name.toLowerFirst() /]_res.set[joinTable.getPhysicalSchema().name.toUpperFirst()/]_[joinTable.name/]_[sndRef.name/]_[field.getPhysicalName()/]([sndRef.name/]_[field.getPhysicalName()/]);
+				[/for]
 			[/for]
+			
 
 			return [role.getRelationShipType().name.toLowerFirst() /]_res;
 		}, Encoders.bean([role.getRelationShipType().name.toUpperFirst() /]TDO.class));
@@ -409,7 +411,10 @@ public [if (override = false)]abstract [/if]Dataset<[role.getRelationShipType().
 	where = (where == null) ? "" : (" AND " + where);
 	String aliasedColumns = "[for (field : PhysicalField | table.oclAsType(Table).columns) separator(',')][table.name /].[field.getPhysicalName() /] as [table.name /]_[field.getPhysicalName() /][/for], [for (col : PhysicalField | joinTable.oclAsType(Table).columns) separator(',')][joinTable.name /].[col.getPhysicalName() /] as [joinTable.name /]_[col.getPhysicalName() /][/for]";
 	Dataset<Row> d = dbconnection.SparkConnectionMgr.getDataset("[db.name /]", "(SELECT " + aliasedColumns + " FROM [table.name/], [joinTable.name/] WHERE [for (srcField : PhysicalField | ref.sourceField) separator(' AND ')][joinTable.name/].[srcField.getPhysicalName()/] = [table.name /].[ref.targetField->at(i).getPhysicalName()/][/for]" + where + ") AS JOIN_TABLE");
-	[generateRowToRelationshipTypeTDOMapper(role, table, joinTable, db, sndRole, sndRef, sndStruct)/]
+	[let sndRefs : Set(Reference) = getMappedReferencesInSamePhysicalStructureForOppositeRole(sndRole, ref.getAbstractPhysicalStructureNotEmbeddedObject())]
+	[generateRowToRelationshipTypeTDOMapper(role, table, joinTable, db, sndRole, sndRefs)/]
+	[/let]
+	
 	return res;
 }[else];[/if]
 [/let]
