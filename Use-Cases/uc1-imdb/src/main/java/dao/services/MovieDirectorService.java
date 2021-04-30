@@ -27,16 +27,16 @@ public abstract class MovieDirectorService {
 	
 	
 	//join structure
-	// Left side 'movie_id' of reference [has_directed ]
-	public abstract Dataset<MovieTDO> getMovieTDOListDirected_movieInHas_directedInMovieKVFromMovieRedis(Condition<MovieAttribute> condition, MutableBoolean refilterFlag);
+	// Left side 'movie_id' of reference [movie_info ]
+	public abstract Dataset<MovieTDO> getMovieTDOListDirected_movieInMovie_infoInActorCollectionFromIMDB_Mongo(Condition<MovieAttribute> condition, MutableBoolean refilterFlag);
 	
 	
 	
 	
 	
 	//join structure
-	// Left side 'movie_id' of reference [movie_info ]
-	public abstract Dataset<MovieTDO> getMovieTDOListDirected_movieInMovie_infoInActorCollectionFromIMDB_Mongo(Condition<MovieAttribute> condition, MutableBoolean refilterFlag);
+	// Left side 'movie_id' of reference [has_directed ]
+	public abstract Dataset<MovieTDO> getMovieTDOListDirected_movieInHas_directedInMovieKVFromMovieRedis(Condition<MovieAttribute> condition, MutableBoolean refilterFlag);
 	
 	
 	

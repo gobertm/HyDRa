@@ -105,6 +105,7 @@ public abstract class MovieService {
 								.withColumnRenamed("runtimeMinutes", "runtimeMinutes_1")
 								.withColumnRenamed("averageRating", "averageRating_1")
 								.withColumnRenamed("numVotes", "numVotes_1")
+								.withColumnRenamed("logEvents", "logEvents_1")
 							, seq, "fullouter");
 			for(int i = 2; i < datasets.size(); i++) {
 				res = res.join(datasets.get(i)
@@ -115,6 +116,7 @@ public abstract class MovieService {
 								.withColumnRenamed("runtimeMinutes", "runtimeMinutes_" + i)
 								.withColumnRenamed("averageRating", "averageRating_" + i)
 								.withColumnRenamed("numVotes", "numVotes_" + i)
+								.withColumnRenamed("logEvents", "logEvents_" + i)
 							, seq, "fullouter");
 			} 
 			d = res.map((MapFunction<Row, Movie>) r -> {
@@ -221,6 +223,21 @@ public abstract class MovieService {
 						}
 					}
 					movie_res.setNumVotes(firstNotNull_numVotes);
+					
+					scala.collection.mutable.WrappedArray<String> logEvents = r.getAs("logEvents");
+					if(logEvents != null)
+						for (int i = 0; i < logEvents.size(); i++){
+							movie_res.addLogEvent(logEvents.apply(i));
+						}
+		
+					for (int i = 1; i < datasets.size(); i++) {
+						logEvents = r.getAs("logEvents_" + i);
+						if(logEvents != null)
+						for (int j = 0; j < logEvents.size(); j++){
+							movie_res.addLogEvent(logEvents.apply(j));
+						}
+					}
+					
 					return movie_res;
 				}, Encoders.bean(Movie.class));
 		}

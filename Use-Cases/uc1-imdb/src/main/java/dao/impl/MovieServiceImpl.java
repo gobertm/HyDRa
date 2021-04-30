@@ -70,7 +70,7 @@ public class MovieServiceImpl extends MovieService {
 					pattern = Pattern.compile("\\*");
 			        match = pattern.matcher(finalKeypattern);
 			        if(match.results().count()==1){
-						movie_res.setId(key);
+						movie_res.setId(key == null ? null : key);
 					}else{
 						regex = finalKeypattern.replaceAll("\\*","(.*)");
 						groupindex = fieldsListInKey.indexOf("id")+1;
@@ -87,22 +87,22 @@ public class MovieServiceImpl extends MovieService {
 							logger.warn("Cannot retrieve value for Movieid attribute stored in db myredis. Probably due to an ambiguous regex.");
 							movie_res.addLogEvent("Cannot retrieve value for Movie.id attribute stored in db myredis. Probably due to an ambiguous regex.");
 						}
-						movie_res.setId(id);
+						movie_res.setId(id == null ? null : id);
 					}
 					// attribute [Movie.PrimaryTitle]
-					String primaryTitle = r.getAs("title")==null ? null : r.getAs("title");
+					String primaryTitle = r.getAs("title") == null ? null : r.getAs("title");
 					movie_res.setPrimaryTitle(primaryTitle);
 					// attribute [Movie.OriginalTitle]
-					String originalTitle = r.getAs("originalTitle")==null ? null : r.getAs("originalTitle");
+					String originalTitle = r.getAs("originalTitle") == null ? null : r.getAs("originalTitle");
 					movie_res.setOriginalTitle(originalTitle);
 					// attribute [Movie.IsAdult]
-					Boolean isAdult = r.getAs("isAdult")==null ? null : Boolean.parseBoolean(r.getAs("isAdult"));
+					Boolean isAdult = r.getAs("isAdult") == null ? null : Boolean.parseBoolean(r.getAs("isAdult"));
 					movie_res.setIsAdult(isAdult);
 					// attribute [Movie.StartYear]
-					Integer startYear = r.getAs("startYear")==null ? null : Integer.parseInt(r.getAs("startYear"));
+					Integer startYear = r.getAs("startYear") == null ? null : Integer.parseInt(r.getAs("startYear"));
 					movie_res.setStartYear(startYear);
 					// attribute [Movie.RuntimeMinutes]
-					Integer runtimeMinutes = r.getAs("runtimeMinutes")==null ? null : Integer.parseInt(r.getAs("runtimeMinutes"));
+					Integer runtimeMinutes = r.getAs("runtimeMinutes") == null ? null : Integer.parseInt(r.getAs("runtimeMinutes"));
 					movie_res.setRuntimeMinutes(runtimeMinutes);
 	
 						return movie_res;
@@ -320,7 +320,7 @@ public class MovieServiceImpl extends MovieService {
 								matches = m.find();
 								if(matches) {
 									String averageRating = m.group(groupIndex.intValue());
-									movie2.setAverageRating(averageRating);
+									movie2.setAverageRating(averageRating == null ? null : averageRating);
 									toAdd2 = true;
 								} else {
 									throw new Exception("Cannot retrieve value for Movie.averageRating attribute stored in db mymongo. Probably due to an ambiguous regex.");
@@ -412,22 +412,6 @@ public class MovieServiceImpl extends MovieService {
 	
 		//join between 2 SQL tables and a non-relational structure
 		director_refilter = new MutableBoolean(false);
-		Dataset<MovieDirectorTDO> res_movieDirector_directed_by_has_directed = movieDirectorService.getMovieDirectorTDOListIndirectorTableAnddirectedFrommydb(director_condition, director_refilter);
-		if(director_refilter.booleanValue()) {
-				joinCondition = null;
-				joinCondition = res_movieDirector_directed_by_has_directed.col("director.id").equalTo(all.col("id"));
-				res_movieDirector_directed_by_has_directed = res_movieDirector_directed_by_has_directed.as("A").join(all, joinCondition).select("A.*").as(Encoders.bean(MovieDirectorTDO.class));
-		} 
-		Dataset<MovieTDO> res_has_directed_directed_by = movieDirectorService.getMovieTDOListDirected_movieInHas_directedInMovieKVFromMovieRedis(directed_movie_condition, directed_movie_refilter);
-		Dataset<Row> res_row_directed_by_has_directed = res_movieDirector_directed_by_has_directed.join(res_has_directed_directed_by.withColumnRenamed("logEvents", "movieDirector_logEvents"),
-			res_has_directed_directed_by.col("myRelSchema_directed_has_directed_id").equalTo(res_movieDirector_directed_by_has_directed.col("myRelSchema_directed_has_directed_movie_id")));
-		Dataset<Movie> res_Movie_has_directed = res_row_directed_by_has_directed.as(Encoders.bean(Movie.class));
-		datasetsPOJO.add(res_Movie_has_directed.dropDuplicates(new String[] {"id"}));	
-		
-		// join physical structure
-	
-		//join between 2 SQL tables and a non-relational structure
-		director_refilter = new MutableBoolean(false);
 		Dataset<MovieDirectorTDO> res_movieDirector_directed_by_movie_info = movieDirectorService.getMovieDirectorTDOListIndirectorTableAnddirectedFrommydb(director_condition, director_refilter);
 		if(director_refilter.booleanValue()) {
 				joinCondition = null;
@@ -439,6 +423,22 @@ public class MovieServiceImpl extends MovieService {
 			res_movie_info_directed_by.col("myRelSchema_directed_movie_info_id").equalTo(res_movieDirector_directed_by_movie_info.col("myRelSchema_directed_movie_info_movie_id")));
 		Dataset<Movie> res_Movie_movie_info = res_row_directed_by_movie_info.as(Encoders.bean(Movie.class));
 		datasetsPOJO.add(res_Movie_movie_info.dropDuplicates(new String[] {"id"}));	
+		
+		// join physical structure
+	
+		//join between 2 SQL tables and a non-relational structure
+		director_refilter = new MutableBoolean(false);
+		Dataset<MovieDirectorTDO> res_movieDirector_directed_by_has_directed = movieDirectorService.getMovieDirectorTDOListIndirectorTableAnddirectedFrommydb(director_condition, director_refilter);
+		if(director_refilter.booleanValue()) {
+				joinCondition = null;
+				joinCondition = res_movieDirector_directed_by_has_directed.col("director.id").equalTo(all.col("id"));
+				res_movieDirector_directed_by_has_directed = res_movieDirector_directed_by_has_directed.as("A").join(all, joinCondition).select("A.*").as(Encoders.bean(MovieDirectorTDO.class));
+		} 
+		Dataset<MovieTDO> res_has_directed_directed_by = movieDirectorService.getMovieTDOListDirected_movieInHas_directedInMovieKVFromMovieRedis(directed_movie_condition, directed_movie_refilter);
+		Dataset<Row> res_row_directed_by_has_directed = res_movieDirector_directed_by_has_directed.join(res_has_directed_directed_by.withColumnRenamed("logEvents", "movieDirector_logEvents"),
+			res_has_directed_directed_by.col("myRelSchema_directed_has_directed_id").equalTo(res_movieDirector_directed_by_has_directed.col("myRelSchema_directed_has_directed_movie_id")));
+		Dataset<Movie> res_Movie_has_directed = res_row_directed_by_has_directed.as(Encoders.bean(Movie.class));
+		datasetsPOJO.add(res_Movie_has_directed.dropDuplicates(new String[] {"id"}));	
 		
 		
 		

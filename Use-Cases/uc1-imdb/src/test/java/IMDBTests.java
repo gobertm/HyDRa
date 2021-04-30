@@ -12,6 +12,7 @@ import pojo.Director;
 import pojo.Movie;
 
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 public class IMDBTests {
@@ -27,12 +28,12 @@ public class IMDBTests {
     public void testGetAllMovies() {
         // All movie info found in all databases with Movies (Redis and Mongo),
         movieDataset = movieService.getMovieList(null);
-        movieDataset.show();
+        movieDataset.show(false);
         // Redis contains only 2010 movies and is the only database containing certain attributes (originalTitle, isAdult, runtimeMinutes, startYear)
         // Performs a conceptual join and an entity reconstruction.
         Condition movieCondition = Condition.simple(MovieAttribute.startYear, Operator.EQUALS, 2010);
         movieDataset = movieService.getMovieList(movieCondition);
-        movieDataset.show();
+        movieDataset.show(false);
     }
     
     @Test
@@ -48,9 +49,10 @@ public class IMDBTests {
 //        movies.show();
         Set<Actor> actorSet = new HashSet<>();
         movies.collectAsList().forEach(m -> {
-            m._setCharacterList(actorService.getActorList(Actor.movieActor.character,m).collectAsList());
-            actorSet.addAll(m._getCharacterList());
+        	List<Actor> actors = actorService.getActorList(Actor.movieActor.character,m).collectAsList(); 
+            actorSet.addAll(actors);
         });
+        actorSet.forEach(System.out::println);
     }
 
 }

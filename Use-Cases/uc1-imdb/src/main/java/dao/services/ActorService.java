@@ -93,12 +93,14 @@ public abstract class ActorService {
 								.withColumnRenamed("fullName", "fullName_1")
 								.withColumnRenamed("yearOfBirth", "yearOfBirth_1")
 								.withColumnRenamed("yearOfDeath", "yearOfDeath_1")
+								.withColumnRenamed("logEvents", "logEvents_1")
 							, seq, "fullouter");
 			for(int i = 2; i < datasets.size(); i++) {
 				res = res.join(datasets.get(i)
 								.withColumnRenamed("fullName", "fullName_" + i)
 								.withColumnRenamed("yearOfBirth", "yearOfBirth_" + i)
 								.withColumnRenamed("yearOfDeath", "yearOfDeath_" + i)
+								.withColumnRenamed("logEvents", "logEvents_" + i)
 							, seq, "fullouter");
 			} 
 			d = res.map((MapFunction<Row, Actor>) r -> {
@@ -149,6 +151,21 @@ public abstract class ActorService {
 						}
 					}
 					actor_res.setYearOfDeath(firstNotNull_yearOfDeath);
+					
+					scala.collection.mutable.WrappedArray<String> logEvents = r.getAs("logEvents");
+					if(logEvents != null)
+						for (int i = 0; i < logEvents.size(); i++){
+							actor_res.addLogEvent(logEvents.apply(i));
+						}
+		
+					for (int i = 1; i < datasets.size(); i++) {
+						logEvents = r.getAs("logEvents_" + i);
+						if(logEvents != null)
+						for (int j = 0; j < logEvents.size(); j++){
+							actor_res.addLogEvent(logEvents.apply(j));
+						}
+					}
+					
 					return actor_res;
 				}, Encoders.bean(Actor.class));
 		}

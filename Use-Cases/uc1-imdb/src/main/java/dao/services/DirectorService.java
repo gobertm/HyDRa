@@ -94,6 +94,7 @@ public abstract class DirectorService {
 								.withColumnRenamed("lastName", "lastName_1")
 								.withColumnRenamed("yearOfBirth", "yearOfBirth_1")
 								.withColumnRenamed("yearOfDeath", "yearOfDeath_1")
+								.withColumnRenamed("logEvents", "logEvents_1")
 							, seq, "fullouter");
 			for(int i = 2; i < datasets.size(); i++) {
 				res = res.join(datasets.get(i)
@@ -101,6 +102,7 @@ public abstract class DirectorService {
 								.withColumnRenamed("lastName", "lastName_" + i)
 								.withColumnRenamed("yearOfBirth", "yearOfBirth_" + i)
 								.withColumnRenamed("yearOfDeath", "yearOfDeath_" + i)
+								.withColumnRenamed("logEvents", "logEvents_" + i)
 							, seq, "fullouter");
 			} 
 			d = res.map((MapFunction<Row, Director>) r -> {
@@ -165,6 +167,21 @@ public abstract class DirectorService {
 						}
 					}
 					director_res.setYearOfDeath(firstNotNull_yearOfDeath);
+					
+					scala.collection.mutable.WrappedArray<String> logEvents = r.getAs("logEvents");
+					if(logEvents != null)
+						for (int i = 0; i < logEvents.size(); i++){
+							director_res.addLogEvent(logEvents.apply(i));
+						}
+		
+					for (int i = 1; i < datasets.size(); i++) {
+						logEvents = r.getAs("logEvents_" + i);
+						if(logEvents != null)
+						for (int j = 0; j < logEvents.size(); j++){
+							director_res.addLogEvent(logEvents.apply(j));
+						}
+					}
+					
 					return director_res;
 				}, Encoders.bean(Director.class));
 		}
