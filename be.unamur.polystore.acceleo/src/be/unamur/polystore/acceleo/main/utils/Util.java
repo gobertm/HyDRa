@@ -30,6 +30,9 @@ import be.unamur.polystore.pml.TerminalExpression;
 
 public class Util {
 	
+	public static String ARTIFACTID = "be.unamur.polystore";
+	public static String GROUPID = "example";
+
 	public static String getJavaRegexFromLongField(LongField field) {
 		if (field == null)
 			return null;
@@ -312,6 +315,14 @@ public class Util {
 		
 		return null;
 		
+	}
+	
+	public static String getPomArtifactId() {
+		return ARTIFACTID;
+	}
+	
+	public static String getPomGroupId() {
+		return GROUPID;
 	}
 	
 	
