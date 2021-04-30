@@ -152,7 +152,13 @@ invoke('be.unamur.polystore.acceleo.main.utils.Util', 'getPhysicalFieldAbsoluteP
 
 [query public isRelational(dbType : DatabaseType) : Boolean = dbType = DatabaseType::MARIADB or  dbType = DatabaseType::SQLITE/]
 
+[query public getPomArtifactId() : String =  
+invoke('be.unamur.polystore.acceleo.main.utils.Util', 'getPomArtifactId()', Sequence{})
+/]
 
+[query public getPomGroupId() : String =  
+invoke('be.unamur.polystore.acceleo.main.utils.Util', 'getPomGroupId()', Sequence{})
+/]
 
 
 
