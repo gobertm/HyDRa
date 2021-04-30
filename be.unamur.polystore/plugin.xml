@@ -7,4 +7,8 @@
 			class = "be.unamur.polystore.pml.PmlPackage"
 			genModel = "model/generated/Pml.genmodel" />
 	</extension>
+	<extension point="org.eclipse.core.contenttype.contentTypes">
+		<content-type id="myContentType" name="My Content Type" base-type="org.eclipse.core.runtime.text" priority="high" file-extensions="pml"
+		default-charset="UTF-8"/>
+	</extension>
 </plugin>
