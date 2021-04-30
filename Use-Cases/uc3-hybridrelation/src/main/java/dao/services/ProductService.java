@@ -92,11 +92,13 @@ public abstract class ProductService {
 			Dataset<Row> res = d.join(datasets.get(1)
 								.withColumnRenamed("label", "label_1")
 								.withColumnRenamed("price", "price_1")
+								.withColumnRenamed("logEvents", "logEvents_1")
 							, seq, "fullouter");
 			for(int i = 2; i < datasets.size(); i++) {
 				res = res.join(datasets.get(i)
 								.withColumnRenamed("label", "label_" + i)
 								.withColumnRenamed("price", "price_" + i)
+								.withColumnRenamed("logEvents", "logEvents_" + i)
 							, seq, "fullouter");
 			} 
 			d = res.map((MapFunction<Row, Product>) r -> {
@@ -133,6 +135,21 @@ public abstract class ProductService {
 						}
 					}
 					product_res.setPrice(firstNotNull_price);
+					
+					scala.collection.mutable.WrappedArray<String> logEvents = r.getAs("logEvents");
+					if(logEvents != null)
+						for (int i = 0; i < logEvents.size(); i++){
+							product_res.addLogEvent(logEvents.apply(i));
+						}
+		
+					for (int i = 1; i < datasets.size(); i++) {
+						logEvents = r.getAs("logEvents_" + i);
+						if(logEvents != null)
+						for (int j = 0; j < logEvents.size(); j++){
+							product_res.addLogEvent(logEvents.apply(j));
+						}
+					}
+					
 					return product_res;
 				}, Encoders.bean(Product.class));
 		}

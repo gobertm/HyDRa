@@ -34,71 +34,6 @@ public class ProductServiceImpl extends ProductService {
 	
 	
 	
-	
-	//TODO redis
-	public Dataset<Product> getProductListInKVProdPhotosFromMyredis(conditions.Condition<conditions.ProductAttribute> condition, MutableBoolean refilterFlag){
-		// As we cannot filter on the values in a Redis DB, we always put the refilterflag to true.
-		refilterFlag.setValue(true);
-		// Build the key pattern
-		//  - If the condition attribute is in the key pattern, replace by the value. Only if operator is EQUALS.
-		//  - Replace all other fields of key pattern by a '*' 
-		String keypattern= "";
-		String finalKeypattern;
-		List<String> fieldsListInKey = new ArrayList<>();
-		keypattern=keypattern.concat("PRODUCT:");
-		keypattern=keypattern.concat("*");
-		fieldsListInKey.add("prodID");
-		keypattern=keypattern.concat(":PHOTO");
-			
-		// Find the type of query to perform in order to retrieve a Dataset<Row>
-		// Based on the type of the value. Is a it a simple string or a hash or a list... 
-		Dataset<Row> rows;
-		rows = SparkConnectionMgr.getRowsFromKeyValue("myredis",keypattern);
-		// Transform to POJO. Based on Row containing (String key, String value)
-		finalKeypattern = keypattern;
-		Dataset<Product> res = rows.map((MapFunction<Row, Product>) r -> {
-					Product product_res = new Product();
-					Integer groupindex = null;
-					String regex = null;
-					String value = null;
-					Pattern p, pattern = null;
-					Matcher m, match = null;
-	
-					boolean matches = false;
-					// attribute [Product.Id]
-					// Attribute mapped in a key.
-					String key = r.getAs("key");
-					regex = finalKeypattern.replaceAll("\\*","(.*)");
-					groupindex = fieldsListInKey.indexOf("prodID")+1;
-					if(groupindex==null) {
-						logger.warn("Attribute of 'Product' mapped physical field 'prodID' found in key but can't get index in build keypattern '{}'.", finalKeypattern);
-					}
-					p = Pattern.compile(regex);
-					m = p.matcher(key);
-					matches = m.find();
-					String id = null;
-					if(matches) {
-						id = m.group(groupindex.intValue());
-					} else {
-						logger.warn("Cannot retrieve value for Productid attribute stored in db myredis. Probably due to an ambiguous regex.");
-						product_res.addLogEvent("Cannot retrieve value for Product.id attribute stored in db myredis. Probably due to an ambiguous regex.");
-					}
-					product_res.setId(id == null ? null : id);
-					// attribute [Product.Photo]
-					// Attribute mapped in value part.
-					value = r.getAs("value");
-					String photo = value == null ? null : value;
-					product_res.setPhoto(photo);
-					
-						
-					return product_res;
-				}, Encoders.bean(Product.class));
-		return res;
-	
-		
-	}
-	
-	
 	public static String getBSONMatchQueryInCategoryCollectionFromMymongo2(Condition<ProductAttribute> condition, MutableBoolean refilterFlag) {	
 		String res = null;	
 		if(condition != null) {
@@ -531,6 +466,71 @@ public class ProductServiceImpl extends ProductService {
 	}
 	
 	
+	
+	//TODO redis
+	public Dataset<Product> getProductListInKVProdPhotosFromMyredis(conditions.Condition<conditions.ProductAttribute> condition, MutableBoolean refilterFlag){
+		// As we cannot filter on the values in a Redis DB, we always put the refilterflag to true.
+		refilterFlag.setValue(true);
+		// Build the key pattern
+		//  - If the condition attribute is in the key pattern, replace by the value. Only if operator is EQUALS.
+		//  - Replace all other fields of key pattern by a '*' 
+		String keypattern= "";
+		String finalKeypattern;
+		List<String> fieldsListInKey = new ArrayList<>();
+		keypattern=keypattern.concat("PRODUCT:");
+		keypattern=keypattern.concat("*");
+		fieldsListInKey.add("prodID");
+		keypattern=keypattern.concat(":PHOTO");
+			
+		// Find the type of query to perform in order to retrieve a Dataset<Row>
+		// Based on the type of the value. Is a it a simple string or a hash or a list... 
+		Dataset<Row> rows;
+		rows = SparkConnectionMgr.getRowsFromKeyValue("myredis",keypattern);
+		// Transform to POJO. Based on Row containing (String key, String value)
+		finalKeypattern = keypattern;
+		Dataset<Product> res = rows.map((MapFunction<Row, Product>) r -> {
+					Product product_res = new Product();
+					Integer groupindex = null;
+					String regex = null;
+					String value = null;
+					Pattern p, pattern = null;
+					Matcher m, match = null;
+	
+					boolean matches = false;
+					// attribute [Product.Id]
+					// Attribute mapped in a key.
+					String key = r.getAs("key");
+					regex = finalKeypattern.replaceAll("\\*","(.*)");
+					groupindex = fieldsListInKey.indexOf("prodID")+1;
+					if(groupindex==null) {
+						logger.warn("Attribute of 'Product' mapped physical field 'prodID' found in key but can't get index in build keypattern '{}'.", finalKeypattern);
+					}
+					p = Pattern.compile(regex);
+					m = p.matcher(key);
+					matches = m.find();
+					String id = null;
+					if(matches) {
+						id = m.group(groupindex.intValue());
+					} else {
+						logger.warn("Cannot retrieve value for Productid attribute stored in db myredis. Probably due to an ambiguous regex.");
+						product_res.addLogEvent("Cannot retrieve value for Product.id attribute stored in db myredis. Probably due to an ambiguous regex.");
+					}
+					product_res.setId(id == null ? null : id);
+					// attribute [Product.Photo]
+					// Attribute mapped in value part.
+					value = r.getAs("value");
+					String photo = value == null ? null : value;
+					product_res.setPhoto(photo);
+					
+						
+					return product_res;
+				}, Encoders.bean(Product.class));
+		return res;
+	
+		
+	}
+	
+	
 	// TODO get based on id(s). Ex:public Client getClientById(Long id)
 	
 	public Dataset<Product> getProductListById(String id) {
@@ -566,15 +566,12 @@ public class ProductServiceImpl extends ProductService {
 	}
 	public void insertProduct(Product product){
 		// Insert into all mapped AbstractPhysicalStructure 
-			insertProductInKVProdPhotosFromMyredis(product);
 			insertProductInCategoryCollectionFromMymongo2(product);
 			insertProductInKVProdPriceFromMyredis(product);
 			insertProductInProductCatalogTableFromMyproductdb(product);
+			insertProductInKVProdPhotosFromMyredis(product);
 	}
 	
-	public void insertProductInKVProdPhotosFromMyredis(Product product)	{
-			//other databases to implement
-		}
 	public void insertProductInCategoryCollectionFromMymongo2(Product product){
 		//Read mapping rules and find attributes of the POJO that are mapped to the corresponding AbstractPhysicalStructure
 		// Insert in MongoDB
@@ -585,15 +582,18 @@ public class ProductServiceImpl extends ProductService {
 	public void insertProductInProductCatalogTableFromMyproductdb(Product product){
 		//Read mapping rules and find attributes of the POJO that are mapped to the corresponding AbstractPhysicalStructure
 		// Insert in SQL DB 
-	String query = "INSERT INTO ProductCatalogTable(product_id,europrice,description) VALUES (?,?,?)";
+	String query = "INSERT INTO ProductCatalogTable(europrice,product_id,description) VALUES (?,?,?)";
 	
 	List<Object> inputs = new ArrayList<>();
-	inputs.add(product.getId());
 	inputs.add(product.getPrice());
+	inputs.add(product.getId());
 	inputs.add(product.getDescription());
 	// Get the reference attribute. Either via a TDO Object or using the Pojo reference TODO
 	DBConnectionMgr.getMapDB().get("myproductdb").insertOrUpdateOrDelete(query,inputs);
 	}
+	public void insertProductInKVProdPhotosFromMyredis(Product product)	{
+			//other databases to implement
+		}
 	
 	public void updateProductList(conditions.Condition<conditions.ProductAttribute> condition, conditions.SetClause<conditions.ProductAttribute> set){
 		//TODO

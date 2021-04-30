@@ -93,12 +93,14 @@ public abstract class CustomerService {
 								.withColumnRenamed("firstName", "firstName_1")
 								.withColumnRenamed("lastName", "lastName_1")
 								.withColumnRenamed("address", "address_1")
+								.withColumnRenamed("logEvents", "logEvents_1")
 							, seq, "fullouter");
 			for(int i = 2; i < datasets.size(); i++) {
 				res = res.join(datasets.get(i)
 								.withColumnRenamed("firstName", "firstName_" + i)
 								.withColumnRenamed("lastName", "lastName_" + i)
 								.withColumnRenamed("address", "address_" + i)
+								.withColumnRenamed("logEvents", "logEvents_" + i)
 							, seq, "fullouter");
 			} 
 			d = res.map((MapFunction<Row, Customer>) r -> {
@@ -149,6 +151,21 @@ public abstract class CustomerService {
 						}
 					}
 					customer_res.setAddress(firstNotNull_address);
+					
+					scala.collection.mutable.WrappedArray<String> logEvents = r.getAs("logEvents");
+					if(logEvents != null)
+						for (int i = 0; i < logEvents.size(); i++){
+							customer_res.addLogEvent(logEvents.apply(i));
+						}
+		
+					for (int i = 1; i < datasets.size(); i++) {
+						logEvents = r.getAs("logEvents_" + i);
+						if(logEvents != null)
+						for (int j = 0; j < logEvents.size(); j++){
+							customer_res.addLogEvent(logEvents.apply(j));
+						}
+					}
+					
 					return customer_res;
 				}, Encoders.bean(Customer.class));
 		}

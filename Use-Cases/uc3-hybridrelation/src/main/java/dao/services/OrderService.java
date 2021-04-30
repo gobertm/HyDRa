@@ -101,10 +101,12 @@ public abstract class OrderService {
 			scala.collection.Seq<String> seq = scala.collection.JavaConverters.asScalaIteratorConverter(idFields.iterator()).asScala().toSeq();
 			Dataset<Row> res = d.join(datasets.get(1)
 								.withColumnRenamed("quantity", "quantity_1")
+								.withColumnRenamed("logEvents", "logEvents_1")
 							, seq, "fullouter");
 			for(int i = 2; i < datasets.size(); i++) {
 				res = res.join(datasets.get(i)
 								.withColumnRenamed("quantity", "quantity_" + i)
+								.withColumnRenamed("logEvents", "logEvents_" + i)
 							, seq, "fullouter");
 			} 
 			d = res.map((MapFunction<Row, Order>) r -> {
@@ -127,6 +129,21 @@ public abstract class OrderService {
 						}
 					}
 					order_res.setQuantity(firstNotNull_quantity);
+					
+					scala.collection.mutable.WrappedArray<String> logEvents = r.getAs("logEvents");
+					if(logEvents != null)
+						for (int i = 0; i < logEvents.size(); i++){
+							order_res.addLogEvent(logEvents.apply(i));
+						}
+		
+					for (int i = 1; i < datasets.size(); i++) {
+						logEvents = r.getAs("logEvents_" + i);
+						if(logEvents != null)
+						for (int j = 0; j < logEvents.size(); j++){
+							order_res.addLogEvent(logEvents.apply(j));
+						}
+					}
+					
 					return order_res;
 				}, Encoders.bean(Order.class));
 		}
