@@ -18,3 +18,5 @@ Use-Cases/uc2-datainconsistency/uc2.iml
 Use-Cases/uc3-hybridrelation/uc3.iml
 Use-Cases/uc1-imdb/uc1.iml
 Use-Cases/usecases.iml
+Use-Cases/uc2-datainconsistency/bin/src/main/java/conditions/Condition.class
+Use-Cases/*/bin/*
