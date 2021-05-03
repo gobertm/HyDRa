@@ -30,7 +30,7 @@ physical schemas {
 			columns {
 				product_id,
 				description,
-				europrice : [price]"$"
+				dollarprice : [price]"$"
 			}
 		}
 	}
