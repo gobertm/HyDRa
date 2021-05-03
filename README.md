@@ -8,12 +8,15 @@ HyDRa (Hybrid Data Representation and Access) is a hybrid polystore management f
     -   Help > Install New Software > Add > https://staff.info.unamur.be/gobertm/
 -   Restart Eclipse. (Note that in some cases the API generation need a second Eclipse restart)
 
+![eclipse](Use-Cases/resources/eclipse.PNG)
+
 ## Usage
 -   Create New Maven project or import pre existing ones in [Use-Cases](Use-Cases/) folder.
     -   Please make sure to use Java 14 compiler. Properties > Build path > Select Java 14 JRE. 
     And Properties > Java Compiler > Compiler Compliance Level.
 -   Design HyDRa Polystore schema. Create New File > *.pml file extension.
 -   Generate API Code by right clicking on a .pml file > HyDRa API Generation > Generate HyDRa Conceptual API. Note that if no files are generated it may be necessary to restart Eclipse.
+![Plugin](Use-Cases/resources/ApiPlugin.PNG)
 
 ## Use-Cases 
 
@@ -38,11 +41,11 @@ It is made of three main sections :
 
 HyDRa comes with a conceptual access API code generation.
 A HyDRa polystore schema is the input of our Acceleo code (see [acceleo sources](be.unamur.polystore.parent/be.unamur.polystore.acceleo)) which generates object classes and data manipulation classes.
-![API](Use-Cases/other-models/ApiGeneration.PNG)
-
 Right clicking on .pml HyDRa polystore schema allows the generation.
 
-![Plugin](Use-Cases/other-models/ApiPlugin.PNG)
+![API](Use-Cases/resources/ApiGeneration.PNG)
+
+
 
 
 
