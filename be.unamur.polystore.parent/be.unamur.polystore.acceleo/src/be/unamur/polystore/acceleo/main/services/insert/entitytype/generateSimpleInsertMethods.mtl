@@ -1,0 +1,36 @@
+[comment encoding = UTF-8 /]
+[module generateSimpleInsertMethods('http://www.unamur.be/polystore/Pml')]
+[import be::unamur::polystore::acceleo::main::util /]
+[import be::unamur::polystore::acceleo::main::mappingrules::util /]
+[import be::unamur::polystore::acceleo::main::impl::insert::entitytype::generateSimpleInsertMethodsImpl /]
+
+[template public generateSimpleInsertMethods(entityType: EntityType, conceptualSchema: ConceptualSchema, override: Boolean)]
+public [if (override = false)]abstract [/if]void insert[entityType.name.toUpperFirst() /]AndLinkedItems([entityType.name.toUpperFirst() /] [entityType.name.toLowerFirst() /])[if (override = false)];[else][implMethod1(entityType, conceptualSchema) /][/if]
+[if (getMandatoryRoles(entityType, conceptualSchema)->size() = 0)]
+public [if (override = false)]abstract [/if]void insert[entityType.name.toUpperFirst() /]([entityType.name.toUpperFirst() /] [entityType.name.toLowerFirst() /])[if (override = false)];[else][insertPOJOImpl(entityType, conceptualSchema) /][/if]
+[elseif (getOppositeMandatoryRoles(entityType, conceptualSchema)->size() = 0)]
+public [if (override = false)]abstract [/if]void insert[entityType.name.toUpperFirst() /](
+	[entityType.name.toUpperFirst() /] [entityType.name.toLowerFirst() /][for (opp: Role | getRolesOppositeToMandatoryEntityRole(entityType, conceptualSchema))],
+	pojo.[opp.entity.name.toUpperFirst() /] persistent[getRelationShipType(opp).name.toUpperFirst()/][opp.name.toUpperFirst()/][/for][for (attr: Attribute | getAttributesFromMandatoryRoles(entityType, conceptualSchema))],
+	[generateJavaType(attr.type)/] [getRelationshipType(attr).name /]_[attr.name /]
+	[/for]
+)[if (override = false)];[else][implMethod3(entityType, conceptualSchema) /][/if]
+[/if]
+
+[comment insert In single database /]
+[for (struct: AbstractPhysicalStructure | getConcernedPhysicalStructures(entityType, entityType.ancestors(Domainmodel)->first()))]
+[if (struct.oclIsTypeOf(pml::EmbeddedObject) = false)]
+[for (db: Database | getConcernedDatabases(struct, entityType.ancestors(Domainmodel)->first()))]
+public [if (override = false)]abstract [/if]void insert[entityType.name.toUpperFirst() /]In[struct.name.toUpperFirst()/]From[db.name.toUpperFirst() /]([entityType.name.toUpperFirst()/] [entityType.name.toLowerFirst()/])[if (override = false)]; [else]
+[if (override = true and (db.dbType = pml::DatabaseType::MARIADB or db.dbType = pml::DatabaseType::SQLITE))][insertInSQLDBImpl(entityType, struct, db)/]
+[elseif (override = true and db.dbType = pml::DatabaseType::MONGODB) ][insertInMongoDBImpl(entityType, struct, db) /]
+[else]
+	{
+		//other databases to implement
+	}
+[/if] 
+[/if]
+[/for]
+[/if]
+[/for]
+[/template]

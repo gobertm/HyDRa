@@ -1,0 +1,577 @@
+[comment encoding = UTF-8 /]
+[module generateGenericClasses('http://www.unamur.be/polystore/Pml')]
+[import be::unamur::polystore::acceleo::main::util /]
+[import be::unamur::polystore::acceleo::main::generatePomFile /]
+
+[template public generateGenericClasses(conceptualSchema: ConceptualSchema)]
+[generateUtilClass() /]
+[generateLoadingClass() /]
+[generateConditions(conceptualSchema) /]
+[generateLog4JConfFile() /]
+[generatePomFile(conceptualSchema) /]
+[generateExceptions()/]
+[/template]
+
+
+[template public generateUtilClass()]
+[file ('src/main/java/util/Util.java', false, 'UTF-8')]
+package util;
+
+public class Util {
+	
+	/**
+	Les prochaines methodes transformXXXValue ont pour but de transformer 
+	l'object de la condition dans un format String conforme � la techno cible
+	ex: un boolean doit-il etre traduit en true ou 1?
+	ex2: une date, comment la formatter? etc.
+	Cela dependra du type de la valeur ainsi que du backend cible
+	**/
+	public static String transformSQLValue(Object o) {
+		if(o == null)
+			return null;
+
+		//TODO comportement different en fct des types de donnees(ex: dates et leur format)
+		return o.toString();
+	}
+
+	public static String transformBSONValue(Object o) {
+			if(o == null)
+				return null;
+	
+			//TODO comportement different en fct des types de donnees (ex: dates et leur format)
+			return o.toString();
+	}
+
+	public static String escapeReservedCharSQL(String v) {
+		if(v == null)
+			return null;
+		//TODO other reserved char in regex sql
+		return v.replaceAll("_", "\\\\\\\\_").replaceAll("%", "\\\\\\\\%");
+	}
+
+	public static String escapeReservedRegexMongo(String v) {
+		if(v == null)
+			return null;
+		//TODO https://perldoc.perl.org/perlre
+		return v.replaceAll("\\*", "\\\\\\\\*").replaceAll("\\^", "\\\\\\\\^").replaceAll("\\$", "\\\\\\\\\\$");
+	}
+
+	public static String escapeQuote(String s) {
+		if(s == null)
+			return null;
+		return s.replaceAll("'", "\\\\\\\\'");
+	}
+
+	
+	public static String getDelimitedMongoValue(Class cl, String value) {
+		if(value == null)
+			return null;
+
+		if(cl == String.class)
+			return "'" + value.replaceAll("'","\\\\\\'") + "'";
+
+		//TODO handle the other special data types, e.g., Byte, Date, ...
+		return value;
+		
+	}
+
+}
+[/file]
+[/template]
+
+
+[template public generateIPojo()]
+[file ('src/main/java/pojo/IPojo.java', false, 'UTF-8')]
+package pojo;
+
+public interface IPojo {}
+[/file]
+[/template]
+
+[template public generateLoggingPojo()]
+[file ('src/main/java/pojo/LoggingPojo.java', false, 'UTF-8')]
+package pojo;
+import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.List;
+
+public abstract class LoggingPojo implements Serializable, Cloneable, IPojo {
+	protected List<String> logEvents = new ArrayList<String>();
+
+	public List<String> getLogEvents() {
+		return this.logEvents;
+	}
+
+	public void setLogEvents(List<String> logEvents) {
+		this.logEvents = logEvents;
+	}
+
+	public void addLogEvent(String logEvent) {
+		this.logEvents.add(logEvent);
+	}
+}
+[/file]
+[/template]
+
+
+[template public generateLoadingClass()]
+[file ('src/main/java/loading/Loading.java', false, 'UTF-8')]
+package loading;
+public enum Loading {
+	EAGER, LAZY
+}
+[/file]
+[/template]
+
+[template public generateConditions(conceptualSchema : ConceptualSchema)]
+[file ('src/main/java/conditions/Condition.java', false, 'UTF-8')]
+package conditions;
+
+import pojo.IPojo;
+import java.io.Serializable;
+
+public abstract class Condition<E> implements Serializable {
+
+	public static <E> SimpleCondition<E> simple(E attr, Operator op, Object value) {
+		return new SimpleCondition<E>(attr, op, value);
+	}
+
+	public static <E> AndCondition<E> and(Condition<E> left, Condition<E> right) {
+		return new AndCondition<E>(left, right);
+	}
+	
+	public static <E> OrCondition<E> or(Condition<E> left, Condition<E> right) {
+		return new OrCondition<E>(left, right);
+	}
+
+	public abstract Class<E> eval() throws Exception;
+
+	public abstract boolean evaluate(IPojo obj);
+}
+[/file]
+
+[file ('src/main/java/conditions/AndCondition.java', false, 'UTF-8')]
+package conditions;
+
+import pojo.IPojo;
+
+public class AndCondition<E> extends Condition<E> {
+
+	private Condition<E> leftCondition;
+	private Condition<E> rightCondition;
+
+	public AndCondition(Condition<E> leftCondition, Condition<E> rightCondition) {
+		setLeftCondition(leftCondition);
+		setRightCondition(rightCondition);
+	}
+
+	public Condition<E> getLeftCondition() {
+		return this.leftCondition;
+	}
+
+	public void setLeftCondition(Condition<E> leftCondition) {
+		this.leftCondition = leftCondition;
+	}
+
+	public Condition<E> getRightCondition() {
+		return this.rightCondition;
+	}
+
+	public void setRightCondition(Condition<E> rightCondition) {
+		this.rightCondition = rightCondition;
+	}
+
+	@Override
+	public Class<E> eval() throws Exception {
+		Class<E> cl1 = leftCondition.eval();
+		Class<E> cl2 = rightCondition.eval();
+
+		if(cl1 != cl2)
+			throw new Exception("This condition is defined on more than one POJO class: " + cl1 + " and " + cl2);
+		return cl1;
+	}	
+
+	@Override
+	public boolean evaluate(IPojo o) {
+		boolean res = true;
+		if(getLeftCondition() != null)
+			res = getLeftCondition().evaluate(o);
+		if(getRightCondition() != null)
+			res = res && getRightCondition().evaluate(o);
+		return res;
+	}
+}
+[/file]
+
+[file ('src/main/java/conditions/OrCondition.java', false, 'UTF-8')]
+package conditions;
+
+import pojo.IPojo;
+
+public class OrCondition<E> extends Condition<E> {
+
+	private Condition<E> leftCondition;
+	private Condition<E> rightCondition;
+
+	public OrCondition(Condition<E> leftCondition, Condition<E> rightCondition) {
+		setLeftCondition(leftCondition);
+		setRightCondition(rightCondition);
+	}
+
+	public Condition<E> getLeftCondition() {
+		return this.leftCondition;
+	}
+
+	public void setLeftCondition(Condition<E> leftCondition) {
+		this.leftCondition = leftCondition;
+	}
+
+	public Condition<E> getRightCondition() {
+		return this.rightCondition;
+	}
+
+	public void setRightCondition(Condition<E> rightCondition) {
+		this.rightCondition = rightCondition;
+	}
+
+	@Override
+	public Class<E> eval() throws Exception {
+		Class<E> cl1 = leftCondition.eval();
+		Class<E> cl2 = rightCondition.eval();
+
+		if(cl1 != cl2)
+			throw new Exception("This condition is defined on more than one POJO class: " + cl1 + " and " + cl2);
+		return cl1;
+	}
+
+	@Override
+	public boolean evaluate(IPojo o) {
+		if(getLeftCondition() == null && getRightCondition() == null)
+			return true;
+		boolean res = false;
+		if(getLeftCondition() != null)
+			res = getLeftCondition().evaluate(o);
+		if(getRightCondition() != null)
+			res = res || getRightCondition().evaluate(o);
+		return res;
+	}
+}
+[/file]
+
+[file ('src/main/java/conditions/SimpleCondition.java', false, 'UTF-8')]
+package conditions;
+
+import pojo.*;
+
+public class SimpleCondition<E> extends Condition<E> {
+
+	private E attribute;
+	private Operator operator;
+	private Object value;
+
+	public SimpleCondition(E attribute, Operator operator, Object value) {
+		setAttribute(attribute);
+		setOperator(operator);
+		setValue(value);
+	}
+
+	public E getAttribute() {
+		return this.attribute;
+	}
+
+	public void setAttribute(E attribute) {
+		this.attribute = attribute;
+	}
+
+	public Operator getOperator() {
+		return this.operator;
+	}
+
+	public void setOperator(Operator operator) {
+		this.operator = operator;
+	}
+
+	public Object getValue() {
+		return this.value;
+	}
+
+	public void setValue(Object value) {
+		this.value = value;
+	}
+
+	@Override
+	public Class<E> eval() throws Exception {
+		if(getOperator() == null)
+			throw new Exception("You cannot specify a NULL operator in a simple condition");
+		if(getValue() == null && operator != Operator.EQUALS && operator != Operator.NOT_EQUALS)
+			throw new Exception("You cannot specify a NULL value with this operator");
+
+		return (Class<E>) attribute.getClass();
+	}
+
+	@Override
+	public boolean evaluate(IPojo obj) {
+		[for (ent : EntityType | conceptualSchema.entities)]
+		if(obj instanceof [ent.name.toUpperFirst() /])
+			return evaluate[ent.name.toUpperFirst() /](([ent.name.toUpperFirst() /]) obj);
+		[/for]
+		[for (rel : RelationshipType | conceptualSchema.relationships)][if (rel.attributes->size() > 0)]
+		if(obj instanceof [rel.name.toUpperFirst() /])
+			return evaluate[rel.name.toUpperFirst() /](([rel.name.toUpperFirst() /]) obj);
+		[/if][/for]
+		return true;
+	}
+
+
+	[for (ent : EntityType | conceptualSchema.entities)]
+	private boolean evaluate[ent.name.toUpperFirst() /]([ent.name.toUpperFirst() /] obj) {
+		if(obj == null)
+			return false;
+		if(this.operator == null)
+			return true;
+
+		[ent.name.toUpperFirst() /]Attribute attr = ([ent.name.toUpperFirst() /]Attribute) this.attribute;
+		Object objectValue = null;
+
+		[for (attr : Attribute | ent.attributes)]
+		if(attr == [ent.name.toUpperFirst() /]Attribute.[attr.name /])
+			objectValue = obj.get[attr.name.toUpperFirst() /]();
+		[/for]
+
+		return operator.evaluate(objectValue, this.getValue());
+	}
+	[/for]
+	[for (rel : RelationshipType | conceptualSchema.relationships)][if (rel.attributes->size() > 0)]
+		private boolean evaluate[rel.name.toUpperFirst() /]([rel.name.toUpperFirst() /] obj) {
+		if(obj == null)
+			return false;
+		if(this.operator == null)
+			return true;
+
+		[rel.name.toUpperFirst() /]Attribute attr = ([rel.name.toUpperFirst() /]Attribute) this.attribute;
+		Object objectValue = null;
+
+		[for (attr : Attribute | rel.attributes)]
+		if(attr == [rel.name.toUpperFirst() /]Attribute.[attr.name /])
+			objectValue = obj.get[attr.name.toUpperFirst() /]();
+		[/for]
+
+		return operator.evaluate(objectValue, this.getValue());
+	}
+	[/if][/for]
+
+	
+}
+[/file]
+
+[file ('src/main/java/conditions/SetClause.java', false, 'UTF-8')]
+package conditions;
+
+public class SetClause<E> {
+
+	private java.util.Map<E, Object> sets = new java.util.HashMap<E, Object>();
+
+	public void  set(E attribute, Object value) {
+		sets.put(attribute, value);
+	}
+
+	public void reset() {
+		sets = new java.util.HashMap<E, Object>();
+	}
+
+	public Class<E> eval() throws Exception {
+		Class cl1 = null;
+		for(E attr: sets.keySet()) {
+			Class cl2 = attr.getClass();
+			if(cl1 != null && cl1 != cl2)
+				throw new Exception("This set clause is defined on more than one POJO class: " + cl1+ " and " + cl2);
+		}
+
+		return cl1;
+	}
+}
+[/file]
+
+[file ('src/main/java/conditions/Operator.java', false, 'UTF-8')]
+package conditions;
+
+public enum Operator {
+	EQUALS, NOT_EQUALS, GT, GTE, LT, LTE, CONTAINS/**, START_WITH, END_WITH**/;
+	
+	public boolean evaluate(Object objectValue, Object testValue) {
+			if(this == Operator.EQUALS) {
+				if(testValue == null && objectValue!= null)
+					return false;
+				if(testValue != null && objectValue == null)
+					return false;	
+				return testValue.equals(objectValue);
+			}
+			if(this == Operator.NOT_EQUALS) {
+				if(testValue == null && objectValue!= null)
+					return true;
+				if(testValue != null && objectValue == null)
+					return true;	
+				return !testValue.equals(objectValue);
+			}
+
+			if(testValue == null && objectValue == null) {
+				if(this == Operator.GTE || this == Operator.LTE || this == Operator.CONTAINS)
+					return true;
+				return false;
+			}
+			
+			if(objectValue == null)
+				return false;
+
+			if(this == Operator.GT) {
+				return ((Comparable) testValue).compareTo(objectValue) < 0;
+			}
+			if(this == Operator.GTE) {
+				return ((Comparable) testValue).compareTo(objectValue) <= 0;
+			}
+			if(this == Operator.LT) {
+				return ((Comparable) testValue).compareTo(objectValue) > 0;
+			}
+			if(this == Operator.LTE)
+				return ((Comparable) testValue).compareTo(objectValue) >= 0;
+			if(this == Operator.CONTAINS) {
+				if(objectValue == null)
+					return false;
+				return objectValue.toString().contains(testValue.toString());
+			}
+			
+			return false;
+	}
+
+	public String getSQLOperator() {
+		if(this == EQUALS)
+			return "=";
+		if(this == NOT_EQUALS)
+			return "<>";
+		if(this == GT)
+			return ">";
+		if(this == GTE)
+			return ">=";
+		if(this == LT)
+			return "<";
+		if(this == LTE)
+			return "<=";
+		if(this == CONTAINS)
+			return "LIKE";
+		/**if(this == START_WITH)
+			return "LIKE";
+		if(this == END_WITH)
+			return "LIKE";**/
+		
+		return null;
+	}
+
+	public String getMongoDBOperator() {
+		if(this == EQUALS)
+			return "$eq";
+		if(this == NOT_EQUALS)
+			return "$ne";
+		if(this == GT)
+			return "$gt";
+		if(this == GTE)
+			return "$gte";
+		if(this == LT)
+			return "$lt";
+		if(this == LTE)
+			return "$lte";
+		if(this == CONTAINS)
+			return "$regex";
+		/**if(this == START_WITH)
+			return "LIKE";
+		if(this == END_WITH)
+			return "LIKE";**/
+		
+		return null;
+
+		
+	}
+
+}
+[/file]
+
+[for (ent: EntityType | conceptualSchema.entities)]
+[file ('src/main/java/conditions/' + ent.name.toUpperFirst() + 'Attribute.java', false, 'UTF-8')]
+package conditions;
+
+public enum [ent.name.toUpperFirst() /]Attribute {
+	[for (attr : Attribute | ent.attributes)][if (i > 1)], [/if][attr.name /][/for]
+}
+[/file]
+[/for]
+
+[for (rel: RelationshipType | conceptualSchema.relationships)]
+[file ('src/main/java/conditions/' + rel.name.toUpperFirst() + 'Attribute.java', false, 'UTF-8')]
+package conditions;
+
+public enum [rel.name.toUpperFirst() /]Attribute {
+	[for (attr : Attribute | rel.attributes)][if (i > 1)], [/if][attr.name /][/for]
+}
+[/file]
+[/for]
+
+[/template]
+
+[template private generateLog4JConfFile()]
+[file ('src/main/resources/log4j.xml', false, 'UTF-8')]
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE log4j:configuration SYSTEM "log4j.dtd">
+<log4j:configuration debug="true">
+
+	<appender name="console"
+		class="org.apache.log4j.ConsoleAppender">
+		<layout class="org.apache.log4j.PatternLayout">
+			<param name="ConversionPattern"
+				value="%d{yyyy-MM-dd HH:mm:ss} %-5p %c{1}:%L - %m%n" />
+		</layout>
+	</appender>
+
+	<logger name="org.apache.spark">
+        <level value="error" />
+    </logger>
+    <logger name="org.spark-project">
+        <level value="error" />
+    </logger>
+    <logger name="org.apache.hadoop">
+        <level value="error" />
+    </logger>
+    <logger name="io.netty">
+        <level value="error" />
+    </logger>
+    <logger name="org.apache.zookeeper">
+        <level value="error" />
+    </logger>
+   <logger name="org">
+        <level value="error" />
+    </logger>
+	
+	<root>
+		<level value="DEBUG" />
+		<appender-ref ref="console" />
+	</root>
+
+</log4j:configuration>
+[/file]
+[/template]
+
+[template public generateExceptions()]
+	[generateInsertReferenceException()/]
+[/template]
+
+[template public generateInsertReferenceException()]
+[file ('src/main/java/exceptions/InsertReferenceException.java', false, 'UTF-8')]
+package exceptions;
+
+class InsertReferenceException extends Exception{
+
+	InsertReferenceException(String message){
+	super(message);
+	}
+}
+[/file]
+[/template]
+

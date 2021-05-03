@@ -1,0 +1,194 @@
+[comment encoding = UTF-8 /]
+[module generateEntityTypeRelatedClasses('http://www.unamur.be/polystore/Pml')]
+[import be::unamur::polystore::acceleo::main::generateRelationshipTypeClass /]
+[import be::unamur::polystore::acceleo::main::services::generateEntityTypeServices /]
+[import be::unamur::polystore::acceleo::main::impl::generateEntityTypeServicesImpl /]
+[import be::unamur::polystore::acceleo::main::util /]
+[import be::unamur::polystore::acceleo::main::mappingrules::util /]
+
+[template public generateAllLevelsEntityTypeClass(entityType : EntityType, conceptualSchema: ConceptualSchema)]
+[generateEntityTypeServices(entityType, conceptualSchema) /]
+[generateEntityTypeServicesImpl(entityType, conceptualSchema) /]
+[/template]
+
+
+[query public getConcernedRelationshipTypes(entityType : EntityType, conceptualSchema : ConceptualSchema) : Collection(pml::RelationshipType) = 
+	conceptualSchema.relationships->select(rel: RelationshipType | isConcernedByEntity(rel, entityType))
+ /]
+
+
+[query public isConcernedByEntity(rel : RelationshipType, ent : EntityType) : Boolean = 
+	(rel.roles-> select(role: Role | role.entity = ent)) -> size() > 0
+ /]
+
+
+[template public generateEntityTypePojoClass(entityType : EntityType, conceptualSchema: ConceptualSchema)]
+[file ('src/main/java/pojo/' + entityType.name.toUpperFirst().concat('.java'), false, 'UTF-8')]
+package pojo;
+
+public class [entityType.name.toUpperFirst() /] extends LoggingPojo {
+
+	[for (attr: Attribute | entityType.attributes)]
+	private [generateJavaType(attr.type) /] [attr.name /];
+	[/for]
+
+	[for (rel: RelationshipType | getConcernedRelationshipTypes(entityType, conceptualSchema))]
+		[if (rel.roles->size() = 2 and rel.attributes->size() = 0)]
+	public enum [rel.name/] {
+		[for (role : Role | rel.getConcernedRoles(entityType)) separator(', ')][role.name/][/for]
+	}
+		[/if]
+		[for (r : Role | rel.roles) ]
+			[if (r.entity = entityType and isRelationshipTypeComplex(rel))]
+				[if (r.cardinality = pml::Cardinality::ZERO_MANY or r.cardinality = pml::Cardinality::ONE_MANY)]
+	private java.util.List<[rel.name.toUpperFirst() /]> [rel.name/]ListAs[r.name.toUpperFirst()/];
+				[else]
+	private [rel.name.toUpperFirst() /] [rel.name/]As[r.name.toUpperFirst()/];
+				[/if]
+			[else]
+				[if (r.entity = entityType)]
+					[if (r.cardinality = pml::Cardinality::ZERO_MANY or r.cardinality = pml::Cardinality::ONE_MANY)]
+	private java.util.List<[rel.roles->at(i.mod(2) + 1).entity.name.toUpperFirst() /]> [rel.roles->at(i.mod(2) + 1).name /]List;
+					[else]
+	private [rel.roles->at(i.mod(2) + 1).entity.name.toUpperFirst() /] [rel.roles->at(i.mod(2) + 1).name /];
+					[/if] 
+				[/if]
+			[/if]
+		[/for]
+	[/for]
+
+	[comment Empty Constructor /]
+	
+	public [entityType.name.toUpperFirst() /]() {}
+
+	[comment clone function /]
+	@Override
+    public Object clone() throws CloneNotSupportedException {
+        return super.clone();
+    }
+	
+
+	[comment Getter & Setter for attributes /]
+	
+	[for (attr: Attribute | entityType.attributes)]
+	public [generateJavaType(attr.type) /] get[attr.name.toUpperFirst() /]() {
+		return [attr.name /];
+	}
+
+	public void set[attr.name.toUpperFirst() /]([generateJavaType(attr.type) /] [attr.name /]) {
+		this.[attr.name /] = [attr.name /];
+	}
+	[/for]
+
+	[comment Getter & Setter for relationships types /]
+	
+
+	[for (rel: RelationshipType | getConcernedRelationshipTypes(entityType, conceptualSchema))]
+		[for (r: Role | rel.roles) ]
+			[if (r.entity = entityType and isRelationshipTypeComplex(rel))]
+				[if (r.cardinality = pml::Cardinality::ZERO_MANY or r.cardinality = pml::Cardinality::ONE_MANY)]
+	public java.util.List<[rel.name.toUpperFirst() /]> _get[rel.name.toUpperFirst()/]ListAs[r.name.toUpperFirst()/]() {
+		return [rel.name/]ListAs[r.name.toUpperFirst()/];
+	}
+
+	public void _set[rel.name.toUpperFirst()/]ListAs[r.name.toUpperFirst()/](java.util.List<[rel.name.toUpperFirst() /]> [rel.name/]ListAs[r.name.toUpperFirst()/]) {
+		this.[rel.name/]ListAs[r.name.toUpperFirst()/] = [rel.name/]ListAs[r.name.toUpperFirst()/];
+	}
+				[else]
+	public [rel.name.toUpperFirst() /] _get[rel.name.toUpperFirst()/]As[r.name.toUpperFirst()/]() {
+		return [rel.name/]As[r.name.toUpperFirst()/];
+	}
+
+	public void _set[rel.name.toUpperFirst()/]As[r.name.toUpperFirst()/]([rel.name.toUpperFirst() /] [rel.name/]As[r.name.toUpperFirst()/]) {
+		this.[rel.name/]As[r.name.toUpperFirst()/] = [rel.name/]As[r.name.toUpperFirst()/];
+	}
+				[/if]
+			[else]
+				[if (r.entity = entityType)]
+					[if (r.cardinality = pml::Cardinality::ZERO_MANY or r.cardinality = pml::Cardinality::ONE_MANY)]
+	public java.util.List<[rel.roles->at(i.mod(2) + 1).entity.name.toUpperFirst() /]> _get[rel.roles->at(i.mod(2) + 1).name.toUpperFirst() /]List() {
+		return [rel.roles->at(i.mod(2) + 1).name /]List;
+	}
+
+	public void _set[rel.roles->at(i.mod(2) + 1).name.toUpperFirst() /]List(java.util.List<[rel.roles->at(i.mod(2) + 1).entity.name.toUpperFirst() /]> [rel.roles->at(i.mod(2) + 1).name /]List) {
+		this.[rel.roles->at(i.mod(2) + 1).name /]List = [rel.roles->at(i.mod(2) + 1).name /]List;
+	}
+					[else]
+	public [rel.roles->at(i.mod(2) + 1).entity.name.toUpperFirst() /] _get[rel.roles->at(i.mod(2) + 1).name.toUpperFirst() /]() {
+		return [rel.roles->at(i.mod(2) + 1).name /];
+	}
+
+	public void _set[rel.roles->at(i.mod(2) + 1).name.toUpperFirst() /]([rel.roles->at(i.mod(2) + 1).entity.name.toUpperFirst() /] [rel.roles->at(i.mod(2) + 1).name /]) {
+		this.[rel.roles->at(i.mod(2) + 1).name /] = [rel.roles->at(i.mod(2) + 1).name /];
+	}
+					[/if] 
+				[/if]
+			[/if]
+		[/for]
+	[/for]
+}
+[/file]
+
+[/template]
+
+[template public generateEntityTypeTechnicalDataObjectsClass(ent : EntityType, conceptualSchema : ConceptualSchema)]
+[file ('src/main/java/tdo/' + ent.name.toUpperFirst() + 'TDO'.concat('.java'), false, 'UTF-8')]
+package tdo;
+
+import pojo.[ent.name.toUpperFirst() /];
+
+public class [ent.name.toUpperFirst() /]TDO extends [ent.name.toUpperFirst() /] {
+	[for (rel : RelationshipType | conceptualSchema.relationships)]
+	[if (hasEntityTypeInBinarySimpleRelationshipType(rel, ent))]
+	[for (role : Role | rel.roles)]
+	[let role2 : Role = getOppositeRoles(role)->any(true)]
+	[for (ref: Reference | getMappedReferences(role, conceptualSchema.getMappingRules()))]
+	[if (role.entity = ent)]
+	[let fieldsList : Sequence(PhysicalField) = getFields(ref, role, role2)]
+	[for (field : PhysicalField | fieldsList)]
+	private String [getJavaAbsolutePath(ref) /]_[field.getPhysicalName() /];
+	public String get[getJavaAbsolutePath(ref).toUpperFirst() /]_[field.getPhysicalName() /]() {
+		return this.[getJavaAbsolutePath(ref) /]_[field.getPhysicalName() /];
+	}
+
+	public void set[getJavaAbsolutePath(ref).toUpperFirst() /]_[field.getPhysicalName() /]( String [getJavaAbsolutePath(ref) /]_[field.getPhysicalName() /]) {
+		this.[getJavaAbsolutePath(ref) /]_[field.getPhysicalName() /] = [getJavaAbsolutePath(ref) /]_[field.getPhysicalName() /];
+	}
+
+	[/for]
+	[/let]
+	[/if]
+	[if (role2.entity = ent and isHostedInJoinPhysicalStructureServing(role2, ref.getAbstractPhysicalStructureNotEmbeddedObject()) = false)]
+	[for (field : PhysicalField | ref.targetField)]
+	private String [getJavaAbsolutePath(ref) /]_[field.getPhysicalName() /];
+	public String get[getJavaAbsolutePath(ref).toUpperFirst() /]_[field.getPhysicalName() /]() {
+		return this.[getJavaAbsolutePath(ref) /]_[field.getPhysicalName() /];
+	}
+
+	public void set[getJavaAbsolutePath(ref).toUpperFirst() /]_[field.getPhysicalName() /]( String [getJavaAbsolutePath(ref) /]_[field.getPhysicalName() /]) {
+		this.[getJavaAbsolutePath(ref) /]_[field.getPhysicalName() /] = [getJavaAbsolutePath(ref) /]_[field.getPhysicalName() /];
+	}
+
+	[/for]
+	[/if]
+	[/for]
+	[/let]
+	[/for]
+	[/if]
+	[/for]
+}
+[/file]
+[/template]
+
+[query public hasEntityTypeInBinarySimpleRelationshipType(rel : RelationshipType, ent : EntityType) : Boolean =  
+	rel.roles->select(role: Role | role.entity = ent and rel.roles->size() = 2 and rel.attributes->size() = 0)->size() > 0
+/]
+
+[query private getFields(ref: Reference, role1 : Role, role2 : Role) : Sequence(PhysicalField) = 
+	invoke('be.unamur.polystore.acceleo.main.utils.Util', 'getFields(be.unamur.polystore.pml.Reference, java.lang.Boolean)', Sequence{ref, isHostedInJoinPhysicalStructureServing(role2, ref.getAbstractPhysicalStructureNotEmbeddedObject())})
+ /]
+
+
+
+
+

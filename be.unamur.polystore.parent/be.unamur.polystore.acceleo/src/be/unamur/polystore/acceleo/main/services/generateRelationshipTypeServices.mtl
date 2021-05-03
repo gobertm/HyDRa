@@ -1,0 +1,43 @@
+[comment encoding = UTF-8 /]
+[module generateRelationshipTypeServices('http://www.unamur.be/polystore/Pml')]
+[import be::unamur::polystore::acceleo::main::generateRelationshipTypeClass /]
+[import be::unamur::polystore::acceleo::main::util /]
+[import be::unamur::polystore::acceleo::main::services::select::relationshiptype::generateBinaryWithAttributesSelectMethods /]
+[import be::unamur::polystore::acceleo::main::services::select::relationshiptype::generateSelectMethods /]
+[import be::unamur::polystore::acceleo::main::services::insert::relationshiptype::generateInsertMethods /]
+[import be::unamur::polystore::acceleo::main::services::insert::relationshiptype::generateComplexRelationshipTypeInsertMethods /]
+[import be::unamur::polystore::acceleo::main::services::update::relationshiptype::generateUpdateMethods /]
+[import be::unamur::polystore::acceleo::main::services::delete::relationshiptype::generateDeleteMethods /]
+
+[template public generateRelationshipTypeServices(rel : RelationshipType, conceptualSchema: ConceptualSchema)]
+[file ('src/main/java/dao/services/' + rel.name.toUpperFirst() + 'Service'.concat('.java'), false, 'UTF-8')]
+package dao.services;
+
+import org.apache.spark.sql.Dataset;
+import org.apache.spark.sql.Row;
+import conditions.Condition;
+import pojo.[rel.name.toUpperFirst()/];
+[for (role : Role | rel.roles)]
+import tdo.[role.entity.name.toUpperFirst() /]TDO;
+import tdo.[rel.name.toUpperFirst()/]TDO;
+import pojo.[role.entity.name.toUpperFirst() /];
+import conditions.[role.entity.name.toUpperFirst() /]Attribute;
+import org.apache.commons.lang.mutable.MutableBoolean;
+[/for]
+
+
+public abstract class [rel.name.toUpperFirst() + 'Service' /] {
+	[instantiateLogger(rel.name.toUpperFirst() + 'Service') /]
+[comment]	[if (isBinaryWithAttributes(rel))]
+	[generateBinaryWithAttributesSelectMethods(rel) /]
+	[/if]
+	[if (isNAire(rel))]
+	[generateNAireSelectMethods(rel) /]
+	[/if][/comment]
+	[generateSelectMethods(rel, false) /]
+	[generateInsertMethods(rel, false) /]
+	[generateUpdateMethods(rel, false) /]
+	[generateDeleteMethods(rel, false) /]
+}
+[/file]
+[/template]

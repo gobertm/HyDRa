@@ -1,0 +1,266 @@
+[comment encoding = UTF-8 /]
+[module generateSimpleSelectFromGivenRelationalTable('http://www.unamur.be/polystore/Pml')]
+[import be::unamur::polystore::acceleo::main::mappingrules::util /]
+[import be::unamur::polystore::acceleo::main::util /]
+
+[comment get{E}List({E)AttributeCondition /]
+
+[template public generateSimpleSelectFromGivenRelationalTable(rel : RelationshipType, struct: AbstractPhysicalStructure, db : Database)]
+[generateSimpleSelectFromGivenRelationalTable(rel, struct, db, Sequence{}) /]
+[/template]
+
+[template public generateSimpleSelectFromGivenRelationalTable(rel : RelationshipType, struct: AbstractPhysicalStructure, db : Database, references : Sequence(Sequence(OclAny)))]
+[generateSimpleSelectFromGivenRelationalTable(rel.name.toUpperFirst(), rel.attributes, struct, db, references)/]
+[/template]
+
+[template public generateSimpleSelectFromGivenRelationalTable(ent : EntityType, struct: AbstractPhysicalStructure, db : Database)]
+[generateSimpleSelectFromGivenRelationalTable(ent, struct, db, Sequence{}) /]
+[/template]
+
+[template public generateSimpleSelectFromGivenRelationalTable(ent : EntityType, struct: AbstractPhysicalStructure, db : Database, references : Sequence(Sequence(OclAny)))]
+[generateSimpleSelectFromGivenRelationalTable(ent.name.toUpperFirst(), ent.attributes, struct, db, references)/]
+[/template]
+
+
+
+[template public generateSimpleSelectFromGivenRelationalTable(pojoName : String, attributes : Collection(Attribute), struct: AbstractPhysicalStructure, db : Database, references : Sequence(Sequence(OclAny)))]
+
+[comment  select * from Client where (...) /]
+	Pair<String, List<String>> whereClause = [pojoName/]ServiceImpl.getSQLWhereClauseIn[struct.name.toUpperFirst()/]From[db.name.toUpperFirst() /](condition, refilterFlag);
+	String where = whereClause.getKey();
+	List<String> preparedValues = whereClause.getValue();
+	for(String preparedValue : preparedValues) {
+		where = where.replaceFirst("\\?", "'" + Util.escapeQuote(preparedValue) + "'");
+	}
+	
+	Dataset<Row> d = dbconnection.SparkConnectionMgr.getDataset("[db.name /]", "[struct.name/]");
+	if(where != null) {
+		d = d.where(where);
+	}
+
+	Dataset<[pojoName /][if (references->size() > 0)][getTDOLiteral('') /][/if]> res = d.map((MapFunction<Row, [pojoName/][if (references->size() > 0)][getTDOLiteral('') /][/if]>) r -> {
+				[pojoName /][if (references->size() > 0)][getTDOLiteral('') /][/if] [pojoName.toLowerFirst() /]_res = new [pojoName /][if (references->size() > 0)][getTDOLiteral('') /][/if]();
+				Integer groupIndex = null;
+				String regex = null;
+				String value = null;
+				Pattern p = null;
+				Matcher m = null;
+				boolean matches = false;
+				[for (attr : Attribute | attributes)]
+				[let field : PhysicalField = getMappedPhysicalField(attr, struct, db, struct.ancestors(Domainmodel)->first().mappingRules)][if (field <> null)]
+				
+				// attribute [ '[' /][pojoName /].[attr.name.toUpperFirst() /][ ']' /]
+				[if (field.ancestors(LongField) -> size() = 0)]
+				[comment shortField or bracketfield/]
+				[generateJavaType(attr.type)/] [attr.name.toLowerFirst()/] = r.getAs("[getPhysicalName(field) /]");
+				[pojoName.toLowerFirst() /]_res.set[attr.name.toUpperFirst()/]([attr.name.toLowerFirst()/]);
+				[else]
+				[comment LongField /]
+				regex = "[getJavaRegexFromLongField(field.ancestors(LongField) -> first().oclAsType(LongField)) /]";
+				groupIndex = [getPositionInLongField(field, field.ancestors(LongField) -> first().oclAsType(LongField))/];
+				if(groupIndex == null) {
+					logger.warn("Cannot retrieve value for [pojoName /][attr.name /] attribute stored in db [db.name/]. Probably due to an ambiguous regex.");
+					[pojoName.toLowerFirst() /]_res.addLogEvent("Cannot retrieve value for [pojoName /][attr.name /] attribute stored in db [db.name/]. Probably due to an ambiguous regex.");
+				}
+				value = r.getAs("[field.ancestors(LongField) -> first().oclAsType(LongField).physicalName /]");
+				p = Pattern.compile(regex);
+				m = p.matcher(value);
+				matches = m.find();
+				String [attr.name.toLowerFirst()/] = null;
+				if(matches) {
+					[attr.name.toLowerFirst()/] = m.group(groupIndex.intValue());
+				} else {
+					logger.warn("Cannot retrieve value for [pojoName /][attr.name /] attribute stored in db [db.name/]. Probably due to an ambiguous regex.");
+					[pojoName.toLowerFirst() /]_res.addLogEvent("Cannot retrieve value for [pojoName /].[attr.name /] attribute stored in db [db.name/]. Probably due to an ambiguous regex.");
+				}
+				[pojoName.toLowerFirst() /]_res.set[attr.name.toUpperFirst()/]([generateParsingFunctionJavaType(attr.type, attr.name.toLowerFirst())/]);
+				[/if]
+				[/if]
+				[/let]
+				[/for]
+
+				[for (pair : Sequence(OclAny) | references)]
+				[let ref : Reference = pair->at(1)]
+				[let refFields : Sequence(PhysicalField) = pair->at(2)]
+				[for (refField : PhysicalField | refFields)]
+				[comment Generate setter for reference column (only in TDO Object) /]
+				[if (refField.oclIsUndefined() = false)]
+				// Get reference column [ '[' /][refField.getPhysicalName()/] [ ']' /] for reference [ '[' /][ref.name/][ ']' /]
+				[if (refField.ancestors(LongField) -> size() = 0)]
+				[comment shortField or bracketfield/]
+				String [getJavaAbsolutePath(ref) /]_[refField.getPhysicalName() /] = r.getAs("[getPhysicalName(refField) /]") == null ? null : r.getAs("[getPhysicalName(refField) /]").toString();
+				[pojoName.toLowerFirst() /]_res.set[getJavaAbsolutePath(ref).toUpperFirst() /]_[refField.getPhysicalName() /]([getJavaAbsolutePath(ref) /]_[refField.getPhysicalName() /]);
+				[else]
+				[comment LongField /]
+				regex = "[getJavaRegexFromLongField(refField.ancestors(LongField) -> first().oclAsType(LongField)) /]";
+				groupIndex = [getPositionInLongField(refField, refField.ancestors(LongField) -> first().oclAsType(LongField))/];
+				if(groupIndex == null) {
+					logger.warn("Cannot retrieve value for [pojoName /][refField.getPhysicalName() /] attribute stored in db [db.name/]. Probably due to an ambiguous regex.");
+					[pojoName.toLowerFirst() /]_res.addLogEvent("Cannot retrieve value for BLABLABLA. Probably due to an ambiguous regex.");
+				}
+				value = r.getAs("[refField.ancestors(LongField) -> first().oclAsType(LongField).physicalName /]");
+				p = Pattern.compile(regex);
+				m = p.matcher(value);
+				matches = m.find();
+				String [getJavaAbsolutePath(ref) /]_[refField.getPhysicalName() /] = null;
+				if(matches) {
+					[getJavaAbsolutePath(ref) /]_[refField.getPhysicalName() /] = m.group(groupIndex.intValue());
+				} else {
+					logger.warn("Cannot retrieve value for [pojoName/][refField.getPhysicalName() /] attribute stored in db [db.name/]. Probably due to an ambiguous regex.");
+					[pojoName.toLowerFirst() /]_res.addLogEvent("Cannot retrieve value for BLABLABLA. Probably due to an ambiguous regex.");
+				}
+				[pojoName.toLowerFirst() /]_res.set[getJavaAbsolutePath(ref).toUpperFirst() /]_[refField.getPhysicalName() /]([getJavaAbsolutePath(ref) /]_[refField.getPhysicalName() /]);
+				[/if]
+				[/if]
+				[/for]	
+				[/let]
+				[/let]
+				[/for]
+
+
+				return [pojoName.toLowerFirst() /]_res;
+			}, Encoders.bean([pojoName /][if (references->size() > 0)][getTDOLiteral('') /][/if].class));
+
+
+	return res;
+[/template]
+
+
+
+
+
+
+
+
+
+
+
+[comment 'generateGetSQLWhereClauseMethod(ent : EntityType, struct: AbstractPhysicalStructure, db : Database)'
+	Generate a recursive method that based on the argument Condition constructs a Pair containing a 'where' clause statement on the attribute of the condition and using the specified operator, the second argument of the Pair is the values to replace in the where clause.
+	Based on the operator of the condition (CONTAINS) or the Mapped Physical Field (LongField) it may be necessary to modify the value of the condition.
+	/]
+
+[template public generateGetSQLWhereClauseMethod(ent : EntityType, struct: AbstractPhysicalStructure, db : Database)]
+[generateGetSQLWhereClauseMethod(ent.name.toUpperFirst(), ent.attributes, struct, db)/]
+[/template]
+
+[template public generateGetSQLWhereClauseMethod(rel : RelationshipType, struct: AbstractPhysicalStructure, db : Database)]
+[generateGetSQLWhereClauseMethod(rel.name.toUpperFirst(), rel.attributes, struct, db)/]
+[/template]
+
+[template public generateGetSQLWhereClauseMethod(pojoName : String, pojoAttributes : Collection(Attribute), struct: AbstractPhysicalStructure, db : Database)]
+public static Pair<String, List<String>> getSQLWhereClauseIn[struct.name.toUpperFirst()/]From[db.name.toUpperFirst() /](Condition<[pojoName.toUpperFirst() /]Attribute> condition, MutableBoolean refilterFlag) {
+	return getSQLWhereClauseIn[struct.name.toUpperFirst()/]From[db.name.toUpperFirst() /]WithTableAlias(condition, refilterFlag, "");
+}
+
+public static Pair<String, List<String>> getSQLWhereClauseIn[struct.name.toUpperFirst()/]From[db.name.toUpperFirst() /]WithTableAlias(Condition<[pojoName.toUpperFirst() /]Attribute> condition, MutableBoolean refilterFlag, String tableAlias) {
+	String where = null;	
+	List<String> preparedValues = new java.util.ArrayList<String>();
+	if(condition != null) {
+		
+		if(condition instanceof SimpleCondition) {
+			[pojoName.toUpperFirst() /]Attribute attr = ((SimpleCondition<[pojoName /]Attribute>) condition).getAttribute();
+			Operator op = ((SimpleCondition<[pojoName /]Attribute>) condition).getOperator();
+			Object value = ((SimpleCondition<[pojoName /]Attribute>) condition).getValue();
+			if(value != null) {
+				boolean isConditionAttrEncountered = false;
+				[for (attr : Attribute | pojoAttributes)]
+				[let field : PhysicalField = getMappedPhysicalField(attr, struct, db, struct.ancestors(Domainmodel)->first().mappingRules)][if (field <> null)]
+				if(attr == [pojoName.toUpperFirst() /]Attribute.[attr.name /] ) {
+					isConditionAttrEncountered = true;
+					String valueString = Util.transformSQLValue(value);
+					String sqlOp = op.getSQLOperator();
+					[if (field.ancestors(LongField) -> size() = 0)]
+					String preparedValue = valueString;
+					if(op == Operator.CONTAINS && valueString != null) {
+						preparedValue = "%" + Util.escapeReservedCharSQL(valueString)  + "%";
+					}
+					[else]
+					[comment no needs to escape if we do not need to use regex /]
+					String preparedValue = [getPreparedValue(attr, field, field.ancestors(LongField) -> first().oclAsType(LongField), false, false) /];
+					Boolean like_op = false;
+					if(op == Operator.EQUALS && valueString != null && preparedValue.contains("[getPatternOtherValue() /]")) {
+						//ex: @@VAR@@' '@@OTHERVAR@@"=> more than one vars in LongField: we shall use regex
+						like_op = true;
+						sqlOp = "LIKE";
+						preparedValue = [getPreparedValue(attr, field, field.ancestors(LongField) -> first().oclAsType(LongField), true, false) /];
+					} else {
+						if(op == Operator.NOT_EQUALS && valueString != null && preparedValue.contains("[getPatternOtherValue() /]")) {
+							//ex: @@VAR@@' '@@OTHERVAR@@"=> more than one vars in LongField: we shall use regex
+							sqlOp = "NOT LIKE";
+							like_op = true;
+							preparedValue = [getPreparedValue(attr, field, field.ancestors(LongField) -> first().oclAsType(LongField), true, false) /];
+						}
+					}
+					if(op == Operator.CONTAINS && valueString != null) {
+						like_op = true;
+						preparedValue = [getPreparedValue(attr, field, field.ancestors(LongField) -> first().oclAsType(LongField), true, false) /];
+						preparedValue = preparedValue.replaceAll("[getPatternValue() /]", "%[getPatternValue() /]%");
+					}
+					
+					if(like_op)
+						valueString = Util.escapeReservedCharSQL(valueString);
+					preparedValue = preparedValue.replaceAll("[getPatternValue() /]", valueString).replaceAll("[getPatternOtherValue() /]", "%");
+					[/if]
+					
+					where = tableAlias + "[getPhysicalName(field)/] " + sqlOp + " ?";
+					preparedValues.add(preparedValue);
+				}
+				[/if]
+				[/let]
+				[/for]
+				if(!isConditionAttrEncountered) {
+					refilterFlag.setValue(true);
+					where = "1 = 1";
+				}
+			}
+		}
+
+		if(condition instanceof AndCondition) {
+			Pair<String, List<String>> pairLeft = getSQLWhereClauseIn[struct.name.toUpperFirst() /]From[db.name.toUpperFirst() /](((AndCondition) condition).getLeftCondition(), refilterFlag);
+			Pair<String, List<String>> pairRight = getSQLWhereClauseIn[struct.name.toUpperFirst() /]From[db.name.toUpperFirst() /](((AndCondition) condition).getRightCondition(), refilterFlag);
+			String whereLeft = pairLeft.getKey();
+			String whereRight = pairRight.getKey();
+			List<String> leftValues = pairLeft.getValue();
+			List<String> rightValues = pairRight.getValue();
+			if(whereLeft != null || whereRight != null) {
+				if(whereLeft == null)
+					where = whereRight;
+				else
+					if(whereRight == null)
+						where = whereLeft;
+					else
+						where = "(" + whereLeft + " AND " + whereRight + ")";
+				preparedValues.addAll(leftValues);
+				preparedValues.addAll(rightValues);
+			}
+		}
+
+		if(condition instanceof OrCondition) {
+			Pair<String, List<String>> pairLeft = getSQLWhereClauseIn[struct.name.toUpperFirst() /]From[db.name.toUpperFirst() /](((OrCondition) condition).getLeftCondition(), refilterFlag);
+			Pair<String, List<String>> pairRight = getSQLWhereClauseIn[struct.name.toUpperFirst() /]From[db.name.toUpperFirst() /](((OrCondition) condition).getRightCondition(), refilterFlag);
+			String whereLeft = pairLeft.getKey();
+			String whereRight = pairRight.getKey();
+			List<String> leftValues = pairLeft.getValue();
+			List<String> rightValues = pairRight.getValue();
+			if(whereLeft != null || whereRight != null) {
+				if(whereLeft == null)
+					where = whereRight;
+				else
+					if(whereRight == null)
+						where = whereLeft;
+					else
+						where = "(" + whereLeft + " OR " + whereRight + ")";
+				preparedValues.addAll(leftValues);
+				preparedValues.addAll(rightValues);
+			}
+		}
+
+	}
+
+	return new ImmutablePair<String, List<String>>(where, preparedValues);
+}
+[/template]
+
+
+[template public getTDOLiteral(o : OclAny)][if (o.oclIsUndefined() = false)]TDO[/if][/template]

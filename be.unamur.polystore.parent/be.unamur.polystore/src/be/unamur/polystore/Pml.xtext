@@ -1,0 +1,323 @@
+grammar be.unamur.polystore.Pml with org.eclipse.xtext.common.Terminals
+
+generate pml "http://www.unamur.be/polystore/Pml"
+
+Domainmodel:
+    conceptualSchema=ConceptualSchema & physicalSchema=PhysicalSchemas & mappingRules= MappingRules & databases = Databases
+    
+;
+
+ConceptualSchema :
+	'conceptual' 'schema' name=ID '{'
+		(entities+=EntityType)* & (relationships+=RelationshipType)*
+	'}'
+;
+
+EntityType returns EntityType:
+	'entity' 'type' name=ID '{'
+		(attributes+=Attribute (','attributes+=Attribute)*)?
+		(identifier=Identifier)?
+		'}'
+;
+
+Identifier:
+	'identifier' '{'
+		attributes+=[Attribute](',' attributes +=[Attribute])*
+	'}'
+;
+ 
+RelationshipType:
+	'relationship' 'type' name=ID '{'
+	(roles+=Role (','roles+=Role)*)+
+	(','attributes+=Attribute)*
+'}'
+;
+
+Role:
+	name = ID ('['cardinality=Cardinality']') ':' entity=[EntityType]
+;
+
+Attribute:
+	name=ID ':' (type=DataType)
+;
+
+enum Cardinality returns Cardinality:
+				ZERO_ONE = '0-1' | ONE = '1' | ZERO_MANY = '0-N' | ONE_MANY = '1-N';
+
+QualifiedName:
+    ID ('.' ID)*
+;
+
+PhysicalSchemas:
+	 {PhysicalSchemas} 'physical' 'schemas' '{' 
+		physicalSchemas+=AbstractPhysicalSchema*
+	'}'
+;
+
+AbstractPhysicalSchema:
+//	(kvschemas+=KeyValueSchema* & documentschemas+= DocumentSchema* & relationalschemas+=RelationalSchema* & graphschemas+= GraphSchema* & columnschemas += ColumnSchema*)
+	KeyValueSchema | DocumentSchema | RelationalSchema | GraphSchema | ColumnSchema
+;
+
+DocumentSchema:
+	'document' 'schema' name=ID (':' databases+=[Database] (','databases+=[Database])*)?'{'
+	(collections+=Collection)*
+'}'
+;
+
+Collection:
+	'collection' name=ID '{'
+		 'fields' '{'
+		(fields+=LimitedPhysicalFieldDoc (',' fields+=LimitedPhysicalFieldDoc)*)?
+	'}'
+		('references' '{'references+=Reference*'}' )?
+	'}'
+;
+
+Reference:
+	name=ID ':' sourceField+=[PhysicalField|QualifiedName](','sourceField+=[PhysicalField|QualifiedName])* '->' targetField+=[PhysicalField|QualifiedName](','targetField+=[PhysicalField|QualifiedName])*
+;
+
+PhysicalField returns PhysicalField:
+	ShortField | EmbeddedObject | BracketsField | LongField
+;
+
+LimitedPhysicalField returns PhysicalField:
+	ShortField | LongField 
+;
+
+LimitedPhysicalFieldDoc returns PhysicalField:
+	ShortField | LongField | EmbeddedObject 
+;
+
+KVPhysicalField returns PhysicalField:
+	ShortField | LongField | KVComplexField
+;
+
+ShortField :
+	name=ID
+;
+
+LongField:
+	physicalName=ID ':'pattern+=TerminalExpression*
+;
+
+BracketsField:
+	'['name=ID']'
+;
+
+EmbeddedObject:
+	name=ID '['cardinality=Cardinality']'('{'
+		(fields+=PhysicalField (',' fields+=PhysicalField)*)?
+	'}')?
+;
+
+KVComplexField:
+	name=ID type=KVDataType	('{'
+		(fields+=KVPhysicalField (',' fields+=KVPhysicalField)*)?
+	'}')
+;
+
+TerminalExpression:
+	{TerminalExpression} literal=STRING | BracketsField
+;
+
+
+
+
+ColumnSchema:
+	'column' 'schema' name=ID (':' databases+=[Database] (','databases+=[Database])*)? '{'
+		tables+=(TableColumnDB)*
+	'}'
+;
+
+TableColumnDB:
+	'table' name=ID '{'
+		rowkey=Rowkey ('columnfamilies' '{'columnfamilies+=ColumnFamily*'}')
+		('references' '{'references+=Reference*'}')? 
+	'}'
+;
+
+ColumnFamily:
+	name=ID '{'
+		columns+=LimitedPhysicalField (','columns+= LimitedPhysicalField)*
+	'}'
+;
+
+
+Rowkey:
+	{Rowkey} 'rowkey' '{'
+	 fields+=ShortField*
+	 '}'
+;
+
+// TODO Modifier l'emplacement du bloc référence.
+GraphSchema:
+	'graph' 'schema' name=ID (':' databases+=[Database] (','databases+=[Database])*)?'{'
+		(nodes+=Node)* (edges+=Edge)* ('references' '{'references+=Reference*'}' )?
+	'}'
+;
+
+Node:
+	'Node' name=ID '{'
+		fields+=PhysicalField (','fields+=PhysicalField)*
+	'}'
+;
+
+Edge:
+	'Edge' name=ID '{'
+		sourceNode=[Node] '->' targetNode = [Node] (',' fields+=PhysicalField)*
+	'}' 	
+;
+
+RelationalSchema:
+	'relational' 'schema' name=ID (':' databases+=[Database] (','databases+=[Database])*)?'{'
+		tables+=Table*
+	'}'
+;
+
+Table:
+	'table' name=ID '{'
+		'columns' '{'
+			(columns+=LimitedPhysicalField (',' columns+=LimitedPhysicalField)*)
+			'}'
+		('references' '{'references+=Reference*'}')? 
+		//Identifier and index section
+	'}'
+;
+
+AbstractPhysicalStructure:
+	Table | Collection | EmbeddedObject | TableColumnDB | Node | Edge | KeyValuePair | KVComplexField
+;
+
+KeyValueSchema:
+	'key' 'value' 'schema' name=ID (':' databases+=[Database] (','databases+=[Database])*)?'{'
+		kvpairs+=KeyValuePair*
+'}'
+;
+
+KeyValuePair:
+	'kvpairs' name=ID '{'
+		'key' ':' key=Key ','
+		'value' ':' value=KVPhysicalField
+		('references' '{'references+=Reference*'}' )?
+	'}'
+;
+
+Key:
+	pattern+=TerminalExpression+
+;
+
+MappingRules:
+	{MappingRules} 'mapping' 'rules' '{'
+		(mappingRules+=AbstractMappingRule (','mappingRules+=AbstractMappingRule)*)?
+	'}'
+;
+
+AbstractMappingRule:
+	EntityMappingRule | RoleToEmbbededObjectMappingRule | RoleToReferenceMappingRule
+;
+
+RoleToEmbbededObjectMappingRule:
+	roleConceptual=[Role|QualifiedName]
+	'->'
+	physicalStructure=[EmbeddedObject|QualifiedName]'('(physicalFields+=[PhysicalField|QualifiedName] (','physicalFields+=[PhysicalField|QualifiedName])*)?')'
+;
+
+RoleToReferenceMappingRule:
+	roleConceptual=[Role|QualifiedName]
+	'->'
+	reference=[Reference|QualifiedName]
+;
+
+EntityMappingRule:
+	(entityConceptual=[EntityType|QualifiedName]'('(attributesConceptual+=[Attribute|QualifiedName] (','attributesConceptual+=[Attribute|QualifiedName])*)?')'
+	('->' | '-''('conditionAttribute+=[Attribute|QualifiedName] operator=Operator value=ValueCondition')->')
+	 physicalStructure=[AbstractPhysicalStructure|QualifiedName]'('(physicalFields+=[PhysicalField|QualifiedName] (','physicalFields+=[PhysicalField|QualifiedName])*)?')')
+;
+
+enum Operator:
+	EQUAL = '=' | LT = '<' | LTE = '<=' | GT = '>' | GTE = '>='
+;
+
+ValueCondition:
+	INT | STRING
+;
+
+Databases :
+	{Databases} 'databases' '{'
+		(databases+=Database)*
+	'}'
+;
+
+enum DatabaseType :
+	MARIADB = 'mariadb' | SQLITE = 'sqlite' | REDIS ='redis' | CASSANDRA = 'cassandra' | HBASE = 'hbase' | MONGODB = 'mongodb' | NEO4J = 'neo4j'
+;
+
+Database :
+	dbType=DatabaseType name=ID '{'
+		(('host'':'host=STRING)  & ('port'':'port= INT) & ('dbname'':'databaseName=STRING)? & ('login'':'login=STRING)? & ('password'':'password=STRING)?)
+	'}'
+;
+
+KVDataType :
+	'list' | 'set' | 'ordered' 'set'| 'hash' // and more to add
+;
+
+DataType returns DataType:
+	IntType | 
+	BigintType | 
+	StringType | 
+	TextType | 
+	BoolType | 
+	FloatType | 
+	BlobType | 
+	DateType | 
+	DatetimeType
+	;
+
+IntType returns IntType:
+	{IntType}
+	'int'
+	;
+
+BigintType returns BigintType:
+	{BigintType}
+	'bigint'
+	;
+
+StringType returns StringType:
+	{StringType}
+	'string' ('[' maxSize=INT ']')?
+	;
+
+TextType returns TextType:
+	{TextType}
+	'text'
+	;
+
+BoolType returns BoolType:
+	{BoolType}
+	'bool'
+	;
+
+FloatType returns FloatType:
+	{FloatType}
+	'float'
+	;
+
+BlobType returns BlobType:
+	{BlobType}
+	'blob'
+	;
+
+
+DateType returns DateType:
+	{DateType}
+	'date'
+	;
+
+DatetimeType returns DatetimeType:
+	{DatetimeType}
+	'datetime'
+	;

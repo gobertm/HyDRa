@@ -1,0 +1,70 @@
+[comment encoding = UTF-8 /]
+[module generateSimpleInsertMethodsImpl('http://www.unamur.be/polystore/Pml')]
+[import be::unamur::polystore::acceleo::main::mappingrules::util /]
+[import be::unamur::polystore::acceleo::main::util /]
+
+[template public implMethod1(entityType: EntityType, conceptualSchema: ConceptualSchema)]{
+	//TODO
+}[/template]
+
+[template public insertPOJOImpl(entityType: EntityType, conceptualSchema: ConceptualSchema)]{
+	// Insert into all mapped AbstractPhysicalStructure 
+	[for (struct: AbstractPhysicalStructure | getConcernedPhysicalStructures(entityType, entityType.ancestors(Domainmodel)->first()))]
+	[for (db: Database | getConcernedDatabases(struct, entityType.ancestors(Domainmodel)->first()))]
+		insert[entityType.name.toUpperFirst() /]In[struct.name.toUpperFirst()/]From[db.name.toUpperFirst() /]([entityType.name.toLowerFirst()/]);
+	[/for]
+	[/for]
+}[/template]
+
+[template public implMethod3(entityType: EntityType, conceptualSchema: ConceptualSchema)]{
+	//TODO
+}[/template]
+
+	
+[template public insertInSQLDBImpl(entityType : EntityType, struct : AbstractPhysicalStructure, db : Database)]
+{
+	//Read mapping rules and find attributes of the POJO that are mapped to the corresponding AbstractPhysicalStructure
+	// Insert in SQL DB 
+[let mappedAttrList : Collection(Attribute) = getMappedAttributesInStructure(entityType, struct, db, entityType.ancestors(Domainmodel)->first().mappingRules)]
+[if (mappedAttrList->size() > 0)]
+String query = "INSERT INTO [struct.name/]([for (attr : Attribute | mappedAttrList) separator(',')][getMappedPhysicalField(attr, struct, db,entityType.ancestors(Domainmodel)->first().mappingRules).oclAsType(PhysicalField).getPhysicalName()/][/for][for (ref : Reference | getRefOfPhysicalStructure(struct))],[ref.sourceField.getPhysicalName()/][/for]) VALUES ([for (attr : Attribute | mappedAttrList) separator(',')]?[/for][for (ref : Reference | getRefOfPhysicalStructure(struct))],?[/for])";
+
+[comment]VALLUES ([for (attr : Attribute | mappedAttrList) separator(',')][entityType.name.toLowerFirst()/].get[attr.name.toUpperFirst()/]()[/for][for (ref : Reference | getRefOfPhysicalStructure(struct))],(([entityType.name.toUpperFirst()/]TDO)[entityType.name.toLowerFirst()/]).get[getJavaAbsolutePath(ref).toUpperFirst() /]_[ref.sourceField.getPhysicalName() /]()[/for])[/comment]
+List<Object> inputs = new ArrayList<>();
+[for (attr : Attribute | mappedAttrList)]
+inputs.add([entityType.name.toLowerFirst()/].get[attr.name.toUpperFirst()/]());
+[/for]
+// Get the reference attribute. Either via a TDO Object or using the Pojo reference TODO
+[for (ref : Reference | getRefOfPhysicalStructure(struct))]
+try{
+inputs.add((([entityType.name.toUpperFirst()/]TDO)[entityType.name.toLowerFirst()/]).get[getJavaAbsolutePath(ref).toUpperFirst() /]_[ref.sourceField.getPhysicalName() /]());
+}catch(java.lang.ClassCastException e){
+	logger.error("Reference attribute is mandatory. Please provide a ['['/]{}[']'/] Object","[entityType.name.toUpperFirst()/]TDO");
+	System.err.println(e);
+	throw new RuntimeException ("Reference attribute is mandatory. Please provide a [entityType.name.toUpperFirst()/]TDO Object");
+	// TODO Exception handling
+	//throw new InsertReferenceException("Reference attribute is mandatory. Please provide a [entityType.name.toUpperFirst()/]TDO Object");
+}
+[/for]
+DBConnectionMgr.getMapDB().get("[db.name/]").insertOrUpdateOrDelete(query,inputs);
+[/if]
+[/let]
+}
+[/template]
+
+
+[template public insertInMongoDBImpl(entityType : EntityType, struct : AbstractPhysicalStructure, db : Database)]
+{
+	//Read mapping rules and find attributes of the POJO that are mapped to the corresponding AbstractPhysicalStructure
+	// Insert in MongoDB
+}
+[/template]
+
+[query private getMappedAttributesInStructure(ent: EntityType, struct : AbstractPhysicalStructure, db : Database, rules: MappingRules) : Collection(Attribute) =  
+	invoke('be.unamur.polystore.acceleo.main.utils.Util', 'getMappedAttributes(be.unamur.polystore.pml.EntityType, be.unamur.polystore.pml.AbstractPhysicalStructure, be.unamur.polystore.pml.Database, be.unamur.polystore.pml.MappingRules)', Sequence{ent, struct, db, rules})
+/]
+
+
+[query private getRefOfPhysicalStructure(struct : AbstractPhysicalStructure) : Collection(Reference) =  
+	invoke('be.unamur.polystore.acceleo.main.utils.MappingRuleService', 'getRefOfPhysicalStructure(be.unamur.polystore.pml.AbstractPhysicalStructure)', Sequence{struct})
+/]

@@ -1,0 +1,35 @@
+[comment encoding = UTF-8 /]
+[module generateBinaryWithAttributesSelectMethods('http://www.unamur.be/polystore/Pml')]
+[import be::unamur::polystore::acceleo::main::util]
+[template public generateBinaryWithAttributesSelectMethods(rel : RelationshipType)]
+public abstract java.util.List<pojo.[rel.name.toUpperFirst() /]> get[rel.name.toUpperFirst() /]List(
+	conditions.Condition<conditions.[(rel.roles->any(true)).entity.name.toUpperFirst() /]Attribute> [(rel.roles->any(true)).name /]_condition,
+	conditions.Condition<conditions.[getOppositeRoles((rel.roles->any(true))).entity.name.toUpperFirst() /]Attribute> [getOppositeRoles(rel.roles->any(true)).name /]_condition,
+	conditions.Condition<conditions.[rel.name.toUpperFirst() /]Attribute> [rel.name /]_condition
+);
+
+public java.util.List<pojo.[rel.name.toUpperFirst() /]> get[rel.name.toUpperFirst() /]ListBy[rel.roles->any(true).name.toUpperFirst() /]Condition(
+	conditions.Condition<conditions.[(rel.roles->any(true)).entity.name.toUpperFirst() /]Attribute> [(rel.roles->any(true)).name /]_condition
+) {
+	return get[rel.name.toUpperFirst() /]List([(rel.roles->any(true)).name /]_condition, null, null);
+}
+
+public java.util.List<pojo.[rel.name.toUpperFirst() /]> get[rel.name.toUpperFirst() /]ListBy[getOppositeRoles(rel.roles->any(true)).name.toUpperFirst() /]Condition(
+	conditions.Condition<conditions.[(getOppositeRoles(rel.roles->any(true))).entity.name.toUpperFirst() /]Attribute> [(getOppositeRoles(rel.roles->any(true))).name /]_condition
+) {
+	return get[rel.name.toUpperFirst() /]List(null, [(getOppositeRoles(rel.roles->any(true))).name /]_condition, null);
+}
+
+public java.util.List<pojo.[rel.name.toUpperFirst() /]> get[rel.name.toUpperFirst() /]ListBy[rel.name.toUpperFirst() /]Condition(
+	conditions.Condition<conditions.[rel.name.toUpperFirst() /]Attribute> [rel.name /]_condition
+) {
+	return get[rel.name.toUpperFirst() /]List(null, null, [rel.name /]_condition);
+}
+
+[for (role : Role | rel.roles)]
+public [if (isMaxOne(role))]pojo.[rel.name.toUpperFirst() /][else]java.util.List<pojo.[rel.name.toUpperFirst() /]>[/if] get[rel.name.toUpperFirst() /][if (isMaxOne(role) = false)]List[/if]By[role.name.toUpperFirst() /](pojo.[role.entity.name.toUpperFirst() /] [role.name /]) {
+	//TODO using id
+	return null;
+}
+[/for]
+[/template]
