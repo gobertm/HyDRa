@@ -30,9 +30,9 @@ It is made of three main sections :
 2.  Physical schema section, allowing the definition of physical data representation
 3.  The Mapping Rules which are the expression of the link between conceptual and physical elements.
 
-![Conceptual Schema](Use-cases/uc1-imdb/src/main/resources/ConceptualSchema.PNG)
-![Physical Schema](Use-cases/uc1-imdb/src/main/resources/PhysicalSchema.PNG)
-![Mapping Rules](Use-cases/uc1-imdb/src/main/resources/MappingRules.PNG) 
+![Conceptual Schema](Use-Cases/uc1-imdb/src/main/resources/ConceptualSchema.PNG)
+![Physical Schema](Use-Cases/uc1-imdb/src/main/resources/PhysicalSchema.PNG)
+![Mapping Rules](Use-Cases/uc1-imdb/src/main/resources/MappingRules.PNG) 
 
 ## API Generation
 
