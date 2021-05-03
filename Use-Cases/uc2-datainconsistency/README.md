@@ -13,7 +13,7 @@ In this example we illustrate the data inconsistency discovery across databases 
 
 According the the mapping rules declared in data-inconstency.pml, *Product* entity type is spread among *KVSchema* key value database, *myRelSchema* relational database and in an embedded document in *categorySchema* document database.
 
-Moreover, as specified in the model (see below), the column *europrice* is a composed field of *price* attribute and *$* sign.
+Moreover, as specified in the model (see below), the column *dollarprice* is a composed field of *price* attribute and *$* sign.
 
 We introduced two different cases of data consistency problems to the model :
 1.  In the data deployed *price* data for *Product id* 0 to 10 is different in *KVProdPrice* than the one in *ProductCatalogTable*.
