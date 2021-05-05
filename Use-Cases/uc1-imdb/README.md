@@ -2,7 +2,8 @@
 
 ## IMDB
 ### **How-to**
--   Run 'docker-compose up' . To deploy databases and data. This may take a few minutes ~10. It's done when mysql docker has succesfully run *3-directorTable.sql*
+-   To deploy databases and data, run 'docker-compose up' in /data-deployment folder. This may take a few minutes ~10. It's done when mysql docker has succesfully run *3-directorTable.sql*
+-   -   Import project or create a new one and generate API using [uc1-imdb.pml](uc1-imdb.pml).
 -   Play with API and Data in [Test Class](https://github.com/gobertm/HyDRa/blob/main/Use-Cases/uc1-imdb/src/test/java/IMDBTests.java)
 
 ### **Description**

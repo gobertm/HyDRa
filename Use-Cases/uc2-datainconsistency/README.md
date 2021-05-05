@@ -4,8 +4,8 @@
 
 ### How-to
 
--   Run 'docker-compose up' . To deploy databases and data.
--   Import API project or generate API using pml file.
+-   To deploy databases and data, run 'docker-compose up' in /data-deployment folder.
+-   Import project or create a new one and generate API using [uc2-datainconsistency.pml](uc2-datainconsistency.pml).
 -   Run `getAllProducts` test of [Test Class](https://github.com/gobertm/HyDRa/blob/main/Use-Cases/uc2-datainconsistency/src/test/java/DataInconsistenciesTests.java)
 
 ### Description
