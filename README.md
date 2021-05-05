@@ -3,19 +3,19 @@ HyDRa (Hybrid Data Representation and Access) is a hybrid polystore management f
 
 ## Install
 
--   Make sure to have Java 14 installed
--   Run Eclipse and install HyDRa plugins
+-   Make sure Java 14 is installed on your computer
+-   Run Eclipse and install the HyDRa plugins
     -   Help > Install New Software > Add > https://staff.info.unamur.be/gobertm/
--   Restart Eclipse. (Note that in some cases the API generation need a second Eclipse restart)
+-   Restart Eclipse. (Note that in some cases the API generation tool requires a second restart of Eclipse)
 
 ![eclipse](Use-Cases/resources/eclipse.PNG)
 
 ## Usage
--   Create New Maven project or import pre existing ones in [Use-Cases](Use-Cases/) folder.
-    -   Please make sure to use Java 14 compiler. Properties > Build path > Select Java 14 JRE. 
+-   Create a New Maven project or import a pre-existing project in [Use-Cases](Use-Cases/) folder.
+    -   Please make sure Eclipse uses the Java 14 compiler. Properties > Build path > Select Java 14 JRE. 
     And Properties > Java Compiler > Compiler Compliance Level.
--   Design HyDRa Polystore schema. Create New File > *.pml file extension.
--   Generate API Code by right clicking on a .pml file > HyDRa API Generation > Generate HyDRa Conceptual API. Note that if no files are generated it may be necessary to restart Eclipse.
+-   Design your HyDRa polystore schema. Create New File > *.pml file extension.
+-   Generate the conceptual API code by right-clicking on the .pml file > HyDRa API Generation > Generate HyDRa Conceptual API. Note that if no files are generated it may be necessary to restart Eclipse.
 ![Plugin](Use-Cases/resources/ApiPlugin.PNG)
 
 ## Use-Cases 
