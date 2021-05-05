@@ -83,14 +83,12 @@ physical schemas {
 			}
 		}
 		
-		
 		table STORE {
 			columns{
 				ID,
 				VAT,
 				ADDR
 			}
-			
 		}
 	}
 }
