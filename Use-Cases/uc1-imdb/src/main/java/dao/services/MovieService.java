@@ -80,10 +80,10 @@ public abstract class MovieService {
 		MutableBoolean refilterFlag = new MutableBoolean(false);
 		List<Dataset<Movie>> datasets = new ArrayList<Dataset<Movie>>();
 		Dataset<Movie> d = null;
-		d = getMovieListInMovieKVFromMyredis(condition, refilterFlag);
+		d = getMovieListInActorCollectionFromMymongo(condition, refilterFlag);
 		if(d != null)
 			datasets.add(d);
-		d = getMovieListInActorCollectionFromMymongo(condition, refilterFlag);
+		d = getMovieListInMovieKVFromMyredis(condition, refilterFlag);
 		if(d != null)
 			datasets.add(d);
 		

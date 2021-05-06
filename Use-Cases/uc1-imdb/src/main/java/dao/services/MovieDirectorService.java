@@ -25,19 +25,16 @@ public abstract class MovieDirectorService {
 		The entity mapped on the right hand side of the reference may be stored in another physical structure than where the ref is declared. 
 		Leading to apparent inconsistency in the method name. But it is actually the physical structure of the ref and not the EntityDTO.*/
 	
-	
-	//join structure
-	// Left side 'movie_id' of reference [movie_info ]
-	public abstract Dataset<MovieTDO> getMovieTDOListDirected_movieInMovie_infoInActorCollectionFromIMDB_Mongo(Condition<MovieAttribute> condition, MutableBoolean refilterFlag);
-	
-	
-	
-	
-	
 	//join structure
 	// Left side 'movie_id' of reference [has_directed ]
 	public abstract Dataset<MovieTDO> getMovieTDOListDirected_movieInHas_directedInMovieKVFromMovieRedis(Condition<MovieAttribute> condition, MutableBoolean refilterFlag);
 	
+	
+	
+	
+	//join structure
+	// Left side 'movie_id' of reference [movie_info ]
+	public abstract Dataset<MovieTDO> getMovieTDOListDirected_movieInMovie_infoInActorCollectionFromIMDB_Mongo(Condition<MovieAttribute> condition, MutableBoolean refilterFlag);
 	
 	
 	

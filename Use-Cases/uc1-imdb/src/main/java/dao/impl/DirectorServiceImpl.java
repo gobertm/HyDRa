@@ -323,17 +323,17 @@ public class DirectorServiceImpl extends DirectorService {
 	
 		//join between 2 SQL tables and a non-relational structure
 		directed_movie_refilter = new MutableBoolean(false);
-		Dataset<MovieDirectorTDO> res_movieDirector_directed_by_movie_info = movieDirectorService.getMovieDirectorTDOListIndirectorTableAnddirectedFrommydb(director_condition, director_refilter);
-		Dataset<MovieTDO> res_movie_info_directed_by = movieDirectorService.getMovieTDOListDirected_movieInMovie_infoInActorCollectionFromIMDB_Mongo(directed_movie_condition, directed_movie_refilter);
+		Dataset<MovieDirectorTDO> res_movieDirector_directed_by_has_directed = movieDirectorService.getMovieDirectorTDOListIndirectorTableAnddirectedFrommydb(director_condition, director_refilter);
+		Dataset<MovieTDO> res_has_directed_directed_by = movieDirectorService.getMovieTDOListDirected_movieInHas_directedInMovieKVFromMovieRedis(directed_movie_condition, directed_movie_refilter);
 		if(directed_movie_refilter.booleanValue()) {
 				joinCondition = null;
-				joinCondition = res_movie_info_directed_by.col("id").equalTo(all.col("id"));
-				res_movie_info_directed_by = res_movie_info_directed_by.as("A").join(all, joinCondition).select("A.*").as(Encoders.bean(MovieTDO.class));
+				joinCondition = res_has_directed_directed_by.col("id").equalTo(all.col("id"));
+				res_has_directed_directed_by = res_has_directed_directed_by.as("A").join(all, joinCondition).select("A.*").as(Encoders.bean(MovieTDO.class));
 		}
 		
-		Dataset<Row> res_row_directed_by_movie_info = res_movieDirector_directed_by_movie_info.join(res_movie_info_directed_by.withColumnRenamed("logEvents", "movieDirector_logEvents"),
-			res_movie_info_directed_by.col("myRelSchema_directed_movie_info_id").equalTo(res_movieDirector_directed_by_movie_info.col("myRelSchema_directed_movie_info_movie_id")));
-		Dataset<Director> res_Director_directed_by = res_row_directed_by_movie_info.select("director.*").as(Encoders.bean(Director.class));
+		Dataset<Row> res_row_directed_by_has_directed = res_movieDirector_directed_by_has_directed.join(res_has_directed_directed_by.withColumnRenamed("logEvents", "movieDirector_logEvents"),
+			res_has_directed_directed_by.col("myRelSchema_directed_has_directed_id").equalTo(res_movieDirector_directed_by_has_directed.col("myRelSchema_directed_has_directed_movie_id")));
+		Dataset<Director> res_Director_directed_by = res_row_directed_by_has_directed.select("director.*").as(Encoders.bean(Director.class));
 		datasetsPOJO.add(res_Director_directed_by.dropDuplicates(new String[] {"id"}));	
 		
 		
@@ -380,14 +380,14 @@ public class DirectorServiceImpl extends DirectorService {
 	public void insertDirectorInDirectorTableFromMydb(Director director){
 		//Read mapping rules and find attributes of the POJO that are mapped to the corresponding AbstractPhysicalStructure
 		// Insert in SQL DB 
-	String query = "INSERT INTO directorTable(fullname,fullname,death,birth,id) VALUES (?,?,?,?,?)";
+	String query = "INSERT INTO directorTable(fullname,id,death,birth,fullname) VALUES (?,?,?,?,?)";
 	
 	List<Object> inputs = new ArrayList<>();
 	inputs.add(director.getFirstName());
-	inputs.add(director.getLastName());
+	inputs.add(director.getId());
 	inputs.add(director.getYearOfDeath());
 	inputs.add(director.getYearOfBirth());
-	inputs.add(director.getId());
+	inputs.add(director.getLastName());
 	// Get the reference attribute. Either via a TDO Object or using the Pojo reference TODO
 	DBConnectionMgr.getMapDB().get("mydb").insertOrUpdateOrDelete(query,inputs);
 	}

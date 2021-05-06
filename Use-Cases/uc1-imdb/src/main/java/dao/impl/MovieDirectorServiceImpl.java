@@ -43,6 +43,119 @@ public class MovieDirectorServiceImpl extends dao.services.MovieDirectorService 
 		The entity mapped on the right hand side of the reference may be stored in another physical structure than where the ref is declared. 
 		Leading to apparent inconsistency in the method name. But it is actually the physical structure of the ref and not the EntityDTO.*/
 	
+	//join structure
+	// Left side 'movie_id' of reference [has_directed ]
+	public Dataset<MovieTDO> getMovieTDOListDirected_movieInHas_directedInMovieKVFromMovieRedis(Condition<MovieAttribute> condition, MutableBoolean refilterFlag){	
+		// As we cannot filter on the values in a Redis DB, we always put the refilterflag to true.
+		refilterFlag.setValue(true);
+		// Build the key pattern
+		//  - If the condition attribute is in the key pattern, replace by the value. Only if operator is EQUALS.
+		//  - Replace all other fields of key pattern by a '*' 
+		String keypattern= "";
+		String finalKeypattern;
+		List<String> fieldsListInKey = new ArrayList<>();
+		keypattern=keypattern.concat("movie:");
+		keypattern=keypattern.concat("*");
+		fieldsListInKey.add("id");
+			
+		// Find the type of query to perform in order to retrieve a Dataset<Row>
+		// Based on the type of the value. Is a it a simple string or a hash or a list... 
+		Dataset<Row> rows;
+			// TODO only handles 'hash' for now
+		rows = SparkConnectionMgr.getRowsFromKeyValueHashes("myredis",keypattern);
+		finalKeypattern = keypattern;
+		Dataset<MovieTDO> res = rows.map((MapFunction<Row, MovieTDO>) r -> {
+					MovieTDO movie_res = new MovieTDO();
+					Integer groupindex = null;
+					String regex = null;
+					String value = null;
+					Pattern p, pattern = null;
+					Matcher m, match = null;
+					boolean matches = false;
+					// attribute [Movie.Id]
+					// Attribute mapped in a key.
+					String key = r.getAs("id");
+					// Spark Redis automatically strips leading character if the pattern provided contains a single '*' at the end.				
+					pattern = Pattern.compile("\\*");
+			        match = pattern.matcher(finalKeypattern);
+			        if(match.results().count()==1){
+						movie_res.setId(key == null ? null : key);
+					}else{
+						regex = finalKeypattern.replaceAll("\\*","(.*)");
+						groupindex = fieldsListInKey.indexOf("id")+1;
+						if(groupindex==null) {
+							logger.warn("Attribute 'Movie' mapped physical field 'id' found in key but can't get index in build keypattern '{}'.", finalKeypattern);
+						}
+						p = Pattern.compile(regex);
+						m = p.matcher(key);
+						matches = m.find();
+						String id = null;
+						if(matches) {
+							id = m.group(groupindex.intValue());
+						} else {
+							logger.warn("Cannot retrieve value for Movieid attribute stored in db myredis. Probably due to an ambiguous regex.");
+							movie_res.addLogEvent("Cannot retrieve value for Movie.id attribute stored in db myredis. Probably due to an ambiguous regex.");
+						}
+						movie_res.setId(id == null ? null : id);
+					}
+					// attribute [Movie.PrimaryTitle]
+					String primaryTitle = r.getAs("title") == null ? null : r.getAs("title");
+					movie_res.setPrimaryTitle(primaryTitle);
+					// attribute [Movie.OriginalTitle]
+					String originalTitle = r.getAs("originalTitle") == null ? null : r.getAs("originalTitle");
+					movie_res.setOriginalTitle(originalTitle);
+					// attribute [Movie.IsAdult]
+					Boolean isAdult = r.getAs("isAdult") == null ? null : Boolean.parseBoolean(r.getAs("isAdult"));
+					movie_res.setIsAdult(isAdult);
+					// attribute [Movie.StartYear]
+					Integer startYear = r.getAs("startYear") == null ? null : Integer.parseInt(r.getAs("startYear"));
+					movie_res.setStartYear(startYear);
+					// attribute [Movie.RuntimeMinutes]
+					Integer runtimeMinutes = r.getAs("runtimeMinutes") == null ? null : Integer.parseInt(r.getAs("runtimeMinutes"));
+					movie_res.setRuntimeMinutes(runtimeMinutes);
+					key = r.getAs("id");
+					//Checking that reference field 'id' is mapped in Key
+					if(fieldsListInKey.contains("id")){
+						//Retrieving reference field 'id' in Key
+						// Spark Redis automatically strips leading character if the pattern provided contains a single '*' at the end.				
+						Pattern pattern_id = Pattern.compile("\\*");
+				        Matcher match_id = pattern_id.matcher(finalKeypattern);
+				        if(match_id.results().count()==1){
+							movie_res.setMyRelSchema_directed_has_directed_id(key);
+						}else{
+						groupindex = fieldsListInKey.indexOf("id")+1;
+						if(groupindex==null) {
+							logger.warn("Attribute 'Movie' mapped physical field 'id' found in key but can't get index in build keypattern '{}'.", finalKeypattern);
+						}
+						p = Pattern.compile(regex);
+						m = p.matcher(key);
+						matches = m.find();
+						String id = null;
+						if(matches) {
+						id = m.group(groupindex.intValue());
+						} else {
+						logger.warn("Cannot retrieve value 'id'. Probably due to an ambiguous regex.");
+						movie_res.addLogEvent("Cannot retrieve value for 'id' attribute stored in db myredis. Probably due to an ambiguous regex.");
+						}
+						movie_res.setMyRelSchema_directed_has_directed_id(id);
+						}
+					}else{
+					// Get reference column in value [id ] for reference [has_directed]
+					String myRelSchema_directed_has_directed_id = r.getAs("id");
+					movie_res.setMyRelSchema_directed_has_directed_id(myRelSchema_directed_has_directed_id);
+					}
+	
+						return movie_res;
+				}, Encoders.bean(MovieTDO.class));
+		if(refilterFlag.booleanValue())
+			res = res.filter((FilterFunction<MovieTDO>) r -> condition == null || condition.evaluate(r));
+		res=res.dropDuplicates();
+		return res;
+	
+	}
+	
+	
+	
 	
 	//join structure
 	// Left side 'movie_id' of reference [movie_info ]
@@ -176,122 +289,6 @@ public class MovieDirectorServiceImpl extends dao.services.MovieDirectorService 
 	
 	
 	
-	
-	//join structure
-	// Left side 'movie_id' of reference [has_directed ]
-	public Dataset<MovieTDO> getMovieTDOListDirected_movieInHas_directedInMovieKVFromMovieRedis(Condition<MovieAttribute> condition, MutableBoolean refilterFlag){	
-		// As we cannot filter on the values in a Redis DB, we always put the refilterflag to true.
-		refilterFlag.setValue(true);
-		// Build the key pattern
-		//  - If the condition attribute is in the key pattern, replace by the value. Only if operator is EQUALS.
-		//  - Replace all other fields of key pattern by a '*' 
-		String keypattern= "";
-		String finalKeypattern;
-		List<String> fieldsListInKey = new ArrayList<>();
-		keypattern=keypattern.concat("movie:");
-		keypattern=keypattern.concat("*");
-		fieldsListInKey.add("id");
-			
-		// Find the type of query to perform in order to retrieve a Dataset<Row>
-		// Based on the type of the value. Is a it a simple string or a hash or a list... 
-		Dataset<Row> rows;
-			// TODO only handles 'hash' for now
-		rows = SparkConnectionMgr.getRowsFromKeyValueHashes("myredis",keypattern);
-		finalKeypattern = keypattern;
-		Dataset<MovieTDO> res = rows.map((MapFunction<Row, MovieTDO>) r -> {
-					MovieTDO movie_res = new MovieTDO();
-					Integer groupindex = null;
-					String regex = null;
-					String value = null;
-					Pattern p, pattern = null;
-					Matcher m, match = null;
-					boolean matches = false;
-					// attribute [Movie.Id]
-					// Attribute mapped in a key.
-					String key = r.getAs("id");
-					// Spark Redis automatically strips leading character if the pattern provided contains a single '*' at the end.				
-					pattern = Pattern.compile("\\*");
-			        match = pattern.matcher(finalKeypattern);
-			        if(match.results().count()==1){
-						movie_res.setId(key == null ? null : key);
-					}else{
-						regex = finalKeypattern.replaceAll("\\*","(.*)");
-						groupindex = fieldsListInKey.indexOf("id")+1;
-						if(groupindex==null) {
-							logger.warn("Attribute 'Movie' mapped physical field 'id' found in key but can't get index in build keypattern '{}'.", finalKeypattern);
-						}
-						p = Pattern.compile(regex);
-						m = p.matcher(key);
-						matches = m.find();
-						String id = null;
-						if(matches) {
-							id = m.group(groupindex.intValue());
-						} else {
-							logger.warn("Cannot retrieve value for Movieid attribute stored in db myredis. Probably due to an ambiguous regex.");
-							movie_res.addLogEvent("Cannot retrieve value for Movie.id attribute stored in db myredis. Probably due to an ambiguous regex.");
-						}
-						movie_res.setId(id == null ? null : id);
-					}
-					// attribute [Movie.PrimaryTitle]
-					String primaryTitle = r.getAs("title") == null ? null : r.getAs("title");
-					movie_res.setPrimaryTitle(primaryTitle);
-					// attribute [Movie.OriginalTitle]
-					String originalTitle = r.getAs("originalTitle") == null ? null : r.getAs("originalTitle");
-					movie_res.setOriginalTitle(originalTitle);
-					// attribute [Movie.IsAdult]
-					Boolean isAdult = r.getAs("isAdult") == null ? null : Boolean.parseBoolean(r.getAs("isAdult"));
-					movie_res.setIsAdult(isAdult);
-					// attribute [Movie.StartYear]
-					Integer startYear = r.getAs("startYear") == null ? null : Integer.parseInt(r.getAs("startYear"));
-					movie_res.setStartYear(startYear);
-					// attribute [Movie.RuntimeMinutes]
-					Integer runtimeMinutes = r.getAs("runtimeMinutes") == null ? null : Integer.parseInt(r.getAs("runtimeMinutes"));
-					movie_res.setRuntimeMinutes(runtimeMinutes);
-					key = r.getAs("id");
-					//Checking that reference field 'id' is mapped in Key
-					if(fieldsListInKey.contains("id")){
-						//Retrieving reference field 'id' in Key
-						// Spark Redis automatically strips leading character if the pattern provided contains a single '*' at the end.				
-						Pattern pattern_id = Pattern.compile("\\*");
-				        Matcher match_id = pattern_id.matcher(finalKeypattern);
-				        if(match_id.results().count()==1){
-							movie_res.setMyRelSchema_directed_has_directed_id(key);
-						}else{
-						groupindex = fieldsListInKey.indexOf("id")+1;
-						if(groupindex==null) {
-							logger.warn("Attribute 'Movie' mapped physical field 'id' found in key but can't get index in build keypattern '{}'.", finalKeypattern);
-						}
-						p = Pattern.compile(regex);
-						m = p.matcher(key);
-						matches = m.find();
-						String id = null;
-						if(matches) {
-						id = m.group(groupindex.intValue());
-						} else {
-						logger.warn("Cannot retrieve value 'id'. Probably due to an ambiguous regex.");
-						movie_res.addLogEvent("Cannot retrieve value for 'id' attribute stored in db myredis. Probably due to an ambiguous regex.");
-						}
-						movie_res.setMyRelSchema_directed_has_directed_id(id);
-						}
-					}else{
-					// Get reference column in value [id ] for reference [has_directed]
-					String myRelSchema_directed_has_directed_id = r.getAs("id");
-					movie_res.setMyRelSchema_directed_has_directed_id(myRelSchema_directed_has_directed_id);
-					}
-	
-						return movie_res;
-				}, Encoders.bean(MovieTDO.class));
-		if(refilterFlag.booleanValue())
-			res = res.filter((FilterFunction<MovieTDO>) r -> condition == null || condition.evaluate(r));
-		res=res.dropDuplicates();
-		return res;
-	
-	}
-	
-	
-	
-	
-	
 	public Dataset<MovieDirectorTDO> getMovieDirectorTDOListIndirectorTableAnddirectedFrommydb(Condition<DirectorAttribute> director_cond, MutableBoolean refilterFlag) {
 		Pair<String, List<String>> whereClause = DirectorServiceImpl.getSQLWhereClauseInDirectorTableFromMydbWithTableAlias(director_cond, refilterFlag, "directorTable.");
 		
@@ -366,12 +363,16 @@ public class MovieDirectorServiceImpl extends dao.services.MovieDirectorService 
 					// attribute [Director.YearOfDeath]
 					Integer director_yearOfDeath = r.getAs("directorTable_death");
 					movieDirector_res.getDirector().setYearOfDeath(director_yearOfDeath);
-		
+					
+					String has_directed_movie_id = r.getAs("directed_movie_id") == null ? null : r.getAs("directed_movie_id").toString();
+					movieDirector_res.setMyRelSchema_directed_has_directed_movie_id(has_directed_movie_id);
 					String movie_info_movie_id = r.getAs("directed_movie_id") == null ? null : r.getAs("directed_movie_id").toString();
 					movieDirector_res.setMyRelSchema_directed_movie_info_movie_id(movie_info_movie_id);
+					
 		
 					return movieDirector_res;
 				}, Encoders.bean(MovieDirectorTDO.class));
+		
 		return res;
 	}
 	

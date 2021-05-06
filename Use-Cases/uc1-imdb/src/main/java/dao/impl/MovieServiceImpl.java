@@ -412,22 +412,6 @@ public class MovieServiceImpl extends MovieService {
 	
 		//join between 2 SQL tables and a non-relational structure
 		director_refilter = new MutableBoolean(false);
-		Dataset<MovieDirectorTDO> res_movieDirector_directed_by_movie_info = movieDirectorService.getMovieDirectorTDOListIndirectorTableAnddirectedFrommydb(director_condition, director_refilter);
-		if(director_refilter.booleanValue()) {
-				joinCondition = null;
-				joinCondition = res_movieDirector_directed_by_movie_info.col("director.id").equalTo(all.col("id"));
-				res_movieDirector_directed_by_movie_info = res_movieDirector_directed_by_movie_info.as("A").join(all, joinCondition).select("A.*").as(Encoders.bean(MovieDirectorTDO.class));
-		} 
-		Dataset<MovieTDO> res_movie_info_directed_by = movieDirectorService.getMovieTDOListDirected_movieInMovie_infoInActorCollectionFromIMDB_Mongo(directed_movie_condition, directed_movie_refilter);
-		Dataset<Row> res_row_directed_by_movie_info = res_movieDirector_directed_by_movie_info.join(res_movie_info_directed_by.withColumnRenamed("logEvents", "movieDirector_logEvents"),
-			res_movie_info_directed_by.col("myRelSchema_directed_movie_info_id").equalTo(res_movieDirector_directed_by_movie_info.col("myRelSchema_directed_movie_info_movie_id")));
-		Dataset<Movie> res_Movie_movie_info = res_row_directed_by_movie_info.as(Encoders.bean(Movie.class));
-		datasetsPOJO.add(res_Movie_movie_info.dropDuplicates(new String[] {"id"}));	
-		
-		// join physical structure
-	
-		//join between 2 SQL tables and a non-relational structure
-		director_refilter = new MutableBoolean(false);
 		Dataset<MovieDirectorTDO> res_movieDirector_directed_by_has_directed = movieDirectorService.getMovieDirectorTDOListIndirectorTableAnddirectedFrommydb(director_condition, director_refilter);
 		if(director_refilter.booleanValue()) {
 				joinCondition = null;
@@ -439,6 +423,22 @@ public class MovieServiceImpl extends MovieService {
 			res_has_directed_directed_by.col("myRelSchema_directed_has_directed_id").equalTo(res_movieDirector_directed_by_has_directed.col("myRelSchema_directed_has_directed_movie_id")));
 		Dataset<Movie> res_Movie_has_directed = res_row_directed_by_has_directed.as(Encoders.bean(Movie.class));
 		datasetsPOJO.add(res_Movie_has_directed.dropDuplicates(new String[] {"id"}));	
+		
+		// join physical structure
+	
+		//join between 2 SQL tables and a non-relational structure
+		director_refilter = new MutableBoolean(false);
+		Dataset<MovieDirectorTDO> res_movieDirector_directed_by_movie_info = movieDirectorService.getMovieDirectorTDOListIndirectorTableAnddirectedFrommydb(director_condition, director_refilter);
+		if(director_refilter.booleanValue()) {
+				joinCondition = null;
+				joinCondition = res_movieDirector_directed_by_movie_info.col("director.id").equalTo(all.col("id"));
+				res_movieDirector_directed_by_movie_info = res_movieDirector_directed_by_movie_info.as("A").join(all, joinCondition).select("A.*").as(Encoders.bean(MovieDirectorTDO.class));
+		} 
+		Dataset<MovieTDO> res_movie_info_directed_by = movieDirectorService.getMovieTDOListDirected_movieInMovie_infoInActorCollectionFromIMDB_Mongo(directed_movie_condition, directed_movie_refilter);
+		Dataset<Row> res_row_directed_by_movie_info = res_movieDirector_directed_by_movie_info.join(res_movie_info_directed_by.withColumnRenamed("logEvents", "movieDirector_logEvents"),
+			res_movie_info_directed_by.col("myRelSchema_directed_movie_info_id").equalTo(res_movieDirector_directed_by_movie_info.col("myRelSchema_directed_movie_info_movie_id")));
+		Dataset<Movie> res_Movie_movie_info = res_row_directed_by_movie_info.as(Encoders.bean(Movie.class));
+		datasetsPOJO.add(res_Movie_movie_info.dropDuplicates(new String[] {"id"}));	
 		
 		
 		
