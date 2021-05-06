@@ -33,6 +33,188 @@ public class ProductServiceImpl extends ProductService {
 	static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ProductServiceImpl.class);
 	
 	
+	
+	public static String getBSONMatchQueryInCategoryCollectionFromMymongo2(Condition<ProductAttribute> condition, MutableBoolean refilterFlag) {	
+		String res = null;	
+		if(condition != null) {
+			if(condition instanceof SimpleCondition) {
+				ProductAttribute attr = ((SimpleCondition<ProductAttribute>) condition).getAttribute();
+				Operator op = ((SimpleCondition<ProductAttribute>) condition).getOperator();
+				Object value = ((SimpleCondition<ProductAttribute>) condition).getValue();
+				if(value != null) {
+					String valueString = Util.transformBSONValue(value);
+					boolean isConditionAttrEncountered = false;
+	
+					if(attr == ProductAttribute.id ) {
+						isConditionAttrEncountered = true;
+					
+						String mongoOp = op.getMongoDBOperator();
+						String preparedValue = valueString;
+						if(op == Operator.CONTAINS && valueString != null) {
+							preparedValue = "'.*" + Util.escapeReservedRegexMongo(valueString)  + ".*'";
+						} else {
+							preparedValue = Util.getDelimitedMongoValue(value.getClass(), preparedValue);
+						}
+						res = "id': {" + mongoOp + ": " + preparedValue + "}";
+	
+						res = "products." + res;
+					res = "'" + res;
+					}
+					if(attr == ProductAttribute.Name ) {
+						isConditionAttrEncountered = true;
+					
+						String mongoOp = op.getMongoDBOperator();
+						String preparedValue = valueString;
+						if(op == Operator.CONTAINS && valueString != null) {
+							preparedValue = "'.*" + Util.escapeReservedRegexMongo(valueString)  + ".*'";
+						} else {
+							preparedValue = Util.getDelimitedMongoValue(value.getClass(), preparedValue);
+						}
+						res = "name': {" + mongoOp + ": " + preparedValue + "}";
+	
+						res = "products." + res;
+					res = "'" + res;
+					}
+					if(attr == ProductAttribute.category ) {
+						isConditionAttrEncountered = true;
+					
+						String mongoOp = op.getMongoDBOperator();
+						String preparedValue = valueString;
+						if(op == Operator.CONTAINS && valueString != null) {
+							preparedValue = "'.*" + Util.escapeReservedRegexMongo(valueString)  + ".*'";
+						} else {
+							preparedValue = Util.getDelimitedMongoValue(value.getClass(), preparedValue);
+						}
+						res = "categoryname': {" + mongoOp + ": " + preparedValue + "}";
+	
+					res = "'" + res;
+					}
+					if(!isConditionAttrEncountered) {
+						refilterFlag.setValue(true);
+						res = "$expr: {$eq:[1,1]}";
+					}
+					
+				}
+			}
+	
+			if(condition instanceof AndCondition) {
+				String bsonLeft = getBSONMatchQueryInCategoryCollectionFromMymongo2(((AndCondition)condition).getLeftCondition(), refilterFlag);
+				String bsonRight = getBSONMatchQueryInCategoryCollectionFromMymongo2(((AndCondition)condition).getRightCondition(), refilterFlag);			
+				if(bsonLeft == null && bsonRight == null)
+					return null;
+				if(bsonLeft == null)
+					return bsonRight;
+				if(bsonRight == null)
+					return bsonLeft;
+				res = " $and: [ {" + bsonLeft + "}, {" + bsonRight + "}] ";
+			}
+	
+			if(condition instanceof OrCondition) {
+				String bsonLeft = getBSONMatchQueryInCategoryCollectionFromMymongo2(((OrCondition)condition).getLeftCondition(), refilterFlag);
+				String bsonRight = getBSONMatchQueryInCategoryCollectionFromMymongo2(((OrCondition)condition).getRightCondition(), refilterFlag);			
+				if(bsonLeft == null && bsonRight == null)
+					return null;
+				if(bsonLeft == null)
+					return bsonRight;
+				if(bsonRight == null)
+					return bsonLeft;
+				res = " $or: [ {" + bsonLeft + "}, {" + bsonRight + "}] ";	
+			}
+	
+			
+	
+			
+		}
+	
+		return res;
+	}
+	
+	public Dataset<Product> getProductListInCategoryCollectionFromMymongo2(conditions.Condition<conditions.ProductAttribute> condition, MutableBoolean refilterFlag){
+		String bsonQuery = ProductServiceImpl.getBSONMatchQueryInCategoryCollectionFromMymongo2(condition, refilterFlag);
+		if(bsonQuery != null) {
+			bsonQuery = "{$match: {" + bsonQuery + "}}";	
+		} 
+		
+		Dataset<Row> dataset = dbconnection.SparkConnectionMgr.getSparkSessionForMongoDB("mymongo2", "categoryCollection", bsonQuery);
+	
+		Dataset<Product> res = dataset.flatMap((FlatMapFunction<Row, Product>) r -> {
+				List<Product> list_res = new ArrayList<Product>();
+				Integer groupIndex = null;
+				String regex = null;
+				String value = null;
+				Pattern p = null;
+				Matcher m = null;
+				boolean matches = false;
+				Row nestedRow = null;
+	
+				boolean addedInList = false;
+				Row r1 = r;
+				Product product1 = new Product();
+					boolean toAdd1  = false;
+					WrappedArray array1  = null;
+					// 	attribute Product.category for field categoryname			
+					nestedRow =  r1;
+					if(nestedRow != null && Arrays.asList(nestedRow.schema().fieldNames()).contains("categoryname")) {
+						if(nestedRow.getAs("categoryname")==null)
+							product1.setCategory(null);
+						else{
+							product1.setCategory((String) nestedRow.getAs("categoryname"));
+							toAdd1 = true;					
+							}
+					}
+					array1 = r1.getAs("products");
+					if(array1!= null) {
+						for (int i2 = 0; i2 < array1.size(); i2++){
+							Row r2 = (Row) array1.apply(i2);
+							Product product2 = (Product) product1.clone();
+							boolean toAdd2  = false;
+							WrappedArray array2  = null;
+							// 	attribute Product.id for field id			
+							nestedRow =  r2;
+							if(nestedRow != null && Arrays.asList(nestedRow.schema().fieldNames()).contains("id")) {
+								if(nestedRow.getAs("id")==null)
+									product2.setId(null);
+								else{
+									product2.setId((String) nestedRow.getAs("id"));
+									toAdd2 = true;					
+									}
+							}
+							// 	attribute Product.Name for field name			
+							nestedRow =  r2;
+							if(nestedRow != null && Arrays.asList(nestedRow.schema().fieldNames()).contains("name")) {
+								if(nestedRow.getAs("name")==null)
+									product2.setName(null);
+								else{
+									product2.setName((String) nestedRow.getAs("name"));
+									toAdd2 = true;					
+									}
+							}
+							if(toAdd2) {
+								if(condition ==null || refilterFlag.booleanValue() || condition.evaluate(product2))
+								list_res.add(product2);
+								addedInList = true;
+							} 
+							if(addedInList)
+								toAdd1 = false;
+						}
+					}
+					
+					if(toAdd1) {
+						
+							list_res.add(product1);
+						addedInList = true;
+					} 
+					
+					
+				
+				return list_res.iterator();
+	
+		}, Encoders.bean(Product.class));
+		res= res.dropDuplicates(new String[]{"id"});
+		return res;
+		
+	}
+	
 	public static Pair<String, List<String>> getSQLWhereClauseInProductCatalogTableFromMyproductdb(Condition<ProductAttribute> condition, MutableBoolean refilterFlag) {
 		return getSQLWhereClauseInProductCatalogTableFromMyproductdbWithTableAlias(condition, refilterFlag, "");
 	}
@@ -219,188 +401,6 @@ public class ProductServiceImpl extends ProductService {
 	}
 	
 	
-	public static String getBSONMatchQueryInCategoryCollectionFromMymongo2(Condition<ProductAttribute> condition, MutableBoolean refilterFlag) {	
-		String res = null;	
-		if(condition != null) {
-			if(condition instanceof SimpleCondition) {
-				ProductAttribute attr = ((SimpleCondition<ProductAttribute>) condition).getAttribute();
-				Operator op = ((SimpleCondition<ProductAttribute>) condition).getOperator();
-				Object value = ((SimpleCondition<ProductAttribute>) condition).getValue();
-				if(value != null) {
-					String valueString = Util.transformBSONValue(value);
-					boolean isConditionAttrEncountered = false;
-	
-					if(attr == ProductAttribute.id ) {
-						isConditionAttrEncountered = true;
-					
-						String mongoOp = op.getMongoDBOperator();
-						String preparedValue = valueString;
-						if(op == Operator.CONTAINS && valueString != null) {
-							preparedValue = "'.*" + Util.escapeReservedRegexMongo(valueString)  + ".*'";
-						} else {
-							preparedValue = Util.getDelimitedMongoValue(value.getClass(), preparedValue);
-						}
-						res = "id': {" + mongoOp + ": " + preparedValue + "}";
-	
-						res = "products." + res;
-					res = "'" + res;
-					}
-					if(attr == ProductAttribute.Name ) {
-						isConditionAttrEncountered = true;
-					
-						String mongoOp = op.getMongoDBOperator();
-						String preparedValue = valueString;
-						if(op == Operator.CONTAINS && valueString != null) {
-							preparedValue = "'.*" + Util.escapeReservedRegexMongo(valueString)  + ".*'";
-						} else {
-							preparedValue = Util.getDelimitedMongoValue(value.getClass(), preparedValue);
-						}
-						res = "name': {" + mongoOp + ": " + preparedValue + "}";
-	
-						res = "products." + res;
-					res = "'" + res;
-					}
-					if(attr == ProductAttribute.category ) {
-						isConditionAttrEncountered = true;
-					
-						String mongoOp = op.getMongoDBOperator();
-						String preparedValue = valueString;
-						if(op == Operator.CONTAINS && valueString != null) {
-							preparedValue = "'.*" + Util.escapeReservedRegexMongo(valueString)  + ".*'";
-						} else {
-							preparedValue = Util.getDelimitedMongoValue(value.getClass(), preparedValue);
-						}
-						res = "categoryname': {" + mongoOp + ": " + preparedValue + "}";
-	
-					res = "'" + res;
-					}
-					if(!isConditionAttrEncountered) {
-						refilterFlag.setValue(true);
-						res = "$expr: {$eq:[1,1]}";
-					}
-					
-				}
-			}
-	
-			if(condition instanceof AndCondition) {
-				String bsonLeft = getBSONMatchQueryInCategoryCollectionFromMymongo2(((AndCondition)condition).getLeftCondition(), refilterFlag);
-				String bsonRight = getBSONMatchQueryInCategoryCollectionFromMymongo2(((AndCondition)condition).getRightCondition(), refilterFlag);			
-				if(bsonLeft == null && bsonRight == null)
-					return null;
-				if(bsonLeft == null)
-					return bsonRight;
-				if(bsonRight == null)
-					return bsonLeft;
-				res = " $and: [ {" + bsonLeft + "}, {" + bsonRight + "}] ";
-			}
-	
-			if(condition instanceof OrCondition) {
-				String bsonLeft = getBSONMatchQueryInCategoryCollectionFromMymongo2(((OrCondition)condition).getLeftCondition(), refilterFlag);
-				String bsonRight = getBSONMatchQueryInCategoryCollectionFromMymongo2(((OrCondition)condition).getRightCondition(), refilterFlag);			
-				if(bsonLeft == null && bsonRight == null)
-					return null;
-				if(bsonLeft == null)
-					return bsonRight;
-				if(bsonRight == null)
-					return bsonLeft;
-				res = " $or: [ {" + bsonLeft + "}, {" + bsonRight + "}] ";	
-			}
-	
-			
-	
-			
-		}
-	
-		return res;
-	}
-	
-	public Dataset<Product> getProductListInCategoryCollectionFromMymongo2(conditions.Condition<conditions.ProductAttribute> condition, MutableBoolean refilterFlag){
-		String bsonQuery = ProductServiceImpl.getBSONMatchQueryInCategoryCollectionFromMymongo2(condition, refilterFlag);
-		if(bsonQuery != null) {
-			bsonQuery = "{$match: {" + bsonQuery + "}}";	
-		} 
-		
-		Dataset<Row> dataset = dbconnection.SparkConnectionMgr.getSparkSessionForMongoDB("mymongo2", "categoryCollection", bsonQuery);
-	
-		Dataset<Product> res = dataset.flatMap((FlatMapFunction<Row, Product>) r -> {
-				List<Product> list_res = new ArrayList<Product>();
-				Integer groupIndex = null;
-				String regex = null;
-				String value = null;
-				Pattern p = null;
-				Matcher m = null;
-				boolean matches = false;
-				Row nestedRow = null;
-	
-				boolean addedInList = false;
-				Row r1 = r;
-				Product product1 = new Product();
-					boolean toAdd1  = false;
-					WrappedArray array1  = null;
-					// 	attribute Product.category for field categoryname			
-					nestedRow =  r1;
-					if(nestedRow != null && Arrays.asList(nestedRow.schema().fieldNames()).contains("categoryname")) {
-						if(nestedRow.getAs("categoryname")==null)
-							product1.setCategory(null);
-						else{
-							product1.setCategory((String) nestedRow.getAs("categoryname"));
-							toAdd1 = true;					
-							}
-					}
-					array1 = r1.getAs("products");
-					if(array1!= null) {
-						for (int i2 = 0; i2 < array1.size(); i2++){
-							Row r2 = (Row) array1.apply(i2);
-							Product product2 = (Product) product1.clone();
-							boolean toAdd2  = false;
-							WrappedArray array2  = null;
-							// 	attribute Product.id for field id			
-							nestedRow =  r2;
-							if(nestedRow != null && Arrays.asList(nestedRow.schema().fieldNames()).contains("id")) {
-								if(nestedRow.getAs("id")==null)
-									product2.setId(null);
-								else{
-									product2.setId((String) nestedRow.getAs("id"));
-									toAdd2 = true;					
-									}
-							}
-							// 	attribute Product.Name for field name			
-							nestedRow =  r2;
-							if(nestedRow != null && Arrays.asList(nestedRow.schema().fieldNames()).contains("name")) {
-								if(nestedRow.getAs("name")==null)
-									product2.setName(null);
-								else{
-									product2.setName((String) nestedRow.getAs("name"));
-									toAdd2 = true;					
-									}
-							}
-							if(toAdd2) {
-								if(condition ==null || refilterFlag.booleanValue() || condition.evaluate(product2))
-								list_res.add(product2);
-								addedInList = true;
-							} 
-							if(addedInList)
-								toAdd1 = false;
-						}
-					}
-					
-					if(toAdd1) {
-						
-							list_res.add(product1);
-						addedInList = true;
-					} 
-					
-					
-				
-				return list_res.iterator();
-	
-		}, Encoders.bean(Product.class));
-		res= res.dropDuplicates(new String[]{"id"});
-		return res;
-		
-	}
-	
-	
 	
 	//TODO redis
 	public Dataset<Product> getProductListInKVProdPriceFromMyredis(conditions.Condition<conditions.ProductAttribute> condition, MutableBoolean refilterFlag){
@@ -566,12 +566,16 @@ public class ProductServiceImpl extends ProductService {
 	}
 	public void insertProduct(Product product){
 		// Insert into all mapped AbstractPhysicalStructure 
-			insertProductInProductCatalogTableFromMyproductdb(product);
 			insertProductInCategoryCollectionFromMymongo2(product);
+			insertProductInProductCatalogTableFromMyproductdb(product);
 			insertProductInKVProdPriceFromMyredis(product);
 			insertProductInKVProdPhotosFromMyredis(product);
 	}
 	
+	public void insertProductInCategoryCollectionFromMymongo2(Product product){
+		//Read mapping rules and find attributes of the POJO that are mapped to the corresponding AbstractPhysicalStructure
+		// Insert in MongoDB
+	}
 	public void insertProductInProductCatalogTableFromMyproductdb(Product product){
 		//Read mapping rules and find attributes of the POJO that are mapped to the corresponding AbstractPhysicalStructure
 		// Insert in SQL DB 
@@ -583,10 +587,6 @@ public class ProductServiceImpl extends ProductService {
 	inputs.add(product.getDescription());
 	// Get the reference attribute. Either via a TDO Object or using the Pojo reference TODO
 	DBConnectionMgr.getMapDB().get("myproductdb").insertOrUpdateOrDelete(query,inputs);
-	}
-	public void insertProductInCategoryCollectionFromMymongo2(Product product){
-		//Read mapping rules and find attributes of the POJO that are mapped to the corresponding AbstractPhysicalStructure
-		// Insert in MongoDB
 	}
 	public void insertProductInKVProdPriceFromMyredis(Product product)	{
 			//other databases to implement

@@ -70,10 +70,10 @@ public abstract class ProductService {
 		MutableBoolean refilterFlag = new MutableBoolean(false);
 		List<Dataset<Product>> datasets = new ArrayList<Dataset<Product>>();
 		Dataset<Product> d = null;
-		d = getProductListInProductCatalogTableFromMyproductdb(condition, refilterFlag);
+		d = getProductListInCategoryCollectionFromMymongo2(condition, refilterFlag);
 		if(d != null)
 			datasets.add(d);
-		d = getProductListInCategoryCollectionFromMymongo2(condition, refilterFlag);
+		d = getProductListInProductCatalogTableFromMyproductdb(condition, refilterFlag);
 		if(d != null)
 			datasets.add(d);
 		d = getProductListInKVProdPriceFromMyredis(condition, refilterFlag);
@@ -213,12 +213,12 @@ public abstract class ProductService {
 	
 	
 	
-	public abstract Dataset<Product> getProductListInProductCatalogTableFromMyproductdb(conditions.Condition<conditions.ProductAttribute> condition, MutableBoolean refilterFlag);
-	
-	
-	
-	
 	public abstract Dataset<Product> getProductListInCategoryCollectionFromMymongo2(conditions.Condition<conditions.ProductAttribute> condition, MutableBoolean refilterFlag);
+	
+	
+	
+	
+	public abstract Dataset<Product> getProductListInProductCatalogTableFromMyproductdb(conditions.Condition<conditions.ProductAttribute> condition, MutableBoolean refilterFlag);
 	
 	
 	
@@ -380,7 +380,7 @@ public abstract class ProductService {
 	public abstract void insertProductAndLinkedItems(Product product);
 	public abstract void insertProduct(Product product);
 	
-	public abstract void insertProductInProductCatalogTableFromMyproductdb(Product product); public abstract void insertProductInCategoryCollectionFromMymongo2(Product product); public abstract void insertProductInKVProdPriceFromMyredis(Product product); public abstract void insertProductInKVProdPhotosFromMyredis(Product product); 
+	public abstract void insertProductInCategoryCollectionFromMymongo2(Product product); public abstract void insertProductInProductCatalogTableFromMyproductdb(Product product); public abstract void insertProductInKVProdPriceFromMyredis(Product product); public abstract void insertProductInKVProdPhotosFromMyredis(Product product); 
 	public abstract void updateProductList(conditions.Condition<conditions.ProductAttribute> condition, conditions.SetClause<conditions.ProductAttribute> set);
 	
 	public void updateProduct(pojo.Product product) {
