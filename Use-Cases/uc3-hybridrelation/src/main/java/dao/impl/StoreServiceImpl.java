@@ -272,12 +272,12 @@ public class StoreServiceImpl extends StoreService {
 	public void insertStoreInSTOREFromINVENTORY(Store store){
 		//Read mapping rules and find attributes of the POJO that are mapped to the corresponding AbstractPhysicalStructure
 		// Insert in SQL DB 
-	String query = "INSERT INTO STORE(ADDR,VAT,ID) VALUES (?,?,?)";
+	String query = "INSERT INTO STORE(ID,VAT,ADDR) VALUES (?,?,?)";
 	
 	List<Object> inputs = new ArrayList<>();
-	inputs.add(store.getAddress());
-	inputs.add(store.getVAT());
 	inputs.add(store.getId());
+	inputs.add(store.getVAT());
+	inputs.add(store.getAddress());
 	// Get the reference attribute. Either via a TDO Object or using the Pojo reference TODO
 	DBConnectionMgr.getMapDB().get("INVENTORY").insertOrUpdateOrDelete(query,inputs);
 	}

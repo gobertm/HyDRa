@@ -272,11 +272,11 @@ public class ProductServiceImpl extends ProductService {
 	public void insertProductInPRODUCTFromINVENTORY(Product product){
 		//Read mapping rules and find attributes of the POJO that are mapped to the corresponding AbstractPhysicalStructure
 		// Insert in SQL DB 
-	String query = "INSERT INTO PRODUCT(ID,NAME,PRICE) VALUES (?,?,?)";
+	String query = "INSERT INTO PRODUCT(NAME,ID,PRICE) VALUES (?,?,?)";
 	
 	List<Object> inputs = new ArrayList<>();
-	inputs.add(product.getId());
 	inputs.add(product.getLabel());
+	inputs.add(product.getId());
 	inputs.add(product.getPrice());
 	// Get the reference attribute. Either via a TDO Object or using the Pojo reference TODO
 	DBConnectionMgr.getMapDB().get("INVENTORY").insertOrUpdateOrDelete(query,inputs);

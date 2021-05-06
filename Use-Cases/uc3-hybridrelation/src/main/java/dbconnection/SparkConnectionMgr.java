@@ -64,15 +64,22 @@ public class SparkConnectionMgr {
 	}
 
 	public static Dataset<Row> getSparkSessionForMongoDB(String dbName, String collectionName, String bsonQuery) {
-		JavaSparkContext jsc = new JavaSparkContext(getSession().sparkContext());
-
+		
 		// https://docs.mongodb.com/manual/core/read-preference/#replica-set-read-preference-modes
 		Map<String, String> readOverrides = new HashMap<String, String>();
 		DBCredentials credentials = dbPorts.get(dbName);
-		readOverrides.put("uri", "mongodb://" + credentials.url + ":" + credentials.port);
+		
+		String mongoURL = "mongodb://" + credentials.url + ":" + credentials.port + "/" + dbName + "." + collectionName;
+		getSession().sparkContext().conf().set("spark.mongodb.input.uri", mongoURL);
+		getSession().sparkContext().conf().set("spark.mongodb.output.uri", mongoURL);
+		
+//		readOverrides.put("uri", "mongodb://" + credentials.url + ":" + credentials.port);
 		readOverrides.put("database", dbName);
 		readOverrides.put("collection", collectionName);
 		readOverrides.put("readPreference.name", "primaryPreferred");
+		
+		JavaSparkContext jsc = new JavaSparkContext(getSession().sparkContext());
+		
 		ReadConfig readConfig = ReadConfig.create(jsc).withOptions(readOverrides);
 
 		Dataset<Row> res = (bsonQuery != null)
