@@ -3,7 +3,7 @@ HyDRa (Hybrid Data Representation and Access) is a hybrid polystore management f
 
 ## Install
 
-**A [video](Use-Cases/resources/Video-Installation-Usage.mp4) of the installation and usage of HyDRa tools is available**
+**A [video](https://github.com/gobertm/HyDRa/raw/main/Use-Cases/resources/Video-Installation-Usage.mp4) of the installation and usage of HyDRa tools is available**
 
 -   Make sure Java 14 is installed on your computer
 -   Run Eclipse and install the HyDRa plugins
