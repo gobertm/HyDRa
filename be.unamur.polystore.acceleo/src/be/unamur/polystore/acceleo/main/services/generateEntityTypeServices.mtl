@@ -25,6 +25,7 @@ import org.apache.spark.api.java.function.FilterFunction;
 import org.apache.commons.lang.mutable.MutableBoolean;
 import conditions.Condition;
 import conditions.Operator;
+import util.Util;
 [for (role: Role | getRolesFromEntityType(entityType, conceptualSchema))]
 import conditions.[role.entity.name.toUpperFirst()/]Attribute;
 [for (oppositeRole : Role | role.getOppositeRoles())]
