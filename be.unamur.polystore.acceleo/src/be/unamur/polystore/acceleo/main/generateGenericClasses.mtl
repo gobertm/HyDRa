@@ -90,6 +90,8 @@ public class Util {
 			return ((Float) o).doubleValue();
 		if(o instanceof Short)
 			return ((Short) o).doubleValue();
+		if(o instanceof Double)
+			return ((Double) o).doubleValue();
 		if(o instanceof Integer)
 			return ((Integer) o).doubleValue();
 		if (o instanceof Long)
@@ -106,6 +108,8 @@ public class Util {
 			return ((BigDecimal) o).intValue();
 		if(o instanceof Float)
 			return ((Float) o).intValue();
+		if(o instanceof Double)
+			return ((Double) o).intValue();
 		if(o instanceof Short)
 			return ((Short) o).intValue();
 		if(o instanceof Integer)
@@ -126,6 +130,8 @@ public class Util {
 			return ((Float) o).longValue();
 		if(o instanceof Short)
 			return ((Short) o).longValue();
+		if(o instanceof Double)
+			return ((Double) o).longValue();
 		if(o instanceof Integer)
 			return ((Integer) o).longValue();
 		if (o instanceof Long)
@@ -142,6 +148,8 @@ public class Util {
 			return ((BigDecimal) o).toString();
 		if(o instanceof Float)
 			return ((Float) o).toString();
+		if(o instanceof Double)
+			return ((Double) o).toString();
 		if(o instanceof Short)
 			return ((Short) o).toString();
 		if(o instanceof Integer)
