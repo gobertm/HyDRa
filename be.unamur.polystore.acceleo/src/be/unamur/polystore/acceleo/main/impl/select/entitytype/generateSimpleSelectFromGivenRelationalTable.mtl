@@ -52,7 +52,7 @@
 				// attribute [ '[' /][pojoName /].[attr.name.toUpperFirst() /][ ']' /]
 				[if (field.ancestors(LongField) -> size() = 0)]
 				[comment shortField or bracketfield/]
-				[generateJavaType(attr.type)/] [attr.name.toLowerFirst()/] = r.getAs("[getPhysicalName(field) /]");
+				[generateJavaType(attr.type)/] [attr.name.toLowerFirst()/] = Util.get[generateJavaType(attr.type) /]Value(r.getAs("[getPhysicalName(field) /]"));
 				[pojoName.toLowerFirst() /]_res.set[attr.name.toUpperFirst()/]([attr.name.toLowerFirst()/]);
 				[else]
 				[comment LongField /]

@@ -274,7 +274,7 @@ Dataset<[role.getRelationShipType().name.toUpperFirst() /]TDO> res = d.map((MapF
 			// attribute [ '[' /][role.entity.name.toUpperFirst() /].[attr.name.toUpperFirst() /][ ']' /]
 			[if (field.ancestors(LongField) -> size() = 0)]
 			[comment shortField or bracketfield/]
-			[generateJavaType(attr.type)/] [role.entity.name.toLowerFirst()/]_[attr.name.toLowerFirst()/] = r.getAs("[table.name/]_[getPhysicalName(field) /]");
+			[generateJavaType(attr.type)/] [role.entity.name.toLowerFirst()/]_[attr.name.toLowerFirst()/] = Util.get[generateJavaType(attr.type) /]Value(r.getAs("[table.name/]_[getPhysicalName(field) /]"));
 			[role.getRelationShipType().name.toUpperFirst().toLowerFirst() /]_res.get[role.name.toUpperFirst()/]().set[attr.name.toUpperFirst()/]([role.entity.name.toLowerFirst()/]_[attr.name.toLowerFirst()/]);
 			[else]
 			[comment LongField /]
@@ -331,7 +331,7 @@ Dataset<[role.getRelationShipType().name.toUpperFirst() /]TDO> res = d.map((MapF
 				// attribute [ '[' /][role1.entity.name.toUpperFirst() /].[attr.name.toUpperFirst() /][ ']' /]
 				[if (field.ancestors(LongField) -> size() = 0)]
 				[comment shortField or bracketfield/]
-				[generateJavaType(attr.type)/] [role1.entity.name.toLowerFirst()/]_[attr.name.toLowerFirst()/] = r.getAs("[table1.name/]_[getPhysicalName(field) /]");
+				[generateJavaType(attr.type)/] [role1.entity.name.toLowerFirst()/]_[attr.name.toLowerFirst()/] = Util.get[generateJavaType(attr.type) /]Value(r.getAs("[table1.name/]_[getPhysicalName(field) /]"));
 				[role1.getRelationShipType().name.toUpperFirst().toLowerFirst() /]_res.get[role1.name.toUpperFirst()/]().set[attr.name.toUpperFirst()/]([role1.entity.name.toLowerFirst()/]_[attr.name.toLowerFirst()/]);
 				[else]
 				[comment LongField /]
@@ -364,7 +364,7 @@ Dataset<[role.getRelationShipType().name.toUpperFirst() /]TDO> res = d.map((MapF
 				// attribute [ '[' /][role2.entity.name.toUpperFirst() /].[attr.name.toUpperFirst() /][ ']' /]
 				[if (field.ancestors(LongField) -> size() = 0)]
 				[comment shortField or bracketfield/]
-				[generateJavaType(attr.type)/] [role2.entity.name.toLowerFirst()/]_[attr.name.toLowerFirst()/] = r.getAs("[table2.name/]_[getPhysicalName(field) /]");
+				[generateJavaType(attr.type)/] [role2.entity.name.toLowerFirst()/]_[attr.name.toLowerFirst()/] = Util.get[generateJavaType(attr.type) /]Value(r.getAs("[table2.name/]_[getPhysicalName(field) /]"));
 				[role2.getRelationShipType().name.toUpperFirst().toLowerFirst() /]_res.get[role2.name.toUpperFirst()/]().set[attr.name.toUpperFirst()/]([role2.entity.name.toLowerFirst()/]_[attr.name.toLowerFirst()/]);
 				[else]
 				[comment LongField /]
