@@ -4,8 +4,9 @@ conceptual schema noe {
 	entity type Course { 
 		// presentation
 		id : int,
-		full_code : string,
 		academic_year : int,
+		lang:string,
+		parent_id : int,
 		partim_title : string,  
 		title : string,
 		goals : string,
@@ -32,6 +33,7 @@ conceptual schema noe {
 //		exercises_q2 : float,
 		disciplines : string,
 		// presenation - pedagogy
+		prerequisites: string,
 		teaching : string,
 		assesment : string,
 		readings : string,
@@ -161,14 +163,14 @@ physical schemas {
 				readings,
 				content,
 				goals,
-//				table,
+				table1,
 				exercises,
 				teaching,
 				decree_goals,
 				objectives,
 				course_orga_id
 			}
-//			Ne mappe à rien pour l'instant car aucun role ne réprésente cette ref'
+//			Ne mappe à rien pour l'instant car aucun role ne réprésente cette ref'. En conceptua
 //			references {
 //				noe_edu_course_description_course_orga_id_fkey : course_orga_id -> noe_edu_course_organization.id
 //			}
@@ -178,7 +180,9 @@ physical schemas {
 			columns {
 				id,
 				academic_year,
+				lang,
 				course_id,
+				parent_id,
 				hours_exercises_q1,
 				hours_exercises_q2,
 				hours_theory_q1,
@@ -191,8 +195,8 @@ physical schemas {
 	
 }
 mapping rules {
-	noe.Course(id, title,assesment,readings,content,goals,exercises,teaching,objectives) -> noe_course.noe_edu_course_description(course_orga_id,title,assessment,readings,content,goals,exercises,teaching,objectives),
-	noe.Course(id, academic_year, full_code,exercises_q1,exercises_q2, theory_q1, theory_q2) -> noe_course.noe_edu_course_organization(id, academic_year,full_code, hours_exercises_q1, hours_exercises_q2, hours_theory_q1, hours_theory_q2)
+	noe.Course(id, title, prerequisites, assesment,readings,content,goals,exercises,teaching,objectives) -> noe_course.noe_edu_course_description(course_orga_id,title, prerequisites, assessment,readings,content,goals,exercises,teaching,objectives),
+	noe.Course(id, parent_id, absolute_credits, academic_year,lang, course_code,exercises_q1,exercises_q2, theory_q1, theory_q2) -> noe_course.noe_edu_course_organization(id, parent_id, credits, academic_year, lang, full_code, hours_exercises_q1, hours_exercises_q2, hours_theory_q1, hours_theory_q2)
 }
 
 databases {
