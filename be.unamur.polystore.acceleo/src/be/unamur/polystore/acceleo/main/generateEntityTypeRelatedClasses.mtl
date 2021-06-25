@@ -67,7 +67,10 @@ public class [entityType.name.toUpperFirst() /] extends LoggingPojo {
         return super.clone();
     }
 	
-
+	@Override
+	public String toString(){
+		return "[entityType.name/] { " + [for (attr: Attribute | entityType.attributes) separator ('+", "+\n')]"[attr.name/]="+[attr.name/] [/for]+"}"; 
+	}
 	[comment Getter & Setter for attributes /]
 	
 	[for (attr: Attribute | entityType.attributes)]
