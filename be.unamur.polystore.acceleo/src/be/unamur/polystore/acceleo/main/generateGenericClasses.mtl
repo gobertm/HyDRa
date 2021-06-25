@@ -516,7 +516,9 @@ public enum Operator {
 				if(testValue == null && objectValue!= null)
 					return false;
 				if(testValue != null && objectValue == null)
-					return false;	
+					return false;
+				if(testValue == null && objectValue == null)
+					return true;	
 				return testValue.equals(objectValue);
 			}
 			if(this == Operator.NOT_EQUALS) {
