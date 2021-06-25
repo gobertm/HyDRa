@@ -46,7 +46,7 @@ public [if (isMaxOne(role2) = false)]Dataset<[entity.name.toUpperFirst() /]>[els
 	[if (isMaxOne(role2) = false)]
 	return res;
 	[else]
-	return res.first();
+	return !res.isEmpty()?res.first():null;
 	[/if]
 [comment]getDirected_movieListInMovieDirector(null, Condition.simple(DirectorAttribute.id, Operator.EQUALS, director.getId()));[/comment]
 }
