@@ -273,12 +273,16 @@ private static Dataset<[entityType.name.toUpperFirst()/]> fullOuterJoins[entityT
 		Dataset<Row> res = d.join(datasetsPOJO.get(1)
 	[for (attr : Attribute | entityType.attributes)][if (entityType.identifier.attributes->includes(attr) = false)]
 							.withColumnRenamed("[attr.name.toLowerFirst() /]", "[attr.name.toLowerFirst() /]_1")
-	[/if][/for]						, seq, joinMode);
+	[/if][/for]						
+							.withColumnRenamed("logEvents", "logEvents_1")
+						, seq, joinMode);
 		for(int i = 2; i < datasetsPOJO.size(); i++) {
 			res = res.join(datasetsPOJO.get(i)
 	[for (attr : Attribute | entityType.attributes)][if (entityType.identifier.attributes->includes(attr) = false)]
 							.withColumnRenamed("[attr.name.toLowerFirst() /]", "[attr.name.toLowerFirst() /]_" + i)
-	[/if][/for]						, seq, joinMode);
+	[/if][/for]	
+							.withColumnRenamed("logEvents", "logEvents_" + i)
+					, seq, joinMode);
 		} 
 		d = res.map((MapFunction<Row, [entityType.name.toUpperFirst() /]>) r -> {
 				[entityType.name.toUpperFirst() /] [entityType.name.toLowerFirst() /]_res = new [entityType.name.toUpperFirst() /]();
@@ -300,6 +304,21 @@ private static Dataset<[entityType.name.toUpperFirst()/]> fullOuterJoins[entityT
 				[/if]
 				[entityType.name.toLowerFirst() /]_res.set[attr.name.toUpperFirst() /](firstNotNull_[attr.name /]);
 				[/for]
+
+				scala.collection.mutable.WrappedArray<String> logEvents = r.getAs("logEvents");
+				if(logEvents != null)
+					for (int i = 0; i < logEvents.size(); i++){
+						[entityType.name.toLowerFirst() /]_res.addLogEvent(logEvents.apply(i));
+					}
+	
+				for (int i = 1; i < datasetsPOJO.size(); i++) {
+					logEvents = r.getAs("logEvents_" + i);
+					if(logEvents != null)
+					for (int j = 0; j < logEvents.size(); j++){
+						[entityType.name.toLowerFirst() /]_res.addLogEvent(logEvents.apply(j));
+					}
+				}
+
 				return [entityType.name.toLowerFirst() /]_res;
 			}, Encoders.bean([entityType.name.toUpperFirst() /].class));
 		return d;
