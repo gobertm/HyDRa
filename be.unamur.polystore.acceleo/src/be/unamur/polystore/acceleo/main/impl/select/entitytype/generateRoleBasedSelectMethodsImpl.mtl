@@ -15,14 +15,14 @@
 	MutableBoolean [role2.name/]_refilter;
 	org.apache.spark.sql.Column joinCondition = null;
 	[for (ref: Reference | getMappedReferences(role, conceptualSchema.getMappingRules()))]
-	[if (isHostedInJoinPhysicalStructureServing(role2, ref.getAbstractPhysicalStructureNotEmbeddedObject()))]
+	[if (hasMappedReferenceInSamePhysicalStructureForOppoisteRole(role2, ref.getAbstractPhysicalStructureNotEmbeddedObject()))]
 	[let ref2 : Reference = getMappedReferenceInSamePhysicalStructureForOppositeRole(role2, ref.getAbstractPhysicalStructureNotEmbeddedObject())]
 	// join physical structure
 
 	[generateCodeForJoinPhysicalStructure(entity, role, ref, role2, ref2)/]
 	[/let]
 	[/if]
-	[if (isHostedInJoinPhysicalStructureServing(role2, ref.getAbstractPhysicalStructureNotEmbeddedObject()) = false)]
+	[if (hasMappedReferenceInSamePhysicalStructureForOppoisteRole(role2, ref.getAbstractPhysicalStructureNotEmbeddedObject()) = false)]
 
 	[let struct1 : AbstractPhysicalStructure = ref.getAbstractPhysicalStructureNotEmbeddedObject()]
 	[let struct2 : AbstractPhysicalStructure = ref.targetField->first().getAbstractPhysicalStructureNotEmbeddedObject()]

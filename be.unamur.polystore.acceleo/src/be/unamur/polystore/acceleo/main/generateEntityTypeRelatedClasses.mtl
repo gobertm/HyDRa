@@ -161,7 +161,7 @@ public class [ent.name.toUpperFirst() /]TDO extends [ent.name.toUpperFirst() /] 
 	[/for]
 	[/let]
 	[/if]
-	[if (role2.entity = ent and isHostedInJoinPhysicalStructureServing(role2, ref.getAbstractPhysicalStructureNotEmbeddedObject()) = false)]
+	[if (role2.entity = ent and hasMappedReferenceInSamePhysicalStructureForOppoisteRole(role2, ref.getAbstractPhysicalStructureNotEmbeddedObject()) = false)]
 	[for (field : PhysicalField | ref.targetField)]
 	private String [getJavaAbsolutePath(ref) /]_[field.getPhysicalName() /];
 	public String get[getJavaAbsolutePath(ref).toUpperFirst() /]_[field.getPhysicalName() /]() {
@@ -188,7 +188,7 @@ public class [ent.name.toUpperFirst() /]TDO extends [ent.name.toUpperFirst() /] 
 /]
 
 [query private getFields(ref: Reference, role1 : Role, role2 : Role) : Sequence(PhysicalField) = 
-	invoke('be.unamur.polystore.acceleo.main.utils.Util', 'getFields(be.unamur.polystore.pml.Reference, java.lang.Boolean)', Sequence{ref, isHostedInJoinPhysicalStructureServing(role2, ref.getAbstractPhysicalStructureNotEmbeddedObject())})
+	invoke('be.unamur.polystore.acceleo.main.utils.Util', 'getFields(be.unamur.polystore.pml.Reference, java.lang.Boolean)', Sequence{ref, hasMappedReferenceInSamePhysicalStructureForOppoisteRole(role2, ref.getAbstractPhysicalStructureNotEmbeddedObject())})
  /]
 
 

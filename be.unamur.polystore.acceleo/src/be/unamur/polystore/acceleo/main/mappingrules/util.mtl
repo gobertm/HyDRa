@@ -41,9 +41,6 @@
 [query public getMappingRules(o: OclAny) : MappingRules = 
 	o.ancestors(Domainmodel)->first().mappingRules /]
 
-[query public isHostedInJoinPhysicalStructureServing(role : Role, struct: AbstractPhysicalStructure) : Boolean = 
-	hasMappedReferenceInSamePhysicalStructureForOppoisteRole(role, struct) /]
-
 [query public hasMappedReferenceInSamePhysicalStructureForOppoisteRole(role : Role, struct: AbstractPhysicalStructure) : Boolean = 
 	getMappedReferences(role, role.getMappingRules()) -> select(ref : Reference | ref.getAbstractPhysicalStructureNotEmbeddedObject() = struct) -> size() > 0 /]
 
