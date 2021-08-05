@@ -27,6 +27,7 @@ import be.unamur.polystore.pml.Node;
 import be.unamur.polystore.pml.PhysicalField;
 import be.unamur.polystore.pml.PmlPackage;
 import be.unamur.polystore.pml.RoleToEmbbededObjectMappingRule;
+import be.unamur.polystore.pml.RoleToKeyBracketsFieldMappingRule;
 import be.unamur.polystore.pml.RoleToReferenceMappingRule;
 import be.unamur.polystore.pml.ShortField;
 import be.unamur.polystore.pml.Table;
@@ -53,7 +54,7 @@ public class PmlScopeProvider extends AbstractPmlScopeProvider {
 		}
 		if((context instanceof RoleToEmbbededObjectMappingRule || context instanceof EntityMappingRule) 
 				&& 
-				(reference == PmlPackage.Literals.ROLE_TO_EMBBEDED_OBJECT_MAPPING_RULE__PHYSICAL_FIELDS || reference == PmlPackage.Literals.ENTITY_MAPPING_RULE__PHYSICAL_FIELDS)) {
+				(reference == PmlPackage.Literals.ENTITY_MAPPING_RULE__PHYSICAL_FIELDS)) {
 			AbstractPhysicalStructure struct=null;
 			if(context instanceof RoleToEmbbededObjectMappingRule) {
 				RoleToEmbbededObjectMappingRule rule = EcoreUtil2.getContainerOfType(context, RoleToEmbbededObjectMappingRule.class);
@@ -96,6 +97,14 @@ public class PmlScopeProvider extends AbstractPmlScopeProvider {
 		}
 		if(context instanceof RoleToReferenceMappingRule && reference == PmlPackage.Literals.ROLE_TO_REFERENCE_MAPPING_RULE__REFERENCE) {
 			return super.getScope(context, reference);
+		}
+		if(context instanceof RoleToKeyBracketsFieldMappingRule && reference == PmlPackage.Literals.ROLE_TO_KEY_BRACKETS_FIELD_MAPPING_RULE__KEY_FIELD) {
+			AbstractPhysicalStructure struct=null;
+			RoleToKeyBracketsFieldMappingRule rule = EcoreUtil2.getContainerOfType(context, RoleToKeyBracketsFieldMappingRule.class);
+			struct = rule.getPhysicalStructure();
+			EList<PhysicalField> fields = new BasicEList<PhysicalField>();
+			fields.addAll(getPhysicalFieldsFromKey(((KeyValuePair)struct).getKey()));
+			return Scopes.scopeFor(fields);
 		}
 		return super.getScope(context, reference);
 	}
