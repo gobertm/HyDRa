@@ -151,7 +151,7 @@ Rowkey:
 	 '}'
 ;
 
-// TODO Modifier l'emplacement du bloc référence.
+// TODO Modifier l'emplacement du bloc rï¿½fï¿½rence.
 GraphSchema:
 	'graph' 'schema' name=ID (':' databases+=[Database] (','databases+=[Database])*)?'{'
 		(nodes+=Node)* (edges+=Edge)* ('references' '{'references+=Reference*'}' )?
@@ -215,13 +215,19 @@ MappingRules:
 ;
 
 AbstractMappingRule:
-	EntityMappingRule | RoleToEmbbededObjectMappingRule | RoleToReferenceMappingRule
+	EntityMappingRule | RoleToEmbbededObjectMappingRule | RoleToReferenceMappingRule | RoleToKeyBracketsFieldMappingRule
+;
+
+EntityMappingRule:
+	(entityConceptual=[EntityType|QualifiedName]'('(attributesConceptual+=[Attribute|QualifiedName] (','attributesConceptual+=[Attribute|QualifiedName])*)?')'
+	('->' | '-''('conditionAttribute+=[Attribute|QualifiedName] operator=Operator value=ValueCondition')->')
+	 physicalStructure=[AbstractPhysicalStructure|QualifiedName]'('(physicalFields+=[PhysicalField|QualifiedName] (','physicalFields+=[PhysicalField|QualifiedName])*)?')')
 ;
 
 RoleToEmbbededObjectMappingRule:
 	roleConceptual=[Role|QualifiedName]
 	'->'
-	physicalStructure=[EmbeddedObject|QualifiedName]'('(physicalFields+=[PhysicalField|QualifiedName] (','physicalFields+=[PhysicalField|QualifiedName])*)?')'
+	physicalStructure=[EmbeddedObject|QualifiedName]'()'
 ;
 
 RoleToReferenceMappingRule:
@@ -230,10 +236,10 @@ RoleToReferenceMappingRule:
 	reference=[Reference|QualifiedName]
 ;
 
-EntityMappingRule:
-	(entityConceptual=[EntityType|QualifiedName]'('(attributesConceptual+=[Attribute|QualifiedName] (','attributesConceptual+=[Attribute|QualifiedName])*)?')'
-	('->' | '-''('conditionAttribute+=[Attribute|QualifiedName] operator=Operator value=ValueCondition')->')
-	 physicalStructure=[AbstractPhysicalStructure|QualifiedName]'('(physicalFields+=[PhysicalField|QualifiedName] (','physicalFields+=[PhysicalField|QualifiedName])*)?')')
+RoleToKeyBracketsFieldMappingRule:
+	roleConceptual=[Role|QualifiedName]
+	'->'
+	physicalStructure=[KeyValuePair|QualifiedName]'('keyField = [BracketsField|QualifiedName]')'	// Only present in Key , ScopeProvider handles the scope restriction
 ;
 
 enum Operator:

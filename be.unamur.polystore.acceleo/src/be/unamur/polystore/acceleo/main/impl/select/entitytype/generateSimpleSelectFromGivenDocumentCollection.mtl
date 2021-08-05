@@ -343,7 +343,7 @@ if(nestedRow != null && Arrays.asList(nestedRow.schema().fieldNames()).contains(
 	[else]
 		[if (child.ancestors(LongField) -> first().oclAsType(LongField).pattern->size() = 1)][comment if you encounter a "short" long field. E.g., rate: rating  /]
 	if(nestedRow.getAs("[getPhysicalName(child.ancestors(LongField) -> first().oclAsType(LongField)) /]")==null)
-		[pojoName.toLowerFirst() /][level/].set[attr.name.toUpperFirst() /](null)
+		[pojoName.toLowerFirst() /][level/].set[attr.name.toUpperFirst() /](null);
 	else{
 		if(Arrays.asList(nestedRow.schema().fieldNames()).contains("[getPhysicalName(child.ancestors(LongField) -> first().oclAsType(LongField)) /]")){
 			[pojoName.toLowerFirst() /][level/].set[attr.name.toUpperFirst() /](([generateJavaType(attr.type)/]) nestedRow.getAs("[getPhysicalName(child.ancestors(LongField) -> first().oclAsType(LongField)) /]"));
@@ -434,8 +434,12 @@ if(nestedRow != null && Arrays.asList(nestedRow.schema().fieldNames()).contains(
 		}
 	[else]
 		[if (child.ancestors(LongField) -> first().oclAsType(LongField).pattern->size() = 1)][comment if you encounter a "short" long field. E.g., rate: rating  /]
-	[pojoName.toLowerFirst() /][if (references->size() > 0)][getTDOLiteral('') /][/if][level/].set[attr.name.toUpperFirst() /](([generateJavaType(attr.type)/]) nestedRow.getAs("[getPhysicalName(child.ancestors(LongField) -> first().oclAsType(LongField)) /]"));
-	toAdd[level/] = true;	
+	if(nestedRow.getAs("[getPhysicalName(child.ancestors(LongField) -> first().oclAsType(LongField)) /]")==null)
+		[pojoName.toLowerFirst() /][if (references->size() > 0)][getTDOLiteral('') /][/if][level/].set[attr.name.toUpperFirst() /](null);
+	else{
+		[pojoName.toLowerFirst() /][if (references->size() > 0)][getTDOLiteral('') /][/if][level/].set[attr.name.toUpperFirst() /](([generateJavaType(attr.type)/]) nestedRow.getAs("[getPhysicalName(child.ancestors(LongField) -> first().oclAsType(LongField)) /]"));
+		toAdd[level/] = true;	
+	}
 		[else]
 	[comment LongField /]
 	regex = "[getJavaRegexFromLongField(child.ancestors(LongField) -> first().oclAsType(LongField)) /]";

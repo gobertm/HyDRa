@@ -76,6 +76,11 @@ physical schemas {
 				runtimeMinutes
 			}
 		}
+		
+		kvpairs actor_movieKV {
+			key : "actor:"[actorID]":movie:"[movieID],
+			value : title
+		}
 	}
 	
 	relational schema myRelSchema : mydb {
@@ -113,7 +118,12 @@ mapping rules{
 	conceptualSchema.Movie(id) -> movieRedis.movieKV(id),
 	conceptualSchema.Movie(primaryTitle,originalTitle,isAdult,startYear,runtimeMinutes) ->movieRedis.movieKV.attr(title,originalTitle,isAdult,startYear,runtimeMinutes), 
 	conceptualSchema.Movie(averageRating,numVotes) -> IMDB_Mongo.actorCollection.movies.rating(rate,numberofvotes),
-	conceptualSchema.Movie(id, primaryTitle) -> IMDB_Mongo.actorCollection.movies(id,title)
+	conceptualSchema.Movie(id, primaryTitle) -> IMDB_Mongo.actorCollection.movies(id,title),
+//	conceptualSchema.Actor(id) -> movieRedis.actor_movieKV(actorID),
+	conceptualSchema.Movie(id, primaryTitle) -> movieRedis.actor_movieKV(movieID, title),
+	conceptualSchema.movieActor.character -> 
+	
+	
 }
 
 databases {

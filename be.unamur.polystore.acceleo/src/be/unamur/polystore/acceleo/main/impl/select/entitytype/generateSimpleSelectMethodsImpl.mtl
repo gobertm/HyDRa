@@ -27,69 +27,7 @@
 
 	d = datasets.get(0);
 	if(datasets.size() > 1) {
-
-	
-		[if (entityType.identifier.oclIsUndefined() = false and entityType.identifier.attributes-> size() > 0)]
-		List<String> idFields = new ArrayList<String>();
-		[for (attr : Attribute | entityType.identifier.attributes)]
-		idFields.add("[attr.name /]");
-		[/for]
-		scala.collection.Seq<String> seq = scala.collection.JavaConverters.asScalaIteratorConverter(idFields.iterator()).asScala().toSeq();
-		Dataset<Row> res = d.join(datasets.get(1)
-	[for (attr : Attribute | entityType.attributes)][if (entityType.identifier.attributes->includes(attr) = false)]
-							.withColumnRenamed("[attr.name.toLowerFirst() /]", "[attr.name.toLowerFirst() /]_1")
-	[/if][/for]
-							.withColumnRenamed("logEvents", "logEvents_1")
-						, seq, "fullouter");
-		for(int i = 2; i < datasets.size(); i++) {
-			res = res.join(datasets.get(i)
-	[for (attr : Attribute | entityType.attributes)][if (entityType.identifier.attributes->includes(attr) = false)]
-							.withColumnRenamed("[attr.name.toLowerFirst() /]", "[attr.name.toLowerFirst() /]_" + i)
-	[/if][/for]
-							.withColumnRenamed("logEvents", "logEvents_" + i)
-						, seq, "fullouter");
-		} 
-		d = res.map((MapFunction<Row, [entityType.name.toUpperFirst() /]>) r -> {
-				[entityType.name.toUpperFirst() /] [entityType.name.toLowerFirst() /]_res = new [entityType.name.toUpperFirst() /]();
-				[for (attr : Attribute | entityType.attributes)]
-				
-				// attribute '[entityType.name.toUpperFirst() /].[attr.name.toLowerFirst() /]'
-				[generateJavaType(attr.type) /] firstNotNull_[attr.name /] = r.getAs("[attr.name.toLowerFirst() /]");
-				[if (entityType.identifier.attributes->includes(attr) = false)]
-				for (int i = 1; i < datasets.size(); i++) {
-					[generateJavaType(attr.type) /] [attr.name.toLowerFirst() /]2 = r.getAs("[attr.name.toLowerFirst() /]_" + i);
-					if (firstNotNull_[attr.name /] != null && [attr.name.toLowerFirst() /]2 != null && !firstNotNull_[attr.name/].equals([attr.name.toLowerFirst() /]2)) {
-						[entityType.name.toLowerFirst() /]_res.addLogEvent("Data consistency problem: duplicate values found for attribute '[entityType.name.toUpperFirst() /].[attr.name.toLowerFirst() /]': " + firstNotNull_[attr.name /] + " and " + [attr.name.toLowerFirst() /]2 + "." );
-						logger.warn("data consistency problem: duplicate values for attribute : '[entityType.name.toUpperFirst() /].[attr.name.toLowerFirst() /]' ==> " + firstNotNull_[attr.name /] + " and " + [attr.name.toLowerFirst() /]2);
-					}
-					if (firstNotNull_[attr.name /] == null && [attr.name.toLowerFirst() /]2 != null) {
-						firstNotNull_[attr.name /] = [attr.name.toLowerFirst() /]2;
-					}
-				}
-				[/if]
-				[entityType.name.toLowerFirst() /]_res.set[attr.name.toUpperFirst() /](firstNotNull_[attr.name /]);
-				[/for]
-				
-				scala.collection.mutable.WrappedArray<String> logEvents = r.getAs("logEvents");
-				if(logEvents != null)
-					for (int i = 0; i < logEvents.size(); i++){
-						[entityType.name.toLowerFirst() /]_res.addLogEvent(logEvents.apply(i));
-					}
-	
-				for (int i = 1; i < datasets.size(); i++) {
-					logEvents = r.getAs("logEvents_" + i);
-					if(logEvents != null)
-					for (int j = 0; j < logEvents.size(); j++){
-						[entityType.name.toLowerFirst() /]_res.addLogEvent(logEvents.apply(j));
-					}
-				}
-				
-				return [entityType.name.toLowerFirst() /]_res;
-			}, Encoders.bean([entityType.name.toUpperFirst() /].class));
-		[else]
-		for(int i = 1; i < datasets.size(); i++)
-			d = d.union(datasets.get(i));
-		[/if]
+		d=fullOuterJoins[entityType.name.toUpperFirst() /](datasets);
 	}
 	if(refilterFlag.booleanValue())
 		d = d.filter((FilterFunction<[entityType.name.toUpperFirst() /]>) r -> condition == null || condition.evaluate(r));

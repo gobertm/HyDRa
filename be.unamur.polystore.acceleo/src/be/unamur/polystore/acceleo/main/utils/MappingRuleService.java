@@ -197,6 +197,11 @@ public class MappingRuleService {
 //		return (AbstractPhysicalStructure) res;
 //	}
 
+	/**
+	 * Recursively goes up from the given object in order to return the PhysicalStructure which is not an EmbeddedStructure (EmbeddedObject or KVComplexField) 
+	 * @param obj
+	 * @return
+	 */
 	public static AbstractPhysicalStructure getPhysicalStructureNotEmbeddedObject(EObject obj) {
 		if (obj == null)
 			return null;

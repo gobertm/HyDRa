@@ -31,15 +31,14 @@ import be.unamur.polystore.acceleo.main.utils.Util;
 
 /**
  * Entry point of the 'Generate' generation module.
- *
+ * @generated
  */
 public class Generate extends AbstractAcceleoGenerator {
 	/**
 	 * The name of the module.
 	 *
-	 * @generated
 	 */
-	public static final String MODULE_FILE_NAME = "/be/unamur/polystore/acceleo/main/generate";
+	public static final String MODULE_FILE_NAME = "/bin/be/unamur/polystore/acceleo/main/generate";
 
 	/**
 	 * The name of the templates that are to be generated.

@@ -6,6 +6,7 @@
 
 
 [template public generateRoleBasedSelectMethodsImpl(entity: EntityType, role: Role, conceptualSchema: ConceptualSchema)]{
+	[comment getAListInREL /]
 	[if (role.getRelationShipType().roles -> size() = 2 and role.getRelationShipType().attributes -> size() = 0)]
 	MutableBoolean [role.name/]_refilter = new MutableBoolean(false);
 	List<Dataset<[entity.name.toUpperFirst() /]>> datasetsPOJO = new ArrayList<Dataset<[entity.name.toUpperFirst() /]>>();
@@ -15,23 +16,28 @@
 	MutableBoolean [role2.name/]_refilter;
 	org.apache.spark.sql.Column joinCondition = null;
 	[for (ref: Reference | getMappedReferences(role, conceptualSchema.getMappingRules()))]
-	[if (isHostedInJoinPhysicalStructureServing(role2, ref.getAbstractPhysicalStructureNotEmbeddedObject()))]
+	[if (hasMappedReferenceInSamePhysicalStructureForOppoisteRole(role2, ref.getAbstractPhysicalStructureNotEmbeddedObject()))]
 	[let ref2 : Reference = getMappedReferenceInSamePhysicalStructureForOppositeRole(role2, ref.getAbstractPhysicalStructureNotEmbeddedObject())]
 	// join physical structure
-
+	[comment  
+	// role et role2 sont dans la même structure => join table
+	// A <- AB -> B  /]
 	[generateCodeForJoinPhysicalStructure(entity, role, ref, role2, ref2)/]
 	[/let]
 	[/if]
-	[if (isHostedInJoinPhysicalStructureServing(role2, ref.getAbstractPhysicalStructureNotEmbeddedObject()) = false)]
-
+	[if (hasMappedReferenceInSamePhysicalStructureForOppoisteRole(role2, ref.getAbstractPhysicalStructureNotEmbeddedObject()) = false)]
+	[comment // A -> B /] 
+	[comment  // Il n'existe pas de ref2 mappé à Role2 qui soit dans la même structure que Ref. -> Pas de table de jointure /]
 	[let struct1 : AbstractPhysicalStructure = ref.getAbstractPhysicalStructureNotEmbeddedObject()]
 	[let struct2 : AbstractPhysicalStructure = ref.targetField->first().getAbstractPhysicalStructureNotEmbeddedObject()]
 	[let db1 : Database = struct1.getConcernedDatabases(struct1.ancestors(Domainmodel)->first())->any(true)]
 	[let db2 : Database = struct2.getConcernedDatabases(struct2.ancestors(Domainmodel)->first())->any(true)]
 	[if (db1 = db2 and db1.dbType.isRelational())]
+	[comment A & B same db, so we are able to get both objects with one SQL. No need for TDO objects. Use of RelPOJO /]
 	[role2.name/]_refilter = new MutableBoolean(false);
 	Dataset<[role.getRelationShipType().name.toUpperFirst()/]> res_[ref.name/] = [role.getRelationShipType().name.toLowerFirst()/]Service.get[role.name.toUpperFirst()/]And[role.getOppositeRoles()->any(true).name.toUpperFirst()/]ListIn[ref.name.toUpperFirst()/]In[struct1.name.toUpperFirst()/]From[db1.name.toUpperFirst()/]([role.getRelationShipType().roles->first().name/]_condition, [role.getRelationShipType().roles->first().getOppositeRoles()->any(true).name/]_condition, [role.name/]_refilter, [role2.name/]_refilter);
 	Dataset<[entity.name.toUpperFirst()/]> res_[entity.name/]_[ref.name/] = null;
+	[comment  Refilter function needed if the condition on B is based on an attribute of B present only in another structure containing B/]
 	if([role2.name/]_refilter.booleanValue()) {
 		joinCondition = null;
 	[if (role2.entity.identifier.oclIsUndefined() = false and role2.entity.identifier.attributes->size() > 0)]
@@ -50,6 +56,7 @@
 	} else
 		res_[entity.name/]_[ref.name/] = res_[ref.name/].map((MapFunction<[role.getRelationShipType().name.toUpperFirst()/],[entity.name.toUpperFirst()/]>) r -> r.get[role.name.toUpperFirst()/](), Encoders.bean([entity.name.toUpperFirst()/].class));
 	[else]
+	[comment A & B not in same DB or involve NoSQL struct. So need of TDO objects /]
 	// For role '[role.name/]' in reference '[ref.name/]' 
 	Dataset<[entity.name.toUpperFirst()/]TDO> [entity.name.toLowerFirst()/]TDO[ref.name/][role.name/] = [role.getRelationShipType().name.toLowerFirst()/]Service.get[entity.name.toUpperFirst()/]TDOList[role.name.toUpperFirst() /]In[ref.name.toUpperFirst()/]In[ref.getAbstractPhysicalStructureNotEmbeddedObject().name.toUpperFirst() /]From[ref.getPhysicalSchema().name.toUpperFirst()/]([role.name/]_condition, [role.name/]_refilter);
 	[role2.name/]_refilter = new MutableBoolean(false);
@@ -71,16 +78,18 @@
 			[role2.entity.name.toLowerFirst()/]TDO[ref.name/][role2.name/] = [role2.entity.name.toLowerFirst()/]TDO[ref.name/][role2.name/].as("A").join(all, joinCondition).select("A.*").as(Encoders.bean([role2.entity.name.toUpperFirst()/]TDO.class));
 	}
 
-	[comment TODO Multi valued refernece not handled /]
+	
 	Dataset<Row> res_[ref.name/] = [entity.name.toLowerFirst()/]TDO[ref.name/][role.name/].join([role2.entity.name.toLowerFirst()/]TDO[ref.name/][role2.name/]
 	[for (attr : Attribute | role2.entity.attributes)]
 			.withColumnRenamed("[attr.name.toLowerFirst() /]", "[role2.entity.name/]_[attr.name.toLowerFirst() /]")
 	[/for]
 			.withColumnRenamed("logEvents", "[role2.entity.name/]_logEvents"),
+				[comment TODO Multi valued refernece not handled /]
 			[entity.name.toLowerFirst()/]TDO[ref.name/][role.name/].col("[getJavaAbsolutePath(ref) /]_[ref.sourceField->first().getPhysicalName()/]").equalTo([role2.entity.name.toLowerFirst()/]TDO[ref.name/][role2.name/].col("[getJavaAbsolutePath(ref) /]_[ref.targetField->first().getPhysicalName()/]")));
 	Dataset<[entity.name.toUpperFirst()/]> res_[entity.name/]_[ref.name/] = res_[ref.name/].select([for (attr : Attribute | entity.attributes)] "[attr.name/]",[/for] "logEvents").as(Encoders.bean([entity.name.toUpperFirst()/].class));
 	
 	[/if]
+	[comment A->B . The join will return as many lines as B. But we return A, so duplicates may exist. /]
 	res_[entity.name/]_[ref.name/] = res_[entity.name/]_[ref.name/].dropDuplicates(new String[ '[' /][ ']' /] {[if (entity.identifier.oclIsUndefined() = false)][for (attr : Attribute | entity.identifier.attributes) separator(',')]"[attr.name/]"[/for][/if]});
 	datasetsPOJO.add(res_[entity.name/]_[ref.name/]);
 	[/let]
@@ -92,6 +101,7 @@
 	
 	[for (ref: Reference | getMappedReferences(role2, conceptualSchema.getMappingRules()))]
 	[if (hasMappedReferenceInSamePhysicalStructureForOppoisteRole(role, ref.getAbstractPhysicalStructureNotEmbeddedObject()) = false)]
+	[comment B -> A /]
 	[comment reference mapped to a conceptual role. /]
 	[comment optimization possible when the 2 physical structures to join are stored in the same database (ex: a SQL join is possible instead of a brute-force Spark join /]
 	[let struct1 : AbstractPhysicalStructure = ref.getAbstractPhysicalStructureNotEmbeddedObject()]
@@ -120,9 +130,11 @@
 	} else
 		res_[entity.name/]_[ref.name/] = res_[ref.name/].map((MapFunction<[role.getRelationShipType().name.toUpperFirst()/],[entity.name.toUpperFirst()/]>) r -> r.get[role.name.toUpperFirst()/](), Encoders.bean([entity.name.toUpperFirst()/].class));
 	[else]
+	[comment A & B not in same DB or involve NoSQL struct. So need of TDO objects /]
 	// For role '[role2.name/]' in reference '[ref.name/]' 
 	[role2.name/]_refilter = new MutableBoolean(false);
 	Dataset<[role2.entity.name.toUpperFirst()/]TDO> [role2.entity.name.toLowerFirst()/]TDO[ref.name/][role2.name/] = [role.getRelationShipType().name.toLowerFirst()/]Service.get[role2.entity.name.toUpperFirst()/]TDOList[role2.name.toUpperFirst() /]In[ref.name.toUpperFirst()/]In[ref.getAbstractPhysicalStructureNotEmbeddedObject().name.toUpperFirst() /]From[ref.getPhysicalSchema().name.toUpperFirst()/]([role2.name/]_condition, [role2.name/]_refilter);
+	Dataset<[entity.name.toUpperFirst()/]TDO> [entity.name.toLowerFirst()/]TDO[ref.name/][role.name /] = [role.getRelationShipType().name.toLowerFirst()/]Service.get[entity.name.toUpperFirst()/]TDOList[role.name.toUpperFirst() /]In[ref.name.toUpperFirst()/]In[ref.getAbstractPhysicalStructureNotEmbeddedObject().name.toUpperFirst() /]From[ref.getPhysicalSchema().name.toUpperFirst()/]([role.name/]_condition, [role.name/]_refilter);
 	if([role2.name/]_refilter.booleanValue()) {
 		joinCondition = null;
 	[if (role2.entity.identifier.oclIsUndefined() = false and role2.entity.identifier.attributes->size() > 0)]
@@ -139,7 +151,6 @@
 		else
 			[role2.entity.name.toLowerFirst()/]TDO[ref.name/][role2.name/] = [role2.entity.name.toLowerFirst()/]TDO[ref.name/][role2.name/].as("A").join(all, joinCondition).select("A.*").as(Encoders.bean([role2.entity.name.toUpperFirst()/]TDO.class));
 	}
-	Dataset<[entity.name.toUpperFirst()/]TDO> [entity.name.toLowerFirst()/]TDO[ref.name/][role.name /] = [role.getRelationShipType().name.toLowerFirst()/]Service.get[entity.name.toUpperFirst()/]TDOList[role.name.toUpperFirst() /]In[ref.name.toUpperFirst()/]In[ref.getAbstractPhysicalStructureNotEmbeddedObject().name.toUpperFirst() /]From[ref.getPhysicalSchema().name.toUpperFirst()/]([role.name/]_condition, [role.name/]_refilter);
 	[comment TODO Multi valued refernece not handled /]
 	Dataset<Row> res_[ref.name/] = [entity.name.toLowerFirst()/]TDO[ref.name/][role.name /].join([role2.entity.name.toLowerFirst()/]TDO[ref.name/][role2.name/]
 	[for (attr : Attribute | role2.entity.attributes)]
@@ -159,7 +170,7 @@
 	[/for]
 	
 	[let rel : RelationshipType = role.getRelationShipType()]
-	[comment for method getContainingObject by role/]
+	[comment A(B) embedded B in A, getAbyB /]
 	[for (embedded : EmbeddedObject | getMappedEmbeddedObjects(role, conceptualSchema.getMappingRules()))]
 	// Role '[role.name/]' mapped to EmbeddedObject '[embedded.getPhysicalName()/]' - '[role2.entity.name/]' containing '[entity.name/]'
 	[role2.name/]_refilter = new MutableBoolean(false);
@@ -188,6 +199,7 @@
 	datasetsPOJO.add(res_[entity.name/]);
 	[/for]
 	[comment for method getContainedObject by role/]
+	[comment B(A) embedded A in B, getAbyB /]
 	[for (embedded : EmbeddedObject | getMappedEmbeddedObjects(role2, conceptualSchema.getMappingRules()))]
 	// Role '[role2.name/]' mapped to EmbeddedObject '[embedded.getPhysicalName()/]' '[entity.name/]' containing '[role2.entity.name/]' 
 	[role2.name/]_refilter = new MutableBoolean(false);
@@ -223,14 +235,18 @@
 	if(res == null)
 		return null;
 
+	[comment  If A is in another structure not involved in A-r-B , it may contain other attributes of A.
+		We therefore get those A objects, and we left join them with the to return A dataset. (So we retrieve the complete A attributes)/]
 	[let structures : Set(AbstractPhysicalStructure) = getMappedStructuresNotConcernedByRelationshipType(entity, role.getRelationShipType(), conceptualSchema.getMappingRules())]
 	[if (structures->size() > 0)]
 	List<Dataset<[entity.name.toUpperFirst()/]>> lonely[entity.name/]List = new ArrayList<Dataset<[entity.name.toUpperFirst()/]>>();
 	[for (struct : AbstractPhysicalStructure | structures)]
 	lonely[entity.name/]List.add(get[entity.name.toUpperFirst()/]ListIn[struct.name.toUpperFirst()/]From[getConcernedDatabases(struct, struct.ancestors(Domainmodel)->first())->any(true).name.toUpperFirst()/]([role.name/]_condition, new MutableBoolean(false)));
 	[/for]
+	[comment  If A1 'standalone' and A2 standalone. We need to fullouter them./]
 	Dataset<[entity.name.toUpperFirst()/]> lonely[entity.name.toUpperFirst()/] = fullOuterJoins[entity.name.toUpperFirst()/](lonely[entity.name/]List);
 	if(lonely[entity.name.toUpperFirst()/] != null) {
+		[comment  We left join A & the result of full outer of A1 & A2/]
 		res = fullLeftOuterJoins[entity.name.toUpperFirst()/](Arrays.asList(res, lonely[entity.name.toUpperFirst()/]));
 	}
 	[/if]
@@ -273,22 +289,26 @@ private static Dataset<[entityType.name.toUpperFirst()/]> fullOuterJoins[entityT
 		Dataset<Row> res = d.join(datasetsPOJO.get(1)
 	[for (attr : Attribute | entityType.attributes)][if (entityType.identifier.attributes->includes(attr) = false)]
 							.withColumnRenamed("[attr.name.toLowerFirst() /]", "[attr.name.toLowerFirst() /]_1")
-	[/if][/for]						, seq, joinMode);
+	[/if][/for]						
+							.withColumnRenamed("logEvents", "logEvents_1")
+						, seq, joinMode);
 		for(int i = 2; i < datasetsPOJO.size(); i++) {
 			res = res.join(datasetsPOJO.get(i)
 	[for (attr : Attribute | entityType.attributes)][if (entityType.identifier.attributes->includes(attr) = false)]
 							.withColumnRenamed("[attr.name.toLowerFirst() /]", "[attr.name.toLowerFirst() /]_" + i)
-	[/if][/for]						, seq, joinMode);
+	[/if][/for]	
+							.withColumnRenamed("logEvents", "logEvents_" + i)
+					, seq, joinMode);
 		} 
 		d = res.map((MapFunction<Row, [entityType.name.toUpperFirst() /]>) r -> {
 				[entityType.name.toUpperFirst() /] [entityType.name.toLowerFirst() /]_res = new [entityType.name.toUpperFirst() /]();
 				[for (attr : Attribute | entityType.attributes)]
 				
 				// attribute '[entityType.name.toUpperFirst() /].[attr.name.toLowerFirst() /]'
-				[generateJavaType(attr.type) /] firstNotNull_[attr.name /] = r.getAs("[attr.name.toLowerFirst() /]");
+				[generateJavaType(attr.type) /] firstNotNull_[attr.name /] = Util.get[generateJavaType(attr.type) /]Value(r.getAs("[attr.name.toLowerFirst() /]"));
 				[if (entityType.identifier.attributes->includes(attr) = false)]
 				for (int i = 1; i < datasetsPOJO.size(); i++) {
-					[generateJavaType(attr.type) /] [attr.name.toLowerFirst() /]2 = r.getAs("[attr.name.toLowerFirst() /]_" + i);
+					[generateJavaType(attr.type) /] [attr.name.toLowerFirst() /]2 = Util.get[generateJavaType(attr.type) /]Value(r.getAs("[attr.name.toLowerFirst() /]_" + i));
 					if (firstNotNull_[attr.name /] != null && [attr.name.toLowerFirst() /]2 != null && !firstNotNull_[attr.name/].equals([attr.name.toLowerFirst() /]2)) {
 						[entityType.name.toLowerFirst() /]_res.addLogEvent("Data consistency problem: duplicate values found for attribute '[entityType.name.toUpperFirst() /].[attr.name.toLowerFirst() /]': " + firstNotNull_[attr.name /] + " and " + [attr.name.toLowerFirst() /]2 + "." );
 						logger.warn("data consistency problem: duplicate values for attribute : '[entityType.name.toUpperFirst() /].[attr.name.toLowerFirst() /]' ==> " + firstNotNull_[attr.name /] + " and " + [attr.name.toLowerFirst() /]2);
@@ -300,6 +320,21 @@ private static Dataset<[entityType.name.toUpperFirst()/]> fullOuterJoins[entityT
 				[/if]
 				[entityType.name.toLowerFirst() /]_res.set[attr.name.toUpperFirst() /](firstNotNull_[attr.name /]);
 				[/for]
+
+				scala.collection.mutable.WrappedArray<String> logEvents = r.getAs("logEvents");
+				if(logEvents != null)
+					for (int i = 0; i < logEvents.size(); i++){
+						[entityType.name.toLowerFirst() /]_res.addLogEvent(logEvents.apply(i));
+					}
+	
+				for (int i = 1; i < datasetsPOJO.size(); i++) {
+					logEvents = r.getAs("logEvents_" + i);
+					if(logEvents != null)
+					for (int j = 0; j < logEvents.size(); j++){
+						[entityType.name.toLowerFirst() /]_res.addLogEvent(logEvents.apply(j));
+					}
+				}
+
 				return [entityType.name.toLowerFirst() /]_res;
 			}, Encoders.bean([entityType.name.toUpperFirst() /].class));
 		return d;
@@ -320,6 +355,7 @@ private static Dataset<[entityType.name.toUpperFirst()/]> fullOuterJoins[entityT
 [let joindb : Database = jointable.getConcernedDatabases(ref.ancestors(Domainmodel)->any(true))->any(true)]
 [if (db1 = db2 and db2 = joindb and db1.dbType.isRelational() )]
 //join between 3 SQL tables stored in same db
+// (A AB B)
 [role2.name/]_refilter = new MutableBoolean(false);
 Dataset<[role.getRelationShipType().name.toUpperFirst()/]> res_[entity.name/]_[ref.name/]_[ref2.name/] = [role.getRelationShipType().name.toLowerFirst()/]Service.get[role.getRelationShipType().name.toUpperFirst()/]ListIn[table.name/]And[jointable.name/]And[table2.name/]From[db1.name/]([role.name/]_condition, [role2.name/]_condition, [role.name/]_refilter, [role2.name/]_refilter);
 Dataset<[entity.name.toUpperFirst()/]> res_[entity.name/]_[ref.name/] = null;
@@ -343,6 +379,7 @@ if([role2.name/]_refilter.booleanValue()) {
 	
 [elseif (db1 = joindb and db1.dbType.isRelational())]
 //join between 2 SQL tables and a non-relational structure
+// (A - AB) (B)
 [role2.name/]_refilter = new MutableBoolean(false);
 Dataset<[role.getRelationShipType().name.toUpperFirst()/]TDO> res_[role.getRelationShipType().name/]_[ref.name/]_[ref2.name/] = [role.getRelationShipType().name.toLowerFirst()/]Service.get[role.getRelationShipType().name.toUpperFirst()/]TDOListIn[table.name/]And[jointable.name/]From[db1.name/]([role.name/]_condition, [role.name/]_refilter);
 Dataset<[role2.entity.name.toUpperFirst()/]TDO> res_[ref2.name/]_[ref.name/] = [role.getRelationShipType().name.toLowerFirst()/]Service.get[role2.entity.name.toUpperFirst()/]TDOList[role2.name.toUpperFirst()/]In[ref2.name.toUpperFirst()/]In[table2.name.toUpperFirst()/]From[table2.getPhysicalSchema().name.toUpperFirst()/]([role2.name/]_condition, [role2.name/]_refilter);
@@ -369,12 +406,14 @@ if([role2.name/]_refilter.booleanValue()) {
 }
 
 Dataset<Row> res_row_[ref.name/]_[ref2.name/] = res_[role.getRelationShipType().name/]_[ref.name/]_[ref2.name/].join(res_[ref2.name/]_[ref.name/].withColumnRenamed("logEvents", "[role.getRelationShipType().name/]_logEvents"),
-	res_[ref2.name/]_[ref.name/].col("[getJavaAbsolutePath(ref2) /]_[ref2.targetField->first().getPhysicalName()/]").equalTo(res_[role.getRelationShipType().name/]_[ref.name/]_[ref2.name/].col("[getJavaAbsolutePath(ref2) /]_[ref2.sourceField->first().getPhysicalName()/]")));
+													res_[ref2.name/]_[ref.name/].col("[getJavaAbsolutePath(ref2) /]_[ref2.targetField->first().getPhysicalName()/]").equalTo(res_[role.getRelationShipType().name/]_[ref.name/]_[ref2.name/].col("[getJavaAbsolutePath(ref2) /]_[ref2.sourceField->first().getPhysicalName()/]")));
 Dataset<[entity.name.toUpperFirst()/]> res_[entity.name/]_[ref.name/] = res_row_[ref.name/]_[ref2.name/].select("[entity.name.toLowerFirst()/].*").as(Encoders.bean([entity.name.toUpperFirst()/].class));
 [elseif (db2 = joindb and db2.dbType.isRelational())]
 //join between 2 SQL tables and a non-relational structure
+// (A) (AB - B)
 [role2.name/]_refilter = new MutableBoolean(false);
 Dataset<[role2.getRelationShipType().name.toUpperFirst()/]TDO> res_[role2.getRelationShipType().name/]_[ref2.name/]_[ref.name/] = [role2.getRelationShipType().name.toLowerFirst()/]Service.get[role2.getRelationShipType().name.toUpperFirst()/]TDOListIn[table2.name/]And[jointable.name/]From[db2.name/]([role2.name/]_condition, [role2.name/]_refilter);
+Dataset<[role.entity.name.toUpperFirst()/]TDO> res_[ref.name/]_[ref2.name/] = [role.getRelationShipType().name.toLowerFirst()/]Service.get[role.entity.name.toUpperFirst()/]TDOList[role.name.toUpperFirst()/]In[ref.name.toUpperFirst()/]In[table.name.toUpperFirst()/]From[table.getPhysicalSchema().name.toUpperFirst()/]([role.name/]_condition, [role.name/]_refilter);
 if([role2.name/]_refilter.booleanValue()) {
 		joinCondition = null;
 	[if (role2.entity.identifier.oclIsUndefined() = false and role2.entity.identifier.attributes->size() > 0)]
@@ -396,11 +435,11 @@ if([role2.name/]_refilter.booleanValue()) {
 	[/if]
 		res_[role2.getRelationShipType().name/]_[ref2.name/]_[ref.name/] = res_[role2.getRelationShipType().name/]_[ref2.name/]_[ref.name/].as("A").join(all, joinCondition).select("A.*").as(Encoders.bean([role2.getRelationShipType().name.toUpperFirst()/]TDO.class));
 } 
-Dataset<[role.entity.name.toUpperFirst()/]TDO> res_[ref.name/]_[ref2.name/] = [role.getRelationShipType().name.toLowerFirst()/]Service.get[role.entity.name.toUpperFirst()/]TDOList[role.name.toUpperFirst()/]In[ref.name.toUpperFirst()/]In[table.name.toUpperFirst()/]From[table.getPhysicalSchema().name.toUpperFirst()/]([role.name/]_condition, [role.name/]_refilter);
 Dataset<Row> res_row_[ref2.name/]_[ref.name/] = res_[role2.getRelationShipType().name/]_[ref2.name/]_[ref.name/].join(res_[ref.name/]_[ref2.name/].withColumnRenamed("logEvents", "[role2.getRelationShipType().name/]_logEvents"),
 	res_[ref.name/]_[ref2.name/].col("[getJavaAbsolutePath(ref) /]_[ref.targetField->first().getPhysicalName()/]").equalTo(res_[role2.getRelationShipType().name/]_[ref2.name/]_[ref.name/].col("[getJavaAbsolutePath(ref) /]_[ref.sourceField->first().getPhysicalName()/]")));
 Dataset<[entity.name.toUpperFirst()/]> res_[entity.name/]_[ref.name/] = res_row_[ref2.name/]_[ref.name/].as(Encoders.bean([entity.name.toUpperFirst()/].class));
 [else]
+// (A) (AB) (B)  OR (A B) (AB) Join table is 'alone'
 [role2.name/]_refilter = new MutableBoolean(false);
 Dataset<[entity.name.toUpperFirst()/]TDO> [entity.name.toLowerFirst()/]TDO[ref.name/][role.name/] = [role.getRelationShipType().name.toLowerFirst()/]Service.get[entity.name.toUpperFirst()/]TDOList[role.name.toUpperFirst() /]In[ref.name.toUpperFirst()/]In[ref.targetField->first().getAbstractPhysicalStructureNotEmbeddedObject().name.toUpperFirst() /]From[ref.targetField->first().getPhysicalSchema().name.toUpperFirst()/]([role.name/]_condition, [role.name/]_refilter);
 Dataset<[role.getRelationShipType().name.toUpperFirst()/]TDO> [role.getRelationShipType().name.toLowerFirst()/]TDO[ref.name/]_[ref2.name/] = [role.getRelationShipType().name.toLowerFirst()/]Service.get[role.getRelationShipType().name.toUpperFirst()/]TDOListIn[role.ancestors(RelationshipType)->any(true).name.toUpperFirst()/]_[ref.name.toUpperFirst()/]_[ref2.name.toUpperFirst()/]In[ref.getAbstractPhysicalStructureNotEmbeddedObject().name.toUpperFirst() /]From[ref.getPhysicalSchema().name.toUpperFirst()/]();
@@ -427,13 +466,13 @@ if([role2.name/]_refilter.booleanValue()) {
 		[role2.entity.name.toLowerFirst()/]TDO[ref.name/][role2.name/] = [role2.entity.name.toLowerFirst()/]TDO[ref.name/][role2.name/].as("A").join(all, joinCondition).select("A.*").as(Encoders.bean([role2.entity.name.toUpperFirst()/]TDO.class));
 }
 Dataset<Row> res_[ref.name/] = [entity.name.toLowerFirst()/]TDO[ref.name/][role.name/].join([role.getRelationShipType().name.toLowerFirst()/]TDO[ref.name/]_[ref2.name/].withColumnRenamed("logEvents", "[role.getRelationShipType().name/]_logEvents"),
-[entity.name.toLowerFirst()/]TDO[ref.name/][role.name/].col("[getJavaAbsolutePath(ref) /]_[ref.targetField->first().getPhysicalName()/]").equalTo([role.getRelationShipType().name.toLowerFirst()/]TDO[ref.name/]_[ref2.name/].col("[getJavaAbsolutePath(ref) /]_[ref.sourceField->first().getPhysicalName()/]")));
+								[entity.name.toLowerFirst()/]TDO[ref.name/][role.name/].col("[getJavaAbsolutePath(ref) /]_[ref.targetField->first().getPhysicalName()/]").equalTo([role.getRelationShipType().name.toLowerFirst()/]TDO[ref.name/]_[ref2.name/].col("[getJavaAbsolutePath(ref) /]_[ref.sourceField->first().getPhysicalName()/]")));
 res_[ref.name/] = res_[ref.name/].join([role2.entity.name.toLowerFirst()/]TDO[ref.name/][role2.name/]
 [for (attr : Attribute | role2.entity.attributes)]
 	.withColumnRenamed("[attr.name.toLowerFirst() /]", "[role2.entity.name/]_[attr.name.toLowerFirst() /]")
 [/for]
 	.withColumnRenamed("logEvents", "[role2.entity.name/]_logEvents"),
-[role2.entity.name.toLowerFirst()/]TDO[ref.name/][role2.name/].col("[getJavaAbsolutePath(ref2) /]_[ref2.targetField->first().getPhysicalName()/]").equalTo(res_[ref.name/].col("[getJavaAbsolutePath(ref2) /]_[ref2.sourceField->first().getPhysicalName()/]")));
+	[role2.entity.name.toLowerFirst()/]TDO[ref.name/][role2.name/].col("[getJavaAbsolutePath(ref2) /]_[ref2.targetField->first().getPhysicalName()/]").equalTo(res_[ref.name/].col("[getJavaAbsolutePath(ref2) /]_[ref2.sourceField->first().getPhysicalName()/]")));
 Dataset<[entity.name.toUpperFirst()/]> res_[entity.name/]_[ref.name/] = res_[ref.name/].select([for (attr : Attribute | entity.attributes)] "[attr.name/]",[/for] "logEvents").as(Encoders.bean([entity.name.toUpperFirst()/].class));
 [/if]
 datasetsPOJO.add(res_[entity.name/]_[ref.name/].dropDuplicates(new String[ '[' /][ ']' /] {[if (entity.identifier.oclIsUndefined() = false)][for (attr : Attribute | entity.identifier.attributes) separator(',')]"[attr.name/]"[/for][/if]}));	

@@ -11,8 +11,8 @@
 [if (type.oclIsTypeOf(pml::BoolType))]Boolean[/if]
 [if (type.oclIsTypeOf(pml::FloatType))]Double[/if]
 [if (type.oclIsTypeOf(pml::BlobType))]Byte[/if]
-[if (type.oclIsTypeOf(pml::DateType))]java.util.Date[/if]
-[if (type.oclIsTypeOf(pml::DatetimeType))]java.util.Date[/if]
+[if (type.oclIsTypeOf(pml::DateType))]java.time.LocalDate[/if]
+[if (type.oclIsTypeOf(pml::DatetimeType))]java.time.LocalDate[/if]
 [/template]
 
 [template public generateParsingFunctionJavaType(type : DataType, varName: String) post (replaceAll('\n', '').trim())]

@@ -20,21 +20,25 @@
 	The entity mapped on the right hand side of the reference may be stored in another physical structure than where the ref is declared. 
 	Leading to apparent inconsistency in the method name. But it is actually the physical structure of the ref and not the EntityDTO.*/
 [for (ref : Reference | role1.getMappedReferences(role1.getMappingRules()))]
-[if (isHostedInJoinPhysicalStructureServing(role2, ref.getAbstractPhysicalStructureNotEmbeddedObject()) = false)]
+[if (hasMappedReferenceInSamePhysicalStructureForOppoisteRole(role2, ref.getAbstractPhysicalStructureNotEmbeddedObject()) = false)]
+[comment A->B. getAListInREL/]
 [generateRefRelatedMethods(ref, override, role1, role2)/]
 [/if]
-[if (isHostedInJoinPhysicalStructureServing(role2, ref.getAbstractPhysicalStructureNotEmbeddedObject()))]
+[if (hasMappedReferenceInSamePhysicalStructureForOppoisteRole(role2, ref.getAbstractPhysicalStructureNotEmbeddedObject()))]
+[comment A<-AB->B. getAListInREL/]
 [let ref2 : Reference = getMappedReferenceInSamePhysicalStructureForOppositeRole(role2, ref.getAbstractPhysicalStructureNotEmbeddedObject())]
 [generateRefRelatedMethodsInJoinPhysicalStructure(ref, ref2, override, role1, role2)/]
 [/let]
 [/if]
 [/for]
 [for (ref : Reference | role2.getMappedReferences(role2.getMappingRules()))]
-[if (isHostedInJoinPhysicalStructureServing(role1, ref.getAbstractPhysicalStructureNotEmbeddedObject()) = false)]
+[if (hasMappedReferenceInSamePhysicalStructureForOppoisteRole(role1, ref.getAbstractPhysicalStructureNotEmbeddedObject()) = false)]
+[comment B->A. getBListInREL/]
 [generateRefRelatedMethods(ref, override, role2, role1)/]
 [/if]
-[if (isHostedInJoinPhysicalStructureServing(role1, ref.getAbstractPhysicalStructureNotEmbeddedObject()))]
+[if (hasMappedReferenceInSamePhysicalStructureForOppoisteRole(role1, ref.getAbstractPhysicalStructureNotEmbeddedObject()))]
 [let ref2 : Reference = getMappedReferenceInSamePhysicalStructureForOppositeRole(role1, ref.getAbstractPhysicalStructureNotEmbeddedObject())]
+[comment A<-AB->B. getBListInREL/]
 [generateRefRelatedMethodsInJoinPhysicalStructure(ref, ref2, override, role2, role1)/]
 [/let]
 [/if]
@@ -150,8 +154,6 @@ return null;
 [/template]
 
 [template private generateRefRelatedMethodsInJoinPhysicalStructure(ref : Reference, ref2 : Reference, override : Boolean, roleSource : Role, roleTarget : Role)]
-[comment left side of reference /]
-
 [let joinTable : AbstractPhysicalStructure = ref.getAbstractPhysicalStructureNotEmbeddedObject()]
 [let table1 : AbstractPhysicalStructure = ref.targetField->first().getAbstractPhysicalStructureNotEmbeddedObject()]
 [let table2 : AbstractPhysicalStructure = ref2.targetField->first().getAbstractPhysicalStructureNotEmbeddedObject()]
@@ -274,7 +276,7 @@ Dataset<[role.getRelationShipType().name.toUpperFirst() /]TDO> res = d.map((MapF
 			// attribute [ '[' /][role.entity.name.toUpperFirst() /].[attr.name.toUpperFirst() /][ ']' /]
 			[if (field.ancestors(LongField) -> size() = 0)]
 			[comment shortField or bracketfield/]
-			[generateJavaType(attr.type)/] [role.entity.name.toLowerFirst()/]_[attr.name.toLowerFirst()/] = r.getAs("[table.name/]_[getPhysicalName(field) /]");
+			[generateJavaType(attr.type)/] [role.entity.name.toLowerFirst()/]_[attr.name.toLowerFirst()/] = Util.get[generateJavaType(attr.type) /]Value(r.getAs("[table.name/]_[getPhysicalName(field) /]"));
 			[role.getRelationShipType().name.toUpperFirst().toLowerFirst() /]_res.get[role.name.toUpperFirst()/]().set[attr.name.toUpperFirst()/]([role.entity.name.toLowerFirst()/]_[attr.name.toLowerFirst()/]);
 			[else]
 			[comment LongField /]
@@ -331,7 +333,7 @@ Dataset<[role.getRelationShipType().name.toUpperFirst() /]TDO> res = d.map((MapF
 				// attribute [ '[' /][role1.entity.name.toUpperFirst() /].[attr.name.toUpperFirst() /][ ']' /]
 				[if (field.ancestors(LongField) -> size() = 0)]
 				[comment shortField or bracketfield/]
-				[generateJavaType(attr.type)/] [role1.entity.name.toLowerFirst()/]_[attr.name.toLowerFirst()/] = r.getAs("[table1.name/]_[getPhysicalName(field) /]");
+				[generateJavaType(attr.type)/] [role1.entity.name.toLowerFirst()/]_[attr.name.toLowerFirst()/] = Util.get[generateJavaType(attr.type) /]Value(r.getAs("[table1.name/]_[getPhysicalName(field) /]"));
 				[role1.getRelationShipType().name.toUpperFirst().toLowerFirst() /]_res.get[role1.name.toUpperFirst()/]().set[attr.name.toUpperFirst()/]([role1.entity.name.toLowerFirst()/]_[attr.name.toLowerFirst()/]);
 				[else]
 				[comment LongField /]
@@ -364,7 +366,7 @@ Dataset<[role.getRelationShipType().name.toUpperFirst() /]TDO> res = d.map((MapF
 				// attribute [ '[' /][role2.entity.name.toUpperFirst() /].[attr.name.toUpperFirst() /][ ']' /]
 				[if (field.ancestors(LongField) -> size() = 0)]
 				[comment shortField or bracketfield/]
-				[generateJavaType(attr.type)/] [role2.entity.name.toLowerFirst()/]_[attr.name.toLowerFirst()/] = r.getAs("[table2.name/]_[getPhysicalName(field) /]");
+				[generateJavaType(attr.type)/] [role2.entity.name.toLowerFirst()/]_[attr.name.toLowerFirst()/] = Util.get[generateJavaType(attr.type) /]Value(r.getAs("[table2.name/]_[getPhysicalName(field) /]"));
 				[role2.getRelationShipType().name.toUpperFirst().toLowerFirst() /]_res.get[role2.name.toUpperFirst()/]().set[attr.name.toUpperFirst()/]([role2.entity.name.toLowerFirst()/]_[attr.name.toLowerFirst()/]);
 				[else]
 				[comment LongField /]

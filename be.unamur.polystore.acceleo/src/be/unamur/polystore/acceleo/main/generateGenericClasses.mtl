@@ -17,6 +17,12 @@
 [file ('src/main/java/util/Util.java', false, 'UTF-8')]
 package util;
 
+import exceptions.IncompatibleAttributesTypeException;
+
+import java.math.BigDecimal;
+import java.sql.Timestamp;
+import java.time.LocalDate;
+
 public class Util {
 	
 	/**
@@ -73,6 +79,113 @@ public class Util {
 		//TODO handle the other special data types, e.g., Byte, Date, ...
 		return value;
 		
+	}
+
+	public static Double getDoubleValue(Object o) {
+		if(o==null)
+			return null;
+		if(o instanceof BigDecimal)
+			return ((BigDecimal) o).doubleValue();
+		if(o instanceof Float)
+			return ((Float) o).doubleValue();
+		if(o instanceof Short)
+			return ((Short) o).doubleValue();
+		if(o instanceof Double)
+			return ((Double) o).doubleValue();
+		if(o instanceof Integer)
+			return ((Integer) o).doubleValue();
+		if (o instanceof Long)
+			return ((Long) o).doubleValue();
+		if (o instanceof String)
+			return Double.parseDouble((String) o);
+		throw new IncompatibleAttributesTypeException("Conceptual attribute type in model file incompatible with found datatype in database");
+	}
+
+	public static Integer getIntegerValue(Object o) {
+		if(o==null)
+			return null;
+		if(o instanceof BigDecimal)
+			return ((BigDecimal) o).intValue();
+		if(o instanceof Float)
+			return ((Float) o).intValue();
+		if(o instanceof Double)
+			return ((Double) o).intValue();
+		if(o instanceof Short)
+			return ((Short) o).intValue();
+		if(o instanceof Integer)
+			return ((Integer) o).intValue();
+		if (o instanceof Long)
+			return ((Long) o).intValue();
+		if(o instanceof String)
+			return Integer.parseInt((String) o);
+		throw new IncompatibleAttributesTypeException("Conceptual attribute type in model file incompatible with found datatype in database");
+	}
+
+	public static Long getLongValue(Object o) {
+		if(o==null)
+			return null;
+		if(o instanceof BigDecimal)
+			return ((BigDecimal) o).longValue();
+		if(o instanceof Float)
+			return ((Float) o).longValue();
+		if(o instanceof Short)
+			return ((Short) o).longValue();
+		if(o instanceof Double)
+			return ((Double) o).longValue();
+		if(o instanceof Integer)
+			return ((Integer) o).longValue();
+		if (o instanceof Long)
+			return ((Long) o).longValue();
+		if(o instanceof String)
+			return Long.parseLong((String)o);
+		throw new IncompatibleAttributesTypeException("Conceptual attribute type in model file incompatible with found datatype in database");
+	}
+
+	public static String getStringValue(Object o) {
+		if(o==null)
+			return null;
+		if(o instanceof BigDecimal)
+			return ((BigDecimal) o).toString();
+		if(o instanceof Float)
+			return ((Float) o).toString();
+		if(o instanceof Double)
+			return ((Double) o).toString();
+		if(o instanceof Short)
+			return ((Short) o).toString();
+		if(o instanceof Integer)
+			return ((Integer) o).toString();
+		if (o instanceof Long)
+			return ((Long) o).toString();
+		if(o instanceof String)
+			return (String) o ;
+		throw new IncompatibleAttributesTypeException("Conceptual attribute type in model file incompatible with found datatype in database");
+	}
+
+	public static Boolean getBooleanValue(Object o) {
+		if(o==null)
+			return null;
+		if(o instanceof Boolean)
+			return (Boolean) o;
+		throw new IncompatibleAttributesTypeException("Conceptual attribute type in model file incompatible with found datatype in database");
+	}
+
+	public static Byte getByteValue(Object o) {
+		if(o==null)
+			return null;
+		// TODO To improve
+		return (Byte) o;
+	}
+
+	public static LocalDate getDateValue(Object o){
+		if(o==null)
+			return null;
+		if(o instanceof java.sql.Date)
+			return ((java.sql.Date) o).toLocalDate();
+		if(o instanceof LocalDate)
+			return (LocalDate) o;
+		if(o instanceof Timestamp)
+			return ((Timestamp) o).toLocalDateTime().toLocalDate();
+		throw new IncompatibleAttributesTypeException("Conceptual attribute type in model file incompatible with found datatype in database");
 	}
 
 }
@@ -403,7 +516,9 @@ public enum Operator {
 				if(testValue == null && objectValue!= null)
 					return false;
 				if(testValue != null && objectValue == null)
-					return false;	
+					return false;
+				if(testValue == null && objectValue == null)
+					return true;	
 				return testValue.equals(objectValue);
 			}
 			if(this == Operator.NOT_EQUALS) {
@@ -560,6 +675,7 @@ public enum [rel.name.toUpperFirst() /]Attribute {
 
 [template public generateExceptions()]
 	[generateInsertReferenceException()/]
+	[generateIncompatibleTypeException()/]
 [/template]
 
 [template public generateInsertReferenceException()]
@@ -575,3 +691,14 @@ class InsertReferenceException extends Exception{
 [/file]
 [/template]
 
+[template public generateIncompatibleTypeException()]
+[file ('src/main/java/exceptions/IncompatibleAttributesTypeException.java', false, 'UTF-8')]
+package exceptions;
+
+public class IncompatibleAttributesTypeException extends RuntimeException {
+    public IncompatibleAttributesTypeException(String message) {
+        super(message);
+    }
+}
+[/file]
+[/template]
