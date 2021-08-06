@@ -15,6 +15,19 @@
 [if (type.oclIsTypeOf(pml::DatetimeType))]java.time.LocalDate[/if]
 [/template]
 
+[template public generateSparkDataType(type : DataType) post (replaceAll('\n', '').trim())]
+[if (type.oclIsTypeOf(pml::IntType))]DataTypes.IntegerType[/if]
+[if (type.oclIsTypeOf(pml::BigintType))]DataTypes.LongType[/if]
+[if (type.oclIsTypeOf(pml::TextType))]DataTypes.StringType[/if]
+[if (type.oclIsTypeOf(pml::StringType))]DataTypes.StringType[/if]
+[if (type.oclIsTypeOf(pml::BoolType))]DataTypes.BooleanType[/if]
+[if (type.oclIsTypeOf(pml::FloatType))]DataTypes.FloatType[/if]
+[if (type.oclIsTypeOf(pml::BlobType))]DataTypes.ByteType[/if]
+[if (type.oclIsTypeOf(pml::DateType))]DataTypes.DateType[/if]
+[if (type.oclIsTypeOf(pml::DatetimeType))]DataTypes.TimestampType[/if]
+[/template]
+
+
 [template public generateParsingFunctionJavaType(type : DataType, varName: String) post (replaceAll('\n', '').trim())]
 [if (type.oclIsTypeOf(pml::IntType))][varName/] == null ? null : Integer.parseInt([varName/])[/if]
 [if (type.oclIsTypeOf(pml::BigintType))][varName/] == null ? null : Long.parseLong([varName/])[/if]

@@ -16,6 +16,9 @@
 [query public getConcernedPhysicalStructures(ent : EntityType, model: Domainmodel) : Set(AbstractPhysicalStructure) 
 = invoke('be.unamur.polystore.acceleo.main.utils.MappingRuleService', 'getConcernedPhysicalStructures(be.unamur.polystore.pml.EntityType, be.unamur.polystore.pml.Domainmodel)', Sequence{ent, model}) /]
 
+[query public getMappedPhysicalStructureToInsertE(ent : EntityType, model: Domainmodel) : Set(AbstractPhysicalStructure) 
+= invoke('be.unamur.polystore.acceleo.main.utils.MappingRuleService', 'getMappedPhysicalStructureToInsertE(be.unamur.polystore.pml.EntityType, be.unamur.polystore.pml.Domainmodel)', Sequence{ent, model}) /]
+
 [query public getConcernedDatabases(struct : AbstractPhysicalStructure, model: Domainmodel) : Set(Database) 
 = invoke('be.unamur.polystore.acceleo.main.utils.MappingRuleService', 'getConcernedDatabases(be.unamur.polystore.pml.AbstractPhysicalStructure, be.unamur.polystore.pml.Domainmodel)', Sequence{struct, model}) /]
 
@@ -56,4 +59,8 @@
 
 [query public getMappedStructuresNotConcernedByRelationshipType(ent : EntityType, rel : RelationshipType, rules : MappingRules) : Set(AbstractPhysicalStructure)
  	= invoke('be.unamur.polystore.acceleo.main.utils.MappingRuleService', 'getMappedStructuresNotConcernedByRelationshipType(be.unamur.polystore.pml.EntityType, be.unamur.polystore.pml.RelationshipType, be.unamur.polystore.pml.MappingRules)', Sequence{ent, rel, rules}) 
+/]
+
+[query public getMappedAttributes(field: PhysicalField, entOrRel: OclAny, rules: MappingRules) : Collection(Attribute) =  
+	invoke('be.unamur.polystore.acceleo.main.utils.Util', 'getMappedAttributes(be.unamur.polystore.pml.PhysicalField, java.lang.Object, be.unamur.polystore.pml.MappingRules)', Sequence{field, entOrRel, rules})
 /]

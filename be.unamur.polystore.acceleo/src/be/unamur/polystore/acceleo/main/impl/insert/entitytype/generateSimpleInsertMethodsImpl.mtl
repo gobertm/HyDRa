@@ -9,7 +9,7 @@
 
 [template public insertPOJOImpl(entityType: EntityType, conceptualSchema: ConceptualSchema)]{
 	// Insert into all mapped AbstractPhysicalStructure 
-	[for (struct: AbstractPhysicalStructure | getConcernedPhysicalStructures(entityType, entityType.ancestors(Domainmodel)->first()))]
+	[for (struct: AbstractPhysicalStructure | getMappedPhysicalStructureToInsertE(entityType, entityType.ancestors(Domainmodel)->first()))]
 	[for (db: Database | getConcernedDatabases(struct, entityType.ancestors(Domainmodel)->first()))]
 		insert[entityType.name.toUpperFirst() /]In[struct.name.toUpperFirst()/]From[db.name.toUpperFirst() /]([entityType.name.toLowerFirst()/]);
 	[/for]
@@ -22,33 +22,52 @@
 
 	
 [template public insertInSQLDBImpl(entityType : EntityType, struct : AbstractPhysicalStructure, db : Database)]
+[comment insertEInRELTABLE(ENT e) /]
 {
-	//Read mapping rules and find attributes of the POJO that are mapped to the corresponding AbstractPhysicalStructure
-	// Insert in SQL DB 
-[let mappedAttrList : Collection(Attribute) = getMappedAttributesInStructure(entityType, struct, db, entityType.ancestors(Domainmodel)->first().mappingRules)]
-[if (mappedAttrList->size() > 0)]
-String query = "INSERT INTO [struct.name/]([for (attr : Attribute | mappedAttrList) separator(',')][getMappedPhysicalField(attr, struct, db,entityType.ancestors(Domainmodel)->first().mappingRules).oclAsType(PhysicalField).getPhysicalName()/][/for][for (ref : Reference | getRefOfPhysicalStructure(struct))],[ref.sourceField.getPhysicalName()/][/for]) VALUES ([for (attr : Attribute | mappedAttrList) separator(',')]?[/for][for (ref : Reference | getRefOfPhysicalStructure(struct))],?[/for])";
-
-[comment]VALLUES ([for (attr : Attribute | mappedAttrList) separator(',')][entityType.name.toLowerFirst()/].get[attr.name.toUpperFirst()/]()[/for][for (ref : Reference | getRefOfPhysicalStructure(struct))],(([entityType.name.toUpperFirst()/]TDO)[entityType.name.toLowerFirst()/]).get[getJavaAbsolutePath(ref).toUpperFirst() /]_[ref.sourceField.getPhysicalName() /]()[/for])[/comment]
-List<Object> inputs = new ArrayList<>();
-[for (attr : Attribute | mappedAttrList)]
-inputs.add([entityType.name.toLowerFirst()/].get[attr.name.toUpperFirst()/]());
+	List<Object> values = new ArrayList<>();
+	List<StructField> listOfStructuField = new ArrayList<StructField>();
+[for (field : PhysicalField | struct.oclAsType(Table).columns)]
+	[if (field.oclIsTypeOf(ShortField))]
+		[let attr : Attribute = getMappedAttributes(field, entityType, entityType.getMappingRules())->any(true)]
+			[if (attr.oclIsUndefined()=false)]
+	listOfStructuField.add(DataTypes.createStructField("[getPhysicalName(field)/]",[generateSparkDataType(attr.type)/], true));
+	values.add([entityType.name.toLowerFirst()/].get[attr.name.toUpperFirst()/]());
+			[/if]
+		[/let] 
+	[/if]
+	[if (field.oclIsTypeOf(LongField))]
+		[comment LongField with only one component and is BracketsField /]
+		[if (field.oclAsType(LongField).pattern->size()=1 and field.oclAsType(LongField).pattern->any(true).oclIsTypeOf(BracketsField))]
+			[let brackets : BracketsField = field.oclAsType(LongField).pattern->any(true).oclAsType(BracketsField)]
+				[let attr : Attribute = getMappedAttributes(field, entityType, entityType.getMappingRules())->any(true)]
+				[if (attr.oclIsUndefined()=false)]
+	listOfStructuField.add(DataTypes.createStructField("[getPhysicalName(field)/]",[generateSparkDataType(attr.type)/], true));
+	values.add([entityType.name.toLowerFirst()/].get[attr.name.toUpperFirst()/]());
+				[/if]
+				[/let] 
+			[/let]
+		[else]
+			[if (field.oclAsType(LongField).pattern->filter(BracketsField)->exists(b |getMappedAttributes(b, entityType, entityType.getMappingRules())->size()=0)=false)]
+				[comment All BracketsField are mapped to the corresponding entity /]
+				[comment LongField is composed of component, therefore can only be StringType /]
+	String value = "";
+				[for (component : TerminalExpression | field.oclAsType(LongField).pattern)]
+					[if (component.oclIsTypeOf(BracketsField))]
+						[let attr : Attribute = getMappedAttributes(field, entityType, entityType.getMappingRules())->any(true)]
+	value += [entityType.name.toLowerFirst()/].get[attr.name.toUpperFirst()/]();
+						[/let]
+					[else]
+	value += "[component.literal/]";
+					[/if]
+				[/for]
+	listOfStructuField.add(DataTypes.createStructField("[getPhysicalName(field)/]",DataTypes.StringType, true));
+			[/if]
+		[/if]
+	[/if]
 [/for]
-// Get the reference attribute. Either via a TDO Object or using the Pojo reference TODO
-[for (ref : Reference | getRefOfPhysicalStructure(struct))]
-try{
-inputs.add((([entityType.name.toUpperFirst()/]TDO)[entityType.name.toLowerFirst()/]).get[getJavaAbsolutePath(ref).toUpperFirst() /]_[ref.sourceField.getPhysicalName() /]());
-}catch(java.lang.ClassCastException e){
-	logger.error("Reference attribute is mandatory. Please provide a ['['/]{}[']'/] Object","[entityType.name.toUpperFirst()/]TDO");
-	System.err.println(e);
-	throw new RuntimeException ("Reference attribute is mandatory. Please provide a [entityType.name.toUpperFirst()/]TDO Object");
-	// TODO Exception handling
-	//throw new InsertReferenceException("Reference attribute is mandatory. Please provide a [entityType.name.toUpperFirst()/]TDO Object");
-}
-[/for]
-DBConnectionMgr.getMapDB().get("[db.name/]").insertOrUpdateOrDelete(query,inputs);
-[/if]
-[/let]
+	List<Row> list=new ArrayList<Row>();
+	list.add(RowFactory.create(values));
+	SparkConnectionMgr.writeDataset(list, listOfStructuField, "jdbc", "[struct.name/]", "[db.databaseName/]");
 }
 [/template]
 

@@ -66,6 +66,7 @@ import static java.util.Collections.singletonList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.List;
 
 import com.redislabs.provider.redis.ReadWriteConfig;
 import com.redislabs.provider.redis.RedisConfig;
@@ -77,6 +78,7 @@ import org.apache.spark.api.java.function.Function;
 import org.apache.spark.rdd.RDD;
 import org.apache.spark.sql.*;
 import org.apache.spark.sql.types.DataTypes;
+import org.apache.spark.sql.types.StructField;
 import org.apache.spark.sql.types.StructType;
 import org.bson.Document;
 
@@ -159,6 +161,18 @@ public class SparkConnectionMgr {
 
 		Dataset<Row> d = dfr.option("dbtable", physicalStrucName).load();
 		return d;
+	}
+
+	public static void writeDataset(List<Row> rows, List<StructField> structFields, String formattype, String physicalStrucName, String dbName){
+		DBCredentials credentials = dbPorts.get(dbName);
+		StructType structType = DataTypes.createStructType(structFields);
+		Dataset<Row> data = session.createDataFrame(rows, structType);
+		data.write()
+			.format(formattype)
+			.option("url", "jdbc:mysql://" + credentials.url + ":" + credentials.port + "/" + credentials.dbName)
+			.option("dbtable",physicalStrucName)
+			.mode(SaveMode.Append)
+			.save();
 	}
 
 	public static Dataset<Row> getRowsFromKeyValue(String dbName, String keypattern) {
