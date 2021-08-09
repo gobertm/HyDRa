@@ -166,11 +166,12 @@ public class SparkConnectionMgr {
 	public static void writeDataset(List<Row> rows, List<StructField> structFields, String formattype, String physicalStrucName, String dbName){
 		DBCredentials credentials = dbPorts.get(dbName);
 		StructType structType = DataTypes.createStructType(structFields);
-		Dataset<Row> data = session.createDataFrame(rows, structType);
+		Dataset<Row> data = getSession().createDataFrame(rows, structType);
 		data.write()
 			.format(formattype)
 			.option("url", "jdbc:mysql://" + credentials.url + ":" + credentials.port + "/" + credentials.dbName)
 			.option("dbtable",physicalStrucName)
+			.option("user", credentials.userName).option("password", credentials.userPwd)
 			.mode(SaveMode.Append)
 			.save();
 	}

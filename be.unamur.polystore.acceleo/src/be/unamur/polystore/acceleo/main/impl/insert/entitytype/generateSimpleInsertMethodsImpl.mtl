@@ -53,7 +53,7 @@
 	String value = "";
 				[for (component : TerminalExpression | field.oclAsType(LongField).pattern)]
 					[if (component.oclIsTypeOf(BracketsField))]
-						[let attr : Attribute = getMappedAttributes(field, entityType, entityType.getMappingRules())->any(true)]
+						[let attr : Attribute = getMappedAttributes(component.oclAsType(BracketsField), entityType, entityType.getMappingRules())->any(true)]
 	value += [entityType.name.toLowerFirst()/].get[attr.name.toUpperFirst()/]();
 						[/let]
 					[else]
@@ -61,12 +61,13 @@
 					[/if]
 				[/for]
 	listOfStructuField.add(DataTypes.createStructField("[getPhysicalName(field)/]",DataTypes.StringType, true));
+	values.add(value);
 			[/if]
 		[/if]
 	[/if]
 [/for]
 	List<Row> list=new ArrayList<Row>();
-	list.add(RowFactory.create(values));
+	list.add(RowFactory.create(values.toArray()));
 	SparkConnectionMgr.writeDataset(list, listOfStructuField, "jdbc", "[struct.name/]", "[db.databaseName/]");
 }
 [/template]
