@@ -26,52 +26,11 @@
 For each PhysicalFIeld get the mapped conceptual attribute of ENT
  /]
 {
-	List<Object> values = new ArrayList<>();
-	List<StructField> listOfStructField = new ArrayList<StructField>();
-[for (field : PhysicalField | struct.oclAsType(Table).columns)]
-	[if (field.oclIsTypeOf(ShortField))]
-		[let attr : Attribute = getMappedAttributes(field, entityType, entityType.getMappingRules())->any(true)]
-			[if (attr.oclIsUndefined()=false)]
-	listOfStructField.add(DataTypes.createStructField("[getPhysicalName(field)/]",[generateSparkDataType(attr.type)/], true));
-	values.add([entityType.name.toLowerFirst()/].get[attr.name.toUpperFirst()/]());
-			[/if]
-		[/let] 
-	[/if]
-	[if (field.oclIsTypeOf(LongField))]
-		[comment LongField with only one component and is BracketsField /]
-		[if (field.oclAsType(LongField).pattern->size()=1 and field.oclAsType(LongField).pattern->any(true).oclIsTypeOf(BracketsField))]
-			[let brackets : BracketsField = field.oclAsType(LongField).pattern->any(true).oclAsType(BracketsField)]
-				[let attr : Attribute = getMappedAttributes(field, entityType, entityType.getMappingRules())->any(true)]
-				[if (attr.oclIsUndefined()=false)]
-	listOfStructField.add(DataTypes.createStructField("[getPhysicalName(field)/]",[generateSparkDataType(attr.type)/], true));
-	values.add([entityType.name.toLowerFirst()/].get[attr.name.toUpperFirst()/]());
-				[/if]
-				[/let] 
-			[/let]
-		[else]
-			[if (field.oclAsType(LongField).pattern->filter(BracketsField)->exists(b |getMappedAttributes(b, entityType, entityType.getMappingRules())->size()=0)=false)]
-				[comment All BracketsField are mapped to the corresponding entity /]
-				[comment LongField is composed of component, therefore can only be StringType /]
-	String value = "";
-				[for (component : TerminalExpression | field.oclAsType(LongField).pattern)]
-					[if (component.oclIsTypeOf(BracketsField))]
-						[let attr : Attribute = getMappedAttributes(component.oclAsType(BracketsField), entityType, entityType.getMappingRules())->any(true)]
-	value += [entityType.name.toLowerFirst()/].get[attr.name.toUpperFirst()/]();
-						[/let]
-					[else]
-	value += "[component.literal/]";
-					[/if]
-				[/for]
-	listOfStructField.add(DataTypes.createStructField("[getPhysicalName(field)/]",DataTypes.StringType, true));
-	values.add(value);
-			[/if]
-		[/if]
-	[/if]
-[/for]
-	List<Row> list=new ArrayList<Row>();
-	list.add(RowFactory.create(values.toArray()));
-	StructType structType = DataTypes.createStructType(listOfStructField);
-	SparkConnectionMgr.writeDataset(list, structType, "jdbc", "[struct.name/]", "[db.name/]");
+	List<Row> listRows=new ArrayList<Row>();
+	[generateStructField(entityType,struct.oclAsType(Table).columns, struct.oclAsType(Table).name,1)/]
+	StructType structType = DataTypes.createStructType(listOfStructField[struct.oclAsType(Table).name/]_1);
+	listRows.add(RowFactory.create(values[struct.oclAsType(Table).name/]_1.toArray()));
+	SparkConnectionMgr.writeDataset(listRows, structType, "jdbc", "[struct.name/]", "[db.name/]");
 }
 [/template]
 
@@ -117,14 +76,14 @@ String value_[objectName/]_[getPhysicalName(field)/]_[level/] = "";
 				[for (component : TerminalExpression | field.oclAsType(LongField).pattern)]
 					[if (component.oclIsTypeOf(BracketsField))]
 						[let attr : Attribute = getMappedAttributes(component.oclAsType(BracketsField), entityType, entityType.getMappingRules())->any(true)]
-value[objectName/]_[getPhysicalName(field)/]_[level/] += [entityType.name.toLowerFirst()/].get[attr.name.toUpperFirst()/]();
+value_[objectName/]_[getPhysicalName(field)/]_[level/] += [entityType.name.toLowerFirst()/].get[attr.name.toUpperFirst()/]();
 						[/let]
 					[else]
-value[objectName/]_[getPhysicalName(field)/]_[level/] += "[component.literal/]";
+value_[objectName/]_[getPhysicalName(field)/]_[level/] += "[component.literal/]";
 					[/if]
 				[/for]
 listOfStructField[objectName/]_[level/].add(DataTypes.createStructField("[getPhysicalName(field)/]",DataTypes.StringType, true));
-values[objectName/]_[level/].add(value[objectName/]_[getPhysicalName(field)/]_[level/]);
+values[objectName/]_[level/].add(value_[objectName/]_[getPhysicalName(field)/]_[level/]);
 			[/if]
 		[/if]
 	[/if]
