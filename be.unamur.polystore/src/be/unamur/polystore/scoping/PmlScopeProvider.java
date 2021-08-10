@@ -23,6 +23,7 @@ import be.unamur.polystore.pml.KVComplexField;
 import be.unamur.polystore.pml.Key;
 import be.unamur.polystore.pml.KeyValuePair;
 import be.unamur.polystore.pml.LongField;
+import be.unamur.polystore.pml.LongKVField;
 import be.unamur.polystore.pml.Node;
 import be.unamur.polystore.pml.PhysicalField;
 import be.unamur.polystore.pml.PmlPackage;
@@ -114,6 +115,12 @@ public class PmlScopeProvider extends AbstractPmlScopeProvider {
 		for(PhysicalField field : fields) {
 			if(field instanceof LongField){
 				for(TerminalExpression terminal : ((LongField)field).getPattern()) {
+					if(terminal instanceof BracketsField)
+						fieldsInComplex.add((BracketsField)terminal);
+				}
+			}
+			if(field instanceof LongKVField){
+				for(TerminalExpression terminal : ((LongKVField)field).getPattern()) {
 					if(terminal instanceof BracketsField)
 						fieldsInComplex.add((BracketsField)terminal);
 				}

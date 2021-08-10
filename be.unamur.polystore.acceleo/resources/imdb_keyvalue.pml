@@ -77,6 +77,16 @@ physical schemas {
 			}
 		}
 		
+		kvpairs movieKV2 {
+			key : "movie:"[movieID]"title:"[title],
+			value : startYear
+		}
+		
+		kvpairs movieKV3 {
+			key : "movie:"[movieID]"TITLE:"[title],
+			value : [startYear]" POST JESUS F.CHRIST"
+		}
+		
 		kvpairs actor_movieKV {
 			key : "actor:"[actorID]":movie:"[movieID],
 			value : title
@@ -116,12 +126,15 @@ mapping rules{
 	conceptualSchema.movieDirector.directed_movie -> myRelSchema.directed.has_directed,
 	conceptualSchema.movieDirector.directed_movie -> myRelSchema.directed.movie_info,
 	conceptualSchema.Movie(id) -> movieRedis.movieKV(id),
+	conceptualSchema.Movie(id, primaryTitle,startYear) -> movieRedis.movieKV2(movieID,title,startYear),
+	conceptualSchema.Movie(id, primaryTitle,startYear) -> movieRedis.movieKV3(movieID,title,startYear),
 	conceptualSchema.Movie(primaryTitle,originalTitle,isAdult,startYear,runtimeMinutes) ->movieRedis.movieKV.attr(title,originalTitle,isAdult,startYear,runtimeMinutes), 
 	conceptualSchema.Movie(averageRating,numVotes) -> IMDB_Mongo.actorCollection.movies.rating(rate,numberofvotes),
 	conceptualSchema.Movie(id, primaryTitle) -> IMDB_Mongo.actorCollection.movies(id,title),
 //	conceptualSchema.Actor(id) -> movieRedis.actor_movieKV(actorID),
 	conceptualSchema.Movie(id, primaryTitle) -> movieRedis.actor_movieKV(movieID, title),
-	conceptualSchema.movieActor.character -> 
+	conceptualSchema.movieActor.character -> movieRedis.actor_movieKV(actorID),
+	conceptualSchema.movieActor.movie -> movieRedis.actor_movieKV(movieID)
 	
 	
 }

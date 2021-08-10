@@ -91,7 +91,7 @@ LimitedPhysicalFieldDoc returns PhysicalField:
 ;
 
 KVPhysicalField returns PhysicalField:
-	ShortField | LongField | KVComplexField
+	ShortField | LongKVField | KVComplexField
 ;
 
 ShortField :
@@ -100,6 +100,10 @@ ShortField :
 
 LongField:
 	physicalName=ID ':'pattern+=TerminalExpression*
+;
+
+LongKVField:
+	pattern+=TerminalExpression+
 ;
 
 BracketsField:
