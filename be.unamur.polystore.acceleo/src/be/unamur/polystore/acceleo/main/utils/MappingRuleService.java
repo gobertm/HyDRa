@@ -132,33 +132,54 @@ public class MappingRuleService {
 		return res;
 	}
 
-	public static Set<AbstractPhysicalStructure> getMappedPhysicalStructureToInsertE(EntityType ent, Domainmodel domain){
+	public static Set<AbstractPhysicalStructure> getMappedPhysicalStructureToInsertSingleE(EntityType ent, Domainmodel domain){
 		Set<AbstractPhysicalStructure> res = new HashSet<AbstractPhysicalStructure>();
 		res = getConcernedPhysicalStructures(ent, domain);
+		Set<AbstractPhysicalStructure> copyRes = Set.copyOf(res);
+		for(AbstractPhysicalStructure struct : copyRes) {
+			boolean flag = false;
+			for (Attribute attr : ent.getAttributes()) {
+				java.util.Collection<PhysicalField> fields = getMappedPhysicalFields(attr, domain.getMappingRules());
+				for (PhysicalField field : fields) {
+					if(getPhysicalStructureNotEmbeddedObject(field) == struct) {
+						List<EObject> embeddedParent = getAscendents(EmbeddedObject.class, field);
+						if(embeddedParent.size() == 0)
+							flag = true;
+						else {
+							flag = true;
+							for(EObject e : embeddedParent) {
+								if(isMappedToRole(e, domain.getMappingRules())) {
+									flag=false;
+									break;
+								}
+							}
+						}
+					}
+				}
+			}
+			if(!flag) {
+				res.remove(struct);
+			}
+		}
+
 		for (Attribute attr : ent.getAttributes()) {
 			java.util.Collection<PhysicalField> fields = getMappedPhysicalFields(attr, domain.getMappingRules());
 			for (PhysicalField field : fields) {
-				List<EObject> embeddedParent = getAscendents(EmbeddedObject.class, field);
-				for(EObject e : embeddedParent) {
-					if(isMappedToRole(e, domain.getMappingRules())) {
-						res.remove(getPhysicalStructureNotEmbeddedObject(e));
-					}
-				}
 				// check if field is involved in a key with other component mapped to a role
 				KeyValuePair kvpair = (KeyValuePair)getFirstAncestor(KeyValuePair.class, field);
 				if(kvpair!=null) {
 					for(PhysicalField f : getPhysicalFieldsFromKey(kvpair.getKey())) {
-							if(isMappedToRole(f, domain.getMappingRules())) {
-								res.remove(getPhysicalStructureNotEmbeddedObject(f));
-							}
+						if(isMappedToRole(f, domain.getMappingRules())) {
+							res.remove(getPhysicalStructureNotEmbeddedObject(f));
+						}
 					}
-					
+
 				}
 			}
 		}
 		return res;
 	}
-	
+
 	public static EList<PhysicalField> getPhysicalFieldsFromKey(Key key){
 		EList<PhysicalField> fields = new BasicEList<PhysicalField>();
 		for(TerminalExpression terminal : key.getPattern()) {
@@ -167,8 +188,8 @@ public class MappingRuleService {
 		}
 		return fields;
 	}
-	
-	private static boolean isMappedToRole(EObject e, MappingRules rules) {
+
+	public static boolean isMappedToRole(EObject e, MappingRules rules) {
 		for(AbstractMappingRule rule : rules.getMappingRules()) {
 			if(rule instanceof RoleToEmbbededObjectMappingRule) {
 				if(((RoleToEmbbededObjectMappingRule) rule).getPhysicalStructure().equals(e))
@@ -178,7 +199,7 @@ public class MappingRuleService {
 				if((((RoleToKeyBracketsFieldMappingRule)rule).getPhysicalStructure().equals(e)))
 					return true;
 			}
-			
+
 		}
 		return false;
 	}
@@ -274,7 +295,7 @@ public class MappingRuleService {
 		return getFirstAncestor(cl, obj.eContainer());
 	}
 
-	private static List<EObject> getDescendents(final Class cl, EObject obj) {
+	public static List<EObject> getDescendents(final Class cl, EObject obj) {
 		List<EObject> res = new ArrayList<EObject>();
 		if (obj != null) {
 			if (cl.isAssignableFrom(obj.getClass()))
@@ -283,12 +304,19 @@ public class MappingRuleService {
 			while (it.hasNext()) {
 				EObject o = it.next();
 				if (o != null) {
-					if (cl.isAssignableFrom(o.getClass()))
-						res.add(o);
+					res.addAll(getDescendents(cl, o));
 				}
 			}
 		}
 
+		return res;
+	}
+
+	public static List<LongField> getDescendentsLongField(EObject obj){
+		List<LongField> res = new ArrayList<>();
+		for (EObject o : getDescendents(LongField.class, obj)) {
+			res.add((LongField)o);
+		}
 		return res;
 	}
 

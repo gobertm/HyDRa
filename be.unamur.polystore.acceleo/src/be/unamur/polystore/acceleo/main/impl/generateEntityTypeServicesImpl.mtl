@@ -41,6 +41,7 @@ import pojo.*;
 import org.apache.spark.sql.types.DataTypes;
 import org.apache.spark.sql.types.StructField;
 import org.apache.spark.sql.types.StructType;
+import org.apache.spark.sql.types.ArrayType;
 
 public class [entityType.name.toUpperFirst() + 'ServiceImpl' /] extends [entityType.name.toUpperFirst() + 'Service' /] {
 	[instantiateLogger(entityType.name.toUpperFirst() + 'ServiceImpl') /]

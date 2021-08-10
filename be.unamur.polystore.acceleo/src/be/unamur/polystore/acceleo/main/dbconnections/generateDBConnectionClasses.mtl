@@ -153,27 +153,38 @@ public class SparkConnectionMgr {
 
 	}
 
-	public static Dataset<Row> getDataset(String dbName, String physicalStrucName) {
+	public static Dataset<Row> getDataset(String dbName, String physicalStructName) {
 		DBCredentials credentials = dbPorts.get(dbName);
 		DataFrameReader dfr = getSession().sqlContext().read().format("jdbc")
 				.option("url", "jdbc:mysql://" + credentials.url + ":" + credentials.port + "/" + credentials.dbName)
 				.option("user", credentials.userName).option("password", credentials.userPwd);
 
-		Dataset<Row> d = dfr.option("dbtable", physicalStrucName).load();
+		Dataset<Row> d = dfr.option("dbtable", physicalStructName).load();
 		return d;
 	}
 
-	public static void writeDataset(List<Row> rows, List<StructField> structFields, String formattype, String physicalStrucName, String dbName){
+	public static void writeDataset(List<Row> rows, StructType structType, String formattype, String physicalStructName, String dbName){
 		DBCredentials credentials = dbPorts.get(dbName);
-		StructType structType = DataTypes.createStructType(structFields);
 		Dataset<Row> data = getSession().createDataFrame(rows, structType);
-		data.write()
-			.format(formattype)
-			.option("url", "jdbc:mysql://" + credentials.url + ":" + credentials.port + "/" + credentials.dbName)
-			.option("dbtable",physicalStrucName)
-			.option("user", credentials.userName).option("password", credentials.userPwd)
-			.mode(SaveMode.Append)
-			.save();
+		String mongoURL = "mongodb://" + credentials.url + ":" + credentials.port + "/" + dbName + "." + physicalStructName;
+		
+		if(formattype.equals("mongo")){
+			data.write()
+                .format("mongo")
+                .option("spark.mongodb.output.uri", mongoURL)
+                .option("collection",physicalStructName)
+                .mode(SaveMode.Append)
+                .save();
+		}else if(formattype.equals("jdbc"))
+			{
+			data.write()
+				.format(formattype)
+				.option("url", "jdbc:mysql://" + credentials.url + ":" + credentials.port + "/" + credentials.dbName)
+				.option("dbtable",physicalStructName)
+				.option("user", credentials.userName).option("password", credentials.userPwd)
+				.mode(SaveMode.Append)
+				.save();
+			}
 	}
 
 	public static Dataset<Row> getRowsFromKeyValue(String dbName, String keypattern) {

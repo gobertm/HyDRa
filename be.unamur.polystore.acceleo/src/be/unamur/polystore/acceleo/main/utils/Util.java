@@ -251,7 +251,6 @@ public class Util {
 		return res;
 	}
 
-
 	private static boolean isContainedInPhysicalFields(List<PhysicalField> refFields, PhysicalField field) {
 		if(refFields != null)
 			for(PhysicalField refField : refFields)

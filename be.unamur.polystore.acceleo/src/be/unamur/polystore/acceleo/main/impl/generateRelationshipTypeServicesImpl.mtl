@@ -43,6 +43,7 @@ import dbconnection.SparkConnectionMgr;
 import org.apache.spark.sql.types.DataTypes;
 import org.apache.spark.sql.types.StructField;
 import org.apache.spark.sql.types.StructType;
+import org.apache.spark.sql.types.ArrayType;
 
 public class [rel.name.toUpperFirst() + 'ServiceImpl' /] extends dao.services.[rel.name.toUpperFirst() + 'Service' /] {
 	[instantiateLogger(rel.name.toUpperFirst() + 'ServiceImpl') /]

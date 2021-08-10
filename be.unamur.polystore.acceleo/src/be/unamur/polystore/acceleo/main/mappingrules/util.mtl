@@ -16,8 +16,8 @@
 [query public getConcernedPhysicalStructures(ent : EntityType, model: Domainmodel) : Set(AbstractPhysicalStructure) 
 = invoke('be.unamur.polystore.acceleo.main.utils.MappingRuleService', 'getConcernedPhysicalStructures(be.unamur.polystore.pml.EntityType, be.unamur.polystore.pml.Domainmodel)', Sequence{ent, model}) /]
 
-[query public getMappedPhysicalStructureToInsertE(ent : EntityType, model: Domainmodel) : Set(AbstractPhysicalStructure) 
-= invoke('be.unamur.polystore.acceleo.main.utils.MappingRuleService', 'getMappedPhysicalStructureToInsertE(be.unamur.polystore.pml.EntityType, be.unamur.polystore.pml.Domainmodel)', Sequence{ent, model}) /]
+[query public getMappedPhysicalStructureToInsertSingleE(ent : EntityType, model: Domainmodel) : Set(AbstractPhysicalStructure) 
+= invoke('be.unamur.polystore.acceleo.main.utils.MappingRuleService', 'getMappedPhysicalStructureToInsertSingleE(be.unamur.polystore.pml.EntityType, be.unamur.polystore.pml.Domainmodel)', Sequence{ent, model}) /]
 
 [query public getConcernedDatabases(struct : AbstractPhysicalStructure, model: Domainmodel) : Set(Database) 
 = invoke('be.unamur.polystore.acceleo.main.utils.MappingRuleService', 'getConcernedDatabases(be.unamur.polystore.pml.AbstractPhysicalStructure, be.unamur.polystore.pml.Domainmodel)', Sequence{struct, model}) /]
@@ -46,6 +46,14 @@
 
 [query public hasMappedReferenceInSamePhysicalStructureForOppoisteRole(role : Role, struct: AbstractPhysicalStructure) : Boolean = 
 	getMappedReferences(role, role.getMappingRules()) -> select(ref : Reference | ref.getAbstractPhysicalStructureNotEmbeddedObject() = struct) -> size() > 0 /]
+
+[query public getDescendentsLongField(o: OclAny) : Collection(LongField) 
+= invoke('be.unamur.polystore.acceleo.main.utils.MappingRuleService','getDescendentsLongField(org.eclipse.emf.ecore.EObject)',Sequence{o})
+ /]
+
+[query public isMappedToRole(o: OclAny, rule : MappingRules) : Boolean
+= invoke('be.unamur.polystore.acceleo.main.utils.MappingRuleService','isMappedToRole(org.eclipse.emf.ecore.EObject,be.unamur.polystore.pml.MappingRules)',Sequence{o,rule})
+ /]
 
 [query public getMappedReferenceInSamePhysicalStructureForOppositeRole(role : Role, struct: AbstractPhysicalStructure) : Reference = 
 	getMappedReferences(role, role.getMappingRules()) -> select(ref : Reference | ref.getAbstractPhysicalStructureNotEmbeddedObject() = struct) -> any(true) /]

@@ -9,7 +9,7 @@
 
 [template public insertPOJOImpl(entityType: EntityType, conceptualSchema: ConceptualSchema)]{
 	// Insert into all mapped AbstractPhysicalStructure 
-	[for (struct: AbstractPhysicalStructure | getMappedPhysicalStructureToInsertE(entityType, entityType.ancestors(Domainmodel)->first()))]
+	[for (struct: AbstractPhysicalStructure | getMappedPhysicalStructureToInsertSingleE(entityType, entityType.ancestors(Domainmodel)->first()))]
 	[for (db: Database | getConcernedDatabases(struct, entityType.ancestors(Domainmodel)->first()))]
 		insert[entityType.name.toUpperFirst() /]In[struct.name.toUpperFirst()/]From[db.name.toUpperFirst() /]([entityType.name.toLowerFirst()/]);
 	[/for]
@@ -22,15 +22,17 @@
 
 	
 [template public insertInSQLDBImpl(entityType : EntityType, struct : AbstractPhysicalStructure, db : Database)]
-[comment insertEInRELTABLE(ENT e) /]
+[comment insertEInRELTABLE(ENT e)
+For each PhysicalFIeld get the mapped conceptual attribute of ENT
+ /]
 {
 	List<Object> values = new ArrayList<>();
-	List<StructField> listOfStructuField = new ArrayList<StructField>();
+	List<StructField> listOfStructField = new ArrayList<StructField>();
 [for (field : PhysicalField | struct.oclAsType(Table).columns)]
 	[if (field.oclIsTypeOf(ShortField))]
 		[let attr : Attribute = getMappedAttributes(field, entityType, entityType.getMappingRules())->any(true)]
 			[if (attr.oclIsUndefined()=false)]
-	listOfStructuField.add(DataTypes.createStructField("[getPhysicalName(field)/]",[generateSparkDataType(attr.type)/], true));
+	listOfStructField.add(DataTypes.createStructField("[getPhysicalName(field)/]",[generateSparkDataType(attr.type)/], true));
 	values.add([entityType.name.toLowerFirst()/].get[attr.name.toUpperFirst()/]());
 			[/if]
 		[/let] 
@@ -41,7 +43,7 @@
 			[let brackets : BracketsField = field.oclAsType(LongField).pattern->any(true).oclAsType(BracketsField)]
 				[let attr : Attribute = getMappedAttributes(field, entityType, entityType.getMappingRules())->any(true)]
 				[if (attr.oclIsUndefined()=false)]
-	listOfStructuField.add(DataTypes.createStructField("[getPhysicalName(field)/]",[generateSparkDataType(attr.type)/], true));
+	listOfStructField.add(DataTypes.createStructField("[getPhysicalName(field)/]",[generateSparkDataType(attr.type)/], true));
 	values.add([entityType.name.toLowerFirst()/].get[attr.name.toUpperFirst()/]());
 				[/if]
 				[/let] 
@@ -60,7 +62,7 @@
 	value += "[component.literal/]";
 					[/if]
 				[/for]
-	listOfStructuField.add(DataTypes.createStructField("[getPhysicalName(field)/]",DataTypes.StringType, true));
+	listOfStructField.add(DataTypes.createStructField("[getPhysicalName(field)/]",DataTypes.StringType, true));
 	values.add(value);
 			[/if]
 		[/if]
@@ -68,16 +70,83 @@
 [/for]
 	List<Row> list=new ArrayList<Row>();
 	list.add(RowFactory.create(values.toArray()));
-	SparkConnectionMgr.writeDataset(list, listOfStructuField, "jdbc", "[struct.name/]", "[db.databaseName/]");
+	StructType structType = DataTypes.createStructType(listOfStructField);
+	SparkConnectionMgr.writeDataset(list, structType, "jdbc", "[struct.name/]", "[db.name/]");
 }
 [/template]
 
 
 [template public insertInMongoDBImpl(entityType : EntityType, struct : AbstractPhysicalStructure, db : Database)]
 {
-	//Read mapping rules and find attributes of the POJO that are mapped to the corresponding AbstractPhysicalStructure
-	// Insert in MongoDB
+	List<Row> listRows=new ArrayList<Row>();
+	[generateStructField(entityType, struct.oclAsType(pml::Collection).fields,struct.oclAsType(pml::Collection).name,1)/]
+	StructType struct = DataTypes.createStructType(listOfStructField[struct.oclAsType(pml::Collection).name/]_1);
+	listRows.add(RowFactory.create(values[struct.oclAsType(pml::Collection).name/]_1.toArray()));
+	SparkConnectionMgr.writeDataset(listRows, struct, "mongo", "[struct.name/]", "[db.name/]");
 }
+[/template]
+
+[template public generateStructField(entityType : EntityType, fields : Collection(PhysicalField), objectName : String, level : Integer)]
+List<Object> values[objectName/]_[level/] = new ArrayList<>();
+List<StructField> listOfStructField[objectName/]_[level/] = new ArrayList<StructField>();
+[for (field : PhysicalField | fields)]
+	[if (field.oclIsTypeOf(ShortField))]
+		[let attr : Attribute = getMappedAttributes(field, entityType, entityType.getMappingRules())->any(true)]
+			[if (attr.oclIsUndefined()=false)]
+listOfStructField[objectName/]_[level/].add(DataTypes.createStructField("[getPhysicalName(field)/]",[generateSparkDataType(attr.type)/], true));
+values[objectName/]_[level/].add([entityType.name.toLowerFirst()/].get[attr.name.toUpperFirst()/]());
+			[/if]
+		[/let] 
+	[/if]
+	[if (field.oclIsTypeOf(LongField))]
+		[comment LongField with only one component and is BracketsField /]
+		[if (field.oclAsType(LongField).pattern->size()=1 and field.oclAsType(LongField).pattern->any(true).oclIsTypeOf(BracketsField))]
+			[let brackets : BracketsField = field.oclAsType(LongField).pattern->any(true).oclAsType(BracketsField)]
+				[let attr : Attribute = getMappedAttributes(field, entityType, entityType.getMappingRules())->any(true)]
+				[if (attr.oclIsUndefined()=false)]
+listOfStructField[objectName/]_[level/].add(DataTypes.createStructField("[getPhysicalName(field)/]",[generateSparkDataType(attr.type)/], true));
+values[objectName/]_[level/].add([entityType.name.toLowerFirst()/].get[attr.name.toUpperFirst()/]());
+				[/if]
+				[/let] 
+			[/let]
+		[else]
+			[if (field.oclAsType(LongField).pattern->filter(BracketsField)->exists(b |getMappedAttributes(b, entityType, entityType.getMappingRules())->size()=0)=false)]
+				[comment All BracketsField are mapped to the corresponding entity or composed of only one Terminal expression/]
+				[comment LongField is composed of component, therefore can only be StringType /]
+String value_[objectName/]_[getPhysicalName(field)/]_[level/] = "";
+				[for (component : TerminalExpression | field.oclAsType(LongField).pattern)]
+					[if (component.oclIsTypeOf(BracketsField))]
+						[let attr : Attribute = getMappedAttributes(component.oclAsType(BracketsField), entityType, entityType.getMappingRules())->any(true)]
+value[objectName/]_[getPhysicalName(field)/]_[level/] += [entityType.name.toLowerFirst()/].get[attr.name.toUpperFirst()/]();
+						[/let]
+					[else]
+value[objectName/]_[getPhysicalName(field)/]_[level/] += "[component.literal/]";
+					[/if]
+				[/for]
+listOfStructField[objectName/]_[level/].add(DataTypes.createStructField("[getPhysicalName(field)/]",DataTypes.StringType, true));
+values[objectName/]_[level/].add(value[objectName/]_[getPhysicalName(field)/]_[level/]);
+			[/if]
+		[/if]
+	[/if]
+	[if (field.oclIsTypeOf(EmbeddedObject) and field.isMappedToRole(entityType.getMappingRules())=false)]
+	Object row_value_[field.getPhysicalName()/]_[level+1/] = null;
+// Embedded structure [field.getPhysicalName()/]
+		[if (getMappedAttributes(field, entityType, entityType.getMappingRules())->size()>0 or getDescendentsLongField(field)->exists(lf | lf.pattern->size()=1 and lf.pattern->any(true).oclIsTypeOf(BracketsField)=false))]
+		[comment Generate only for embedded objects with at least one field mapped to the concerned ENT or a field composed only of a constant string. /]
+				[generateStructField(entityType, field.oclAsType(EmbeddedObject).fields, field.getPhysicalName(), level+1)/]
+		StructType structType_[objectName/]_[level/] = DataTypes.createStructType(listOfStructField[field.getPhysicalName()/]_[level+1/]);
+				[if (field.oclAsType(EmbeddedObject).cardinality= pml::Cardinality::ONE_MANY) or (field.oclAsType(EmbeddedObject).cardinality= pml::Cardinality::ZERO_MANY)]
+		ArrayType array[field.getPhysicalName()/]_[level/] = DataTypes.createArrayType(structType_[objectName/]_[level/]);
+		listOfStructField[objectName/]_[level/].add(DataTypes.createStructField("[field.getPhysicalName()/]",array[field.getPhysicalName()/]_[level/],true));
+		row_value_[field.getPhysicalName()/]_[level+1/] = Arrays.asList(RowFactory.create(values[field.getPhysicalName()/]_[level+1/].toArray()));
+				[else]
+		listOfStructField[objectName/]_[level/].add(DataTypes.createStructField("[field.getPhysicalName()/]",structType_[objectName/]_[level/], true));
+		row_value_[field.getPhysicalName()/]_[level+1/] = RowFactory.create(values[field.getPhysicalName()/]_[level+1/].toArray());
+				[/if]
+		values[objectName/]_[level/].add(row_value_[field.getPhysicalName()/]_[level+1/]);
+		[/if]
+	[/if]
+[/for]
 [/template]
 
 [query private getMappedAttributesInStructure(ent: EntityType, struct : AbstractPhysicalStructure, db : Database, rules: MappingRules) : Collection(Attribute) =  
