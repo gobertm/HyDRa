@@ -23,6 +23,7 @@ public [if (override = false)]abstract [/if]void insert[entityType.name.toUpperF
 public [if (override = false)]abstract [/if]void insert[entityType.name.toUpperFirst() /]In[struct.name.toUpperFirst()/]From[db.name.toUpperFirst() /]([entityType.name.toUpperFirst()/] [entityType.name.toLowerFirst()/])[if (override = false)]; [else]
 [if (override = true and (db.dbType = pml::DatabaseType::MARIADB or db.dbType = pml::DatabaseType::SQLITE))][insertInSQLDBImpl(entityType, struct, db)/]
 [elseif (override = true and db.dbType = pml::DatabaseType::MONGODB) ][insertInMongoDBImpl(entityType, struct, db) /]
+[elseif (override = true and db.dbType = pml::DatabaseType::REDIS) ][insertInRedisImpl(entityType, struct, db) /]
 [else]
 	{
 		//other databases to implement

@@ -18,6 +18,14 @@ import org.eclipse.ocl.ecore.util.OCLEcoreUtil;
 import be.unamur.polystore.pml.*;
 import be.unamur.polystore.scoping.PmlScopeProvider;
 
+/**
+ * @author Maxime Gobert
+ *
+ */
+/**
+ * @author Maxime Gobert
+ *
+ */
 public class MappingRuleService {
 	private static final String PATTERN_VALUE = "@VAR@";
 	private static final String PATTERN_OTHER_VALUE = "@OTHERVAR@";
@@ -132,11 +140,20 @@ public class MappingRuleService {
 		return res;
 	}
 
-	public static Set<AbstractPhysicalStructure> getMappedPhysicalStructureToInsertSingleE(EntityType ent, Domainmodel domain){
-		Set<AbstractPhysicalStructure> res = new HashSet<AbstractPhysicalStructure>();
-		res = getConcernedPhysicalStructures(ent, domain);
-		Set<AbstractPhysicalStructure> copyRes = Set.copyOf(res);
-		for(AbstractPhysicalStructure struct : copyRes) {
+	
+	/**
+	 * @param ent
+	 * @param domain
+	 * @return
+	 */
+	public static List<AbstractPhysicalStructure> getMappedPhysicalStructureToInsertSingleE(EntityType ent, Domainmodel domain){
+		List<AbstractPhysicalStructure> res ;
+		res = new ArrayList<>(getConcernedPhysicalStructures(ent, domain));
+		AbstractPhysicalStructure struct;
+		for(int i = 0; i< res.size(); i++) {
+			struct = res.get(i);
+			if(struct instanceof KeyValuePair)
+				continue;
 			boolean flag = false;
 			for (Attribute attr : ent.getAttributes()) {
 				java.util.Collection<PhysicalField> fields = getMappedPhysicalFields(attr, domain.getMappingRules());
@@ -154,11 +171,16 @@ public class MappingRuleService {
 								}
 							}
 						}
+						if(flag)
+							break;
 					}
 				}
+				if(flag)
+					break;
 			}
 			if(!flag) {
-				res.remove(struct);
+				res.remove(i);
+				i--;
 			}
 		}
 
@@ -170,6 +192,9 @@ public class MappingRuleService {
 				if(kvpair!=null) {
 					for(PhysicalField f : getPhysicalFieldsFromKey(kvpair.getKey())) {
 						if(isMappedToRole(f, domain.getMappingRules())) {
+							res.remove(getPhysicalStructureNotEmbeddedObject(f));
+						}
+						if(!isMappedToEntity(f, ent, domain.getMappingRules())) {
 							res.remove(getPhysicalStructureNotEmbeddedObject(f));
 						}
 					}
@@ -200,6 +225,16 @@ public class MappingRuleService {
 					return true;
 			}
 
+		}
+		return false;
+	}
+	
+	public static boolean isMappedToEntity(EObject e, EntityType ent, MappingRules rules) {
+		for(AbstractMappingRule rule : rules.getMappingRules()) {
+			if(rule instanceof EntityMappingRule) {
+				if(((EntityMappingRule) rule).getPhysicalFields().contains(e) && ((EntityMappingRule) rule).getEntityConceptual().equals(ent))
+					return true;
+			}
 		}
 		return false;
 	}
@@ -325,7 +360,7 @@ public class MappingRuleService {
 		EObject object = getFirstAncestor(cl, obj.eContainer());
 		if(object!=null) {
 			res.add(object);
-			res.addAll(getAscendents(cl, object.eContainer()));
+			res.addAll(getAscendents(cl, object));
 		}
 		return res;
 	}

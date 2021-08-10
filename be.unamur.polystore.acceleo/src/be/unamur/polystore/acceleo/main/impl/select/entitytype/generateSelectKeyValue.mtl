@@ -53,7 +53,7 @@
 				String value = null;
 				Pattern p, pattern = null;
 				Matcher m, match = null;
-
+				String key="";
 				boolean matches = false;
 				[for (attr : Attribute | attributes)]
 				[let field : PhysicalField = getMappedPhysicalField(attr, struct, db, struct.ancestors(Domainmodel)->first().mappingRules)]
@@ -62,7 +62,7 @@
 				[comment Attribute mapped in a Key /]
 				// attribute [ '[' /][pojoName/].[attr.name.toUpperFirst() /][ ']' /]
 				// Attribute mapped in a key.
-				String key = r.getAs("key");
+				key = r.getAs("key");
 				regex = finalKeypattern.replaceAll("\\*","(.*)");
 				groupindex = fieldsListInKey.indexOf("[field.getPhysicalName()/]")+1;
 				if(groupindex==null) {
