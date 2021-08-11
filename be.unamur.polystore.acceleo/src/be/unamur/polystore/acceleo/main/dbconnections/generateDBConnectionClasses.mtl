@@ -205,6 +205,23 @@ public class SparkConnectionMgr {
         redisContext.toRedisKV(items, 0, redisConfig, readWriteConfig);
 	}
 
+	public static void writeKeyValueHash(String key, List<Tuple2<String, String>> hash, String dbName){
+		DBCredentials credentials = dbPorts.get(dbName);
+		SparkConf sparkConf = new SparkConf()
+                .setAppName("MyApp")
+                .setMaster("local['['/]*[']'/]")
+                .set("spark.redis.host", credentials.url)
+                .set("spark.redis.port", credentials.port);
+        RedisConfig redisConfig = RedisConfig.fromSparkConf(sparkConf);
+        ReadWriteConfig readWriteConfig = ReadWriteConfig.fromSparkConf(sparkConf);
+		//        JavaSparkContext jsc = new JavaSparkContext(sparkConf);
+        JavaSparkContext jsc = JavaSparkContext.fromSparkContext(getSession().sparkContext());
+        RedisContext redisContext = new RedisContext(jsc.sc());
+
+		RDD<Tuple2<String, String>> items = jsc.parallelize(hash,1).rdd();
+		redisContext.toRedisHASH(items, key,0, redisConfig, readWriteConfig);
+	}
+
 	public static Dataset<Row> getRowsFromKeyValue(String dbName, String keypattern) {
 		DBCredentials credentials = dbPorts.get(dbName);
 		SparkConf sparkConf = new SparkConf()

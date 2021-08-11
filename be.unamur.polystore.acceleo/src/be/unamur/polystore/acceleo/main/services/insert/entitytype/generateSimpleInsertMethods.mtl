@@ -6,29 +6,36 @@
 
 [template public generateSimpleInsertMethods(entityType: EntityType, conceptualSchema: ConceptualSchema, override: Boolean)]
 [if (getMandatoryRoles(entityType, conceptualSchema)->size() = 0)]
-public [if (override = false)]abstract [/if]void insert[entityType.name.toUpperFirst() /]([entityType.name.toUpperFirst() /] [entityType.name.toLowerFirst() /])[if (override = false)];[else][insertPOJOImpl(entityType, conceptualSchema) /][/if]
+public [if (override = false)]abstract [/if]boolean insert[entityType.name.toUpperFirst() /]([entityType.name.toUpperFirst() /] [entityType.name.toLowerFirst() /])[if (override = false)];[else][insertPOJOImpl(entityType, conceptualSchema) /][/if]
 [else]
 public [if (override = false)]abstract [/if]void insert[entityType.name.toUpperFirst() /](
 	[entityType.name.toUpperFirst() /] [entityType.name.toLowerFirst() /][for (opp: Role | getRolesOppositeToMandatoryEntityRole(entityType, conceptualSchema))],
 	pojo.[opp.entity.name.toUpperFirst() /] [getRelationShipType(opp).name.toUpperFirst()/][opp.name.toUpperFirst()/][/for][for (attr: Attribute | getAttributesFromMandatoryRoles(entityType, conceptualSchema))],
 	[generateJavaType(attr.type)/] [getRelationshipType(attr).name /]_[attr.name /]
 	[/for]
-)[if (override = false)];[else][implMethod3(entityType, conceptualSchema) /][/if]
+)[if (override = false)];[else][/if]
 [/if]
 
 [comment insert In single database for entities having no mandatory roles (i.e single entity) /]
 [comment For each mapped AbstractPhysicalStructure which contains a mapped attribute of level one (or sub level not mapped to a role). /]
 [for (struct: AbstractPhysicalStructure | getMappedPhysicalStructureToInsertSingleE(entityType, entityType.ancestors(Domainmodel)->first()))]
 [for (db: Database | getConcernedDatabases(struct, entityType.ancestors(Domainmodel)->first()))]
-public [if (override = false)]abstract [/if]void insert[entityType.name.toUpperFirst() /]In[struct.name.toUpperFirst()/]From[db.name.toUpperFirst() /]([entityType.name.toUpperFirst()/] [entityType.name.toLowerFirst()/])[if (override = false)]; [else]
-[if (override = true and (db.dbType = pml::DatabaseType::MARIADB or db.dbType = pml::DatabaseType::SQLITE))][insertInSQLDBImpl(entityType, struct, db)/]
-[elseif (override = true and db.dbType = pml::DatabaseType::MONGODB) ][insertInMongoDBImpl(entityType, struct, db) /]
-[elseif (override = true and db.dbType = pml::DatabaseType::REDIS) ][insertInRedisImpl(entityType, struct, db) /]
-[else]
+public [if (override = false)]abstract [/if]boolean insert[entityType.name.toUpperFirst() /]In[struct.name.toUpperFirst()/]From[db.name.toUpperFirst() /]([entityType.name.toUpperFirst()/] [entityType.name.toLowerFirst()/])[if (override = false)]; [else]
 	{
+[generateCheckExistBeforeInsert(entityType, struct, db)/]
+	if(!entityExists){
+[if (override = true and (db.dbType = pml::DatabaseType::MARIADB or db.dbType = pml::DatabaseType::SQLITE))]	[insertInSQLDBImpl(entityType, struct, db)/]
+[elseif (override = true and db.dbType = pml::DatabaseType::MONGODB) ]	[insertInMongoDBImpl(entityType, struct, db) /]
+[elseif (override = true and db.dbType = pml::DatabaseType::REDIS) ]	[insertInRedisImpl(entityType, struct, db) /]
+[else]
 		//other databases to implement
+[/if]
+		logger.info("Inserted ['['/][entityType.name/][']'/] entity ID ['['/]{}[']'/] in ['['/][struct.name.toUpperFirst()/][']'/] in database ['['/][db.name.toUpperFirst() /][']'/]", idvalue);
 	}
-[/if] 
+	else
+		logger.warn("['['/][entityType.name/][']'/] entity ID ['['/]{}[']'/] already present in ['['/][struct.name.toUpperFirst()/][']'/] in database ['['/][db.name.toUpperFirst() /][']'/]", idvalue);
+	return !entityExists;
+} 
 [/if]
 [/for]
 [/for]
