@@ -50,6 +50,7 @@ For each PhysicalFIeld get the mapped conceptual attribute of ENT
 	[/for]
 	[if (struct.oclAsType(KeyValuePair).value.oclIsTypeOf(pml::KVComplexField))]
 		[comment Generate key value with hash structure /]
+		
 	[else]
 	String value="";
 		[let field : PhysicalField = struct.oclAsType(KeyValuePair).value]
@@ -60,10 +61,10 @@ For each PhysicalFIeld get the mapped conceptual attribute of ENT
 					[/if]
 				[/let] 
 		[/if]
-		[if (field.oclIsTypeOf(LongKVField))]
+		[if (field.oclIsTypeOf(LongField))]
 		[comment LongField with only one component and is BracketsField /]
-			[if (field.oclAsType(LongKVField).pattern->size()=1 and field.oclAsType(LongKVField).pattern->any(true).oclIsTypeOf(BracketsField))]
-				[let brackets : BracketsField = field.oclAsType(LongKVField).pattern->any(true).oclAsType(BracketsField)]
+			[if (field.oclAsType(LongField).pattern->size()=1 and field.oclAsType(LongField).pattern->any(true).oclIsTypeOf(BracketsField))]
+				[let brackets : BracketsField = field.oclAsType(LongField).pattern->any(true).oclAsType(BracketsField)]
 					[let attr : Attribute = getMappedAttributes(field, entityType, entityType.getMappingRules())->any(true)]
 					[if (attr.oclIsUndefined()=false)]
 	value+=[entityType.name.toLowerFirst()/].get[attr.name.toUpperFirst()/]());
@@ -71,10 +72,10 @@ For each PhysicalFIeld get the mapped conceptual attribute of ENT
 					[/let] 
 				[/let]
 			[else]
-				[if (field.oclAsType(LongKVField).pattern->filter(BracketsField)->exists(b |getMappedAttributes(b, entityType, entityType.getMappingRules())->size()=0)=false)]
+				[if (field.oclAsType(LongField).pattern->filter(BracketsField)->exists(b |getMappedAttributes(b, entityType, entityType.getMappingRules())->size()=0)=false)]
 					[comment All BracketsField are mapped to the corresponding entity or composed of only one Terminal expression/]
 					[comment LongField is composed of component, therefore can only be StringType /]
-					[for (component : TerminalExpression | field.oclAsType(LongKVField).pattern)]
+					[for (component : TerminalExpression | field.oclAsType(LongField).pattern)]
 						[if (component.oclIsTypeOf(BracketsField))]
 							[let attr : Attribute = getMappedAttributes(component.oclAsType(BracketsField), entityType, entityType.getMappingRules())->any(true)]
 	value += [entityType.name.toLowerFirst()/].get[attr.name.toUpperFirst()/]();

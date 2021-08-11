@@ -73,7 +73,7 @@ physical schemas {
 				originalTitle,
 				isAdult,
 				startYear,
-				runtimeMinutes
+				lenght : [runtimeMinutes]" minutes" 
 			}
 		}
 		

@@ -94,15 +94,19 @@ KVPhysicalField returns PhysicalField:
 	ShortField | LongKVField | KVComplexField
 ;
 
+LimitedKVPhysicalField returns PhysicalField:
+	ShortField | LongField 
+;
+
 ShortField :
 	name=ID
 ;
 
-LongField:
+LongField returns LongField:
 	physicalName=ID ':'pattern+=TerminalExpression*
 ;
 
-LongKVField:
+LongKVField returns LongField:
 	pattern+=TerminalExpression+
 ;
 
@@ -118,7 +122,7 @@ EmbeddedObject:
 
 KVComplexField:
 	name=ID type=KVDataType	('{'
-		(fields+=KVPhysicalField (',' fields+=KVPhysicalField)*)?
+		(fields+=LimitedKVPhysicalField (',' fields+=LimitedKVPhysicalField)*)?
 	'}')
 ;
 
