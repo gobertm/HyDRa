@@ -73,18 +73,18 @@ physical schemas {
 		}
 	}
 	
-//	key value schema movieRedis : myredis {
-//		kvpairs movieKV {
-//			key : "movie:"[id],
-//			value : attr hash{
-//				title,
-//				originalTitle,
-//				isAdult,
-//				startYear,
-//				runtimeMinutes
-//			}
-//		}
-//	}
+	key value schema movieRedis : myredis {
+		kvpairs movieKV {
+			key : "movie:"[id],
+			value : attr hash{
+				title,
+				originalTitle,
+				isAdult,
+				startYear,
+				runtimeMinutes
+			}
+		}
+	}
 	
 	relational schema myRelSchema : mydb {
 		table directorTable{
@@ -104,7 +104,7 @@ physical schemas {
 			}
 			references {
 				directed_by : director_id -> directorTable.id
-//				has_directed : movie_id -> movieRedis.movieKV.id
+				has_directed : movie_id -> movieRedis.movieKV.id
 				movie_info : movie_id -> IMDB_Mongo.actorCollection.movies.id
 			}
 		}
@@ -116,10 +116,10 @@ mapping rules{
 	conceptualSchema.movieActor.character-> IMDB_Mongo.actorCollection.movies(),
 	conceptualSchema.Director(id,firstName,lastName, yearOfBirth,yearOfDeath) -> myRelSchema.directorTable(id,firstname,lastname,birth,death),
 	conceptualSchema.movieDirector.director -> myRelSchema.directed.directed_by,
-//	conceptualSchema.movieDirector.directed_movie -> myRelSchema.directed.has_directed,
+	conceptualSchema.movieDirector.directed_movie -> myRelSchema.directed.has_directed,
 	conceptualSchema.movieDirector.directed_movie -> myRelSchema.directed.movie_info,
-//	conceptualSchema.Movie(id) -> movieRedis.movieKV(id),
-//	conceptualSchema.Movie(primaryTitle,originalTitle,isAdult,startYear,runtimeMinutes) ->movieRedis.movieKV.attr(title,originalTitle,isAdult,startYear,runtimeMinutes), 
+	conceptualSchema.Movie(id) -> movieRedis.movieKV(id),
+	conceptualSchema.Movie(primaryTitle,originalTitle,isAdult,startYear,runtimeMinutes) ->movieRedis.movieKV.attr(title,originalTitle,isAdult,startYear,runtimeMinutes), 
 	conceptualSchema.Movie(averageRating,numVotes) -> IMDB_Mongo.actorCollection.movies.rating(rate,numberofvotes),
 	conceptualSchema.Movie(id, primaryTitle) -> IMDB_Mongo.actorCollection.movies(id,title),
 	conceptualSchema.Director(id, firstName,lastName) -> IMDB_Mongo.director(id, fname,lname)

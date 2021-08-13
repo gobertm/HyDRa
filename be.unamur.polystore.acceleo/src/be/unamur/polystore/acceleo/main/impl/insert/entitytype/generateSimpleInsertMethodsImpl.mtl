@@ -50,26 +50,86 @@ For each PhysicalFIeld get the mapped conceptual attribute of ENT
 [template public insertInRedisImpl(entityType : EntityType, struct : AbstractPhysicalStructure, db : Database)]
 [comment insertEInREDIS(ENT e)
  /]
-	String key="";
-	[for (component : TerminalExpression | struct.oclAsType(KeyValuePair).key.pattern)]
-					[if (component.oclIsTypeOf(BracketsField))]
-						[let attr : Attribute = getMappedAttributes(component.oclAsType(BracketsField), entityType, entityType.getMappingRules())->any(true)]
-	key += [entityType.name.toLowerFirst()/].get[attr.name.toUpperFirst()/]();
+		String key="";
+		boolean toAdd = false;
+		[for (component : TerminalExpression | struct.oclAsType(KeyValuePair).key.pattern)]
+						[if (component.oclIsTypeOf(BracketsField))]
+							[let attr : Attribute = getMappedAttributes(component.oclAsType(BracketsField), entityType, entityType.getMappingRules())->any(true)]
+		key += [entityType.name.toLowerFirst()/].get[attr.name.toUpperFirst()/]();
+							[/let]
+						[else]
+		key += "[component.literal/]";
+						[/if]
+		[/for]
+		[if (struct.oclAsType(KeyValuePair).value.oclIsTypeOf(pml::KVComplexField))]
+			[comment Generate value for hash structure /]
+		List<Tuple2<String,String>> hash = new ArrayList<>();
+			[for (field : PhysicalField | struct.oclAsType(KeyValuePair).value.oclAsType(KVComplexField).fields)]
+		toAdd = false;
+		String fieldname_[getPhysicalName(field)/]="[getPhysicalName(field)/]";
+		String value_[getPhysicalName(field)/]="";
+				[if (field.oclIsTypeOf(ShortField))]
+						[let attr : Attribute = getMappedAttributes(field, entityType, entityType.getMappingRules())->any(true)]
+							[if (attr.oclIsUndefined()=false)]
+		if([entityType.name.toLowerFirst()/].get[attr.name.toUpperFirst()/]()!=null){
+			toAdd = true;
+			value_[getPhysicalName(field)/] += [entityType.name.toLowerFirst()/].get[attr.name.toUpperFirst()/]();
+		}
+							[/if]
+						[/let] 
+				[/if]
+				[if (field.oclIsTypeOf(LongField))]
+				[comment LongField with only one component and is BracketsField /]
+					[if (field.oclAsType(LongField).pattern->size()=1 and field.oclAsType(LongField).pattern->any(true).oclIsTypeOf(BracketsField))]
+						[let brackets : BracketsField = field.oclAsType(LongField).pattern->any(true).oclAsType(BracketsField)]
+							[let attr : Attribute = getMappedAttributes(field, entityType, entityType.getMappingRules())->any(true)]
+							[if (attr.oclIsUndefined()=false)]
+		if([entityType.name.toLowerFirst()/].get[attr.name.toUpperFirst()/]()!=null){
+			toAdd = true;
+			value_[getPhysicalName(field)/] += [entityType.name.toLowerFirst()/].get[attr.name.toUpperFirst()/]();
+		}
+							[/if]
+							[/let] 
 						[/let]
 					[else]
-	key += "[component.literal/]";
+						[if (field.oclAsType(LongField).pattern->filter(BracketsField)->exists(b |getMappedAttributes(b, entityType, entityType.getMappingRules())->size()=0)=false)]
+							[comment All BracketsField are mapped to the corresponding entity or composed of only one Terminal expression/]
+							[comment LongField is composed of component, therefore can only be StringType /]
+							[for (component : TerminalExpression | field.oclAsType(LongField).pattern)]
+								[if (component.oclIsTypeOf(BracketsField))]
+									[let attr : Attribute = getMappedAttributes(component.oclAsType(BracketsField), entityType, entityType.getMappingRules())->any(true)]
+		if([entityType.name.toLowerFirst()/].get[attr.name.toUpperFirst()/]()!=null){
+			toAdd = true;
+			value_[getPhysicalName(field)/] += [entityType.name.toLowerFirst()/].get[attr.name.toUpperFirst()/]();
+		}
+		else
+			value_[getPhysicalName(field)/] += "";
+									[/let]
+								[else]
+		value_[getPhysicalName(field)/] += "[component.literal/]";
+								[/if]
+							[/for]
+						[/if]
 					[/if]
-	[/for]
-	[if (struct.oclAsType(KeyValuePair).value.oclIsTypeOf(pml::KVComplexField))]
-		[comment Generate value for hash structure /]
-		List<Tuple2<String,String>> hash = new ArrayList<>();
-		[for (field : PhysicalField | struct.oclAsType(KeyValuePair).value.oclAsType(KVComplexField).fields)]
-	String fieldname_[getPhysicalName(field)/]="[getPhysicalName(field)/]";
-	String value_[getPhysicalName(field)/]="";
-			[if (field.oclIsTypeOf(ShortField))]
+				[/if]
+		[comment When value is null for a field in the hash we dont add it to the hash.  /]
+		// When value is null for a field in the hash we dont add it to the hash.
+		if(toAdd)
+			hash.add(new Tuple2<String,String>(fieldname_[getPhysicalName(field)/],value_[getPhysicalName(field)/]));
+			[/for]
+		SparkConnectionMgr.writeKeyValueHash(key,hash, "[db.name/]");
+		[else]
+		[comment Generate value for simple string value /]
+		
+		String value="";
+			[let field : PhysicalField = struct.oclAsType(KeyValuePair).value]
+			[if (struct.oclAsType(KeyValuePair).value.oclIsTypeOf(ShortField))]
 					[let attr : Attribute = getMappedAttributes(field, entityType, entityType.getMappingRules())->any(true)]
 						[if (attr.oclIsUndefined()=false)]
-	value_[getPhysicalName(field)/]+=[entityType.name.toLowerFirst()/].get[attr.name.toUpperFirst()/]()==null?"":[entityType.name.toLowerFirst()/].get[attr.name.toUpperFirst()/]();
+		if([entityType.name.toLowerFirst()/].get[attr.name.toUpperFirst()/]()!=null){
+			toAdd = true;
+			value += [entityType.name.toLowerFirst()/].get[attr.name.toUpperFirst()/]();
+		}
 						[/if]
 					[/let] 
 			[/if]
@@ -79,7 +139,10 @@ For each PhysicalFIeld get the mapped conceptual attribute of ENT
 					[let brackets : BracketsField = field.oclAsType(LongField).pattern->any(true).oclAsType(BracketsField)]
 						[let attr : Attribute = getMappedAttributes(field, entityType, entityType.getMappingRules())->any(true)]
 						[if (attr.oclIsUndefined()=false)]
-	value_[getPhysicalName(field)/]+=[entityType.name.toLowerFirst()/].get[attr.name.toUpperFirst()/]()==null?"":[entityType.name.toLowerFirst()/].get[attr.name.toUpperFirst()/]();
+		if([entityType.name.toLowerFirst()/].get[attr.name.toUpperFirst()/]()!=null){
+			toAdd = true;
+			value += [entityType.name.toLowerFirst()/].get[attr.name.toUpperFirst()/]();
+		}
 						[/if]
 						[/let] 
 					[/let]
@@ -90,65 +153,26 @@ For each PhysicalFIeld get the mapped conceptual attribute of ENT
 						[for (component : TerminalExpression | field.oclAsType(LongField).pattern)]
 							[if (component.oclIsTypeOf(BracketsField))]
 								[let attr : Attribute = getMappedAttributes(component.oclAsType(BracketsField), entityType, entityType.getMappingRules())->any(true)]
-	value_[getPhysicalName(field)/] += [entityType.name.toLowerFirst()/].get[attr.name.toUpperFirst()/]()==null?"":[entityType.name.toLowerFirst()/].get[attr.name.toUpperFirst()/]();
+		if([entityType.name.toLowerFirst()/].get[attr.name.toUpperFirst()/]()!=null){
+			toAdd = true;
+			value += [entityType.name.toLowerFirst()/].get[attr.name.toUpperFirst()/]();
+		}
+		else
+			value+= "";
 								[/let]
 							[else]
-	value_[getPhysicalName(field)/] += "[component.literal/]";
+		value += "[component.literal/]";
 							[/if]
 						[/for]
 					[/if]
 				[/if]
 			[/if]
-	[comment When value is null for a field in the hash we dont add it to the hash. Except LongField with literal. /]
-	// When value is null for a field in the hash we dont add it to the hash. Except LongField with literal.
-	if(!value_[getPhysicalName(field)/].equals(""))
-		hash.add(new Tuple2<String,String>(fieldname_[getPhysicalName(field)/],value_[getPhysicalName(field)/]));
-		[/for]
-	SparkConnectionMgr.writeKeyValueHash(key,hash, "[db.name/]");
-	[else]
-	[comment Generate value for simple string value /]
-	
-	String value="";
-		[let field : PhysicalField = struct.oclAsType(KeyValuePair).value]
-		[if (struct.oclAsType(KeyValuePair).value.oclIsTypeOf(ShortField))]
-				[let attr : Attribute = getMappedAttributes(field, entityType, entityType.getMappingRules())->any(true)]
-					[if (attr.oclIsUndefined()=false)]
-	value+=[entityType.name.toLowerFirst()/].get[attr.name.toUpperFirst()/]()==null?"":[entityType.name.toLowerFirst()/].get[attr.name.toUpperFirst()/]();
-					[/if]
-				[/let] 
+			[/let]
+		[comment  No addition of key value pari when the value is null./]
+		//No addition of key value pair when the value is null.
+		if(toAdd)
+			SparkConnectionMgr.writeKeyValue(key,value,"[db.name/]");
 		[/if]
-		[if (field.oclIsTypeOf(LongField))]
-		[comment LongField with only one component and is BracketsField /]
-			[if (field.oclAsType(LongField).pattern->size()=1 and field.oclAsType(LongField).pattern->any(true).oclIsTypeOf(BracketsField))]
-				[let brackets : BracketsField = field.oclAsType(LongField).pattern->any(true).oclAsType(BracketsField)]
-					[let attr : Attribute = getMappedAttributes(field, entityType, entityType.getMappingRules())->any(true)]
-					[if (attr.oclIsUndefined()=false)]
-	value+=[entityType.name.toLowerFirst()/].get[attr.name.toUpperFirst()/]()==null?"":[entityType.name.toLowerFirst()/].get[attr.name.toUpperFirst()/]();
-					[/if]
-					[/let] 
-				[/let]
-			[else]
-				[if (field.oclAsType(LongField).pattern->filter(BracketsField)->exists(b |getMappedAttributes(b, entityType, entityType.getMappingRules())->size()=0)=false)]
-					[comment All BracketsField are mapped to the corresponding entity or composed of only one Terminal expression/]
-					[comment LongField is composed of component, therefore can only be StringType /]
-					[for (component : TerminalExpression | field.oclAsType(LongField).pattern)]
-						[if (component.oclIsTypeOf(BracketsField))]
-							[let attr : Attribute = getMappedAttributes(component.oclAsType(BracketsField), entityType, entityType.getMappingRules())->any(true)]
-	value += [entityType.name.toLowerFirst()/].get[attr.name.toUpperFirst()/]()==null?"":[entityType.name.toLowerFirst()/].get[attr.name.toUpperFirst()/]();
-							[/let]
-						[else]
-	value += "[component.literal/]";
-						[/if]
-					[/for]
-				[/if]
-			[/if]
-		[/if]
-		[/let]
-	[comment  No addition of key value pari when the value is null./]
-	//No addition of key value pari when the value is null.
-	if(!value.isEmpty())
-		SparkConnectionMgr.writeKeyValue(key,value,"[db.name/]");
-	[/if]
 [/template]
 
 [template public insertInMongoDBImpl(entityType : EntityType, struct : AbstractPhysicalStructure, db : Database)]

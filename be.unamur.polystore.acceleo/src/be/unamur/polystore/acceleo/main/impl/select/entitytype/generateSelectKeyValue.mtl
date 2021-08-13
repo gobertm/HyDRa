@@ -172,11 +172,19 @@
 					
 				return [pojoName.toLowerFirst() /]_res;
 			}, Encoders.bean([pojoName /][if (references->size() > 0)][getTDOLiteral('') /][/if].class));
-	return res;
 	[else]
 		[comment Retrieve Dataset<Row> containing field of hashes. TODO other Redis dataTypes. /]
 		// TODO only handles 'hash' for now
-	rows = SparkConnectionMgr.getRowsFromKeyValueHashes("[db.name/]",keypattern);
+	StructType structTypeHash = new StructType(new StructField['['/][']'/] {
+	[for (field : PhysicalField | struct.key.pattern->filter(BracketsField)) separator(',')]
+		DataTypes.createStructField("[getPhysicalName(field)/]", DataTypes.StringType, true)
+	[/for]
+	[if (struct.key.pattern->filter(BracketsField)->size()>0)],[/if]
+	[for (field : PhysicalField | struct.value.oclAsType(KVComplexField).fields) separator(',')]
+		DataTypes.createStructField("[getPhysicalName(field)/]", DataTypes.StringType, true)
+	[/for]
+	});
+	rows = SparkConnectionMgr.getRowsFromKeyValueHashes("[db.name/]",keypattern, structTypeHash);
 	finalKeypattern = keypattern;
 	Dataset<[pojoName /][if (references->size() > 0)][getTDOLiteral('') /][/if]> res = rows.map((MapFunction<Row, [pojoName /][if (references->size() > 0)][getTDOLiteral('') /][/if]>) r -> {
 				[pojoName/][if (references->size() > 0)][getTDOLiteral('') /][/if] [pojoName.toLowerFirst() /]_res = new [pojoName/][if (references->size() > 0)][getTDOLiteral('') /][/if]();
@@ -233,17 +241,19 @@
 					[pojoName.toLowerFirst() /]_res.addLogEvent("Cannot retrieve value for [pojoName /].[attr.name /] attribute stored in db [db.name/]. Probably due to an ambiguous regex.");
 				}
 				value = r.getAs("[field.ancestors(LongField) -> first().oclAsType(LongField).physicalName /]");
-				p = Pattern.compile(regex);
-				m = p.matcher(value);
-				matches = m.find();
-				String [attr.name.toLowerFirst()/] = null;
-				if(matches) {
-					[attr.name.toLowerFirst()/] = m.group(groupindex.intValue());
-				} else {
-					logger.warn("Cannot retrieve value for [pojoName /][attr.name /] attribute stored in db [db.name/]. Probably due to an ambiguous regex.");
-					[pojoName.toLowerFirst() /]_res.addLogEvent("Cannot retrieve value for [pojoName /].[attr.name /] attribute stored in db [db.name/]. Probably due to an ambiguous regex.");
+				if(value!=null){
+					p = Pattern.compile(regex);
+					m = p.matcher(value);
+					matches = m.find();
+					String [attr.name.toLowerFirst()/] = null;
+					if(matches) {
+						[attr.name.toLowerFirst()/] = m.group(groupindex.intValue());
+					} else {
+						logger.warn("Cannot retrieve value for [pojoName /][attr.name /] attribute stored in db [db.name/]. Probably due to an ambiguous regex.");
+						[pojoName.toLowerFirst() /]_res.addLogEvent("Cannot retrieve value for [pojoName /].[attr.name /] attribute stored in db [db.name/]. Probably due to an ambiguous regex.");
+					}
+					[pojoName.toLowerFirst() /]_res.set[attr.name.toUpperFirst()/]([generateParsingFunctionJavaType(attr.type, attr.name.toLowerFirst())/]);
 				}
-				[pojoName.toLowerFirst() /]_res.set[attr.name.toUpperFirst()/]([generateParsingFunctionJavaType(attr.type, attr.name.toLowerFirst())/]);
 				[/if]
 				[/if]
 				[/if]
@@ -317,6 +327,7 @@
 
 					return [pojoName.toLowerFirst() /]_res;
 			}, Encoders.bean([pojoName /][if (references->size() > 0)][getTDOLiteral('') /][/if].class));
+	[/if]
 	[comment Contrary to other dbs, we perform the filter here, as in case of role based selection, at least one of the retrieved TDO datasets must be filtered in order to join. But refilterFlag is not available at the caller level
 	And to not refactor everything we do it here. As the refilterFlag is always true. /]
 	if(refilterFlag.booleanValue())
@@ -325,7 +336,6 @@
 	 This drop duplicates is necessary when readin data from a key value db, with key structures such as PRODUCT:id:REVIEW:reviewid . /]
 	res=res.dropDuplicates();
 	return res;
-	[/if]
 [/template]
 
 [template public getTDOLiteral(o : OclAny)][if (o.oclIsUndefined() = false)]TDO[/if][/template]

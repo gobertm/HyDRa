@@ -250,7 +250,7 @@ public class SparkConnectionMgr {
 		return res;
 	}
 
-	public static Dataset<Row> getRowsFromKeyValueHashes(String dbName, String keypattern){
+	public static Dataset<Row> getRowsFromKeyValueHashes(String dbName, String keypattern, StructType structTypeHash){
 		DBCredentials credentials = dbPorts.get(dbName);
 		SparkConf sparkConf = new SparkConf()
                 .setAppName("MyApp")
@@ -261,7 +261,7 @@ public class SparkConnectionMgr {
 		Dataset<Row> res = spark.read().format("org.apache.spark.sql.redis")
                 .option("keys.pattern",keypattern)
 				.option("key.column", "id")
-                .option("infer.schema", true).load();
+                .schema(structTypeHash).load();
 		return res;
 	} 
 
