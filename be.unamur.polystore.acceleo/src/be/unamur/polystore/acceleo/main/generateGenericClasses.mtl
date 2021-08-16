@@ -17,6 +17,7 @@
 [file ('src/main/java/util/Util.java', false, 'UTF-8')]
 package util;
 
+import conditions.*;
 import exceptions.IncompatibleAttributesTypeException;
 
 import java.math.BigDecimal;
@@ -186,6 +187,36 @@ public class Util {
 		if(o instanceof Timestamp)
 			return ((Timestamp) o).toLocalDateTime().toLocalDate();
 		throw new IncompatibleAttributesTypeException("Conceptual attribute type in model file incompatible with found datatype in database");
+	}
+
+	public static <E> Object getValueOfAttributeInEqualCondition(Condition<E> condition, E attribute) {
+		Object oleft, oright;
+		if (condition instanceof SimpleCondition) {
+			SimpleCondition cond = ((SimpleCondition<E>) condition);
+			if (cond.getOperator() == Operator.EQUALS) {
+				if(cond.getAttribute()==attribute)
+					return cond.getValue();
+			}
+		}
+		if(condition instanceof AndCondition){
+			AndCondition cond = (AndCondition) condition;
+			oleft= getValueOfAttributeInEqualCondition(cond.getLeftCondition(), attribute);
+			oright= getValueOfAttributeInEqualCondition(cond.getRightCondition(), attribute);
+			if(oleft!=null)
+				return oleft;
+			if(oright!=null)
+				return oright;
+		}
+		if(condition instanceof OrCondition){
+			OrCondition cond = (OrCondition) condition;
+			oleft= getValueOfAttributeInEqualCondition(cond.getLeftCondition(), attribute);
+			oright= getValueOfAttributeInEqualCondition(cond.getRightCondition(), attribute);
+			if(oleft!=null)
+				return oleft;
+			if(oright!=null)
+				return oright;
+		}
+		return null;
 	}
 
 }
