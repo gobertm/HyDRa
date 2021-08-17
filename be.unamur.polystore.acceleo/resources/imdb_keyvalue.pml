@@ -78,12 +78,12 @@ physical schemas {
 		}
 		
 		kvpairs movieKV2 {
-			key : "KV2_movie:"[movieID]"title:"[title],
-			value : startYear
+			key : "KV2_movie:"[movieID]":TITLE:"[title],
+			value : movieTitle
 		}
 //		
 		kvpairs movieKV3 {
-			key : "KV3_movie:"[movieID]"TITLE:"[title],
+			key : "KV3_movie:"[movieID]":YEAR:"[Year],
 			value : [startYear]" POST JESUS F.CHRIST"
 		}
 //		
@@ -126,8 +126,8 @@ mapping rules{
 	conceptualSchema.movieDirector.directed_movie -> myRelSchema.directed.has_directed,
 	conceptualSchema.movieDirector.directed_movie -> myRelSchema.directed.movie_info,
 	conceptualSchema.Movie(id) -> movieRedis.movieKV(id),
-	conceptualSchema.Movie(id, primaryTitle,startYear) -> movieRedis.movieKV2(movieID,title,startYear),
-	conceptualSchema.Movie(id, primaryTitle,startYear) -> movieRedis.movieKV3(movieID,title,startYear),
+//	conceptualSchema.Movie(id, primaryTitle,primaryTitle) -> movieRedis.movieKV2(movieID,title,movieTitle),
+//	conceptualSchema.Movie(id, primaryTitle,startYear) -> movieRedis.movieKV3(movieID,Year,startYear),
 	conceptualSchema.Movie(primaryTitle,originalTitle,isAdult,startYear,runtimeMinutes) ->movieRedis.movieKV.attr(title,originalTitle,isAdult,startYear,runtimeMinutes), 
 	conceptualSchema.Movie(averageRating,numVotes) -> IMDB_Mongo.actorCollection.movies.rating(rate,numberofvotes),
 	conceptualSchema.Movie(id, primaryTitle) -> IMDB_Mongo.actorCollection.movies(id,title)

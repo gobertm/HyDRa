@@ -20,8 +20,6 @@
 [/template]
 
 [template public generateSelectKeyValue(pojoName : String, attributes : Collection(Attribute), struct : KeyValuePair, entOrRel : OclAny, db : Database, references : Sequence(Sequence(OclAny)))]
-	// As we cannot filter on the values in a Redis DB, we always put the refilterflag to true.
-	refilterFlag.setValue(true);
 	// Build the key pattern
 	//  - If the condition attribute is in the key pattern, replace by the value. Only if operator is EQUALS.
 	//  - Replace all other fields of key pattern by a '*' 
@@ -29,12 +27,20 @@
 	String valueCond=null;
 	String finalKeypattern;
 	List<String> fieldsListInKey = new ArrayList<>();
+	Set<[pojoName.toUpperFirst()/]Attribute> keyAttributes = new HashSet<>();
 	[for (expr : TerminalExpression | struct.key.pattern)]
 		[if (expr.oclIsTypeOf(pml::BracketsField) = true)]
 		[let field : BracketsField = expr.oclAsType(BracketsField)]
 			[let attr : Attribute = getMappedAttributes(field, entOrRel, entOrRel.getMappingRules())->any(true)]
 				[if (attr.oclIsUndefined()=false)]
-	valueCond=Util.getStringValue(Util.getValueOfAttributeInEqualCondition(condition,[pojoName.toUpperFirst() /]Attribute.[attr.name /]));
+	if(!Util.containsOrCondition(condition)){
+		valueCond=Util.getStringValue(Util.getValueOfAttributeInEqualCondition(condition,[pojoName.toUpperFirst() /]Attribute.[attr.name /]));
+		keyAttributes.add([pojoName.toUpperFirst() /]Attribute.[attr.name /]);
+	}
+	else{
+		valueCond=null;
+		refilterFlag.setValue(true);
+	}
 				[else]
 	valueCond=null;
 				[/if]
@@ -51,6 +57,15 @@
 	keypatternAllVariables=keypatternAllVariables.concat("[expr.literal/]");
 		[/if]
 	[/for]
+	if(!refilterFlag.booleanValue()){
+		Set<MovieAttribute> conditionAttributes = Util.getConditionAttributes(condition);
+		for (MovieAttribute a : conditionAttributes) {
+			if (!keyAttributes.contains(a)) {
+				refilterFlag.setValue(true);
+				break;
+			}
+		}
+	}
 		
 	// Find the type of query to perform in order to retrieve a Dataset<Row>
 	// Based on the type of the value. Is a it a simple string or a hash or a list... 
@@ -199,6 +214,8 @@
 	[/for]
 	});
 	rows = SparkConnectionMgr.getRowsFromKeyValueHashes("[db.name/]",keypattern, structTypeHash);
+	boolean isStriped = (StringUtils.countMatches(keypattern, "*") == 1 && keypattern.endsWith("*"));
+	String prefix=isStriped?keypattern.substring(0, keypattern.length() - 1):"";
 	finalKeypattern = keypatternAllVariables;
 	Dataset<[pojoName /][if (references->size() > 0)][getTDOLiteral('') /][/if]> res = rows.map((MapFunction<Row, [pojoName /][if (references->size() > 0)][getTDOLiteral('') /][/if]>) r -> {
 				[pojoName/][if (references->size() > 0)][getTDOLiteral('') /][/if] [pojoName.toLowerFirst() /]_res = new [pojoName/][if (references->size() > 0)][getTDOLiteral('') /][/if]();
@@ -208,6 +225,15 @@
 				Pattern p, pattern = null;
 				Matcher m, match = null;
 				boolean matches = false;
+				String key = isStriped ? prefix + r.getAs("id") : r.getAs("id");
+				[comment Spark Redis automatically strips leading character if the pattern provided contains a single '*' at the end. /]
+				// Spark Redis automatically strips leading character if the pattern provided contains a single '*' at the end.				
+				pattern = Pattern.compile("\\*");
+		        match = pattern.matcher(finalKeypattern);
+				regex = finalKeypattern.replaceAll("\\*","(.*)");
+				p = Pattern.compile(regex);
+				m = p.matcher(key);
+				matches = m.find();
 				[for (attr : Attribute | attributes)]
 				[let field : PhysicalField = getMappedPhysicalField(attr, struct, db, struct.ancestors(Domainmodel)->first().mappingRules)]
 				[if (field <> null)]
@@ -215,19 +241,10 @@
 				[comment Attribute mapped in a Key /]
 				// attribute [ '[' /][pojoName/].[attr.name.toUpperFirst() /][ ']' /]
 				// Attribute mapped in a key.
-				String key = r.getAs("id");
-				[comment Spark Redis automatically strips leading character if the pattern provided contains a single '*' at the end. /]
-				// Spark Redis automatically strips leading character if the pattern provided contains a single '*' at the end.				
-				pattern = Pattern.compile("\\*");
-		        match = pattern.matcher(finalKeypattern);
-				regex = finalKeypattern.replaceAll("\\*","(.*)");
 				groupindex = fieldsListInKey.indexOf("[field.getPhysicalName()/]")+1;
 				if(groupindex==null) {
 					logger.warn("Attribute '[pojoName /]' mapped physical field '[field.getPhysicalName()/]' found in key but can't get index in build keypattern '{}'.", finalKeypattern);
 				}
-				p = Pattern.compile(regex);
-				m = p.matcher(key);
-				matches = m.find();
 				String [attr.name.toLowerFirst()/] = null;
 				if(matches) {
 					[attr.name.toLowerFirst()/] = m.group(groupindex.intValue());
