@@ -121,7 +121,7 @@ EmbeddedObject:
 ;
 
 KVComplexField:
-	name=ID type=KVDataType	('{'
+	type=KVDataType	('{'
 		(fields+=LimitedKVPhysicalField (',' fields+=LimitedKVPhysicalField)*)?
 	'}')
 ;
@@ -195,7 +195,7 @@ Table:
 ;
 
 AbstractPhysicalStructure:
-	Table | Collection | EmbeddedObject | TableColumnDB | Node | Edge | KeyValuePair | KVComplexField
+	Table | Collection | EmbeddedObject | TableColumnDB | Node | Edge | KeyValuePair 
 ;
 
 KeyValueSchema:

@@ -68,7 +68,7 @@ physical schemas {
 	key value schema movieRedis : myredis {
 		kvpairs movieKV {
 			key : "movie:"[id],
-			value : attr hash{
+			value : hash{
 				title,
 				originalTitle,
 				isAdult,
@@ -83,17 +83,13 @@ physical schemas {
 		}
 //		
 		kvpairs movieKV3 {
-			key : "KV3_movie:"[movieID]":YEAR:",
+			key : "KV3_movie:"[movieID]":YEAR",
 			value : [startYear]" POST JESUS F.CHRIST"
 		}
-//		
-		kvpairs actor_movieKV {  // Est considéré comme une table de jointure. Cf mappings
-			key : "actor:"[actorID]":movies",
-			value : list [movieID]
-			references {
-				movie: movieID -> movieKV.id
-				actor : actorID -> IMDB_Mongo.actorCollection.id
-			}
+		
+		kvpairs movieKVempty {
+			key : "EMPTYmovie:"[movieID],
+			value : [nullattribute]
 		}
 	}
 	
@@ -129,14 +125,13 @@ mapping rules{
 	conceptualSchema.movieDirector.director -> myRelSchema.directed.directed_by,
 	conceptualSchema.movieDirector.directed_movie -> myRelSchema.directed.has_directed,
 	conceptualSchema.movieDirector.directed_movie -> myRelSchema.directed.movie_info,
+	conceptualSchema.Movie(numVotes) -> movieRedis.movieKVempty(nullattribute),
 	conceptualSchema.Movie(id) -> movieRedis.movieKV(id),
 	conceptualSchema.Movie(id, primaryTitle) -> movieRedis.movieKV2(movieID,movieTitle),
-	conceptualSchema.Movie(id,startYear) -> movieRedis.movieKV3(movieID,startYear),
-	conceptualSchema.Movie(primaryTitle,originalTitle,isAdult,startYear,runtimeMinutes) ->movieRedis.movieKV.attr(title,originalTitle,isAdult,startYear,runtimeMinutes), 
+	conceptualSchema.Movie(id, startYear) -> movieRedis.movieKV3(movieID,startYear),
+	conceptualSchema.Movie(primaryTitle,originalTitle,isAdult,startYear,runtimeMinutes) ->movieRedis.movieKV(title,originalTitle,isAdult,startYear,runtimeMinutes), 
 	conceptualSchema.Movie(averageRating,numVotes) -> IMDB_Mongo.actorCollection.movies.rating(rate,numberofvotes),
 	conceptualSchema.Movie(id, primaryTitle) -> IMDB_Mongo.actorCollection.movies(id,title)
-	conceptualSchema.movieActor.character -> movieRedis.actor_movieKV.actor,
-	conceptualSchema.movieActor.movie -> movieRedis.actor_movieKV.movie
 }
 
 databases {

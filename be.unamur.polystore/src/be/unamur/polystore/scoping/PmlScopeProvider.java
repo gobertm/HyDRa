@@ -84,11 +84,14 @@ public class PmlScopeProvider extends AbstractPmlScopeProvider {
 			if(struct instanceof KeyValuePair) {
 				KeyValuePair kvpair = (KeyValuePair)struct;
 				fields.addAll(getPhysicalFieldsFromKey(kvpair.getKey()));
-				fields.add(kvpair.getValue());
-			}
-			if(struct  instanceof KVComplexField) {
-				KVComplexField kvcomplex = (KVComplexField) struct;
-				fields.addAll(kvcomplex.getFields());
+				PhysicalField field = kvpair.getValue();
+				if(field instanceof KVComplexField) {
+					KVComplexField kvcomplex = (KVComplexField) field;
+					fields.addAll(kvcomplex.getFields());
+				} else {
+					fields.add(kvpair.getValue());
+				}
+					
 			}
 			EList<PhysicalField> fieldsInComplex;
 			fieldsInComplex= getFieldsFromLongField(fields);
