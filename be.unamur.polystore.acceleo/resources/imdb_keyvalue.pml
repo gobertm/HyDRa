@@ -29,7 +29,8 @@ conceptual schema conceptualSchema{
 		startYear : int,
 		runtimeMinutes: int,
 		averageRating : string,
-		numVotes : int
+		numVotes : int,
+		dummy : string
 		identifier{
 			id
 		}
@@ -81,15 +82,22 @@ physical schemas {
 			key : "KV2_movie:"[movieID]":TITLE",
 			value : movieTitle
 		}
-//		
-		kvpairs movieKV3 {
-			key : "KV3_movie:"[movieID]":YEAR",
-			value : [startYear]" POST JESUS F.CHRIST"
-		}
 		
 		kvpairs movieKVempty {
 			key : "EMPTYmovie:"[movieID],
 			value : [nullattribute]
+		}
+		
+		kvpairs actor_movieKV {  // Est considéré comme une table de jointure. Cf mappings
+		key : "actor:"[actorID]":movies",
+		value : list 
+			{
+				movieID
+			}
+		references {
+			movie: movieID -> movieKV.id
+			actor : actorID -> IMDB_Mongo.actorCollection.id
+			}
 		}
 	}
 	
@@ -125,12 +133,13 @@ mapping rules{
 	conceptualSchema.movieDirector.director -> myRelSchema.directed.directed_by,
 	conceptualSchema.movieDirector.directed_movie -> myRelSchema.directed.has_directed,
 	conceptualSchema.movieDirector.directed_movie -> myRelSchema.directed.movie_info,
-	conceptualSchema.Movie(numVotes) -> movieRedis.movieKVempty(nullattribute),
+	conceptualSchema.Movie(dummy) -> movieRedis.movieKVempty(nullattribute),
 	conceptualSchema.Movie(id) -> movieRedis.movieKV(id),
 	conceptualSchema.Movie(id, primaryTitle) -> movieRedis.movieKV2(movieID,movieTitle),
-	conceptualSchema.Movie(id, startYear) -> movieRedis.movieKV3(movieID,startYear),
 	conceptualSchema.Movie(primaryTitle,originalTitle,isAdult,startYear,runtimeMinutes) ->movieRedis.movieKV(title,originalTitle,isAdult,startYear,runtimeMinutes), 
 	conceptualSchema.Movie(averageRating,numVotes) -> IMDB_Mongo.actorCollection.movies.rating(rate,numberofvotes),
+//	conceptualSchema.movieActor.character -> movieRedis.actor_movieKV.actor,
+//	conceptualSchema.movieActor.movie -> movieRedis.actor_movieKV.movie,
 	conceptualSchema.Movie(id, primaryTitle) -> IMDB_Mongo.actorCollection.movies(id,title)
 }
 
