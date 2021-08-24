@@ -155,6 +155,7 @@ field.eContainer(AbstractPhysicalSchema).name + '_' + field.getAbstractPhysicalS
 	invoke('be.unamur.polystore.acceleo.main.utils.MappingRuleService', 'getPhysicalStructureNotEmbeddedObject(org.eclipse.emf.ecore.EObject)', Sequence{o})
 /]
 
+
 [query public getPhysicalSchema(o : OclAny) : AbstractPhysicalSchema =
 	invoke('be.unamur.polystore.acceleo.main.utils.MappingRuleService', 'getPhysicalSchema(org.eclipse.emf.ecore.EObject)', Sequence{o})
 /]

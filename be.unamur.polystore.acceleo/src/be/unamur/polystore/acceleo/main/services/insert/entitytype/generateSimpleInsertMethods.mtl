@@ -8,12 +8,22 @@
 [if (getMandatoryRoles(entityType, conceptualSchema)->size() = 0)]
 public [if (override = false)]abstract [/if]boolean insert[entityType.name.toUpperFirst() /]([entityType.name.toUpperFirst() /] [entityType.name.toLowerFirst() /])[if (override = false)];[else][insertPOJOImpl(entityType, conceptualSchema) /][/if]
 [else]
+[let complexStructList : Collection(AbstractPhysicalStructure) = getMappedComplexEmbeddedStructureOfEntity(entityType,entityType.ancestors(Domainmodel)->first() )]
+	[if (complexStructList -> size()>0)]
+	/**
+	[entityType.name.toUpperFirst() /] is mapped to complex embedded physical structures : ['['/][for (complexStruct : AbstractPhysicalStructure | complexStructList) separator(',')][complexStruct.name/][/for][']'/]
+	Please make sure parameters have their mandatory role objects setted (not null).
+[for (opp: Role | getRolesOppositeToMandatoryEntityRole(entityType, conceptualSchema)) separator('\n')],
+	 @param [opp.name.toLowerFirst()/][getRelationShipType(opp).name.toUpperFirst()/][/for]
+	*/
+[/if]
+[/let]
 public [if (override = false)]abstract [/if]void insert[entityType.name.toUpperFirst() /](
 	[entityType.name.toUpperFirst() /] [entityType.name.toLowerFirst() /][for (opp: Role | getRolesOppositeToMandatoryEntityRole(entityType, conceptualSchema))],
-	pojo.[opp.entity.name.toUpperFirst() /] [getRelationShipType(opp).name.toUpperFirst()/][opp.name.toUpperFirst()/][/for][for (attr: Attribute | getAttributesFromMandatoryRoles(entityType, conceptualSchema))],
+	[opp.entity.name.toUpperFirst() /] [opp.name.toLowerFirst()/][getRelationShipType(opp).name.toUpperFirst()/][/for][for (attr: Attribute | getAttributesFromMandatoryRoles(entityType, conceptualSchema))],
 	[generateJavaType(attr.type)/] [getRelationshipType(attr).name /]_[attr.name /]
 	[/for]
-)[if (override = false)];[else][/if]
+)[if (override = false)];[else][insertPOJOInRImpl(entityType, getRolesOppositeToMandatoryEntityRole(entityType, conceptualSchema),conceptualSchema) /][/if]
 [/if]
 
 [comment insert In single database for entities having no mandatory roles (i.e single entity) /]

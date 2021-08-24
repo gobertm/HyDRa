@@ -3,7 +3,7 @@
 [import be::unamur::polystore::acceleo::main::mappingrules::util /]
 [import be::unamur::polystore::acceleo::main::util /]
 
-[template public implMethod1(entityType: EntityType, conceptualSchema: ConceptualSchema)]{
+[template public insertPOJOInRImpl(entityType: EntityType, roles : Collection(Role), conceptualSchema: ConceptualSchema)]{
 	//TODO
 }[/template]
 

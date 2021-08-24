@@ -19,6 +19,10 @@
 [query public getMappedPhysicalStructureToInsertSingleE(ent : EntityType, model: Domainmodel) : Collection(AbstractPhysicalStructure) 
 = invoke('be.unamur.polystore.acceleo.main.utils.MappingRuleService', 'getMappedPhysicalStructureToInsertSingleE(be.unamur.polystore.pml.EntityType, be.unamur.polystore.pml.Domainmodel)', Sequence{ent, model}) /]
 
+[query public getMappedComplexEmbeddedStructureOfEntity(e : EntityType, model: Domainmodel) : Collection(AbstractPhysicalStructure) =
+	invoke('be.unamur.polystore.acceleo.main.utils.MappingRuleService', 'getMappedComplexEmbeddedStructureOfEntity(be.unamur.polystore.pml.EntityType, be.unamur.polystore.pml.Domainmodel)', Sequence{e, model})
+/]
+
 [query public getConcernedDatabases(struct : AbstractPhysicalStructure, model: Domainmodel) : Set(Database) 
 = invoke('be.unamur.polystore.acceleo.main.utils.MappingRuleService', 'getConcernedDatabases(be.unamur.polystore.pml.AbstractPhysicalStructure, be.unamur.polystore.pml.Domainmodel)', Sequence{struct, model}) /]
 

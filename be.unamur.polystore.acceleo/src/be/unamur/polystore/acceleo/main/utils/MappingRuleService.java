@@ -139,6 +139,42 @@ public class MappingRuleService {
 		}
 		return res;
 	}
+	
+	public static Set<AbstractPhysicalStructure> getMappedComplexEmbeddedStructureOfEntity(EntityType entity,Domainmodel domain) {
+		Set<AbstractPhysicalStructure> res = new HashSet();
+		List<PhysicalField> fields = new ArrayList<>();
+		boolean firstlevelFieldMappedToEntity=false;
+		for(AbstractPhysicalStructure struct : getConcernedPhysicalStructures(entity, domain)) {
+			if(struct instanceof Collection) {
+				fields = ((Collection) struct).getFields();
+				for(PhysicalField field : fields) {
+					if(isMappedToEntity(field, entity, domain.getMappingRules()))
+						firstlevelFieldMappedToEntity=true;
+				}
+				for(PhysicalField field : fields) {
+					if(field instanceof EmbeddedObject) {
+						if(firstlevelFieldMappedToEntity 
+								&& isMappedToRole(field, domain.getMappingRules()) 
+								&& (((EmbeddedObject)field).getCardinality().equals(Cardinality.ONE) || ((EmbeddedObject)field).getCardinality().equals(Cardinality.ONE_MANY))) {
+							List<EObject> embeddedDescendents = getDescendents(EmbeddedObject.class, field);
+							if(embeddedDescendents.size()==0)
+								break;
+							else {
+								for(EObject e : embeddedDescendents) {
+									if(isMappedToRole(e, domain.getMappingRules())
+											&& (((EmbeddedObject)e).getCardinality().equals(Cardinality.ONE) || ((EmbeddedObject)e).getCardinality().equals(Cardinality.ONE_MANY))) {
+										res.add(struct);
+										break;
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+		return res;
+	}
 
 	
 	/**
