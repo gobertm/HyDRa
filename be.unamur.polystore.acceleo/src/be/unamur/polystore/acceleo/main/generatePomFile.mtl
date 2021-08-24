@@ -20,12 +20,13 @@
 	</properties>
 
 	<dependencies>
-		        <!-- https://mvnrepository.com/artifact/com.redislabs/spark-redis -->
-        <dependency>
-            <groupId>com.redislabs</groupId>
-            <artifactId>spark-redis_2.12</artifactId>
-            <version>2.4.2</version>
-        </dependency>
+		<!-- https://mvnrepository.com/artifact/com.redislabs/spark-redis -->
+		<dependency>
+		    <groupId>com.redislabs</groupId>
+		    <artifactId>spark-redis_2.12</artifactId>
+		    <version>2.6.0</version>
+		</dependency>
+
 
 
 		<dependency>
@@ -71,10 +72,20 @@
 		[/comment]
 		<!-- https://mvnrepository.com/artifact/org.apache.spark/spark-core -->
 		<dependency>
-			<groupId>org.apache.spark</groupId>
-			<artifactId>spark-core_2.12</artifactId>
-			<version>3.0.1</version>
+		    <groupId>org.apache.spark</groupId>
+		    <artifactId>spark-core_2.12</artifactId>
+		    <version>3.1.2</version>
 		</dependency>
+
+		<!-- https://mvnrepository.com/artifact/org.apache.spark/spark-streaming -->
+		<dependency>
+		    <groupId>org.apache.spark</groupId>
+		    <artifactId>spark-streaming_2.12</artifactId>
+		    <version>3.1.2</version>
+		    <scope>provided</scope>
+		</dependency>
+
+
 
 		<!-- https://mvnrepository.com/artifact/org.apache.spark/spark-sql -->
 		<dependency>
