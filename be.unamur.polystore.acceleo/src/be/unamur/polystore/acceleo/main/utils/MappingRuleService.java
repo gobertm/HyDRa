@@ -178,6 +178,9 @@ public class MappingRuleService {
 
 	
 	/**
+	 * Returns standalone structures where we can insert 'ent'.
+	 * From all the mapped structure. We check that it is not contained in an Embedded Structure mapped to a role. If yes we remove this structure.
+	 * In Key Value we check that key elements are not mapped to another entity type or a role. 
 	 * @param ent
 	 * @param domain
 	 * @return
@@ -191,6 +194,22 @@ public class MappingRuleService {
 			if(struct instanceof KeyValuePair)
 				continue;
 			boolean flag = false;
+			//Detect if the embedded objects are of cardinality 1 and mapped to a role. 
+			if(struct instanceof Collection) {
+				for(PhysicalField f : ((Collection)struct).getFields()) {
+					if(f instanceof EmbeddedObject) {
+						if(isMappedToRole(f, domain.getMappingRules())
+								&& (((EmbeddedObject) f).getCardinality()==Cardinality.ONE ||((EmbeddedObject) f).getCardinality()==Cardinality.ONE_MANY))
+							flag=true;
+					}
+				}
+				if(flag) {
+					res.remove(i);
+					i--;
+					continue;
+				}
+			}
+			flag=false;
 			for (Attribute attr : ent.getAttributes()) {
 				java.util.Collection<PhysicalField> fields = getMappedPhysicalFields(attr, domain.getMappingRules());
 				for (PhysicalField field : fields) {

@@ -135,6 +135,13 @@ physical schemas {
 				movie_info : movie_id -> IMDB_Mongo.actorCollection.movies.id
 			}
 		}
+		
+		table reviewTable{
+			columns{
+				id, 
+				content
+			}
+		}
 	}
 }
 
@@ -153,7 +160,9 @@ mapping rules{
 	conceptualSchema.movieReview.r_review -> IMDB_Mongo.reviewCol.movie(),
 	// Complex embedded structure
 	conceptualSchema.movieActor.movie -> IMDB_Mongo.reviewCol.movie.actors(),
-	conceptualSchema.Actor(id,fullName) -> IMDB_Mongo.reviewCol.movie.actors(id,name)
+	conceptualSchema.Actor(id,fullName) -> IMDB_Mongo.reviewCol.movie.actors(id,name),
+	// Standalone structure
+	conceptualSchema.Review(id, content) -> myRelSchema.reviewTable(id,content)
 }
 
 databases {
