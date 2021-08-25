@@ -4,7 +4,13 @@
 [import be::unamur::polystore::acceleo::main::util /]
 
 [template public insertPOJOInRImpl(entityType: EntityType, roles : Collection(Role), conceptualSchema: ConceptualSchema)]{
-	//TODO
+	[let complexStructList : Collection(AbstractPhysicalStructure) = getMappedComplexEmbeddedStructureOfEntity(entityType,entityType.ancestors(Domainmodel)->first() )]
+	[if (complexStructList -> size()>0)]
+		//Perform check that needed parameters POJO object are set.
+	[for (complexStruct : AbstractPhysicalStructure | complexStructList) separator(',')]
+	[/for]
+	[/if]
+	[/let]
 }[/template]
 
 [template public insertPOJOImpl(entityType: EntityType, conceptualSchema: ConceptualSchema)]{

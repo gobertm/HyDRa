@@ -20,7 +20,7 @@ public void update[rel.name.toUpperFirst()/]ListBy[role.name.toUpperFirst() /]Co
 	update[rel.name.toUpperFirst() /]List([getListOfNullValues(i - 1) /][if(i - 1 > 0)], [/if][role.name/]_condition[getListOfNullValues(rel.roles->size() -  i, true) /][if (rel.attributes->size() > 0)], null[/if], set);
 }
 
-public void update[rel.name.toUpperFirst() /][if (isMaxOne(role) = false)]List[/if]By[role.name.toUpperFirst() /](pojo.[role.entity.name.toUpperFirst()/] [role.name /], conditions.SetClause<conditions.[rel.name.toUpperFirst() /]Attribute> set) {
+public void update[rel.name.toUpperFirst() /][if (isCardinalityMaxOne(role) = false)]List[/if]By[role.name.toUpperFirst() /](pojo.[role.entity.name.toUpperFirst()/] [role.name /], conditions.SetClause<conditions.[rel.name.toUpperFirst() /]Attribute> set) {
 	// TODO using id for selecting
 	return;
 }

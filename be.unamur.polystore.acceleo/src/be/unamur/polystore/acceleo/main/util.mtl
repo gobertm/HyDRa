@@ -89,7 +89,13 @@
 	getRelationShipType(role).roles->select(r: Role | r <> role)
 /]
 
-[query public isMaxOne(role: Role) : Boolean = role.cardinality = pml::Cardinality::ONE or role.cardinality = pml::Cardinality::ZERO_ONE /]
+[query public getOppositeRoleInBinaryRel(role: Role) : Role =
+	getRelationShipType(role).roles->select(r: Role | r <> role and getRelationShipType(role).roles->size() = 2)->any(true)
+/]
+
+[query public isCardinalityMaxOne(role: Role) : Boolean = role.cardinality = pml::Cardinality::ONE or role.cardinality = pml::Cardinality::ZERO_ONE /]
+
+[query public isCardinalityMaxN(role: Role) : Boolean = role.cardinality = pml::Cardinality::ZERO_MANY or role.cardinality = pml::Cardinality::ONE_MANY /]
 
 [query public getMandatoryRoles(entityType: EntityType, conceptualSchema: ConceptualSchema): Collection(Role) = 
 	conceptualSchema.eAllContents(pml::Role)->select(role: pml::Role | role.entity = entityType and isMandatoryRole(role))

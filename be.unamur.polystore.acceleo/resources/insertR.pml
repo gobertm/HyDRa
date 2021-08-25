@@ -86,9 +86,6 @@ physical schemas {
 					rating[1]{
 						rate: [rate] "/10",
 						numberofvotes
-					},
-					director[1]{
-						name
 					}
 				}
 			}
@@ -156,7 +153,7 @@ mapping rules{
 	conceptualSchema.movieReview.r_review -> IMDB_Mongo.reviewCol.movie(),
 	// Complex embedded structure
 	conceptualSchema.movieActor.movie -> IMDB_Mongo.reviewCol.movie.actors(),
-	conceptualSchema.Actor(fullName) -> IMDB_Mongo.reviewCol.movie.actors(name)
+	conceptualSchema.Actor(id,fullName) -> IMDB_Mongo.reviewCol.movie.actors(id,name)
 }
 
 databases {

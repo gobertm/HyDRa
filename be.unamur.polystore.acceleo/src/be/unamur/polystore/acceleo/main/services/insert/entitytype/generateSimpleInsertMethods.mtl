@@ -19,8 +19,8 @@ public [if (override = false)]abstract [/if]boolean insert[entityType.name.toUpp
 [/if]
 [/let]
 public [if (override = false)]abstract [/if]void insert[entityType.name.toUpperFirst() /](
-	[entityType.name.toUpperFirst() /] [entityType.name.toLowerFirst() /][for (opp: Role | getRolesOppositeToMandatoryEntityRole(entityType, conceptualSchema))],
-	[opp.entity.name.toUpperFirst() /] [opp.name.toLowerFirst()/][getRelationShipType(opp).name.toUpperFirst()/][/for][for (attr: Attribute | getAttributesFromMandatoryRoles(entityType, conceptualSchema))],
+	[entityType.name.toUpperFirst() /] [entityType.name.toLowerFirst() /][for (role: Role | getMandatoryRoles(entityType, conceptualSchema))],
+	[if (isCardinalityMaxN(role))] List<[role.getOppositeRoleInBinaryRel().entity.name.toUpperFirst() /]> [else][role.getOppositeRoleInBinaryRel().entity.name.toUpperFirst() /]	[/if][role.getOppositeRoleInBinaryRel().name.toLowerFirst()/][getRelationShipType(role).name.toUpperFirst()/][/for][for (attr: Attribute | getAttributesFromMandatoryRoles(entityType, conceptualSchema))],
 	[generateJavaType(attr.type)/] [getRelationshipType(attr).name /]_[attr.name /]
 	[/for]
 )[if (override = false)];[else][insertPOJOInRImpl(entityType, getRolesOppositeToMandatoryEntityRole(entityType, conceptualSchema),conceptualSchema) /][/if]
