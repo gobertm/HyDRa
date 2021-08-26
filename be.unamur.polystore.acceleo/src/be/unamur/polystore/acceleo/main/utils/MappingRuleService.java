@@ -5,6 +5,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import javax.management.relation.Relation;
+
 import org.eclipse.emf.common.util.BasicEList;
 import org.eclipse.emf.common.util.EList;
 import org.eclipse.emf.common.util.EMap;
@@ -18,6 +20,10 @@ import org.eclipse.ocl.ecore.util.OCLEcoreUtil;
 import be.unamur.polystore.pml.*;
 import be.unamur.polystore.scoping.PmlScopeProvider;
 
+/**
+ * @author Maxime Gobert
+ *
+ */
 /**
  * @author Maxime Gobert
  *
@@ -51,6 +57,19 @@ public class MappingRuleService {
 						// PhysicalField origin = getOriginalPhysicalField(pf);
 						res.add(pf);
 					}
+				}
+			}
+		}
+		return res;
+	}
+	
+	public static Set<AbstractPhysicalStructure> getMappedPhysicalStructureOfRole(Role role, MappingRules rules) {
+		Set<AbstractPhysicalStructure> res = new HashSet<>();
+		for (AbstractMappingRule rule : rules.getMappingRules()) {
+			if (rule instanceof RoleToReferenceMappingRule) {
+				RoleToReferenceMappingRule roleMappingRule = (RoleToReferenceMappingRule) rule;
+				if(roleMappingRule.getRoleConceptual().equals(role)) {
+					res.add(getPhysicalStructureNotEmbeddedObject(roleMappingRule.getReference()));
 				}
 			}
 		}
@@ -140,6 +159,49 @@ public class MappingRuleService {
 		return res;
 	}
 	
+	
+	/** Returns concerned physical structure (physical structure of field mapped to attribute of given entity type) that are not Standalone structure of ent , nor ComplexEmbedded (2 cascading role embeddeded).
+	 * Also returns structures of mapped mandatory role of Ent 
+	 * @param ent
+	 * @param domain
+	 * @return
+	 */
+	public static Set<AbstractPhysicalStructure> getComplexPhysicalStructures(EntityType ent, Domainmodel domain) {
+		Set<AbstractPhysicalStructure> res = new HashSet<AbstractPhysicalStructure>();
+		for (Attribute attr : ent.getAttributes()) {
+			java.util.Collection<PhysicalField> fields = getMappedPhysicalFields(attr, domain.getMappingRules());
+			for (PhysicalField field : fields) {
+				AbstractPhysicalStructure struct = getPhysicalStructureNotEmbeddedObject(field);
+				if (struct != null)
+					res.add(struct);
+			}
+		}
+		res.removeAll(getMappedComplexEmbeddedStructureOfEntity(ent, domain));
+		res.removeAll(getMappedPhysicalStructureToInsertSingleE(ent, domain));
+		res.addAll(getStructureOfMappedRole(ent, domain));
+		return res;
+	}
+	
+	public static Set<AbstractPhysicalStructure> getStructureOfMappedRole(EntityType ent, Domainmodel model){
+		Set<AbstractPhysicalStructure> res = new HashSet<AbstractPhysicalStructure>();
+		for(RelationshipType rel : model.getConceptualSchema().getRelationships()) {
+			for(Role role : rel.getRoles()) {
+				if(role.getEntity().equals(ent) && (role.getCardinality()==Cardinality.ONE || role.getCardinality()==Cardinality.ONE_MANY)) {
+					res.addAll(getMappedPhysicalStructureOfRole(role,model.getMappingRules()));
+				}
+			}
+		}
+		return res;
+	}
+	
+	
+	
+	
+	/** Returns PhysicalStructures where the given entity is mapped to the first level fields and where there exists cascading mandatory embedded structures mapped to roles. (Identifies structures where we need POJO attribute set.) 
+	 * @param entity
+	 * @param domain
+	 * @return
+	 */
 	public static Set<AbstractPhysicalStructure> getMappedComplexEmbeddedStructureOfEntity(EntityType entity,Domainmodel domain) {
 		Set<AbstractPhysicalStructure> res = new HashSet();
 		List<PhysicalField> fields = new ArrayList<>();

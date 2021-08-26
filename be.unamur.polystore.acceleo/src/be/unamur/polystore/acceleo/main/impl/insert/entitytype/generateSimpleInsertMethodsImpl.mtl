@@ -6,11 +6,29 @@
 [template public insertPOJOInRImpl(entityType: EntityType, roles : Collection(Role), conceptualSchema: ConceptualSchema)]{
 	[let complexStructList : Collection(AbstractPhysicalStructure) = getMappedComplexEmbeddedStructureOfEntity(entityType,entityType.ancestors(Domainmodel)->first() )]
 	[if (complexStructList -> size()>0)]
-		//Perform check that needed parameters POJO object are set.
+	//Perform check that needed parameters POJO object are set.
 	[for (complexStruct : AbstractPhysicalStructure | complexStructList) separator(',')]
 	[/for]
 	[/if]
 	[/let]
+	// Insert in structures containing double embedded role
+	[for (struct: AbstractPhysicalStructure | getMappedComplexEmbeddedStructureOfEntity(entityType, entityType.ancestors(Domainmodel)->first()))]
+	[for (db: Database | getConcernedDatabases(struct, entityType.ancestors(Domainmodel)->first()))]
+    insertComplex[entityType.name.toUpperFirst() /]In[struct.name.toUpperFirst()/]From[db.name.toUpperFirst() /]([entityType.name.toLowerFirst() /][for (role: Role | getMandatoryRoles(entityType, conceptualSchema))],[role.getOppositeRoleInBinaryRel().name.toLowerFirst()/][getRelationShipType(role).name.toUpperFirst()/][/for]);
+	[/for]
+	[/for]
+	// Insert in other structures containing roles
+	[for (struct: AbstractPhysicalStructure | getComplexPhysicalStructures(entityType, entityType.ancestors(Domainmodel)->first()))]
+	[for (db: Database | getConcernedDatabases(struct, entityType.ancestors(Domainmodel)->first()))]
+	insertComplex[entityType.name.toUpperFirst() /]In[struct.name.toUpperFirst()/]From[db.name.toUpperFirst() /]([entityType.name.toLowerFirst() /][for (role: Role | getMandatoryRoles(entityType, conceptualSchema))],[role.getOppositeRoleInBinaryRel().name.toLowerFirst()/][getRelationShipType(role).name.toUpperFirst()/][/for]);
+	[/for]
+	[/for]
+	// Insert in standalone structures
+	[for (struct: AbstractPhysicalStructure | getMappedPhysicalStructureToInsertSingleE(entityType, entityType.ancestors(Domainmodel)->first()))]
+	[for (db: Database | getConcernedDatabases(struct, entityType.ancestors(Domainmodel)->first()))]
+	insertStandalone[entityType.name.toUpperFirst() /]In[struct.name.toUpperFirst()/]From[db.name.toUpperFirst() /]([entityType.name.toLowerFirst()/]);
+	[/for]
+	[/for]
 }[/template]
 
 [template public insertPOJOImpl(entityType: EntityType, conceptualSchema: ConceptualSchema)]{
@@ -18,7 +36,7 @@
 	boolean inserted = false;
 	[for (struct: AbstractPhysicalStructure | getMappedPhysicalStructureToInsertSingleE(entityType, entityType.ancestors(Domainmodel)->first()))]
 	[for (db: Database | getConcernedDatabases(struct, entityType.ancestors(Domainmodel)->first()))]
-		inserted = insert[entityType.name.toUpperFirst() /]In[struct.name.toUpperFirst()/]From[db.name.toUpperFirst() /]([entityType.name.toLowerFirst()/]) || inserted ;
+		inserted = insertStandalone[entityType.name.toUpperFirst() /]In[struct.name.toUpperFirst()/]From[db.name.toUpperFirst() /]([entityType.name.toLowerFirst()/]) || inserted ;
 	[/for]
 	[/for]
 	return inserted;
@@ -41,6 +59,15 @@
 			
 [/template]
 
+[template public insertInComplexEmbeddedStructure(entityType: EntityType, struct : AbstractPhysicalStructure, db : Database)]
+	// Implement Insert In Complex Embedded struct. So we must check that POJO attributes are set.
+	/*if(r_reviewed_movieMovieReview._getCharacterList().isEmpty() || r_reviewed_movieMovieReview._getCharacterList() == null){
+				logger.error("Attribute entity type Actor in r_reviewed_movieMovieReview Movie object must be set in order to correctly insert in collection ['['/]ReviewCol[']'/]");
+				throw new PhysicalStructureException("Attribute entity type Actor in r_reviewed_movieMovieReview Movie object must be set in order to correctly insert in collection ['['/]ReviewCol[']'/]");
+			}
+	*/
+	
+[/template]
 	
 [template public insertInSQLDBImpl(entityType : EntityType, struct : AbstractPhysicalStructure, db : Database)]
 [comment insertEInRELTABLE(ENT e)
