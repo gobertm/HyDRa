@@ -112,6 +112,21 @@ physical schemas {
 				} 
 			}
 		}
+		
+		collection movieCol {
+			fields {
+				idmovie,
+				actors [1-N]{
+					actorid,
+					name
+				},
+				directors [1-N]{
+					 directorid,
+					 firstname,
+					 lastname
+				}
+			}
+		}
 	}
 	
 	relational schema myRelSchema : mydb {
@@ -162,7 +177,14 @@ mapping rules{
 	conceptualSchema.movieActor.movie -> IMDB_Mongo.reviewCol.movie.actors(),
 	conceptualSchema.Actor(id,fullName) -> IMDB_Mongo.reviewCol.movie.actors(id,name),
 	// Standalone structure
-	conceptualSchema.Review(id, content) -> myRelSchema.reviewTable(id,content)
+	conceptualSchema.Review(id, content) -> myRelSchema.reviewTable(id,content),
+	// Descending structure 
+	conceptualSchema.Movie(id) -> IMDB_Mongo.movieCol(idmovie),
+	conceptualSchema.movieActor.movie -> IMDB_Mongo.movieCol.actors(),
+	conceptualSchema.movieDirector.director -> IMDB_Mongo.movieCol.directors(),
+	conceptualSchema.Director(id,firstName,lastName) -> IMDB_Mongo.movieCol.directors(directorid,firstname,lastname),
+	conceptualSchema.Actor(id,fullName) -> IMDB_Mongo.movieCol.actors(actorid,name)
+	// Ascending structure 
 }
 
 databases {

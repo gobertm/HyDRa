@@ -75,8 +75,7 @@ public [if (override = false)]abstract [/if]boolean insertComplex[entityType.nam
 	[/for]
 )[if (override = false)];[else]
 	{
-		 // Implement Insert In other complex struct
-		return false;
+	[insertInComplexStructure(entityType, struct, db)/]
 	}[/if]
 [/for]
 [/for]

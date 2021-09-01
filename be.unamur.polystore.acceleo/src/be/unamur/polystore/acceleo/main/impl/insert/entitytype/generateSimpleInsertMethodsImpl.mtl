@@ -7,8 +7,6 @@
 	[let complexStructList : Collection(AbstractPhysicalStructure) = getMappedComplexEmbeddedStructureOfEntity(entityType,entityType.ancestors(Domainmodel)->first() )]
 	[if (complexStructList -> size()>0)]
 	//Perform check that needed parameters POJO object are set.
-	[for (complexStruct : AbstractPhysicalStructure | complexStructList) separator(',')]
-	[/for]
 	[/if]
 	[/let]
 	// Insert in structures containing double embedded role
@@ -17,8 +15,20 @@
     insertComplex[entityType.name.toUpperFirst() /]In[struct.name.toUpperFirst()/]From[db.name.toUpperFirst() /]([entityType.name.toLowerFirst() /][for (role: Role | getMandatoryRoles(entityType, conceptualSchema))],[role.getOppositeRoleInBinaryRel().name.toLowerFirst()/][getRelationShipType(role).name.toUpperFirst()/][/for]);
 	[/for]
 	[/for]
-	// Insert in other structures containing roles
-	[for (struct: AbstractPhysicalStructure | getComplexPhysicalStructures(entityType, entityType.ancestors(Domainmodel)->first()))]
+	// Insert in descending structures
+	[for (struct: AbstractPhysicalStructure | getDescendingOneLevelPhysicalStructuresOfEntity(entityType, entityType.ancestors(Domainmodel)->first()))]
+	[for (db: Database | getConcernedDatabases(struct, entityType.ancestors(Domainmodel)->first()))]
+	insertComplex[entityType.name.toUpperFirst() /]In[struct.name.toUpperFirst()/]From[db.name.toUpperFirst() /]([entityType.name.toLowerFirst() /][for (role: Role | getMandatoryRoles(entityType, conceptualSchema))],[role.getOppositeRoleInBinaryRel().name.toLowerFirst()/][getRelationShipType(role).name.toUpperFirst()/][/for]);
+	[/for]
+	[/for]
+	// Insert in ascending structures 
+	[for (struct: AbstractPhysicalStructure | getAscendingPhysicalStructuresOfEntity(entityType, entityType.ancestors(Domainmodel)->first()))]
+	[for (db: Database | getConcernedDatabases(struct, entityType.ancestors(Domainmodel)->first()))]
+	insertComplex[entityType.name.toUpperFirst() /]In[struct.name.toUpperFirst()/]From[db.name.toUpperFirst() /]([entityType.name.toLowerFirst() /][for (role: Role | getMandatoryRoles(entityType, conceptualSchema))],[role.getOppositeRoleInBinaryRel().name.toLowerFirst()/][getRelationShipType(role).name.toUpperFirst()/][/for]);
+	[/for]
+	[/for]
+	// Insert in join structures 
+	[for (struct: AbstractPhysicalStructure | getJoinStructureOfMappedMandatoryRoleOfEntity(entityType, entityType.ancestors(Domainmodel)->first()))]
 	[for (db: Database | getConcernedDatabases(struct, entityType.ancestors(Domainmodel)->first()))]
 	insertComplex[entityType.name.toUpperFirst() /]In[struct.name.toUpperFirst()/]From[db.name.toUpperFirst() /]([entityType.name.toLowerFirst() /][for (role: Role | getMandatoryRoles(entityType, conceptualSchema))],[role.getOppositeRoleInBinaryRel().name.toLowerFirst()/][getRelationShipType(role).name.toUpperFirst()/][/for]);
 	[/for]
@@ -67,6 +77,11 @@
 			}
 	*/
 	
+[/template]
+
+[template public insertInComplexStructure(entityType: EntityType, struct : AbstractPhysicalStructure, db : Database)]
+	 // Implement Insert In other complex struct
+			return false;
 [/template]
 	
 [template public insertInSQLDBImpl(entityType : EntityType, struct : AbstractPhysicalStructure, db : Database)]
