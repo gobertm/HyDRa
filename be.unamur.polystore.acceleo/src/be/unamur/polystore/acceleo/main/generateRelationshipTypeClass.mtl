@@ -4,7 +4,6 @@
 [import be::unamur::polystore::acceleo::main::services::generateRelationshipTypeServices /]
 [import be::unamur::polystore::acceleo::main::impl::generateRelationshipTypeServicesImpl /]
 [import be::unamur::polystore::acceleo::main::mappingrules::util /]
-
  [query public isRelationshipTypeComplex(rel : RelationshipType) : Boolean = rel.attributes->size() > 0 or rel.roles->size() > 2 /]
 
 [template public generateAllLevelsRelationshipTypeClass(rel: RelationshipType, conceptualSchema: ConceptualSchema)]

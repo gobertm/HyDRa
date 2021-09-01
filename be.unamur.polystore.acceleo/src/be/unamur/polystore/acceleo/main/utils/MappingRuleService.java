@@ -164,6 +164,7 @@ public class MappingRuleService {
 		List<PhysicalField> fields = new ArrayList<>();
 		boolean firstlevelFieldMappedToEntity=false;
 		for(AbstractPhysicalStructure struct : getConcernedPhysicalStructures(entity, domain)) {
+			firstlevelFieldMappedToEntity=false;
 			if(struct instanceof Collection) {
 				fields = ((Collection) struct).getFields();
 //			if(struct instanceof ColumnFamily)
@@ -185,6 +186,7 @@ public class MappingRuleService {
 				}
 			}
 		}
+		res.removeAll(getMappedComplexEmbeddedStructureOfEntity(entity, domain));
 		return res;
 	}
 	
@@ -192,20 +194,28 @@ public class MappingRuleService {
 	public static Set<AbstractPhysicalStructure> getAscendingPhysicalStructuresOfEntity(EntityType entity, Domainmodel domain){
 		Set<AbstractPhysicalStructure> res = new HashSet();
 		List<PhysicalField> fields = new ArrayList<>();
+		boolean firstlevelFieldMappedToEntity=false;
 		for(AbstractPhysicalStructure struct : getConcernedPhysicalStructures(entity, domain)) {
+			firstlevelFieldMappedToEntity=false;
 			if(struct instanceof Collection) {
 				fields = ((Collection) struct).getFields();
 //			if(struct instanceof ColumnFamily)
 				// TODO Also check other physicalStructures that may contain EmbeddedObjects
 				for(PhysicalField field : fields) {
+					if(isMappedToEntity(field, entity, domain.getMappingRules()))
+						firstlevelFieldMappedToEntity=true;
+				}
+				for(PhysicalField field : fields) {
 					if(field instanceof EmbeddedObject) {
-						if(isMappedToRoleWhoseOppositeIsMandatory(field, domain.getMappingRules())) {
+						if(!firstlevelFieldMappedToEntity // No firstlevel field is of Entity 
+								&& isMappedToRoleWhoseOppositeIsMandatory(field, domain.getMappingRules())) {
 							res.add(struct);
 						}
 					}
 				}
 			}
 		}
+		res.removeAll(getMappedComplexEmbeddedStructureOfEntity(entity, domain));
 		return res;
 	}
 	
@@ -258,6 +268,7 @@ public class MappingRuleService {
 		List<PhysicalField> fields = new ArrayList<>();
 		boolean firstlevelFieldMappedToEntity=false;
 		for(AbstractPhysicalStructure struct : getConcernedPhysicalStructures(entity, domain)) {
+			firstlevelFieldMappedToEntity=false;
 			if(struct instanceof Collection) {
 				fields = ((Collection) struct).getFields();
 				for(PhysicalField field : fields) {

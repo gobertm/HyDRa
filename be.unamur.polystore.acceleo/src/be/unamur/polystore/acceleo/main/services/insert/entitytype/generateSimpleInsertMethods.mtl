@@ -30,7 +30,7 @@ public [if (override = false)]abstract [/if]void insert[entityType.name.toUpperF
 [comment For each mapped AbstractPhysicalStructure which contains a mapped attribute of level one (or sub level not mapped to a role). /]
 [for (struct: AbstractPhysicalStructure | getMappedPhysicalStructureToInsertSingleE(entityType, entityType.ancestors(Domainmodel)->first()))]
 [for (db: Database | getConcernedDatabases(struct, entityType.ancestors(Domainmodel)->first()))]
-public [if (override = false)]abstract [/if]boolean insertStandalone[entityType.name.toUpperFirst() /]In[struct.name.toUpperFirst()/]From[db.name.toUpperFirst() /]([entityType.name.toUpperFirst()/] [entityType.name.toLowerFirst()/])[if (override = false)]; [else]
+public [if (override = false)]abstract [/if]boolean insert[entityType.name.toUpperFirst() /]In[struct.name.toUpperFirst()/]From[db.name.toUpperFirst() /]([entityType.name.toUpperFirst()/] [entityType.name.toLowerFirst()/])[if (override = false)]; [else]
 	{
 [generateCheckExistBeforeInsert(entityType, struct, db)/]
 	if(!entityExists){
@@ -54,7 +54,7 @@ public [if (override = false)]abstract [/if]boolean insertStandalone[entityType.
 [comment Insert In Structure with at least 2 cascading embedded structure with roles /]
 [for (struct: AbstractPhysicalStructure | getMappedComplexEmbeddedStructureOfEntity(entityType, entityType.ancestors(Domainmodel)->first()))]
 [for (db: Database | getConcernedDatabases(struct, entityType.ancestors(Domainmodel)->first()))]
-public [if (override = false)]abstract [/if]boolean insertComplex[entityType.name.toUpperFirst() /]In[struct.name.toUpperFirst()/]From[db.name.toUpperFirst() /]([entityType.name.toUpperFirst() /] [entityType.name.toLowerFirst() /][for (role: Role | getMandatoryRoles(entityType, conceptualSchema))],
+public [if (override = false)]abstract [/if]boolean insert[entityType.name.toUpperFirst() /]In[struct.name.toUpperFirst()/]From[db.name.toUpperFirst() /]([entityType.name.toUpperFirst() /] [entityType.name.toLowerFirst() /][for (role: Role | getMandatoryRoles(entityType, conceptualSchema))],
 	[if (isCardinalityMaxN(role))] List<[role.getOppositeRoleInBinaryRel().entity.name.toUpperFirst() /]> [else][role.getOppositeRoleInBinaryRel().entity.name.toUpperFirst() /]	[/if][role.getOppositeRoleInBinaryRel().name.toLowerFirst()/][getRelationShipType(role).name.toUpperFirst()/][/for][for (attr: Attribute | getAttributesFromMandatoryRoles(entityType, conceptualSchema))],
 	[generateJavaType(attr.type)/] [getRelationshipType(attr).name /]_[attr.name /]
 	[/for]
@@ -69,7 +69,7 @@ public [if (override = false)]abstract [/if]boolean insertComplex[entityType.nam
 [for (struct: AbstractPhysicalStructure | getComplexPhysicalStructures(entityType, entityType.ancestors(Domainmodel)->first()))]
 [for (db: Database | getConcernedDatabases(struct, entityType.ancestors(Domainmodel)->first()))]
 
-public [if (override = false)]abstract [/if]boolean insertComplex[entityType.name.toUpperFirst() /]In[struct.name.toUpperFirst()/]From[db.name.toUpperFirst() /]([entityType.name.toUpperFirst() /] [entityType.name.toLowerFirst() /][for (role: Role | getMandatoryRoles(entityType, conceptualSchema))],
+public [if (override = false)]abstract [/if]boolean insert[entityType.name.toUpperFirst() /]In[struct.name.toUpperFirst()/]From[db.name.toUpperFirst() /]([entityType.name.toUpperFirst() /] [entityType.name.toLowerFirst() /][for (role: Role | getMandatoryRoles(entityType, conceptualSchema))],
 	[if (isCardinalityMaxN(role))] List<[role.getOppositeRoleInBinaryRel().entity.name.toUpperFirst() /]> [else][role.getOppositeRoleInBinaryRel().entity.name.toUpperFirst() /]	[/if][role.getOppositeRoleInBinaryRel().name.toLowerFirst()/][getRelationShipType(role).name.toUpperFirst()/][/for][for (attr: Attribute | getAttributesFromMandatoryRoles(entityType, conceptualSchema))],
 	[generateJavaType(attr.type)/] [getRelationshipType(attr).name /]_[attr.name /]
 	[/for]
