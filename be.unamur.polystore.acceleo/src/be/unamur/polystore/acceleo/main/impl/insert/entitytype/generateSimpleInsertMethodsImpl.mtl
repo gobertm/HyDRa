@@ -75,11 +75,22 @@
 	
 [/template]
 
-[template public insertInComplexStructure(entityType: EntityType, struct : AbstractPhysicalStructure, db : Database)]
-	 // Implement Insert In other complex struct
+[template public insertInDescendingStructure(entityType: EntityType, struct : AbstractPhysicalStructure, db : Database)]
+	 // Implement Insert in descending complex struct
+			return false;
+[/template]
+
+[template public insertInAscendingStructure(entityType: EntityType, struct : AbstractPhysicalStructure, db : Database)]
+	 // Implement Insert in ascending complex struct
 			return false;
 [/template]
 	
+[template public insertInJoinStructure(entityType: EntityType, struct : AbstractPhysicalStructure, db : Database)]
+	 // Implement Insert in join complex struct
+			return false;
+[/template]
+
+
 [template public insertInSQLDBImpl(entityType : EntityType, struct : AbstractPhysicalStructure, db : Database)]
 [comment insertEInRELTABLE(ENT e)
 For each PhysicalFIeld get the mapped conceptual attribute of ENT
