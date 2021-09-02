@@ -41,7 +41,7 @@
 	boolean inserted = false;
 	[for (struct: AbstractPhysicalStructure | getMappedPhysicalStructureToInsertSingleE(entityType, entityType.ancestors(Domainmodel)->first()))]
 	[for (db: Database | getConcernedDatabases(struct, entityType.ancestors(Domainmodel)->first()))]
-		inserted = insertStandalone[entityType.name.toUpperFirst() /]In[struct.name.toUpperFirst()/]From[db.name.toUpperFirst() /]([entityType.name.toLowerFirst()/]) || inserted ;
+		inserted = insert[entityType.name.toUpperFirst() /]In[struct.name.toUpperFirst()/]From[db.name.toUpperFirst() /]([entityType.name.toLowerFirst()/]) || inserted ;
 	[/for]
 	[/for]
 	return inserted;
@@ -76,6 +76,8 @@
 [/template]
 
 [template public insertInDescendingStructure(entityType: EntityType, struct : AbstractPhysicalStructure, db : Database)]
+[comment  /]
+
 	 // Implement Insert in descending complex struct
 			return false;
 [/template]
