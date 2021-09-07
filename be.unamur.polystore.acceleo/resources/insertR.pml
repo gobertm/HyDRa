@@ -116,6 +116,7 @@ physical schemas {
 		collection movieCol {
 			fields {
 				idmovie,
+				title,
 				actors [1-N]{
 					actorid,
 					name
@@ -179,7 +180,7 @@ mapping rules{
 	// Standalone structure
 	conceptualSchema.Review(id, content) -> myRelSchema.reviewTable(id,content),
 	// Descending structure 
-	conceptualSchema.Movie(id) -> IMDB_Mongo.movieCol(idmovie),
+	conceptualSchema.Movie(id,primaryTitle) -> IMDB_Mongo.movieCol(idmovie, title),
 	conceptualSchema.movieActor.movie -> IMDB_Mongo.movieCol.actors(),
 	conceptualSchema.movieDirector.directed_movie -> IMDB_Mongo.movieCol.directors(),
 	conceptualSchema.Director(id,firstName,lastName) -> IMDB_Mongo.movieCol.directors(directorid,firstname,lastname),
