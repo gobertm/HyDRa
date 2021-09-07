@@ -24,7 +24,7 @@ public void delete[role.name.toUpperFirst() /]ListIn[getRelationShipType(role).n
 }
 [if (role2 <> role)]
 
-public void delete[role.name.toUpperFirst() /][if (isMaxOne(role2) = false)]List[/if]In[getRelationShipType(role).name.toUpperFirst() /]By[role2.name.toUpperFirst() /](
+public void delete[role.name.toUpperFirst() /][if (isCardinalityMaxOne(role2) = false)]List[/if]In[getRelationShipType(role).name.toUpperFirst() /]By[role2.name.toUpperFirst() /](
 	pojo.[role2.entity.name.toUpperFirst()/] [role2.name/] 
 ){
 	//TODO get id in condition

@@ -741,6 +741,7 @@ public enum [rel.name.toUpperFirst() /]Attribute {
 [template public generateExceptions()]
 	[generateInsertReferenceException()/]
 	[generateIncompatibleTypeException()/]
+	[generatePhysicalStructureException()/]
 [/template]
 
 [template public generateInsertReferenceException()]
@@ -762,6 +763,18 @@ package exceptions;
 
 public class IncompatibleAttributesTypeException extends RuntimeException {
     public IncompatibleAttributesTypeException(String message) {
+        super(message);
+    }
+}
+[/file]
+[/template]
+
+[template public generatePhysicalStructureException()]
+[file ('src/main/java/exceptions/PhysicalStructureException.java', false, 'UTF-8')]
+package exceptions;
+
+public class PhysicalStructureException extends RuntimeException {
+    public PhysicalStructureException(String message) {
         super(message);
     }
 }

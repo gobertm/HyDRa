@@ -19,7 +19,7 @@ public Dataset<[entity.name.toUpperFirst() /]> get[role.name.toUpperFirst() /]Li
 }
 [if (role2 <> role)]
 
-public [if (isMaxOne(role2) = false)]Dataset<[entity.name.toUpperFirst() /]>[else][entity.name.toUpperFirst() /][/if] get[role.name.toUpperFirst() /][if (isMaxOne(role2) = false)]List[/if]In[getRelationShipType(role).name.toUpperFirst() /]By[role2.name.toUpperFirst() /](pojo.[role2.entity.name.toUpperFirst()/] [role2.name/]){
+public [if (isCardinalityMaxOne(role2) = false)]Dataset<[entity.name.toUpperFirst() /]>[else][entity.name.toUpperFirst() /][/if] get[role.name.toUpperFirst() /][if (isCardinalityMaxOne(role2) = false)]List[/if]In[getRelationShipType(role).name.toUpperFirst() /]By[role2.name.toUpperFirst() /](pojo.[role2.entity.name.toUpperFirst()/] [role2.name/]){
 	if([role2.name/] == null)
 		return null;
 
@@ -43,7 +43,7 @@ public [if (isMaxOne(role2) = false)]Dataset<[entity.name.toUpperFirst() /]>[els
 	[/if]
 	[/if]
 	Dataset<[entity.name.toUpperFirst() /]> res = get[role.name.toUpperFirst() /]ListIn[getRelationShipType(role).name.toUpperFirst() /]By[role2.name.toUpperFirst()/]Condition(c);
-	[if (isMaxOne(role2) = false)]
+	[if (isCardinalityMaxOne(role2) = false)]
 	return res;
 	[else]
 	return !res.isEmpty()?res.first():null;
@@ -69,7 +69,7 @@ public Dataset<[entity.name.toUpperFirst() /]> get[role.name.toUpperFirst() /]Li
 [let role1 : Role = rel.roles->first()]
 [let role2 : Role = role1.getOppositeRoles()->any(true)]
 [if (role1.entity = entity and role2.entity = entity)]
-	[if (role1.isMaxOne() and role2.isMaxOne())]
+	[if (role1.isCardinalityMaxOne() and role2.isCardinalityMaxOne())]
 public [entity.name.toUpperFirst() /] get[entity.name.toUpperFirst() /]([entity.name.toUpperFirst() /].[rel.name/] role, [entity.name.toUpperFirst() /] [entity.name.toLowerFirst() /]) {
 	if(role != null) {
 		if(role.equals([entity.name.toUpperFirst() /].[rel.name/].[role1.name /]))
@@ -80,7 +80,7 @@ public [entity.name.toUpperFirst() /] get[entity.name.toUpperFirst() /]([entity.
 	return null;
 }
 	[/if]
-	[if (role1.isMaxOne() = false and role2.isMaxOne() = false)]
+	[if (role1.isCardinalityMaxOne() = false and role2.isCardinalityMaxOne() = false)]
 public Dataset<[entity.name.toUpperFirst() /]> get[entity.name.toUpperFirst() /]List([entity.name.toUpperFirst() /].[rel.name/] role, [entity.name.toUpperFirst() /] [entity.name.toLowerFirst() /]) {
 	if(role != null) {
 		if(role.equals([entity.name.toUpperFirst() /].[rel.name/].[role1.name /]))
@@ -91,7 +91,7 @@ public Dataset<[entity.name.toUpperFirst() /]> get[entity.name.toUpperFirst() /]
 	return null;
 }
 	[/if]
-	[if (role1.isMaxOne() and role2.isMaxOne() = false)]
+	[if (role1.isCardinalityMaxOne() and role2.isCardinalityMaxOne() = false)]
 public Dataset<[entity.name.toUpperFirst() /]> get[entity.name.toUpperFirst() /]List([entity.name.toUpperFirst() /].[rel.name/] role, [entity.name.toUpperFirst() /] [entity.name.toLowerFirst() /]) {
 	if(role != null) {
 		if(role.equals([entity.name.toUpperFirst() /].[rel.name/].[role1.name /]))
@@ -108,7 +108,7 @@ public [entity.name.toUpperFirst() /] get[entity.name.toUpperFirst() /]([entity.
 	return null;
 }
 	[/if]
-	[if (role1.isMaxOne() = false and role2.isMaxOne())]
+	[if (role1.isCardinalityMaxOne() = false and role2.isCardinalityMaxOne())]
 public Dataset<[entity.name.toUpperFirst() /]> get[entity.name.toUpperFirst() /]List([entity.name.toUpperFirst() /].[rel.name/] role, [entity.name.toUpperFirst() /] [entity.name.toLowerFirst() /]) {
 	if(role != null) {
 		if(role.equals([entity.name.toUpperFirst() /].[rel.name/].[role2.name /]))
@@ -149,10 +149,10 @@ public Dataset<[entity.name.toUpperFirst() /]> get[entity.name.toUpperFirst() /]
 [else]
 [let concernedRole : Role = Sequence{role1, role2}->select(role: Role | role.entity = entity)->any(true)]
 [let opposite : Role = concernedRole.getOppositeRoles()->any(true)]
-public [if (opposite.isMaxOne() = false)]Dataset<[entity.name.toUpperFirst() /]>[else][entity.name.toUpperFirst() /][/if] get[entity.name.toUpperFirst() /][if (opposite.isMaxOne() = false)]List[/if]([entity.name.toUpperFirst() /].[rel.name/] role, [opposite.entity.name.toUpperFirst()/] [opposite.entity.name.toLowerFirst()/]) {
+public [if (opposite.isCardinalityMaxOne() = false)]Dataset<[entity.name.toUpperFirst() /]>[else][entity.name.toUpperFirst() /][/if] get[entity.name.toUpperFirst() /][if (opposite.isCardinalityMaxOne() = false)]List[/if]([entity.name.toUpperFirst() /].[rel.name/] role, [opposite.entity.name.toUpperFirst()/] [opposite.entity.name.toLowerFirst()/]) {
 	if(role != null) {
 		if(role.equals([entity.name.toUpperFirst() /].[rel.name/].[concernedRole.name/]))
-			return get[concernedRole.name.toUpperFirst()/][if (opposite.isMaxOne() = false)]List[/if]In[rel.name.toUpperFirst()/]By[opposite.name.toUpperFirst()/]([opposite.entity.name.toLowerFirst() /]);
+			return get[concernedRole.name.toUpperFirst()/][if (opposite.isCardinalityMaxOne() = false)]List[/if]In[rel.name.toUpperFirst()/]By[opposite.name.toUpperFirst()/]([opposite.entity.name.toLowerFirst() /]);
 	}
 	return null;
 }

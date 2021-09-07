@@ -5,6 +5,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import javax.management.relation.Relation;
+
 import org.eclipse.emf.common.util.BasicEList;
 import org.eclipse.emf.common.util.EList;
 import org.eclipse.emf.common.util.EMap;
@@ -18,6 +20,10 @@ import org.eclipse.ocl.ecore.util.OCLEcoreUtil;
 import be.unamur.polystore.pml.*;
 import be.unamur.polystore.scoping.PmlScopeProvider;
 
+/**
+ * @author Maxime Gobert
+ *
+ */
 /**
  * @author Maxime Gobert
  *
@@ -51,6 +57,19 @@ public class MappingRuleService {
 						// PhysicalField origin = getOriginalPhysicalField(pf);
 						res.add(pf);
 					}
+				}
+			}
+		}
+		return res;
+	}
+	
+	public static Set<AbstractPhysicalStructure> getMappedPhysicalStructureOfRole(Role role, MappingRules rules) {
+		Set<AbstractPhysicalStructure> res = new HashSet<>();
+		for (AbstractMappingRule rule : rules.getMappingRules()) {
+			if (rule instanceof RoleToReferenceMappingRule) {
+				RoleToReferenceMappingRule roleMappingRule = (RoleToReferenceMappingRule) rule;
+				if(roleMappingRule.getRoleConceptual().equals(role)) {
+					res.add(getPhysicalStructureNotEmbeddedObject(roleMappingRule.getReference()));
 				}
 			}
 		}
@@ -139,9 +158,152 @@ public class MappingRuleService {
 		}
 		return res;
 	}
+	
+	public static Set<AbstractPhysicalStructure> getDescendingOneLevelPhysicalStructuresOfEntity(EntityType entity, Domainmodel domain){
+		Set<AbstractPhysicalStructure> res = new HashSet();
+		List<PhysicalField> fields = new ArrayList<>();
+		boolean firstlevelFieldMappedToEntity=false;
+		for(AbstractPhysicalStructure struct : getConcernedPhysicalStructures(entity, domain)) {
+			firstlevelFieldMappedToEntity=false;
+			if(struct instanceof Collection) {
+				fields = ((Collection) struct).getFields();
+//			if(struct instanceof ColumnFamily)
+				// TODO Also check other physicalStructures that may contain EmbeddedObjects
+				for(PhysicalField field : fields) {
+					if(isMappedToEntity(field, entity, domain.getMappingRules()))
+						firstlevelFieldMappedToEntity=true;
+				}
+				for(PhysicalField field : fields) {
+					if(field instanceof EmbeddedObject) {
+						if(firstlevelFieldMappedToEntity 
+								&& (isMappedToMandatoryRole(field, domain.getMappingRules()) 
+//										|| 
+//									(((EmbeddedObject)field).getCardinality().equals(Cardinality.ONE) || ((EmbeddedObject)field).getCardinality().equals(Cardinality.ONE_MANY))
+							)) {
+							res.add(struct);
+						}
+					}
+				}
+			}
+		}
+		res.removeAll(getMappedComplexEmbeddedStructureOfEntity(entity, domain));
+		return res;
+	}
+	
+	
+	public static Set<AbstractPhysicalStructure> getAscendingPhysicalStructuresOfEntity(EntityType entity, Domainmodel domain){
+		Set<AbstractPhysicalStructure> res = new HashSet();
+		List<PhysicalField> fields = new ArrayList<>();
+		boolean firstlevelFieldMappedToEntity=false;
+		for(AbstractPhysicalStructure struct : getConcernedPhysicalStructures(entity, domain)) {
+			firstlevelFieldMappedToEntity=false;
+			if(struct instanceof Collection) {
+				fields = ((Collection) struct).getFields();
+//			if(struct instanceof ColumnFamily)
+				// TODO Also check other physicalStructures that may contain EmbeddedObjects
+				for(PhysicalField field : fields) {
+					if(isMappedToEntity(field, entity, domain.getMappingRules()))
+						firstlevelFieldMappedToEntity=true;
+				}
+				for(PhysicalField field : fields) {
+					if(field instanceof EmbeddedObject) {
+						if(!firstlevelFieldMappedToEntity // No firstlevel field is of Entity 
+								&& isMappedToRoleWhoseOppositeIsMandatory(field, domain.getMappingRules())) {
+							res.add(struct);
+						}
+					}
+				}
+			}
+		}
+		res.removeAll(getMappedComplexEmbeddedStructureOfEntity(entity, domain));
+		return res;
+	}
+	
+	/** Returns concerned physical structure (physical structure of field mapped to attribute of given entity type) that are not Standalone structure of ent , nor ComplexEmbedded (2 cascading role embeddeded).
+	 * Also returns structures of mapped mandatory role of Ent 
+	 * @param ent
+	 * @param domain
+	 * @return
+	 */
+	public static Set<AbstractPhysicalStructure> getComplexPhysicalStructures(EntityType ent, Domainmodel domain) {
+		Set<AbstractPhysicalStructure> res = new HashSet<AbstractPhysicalStructure>();
+		for (Attribute attr : ent.getAttributes()) {
+			java.util.Collection<PhysicalField> fields = getMappedPhysicalFields(attr, domain.getMappingRules());
+			for (PhysicalField field : fields) {
+				AbstractPhysicalStructure struct = getPhysicalStructureNotEmbeddedObject(field);
+				if (struct != null)
+					res.add(struct);
+			}
+		}
+		res.removeAll(getMappedComplexEmbeddedStructureOfEntity(ent, domain));
+		res.removeAll(getMappedPhysicalStructureToInsertSingleE(ent, domain));
+		res.addAll(getJoinStructureOfMappedMandatoryRoleOfEntity(ent, domain));
+		return res;
+	}
+	
+	public static Set<AbstractPhysicalStructure> getJoinStructureOfMappedMandatoryRoleOfEntity(EntityType ent, Domainmodel model){
+		Set<AbstractPhysicalStructure> res = new HashSet<AbstractPhysicalStructure>();
+		for(RelationshipType rel : model.getConceptualSchema().getRelationships()) {
+			for(Role role : rel.getRoles()) {
+				if(role.getEntity().equals(ent) 
+						&& isMandatoryRole(role)
+						// And is a join structure (both roles are in the same struct
+						&& getMappedPhysicalStructureOfRole(role,model.getMappingRules()).equals(getMappedPhysicalStructureOfRole(getOppositeOfRole(role),model.getMappingRules()))
+					) {
+					res.addAll(getMappedPhysicalStructureOfRole(role,model.getMappingRules()));
+				}
+			}
+		}
+		return res;
+	}
+	
+	
+	/** Returns PhysicalStructures where the given entity is mapped to the first level fields and where there exists cascading mandatory embedded structures mapped to roles. (Identifies structures where we need POJO attribute set.) 
+	 * @param entity
+	 * @param domain
+	 * @return
+	 */
+	public static Set<AbstractPhysicalStructure> getMappedComplexEmbeddedStructureOfEntity(EntityType entity,Domainmodel domain) {
+		Set<AbstractPhysicalStructure> res = new HashSet();
+		List<PhysicalField> fields = new ArrayList<>();
+		boolean firstlevelFieldMappedToEntity=false;
+		for(AbstractPhysicalStructure struct : getConcernedPhysicalStructures(entity, domain)) {
+			firstlevelFieldMappedToEntity=false;
+			if(struct instanceof Collection) {
+				fields = ((Collection) struct).getFields();
+				for(PhysicalField field : fields) {
+					if(isMappedToEntity(field, entity, domain.getMappingRules()))
+						firstlevelFieldMappedToEntity=true;
+				}
+				for(PhysicalField field : fields) {
+					if(field instanceof EmbeddedObject) {
+						if(firstlevelFieldMappedToEntity 
+								&& isMappedToMandatoryRole(field, domain.getMappingRules())) { 
+							List<EObject> embeddedDescendents = getDescendents(EmbeddedObject.class, field);
+							if(embeddedDescendents.size()==0)
+								break;
+							else {
+								for(EObject e : embeddedDescendents) {
+									if(!e.equals(field)
+											&& isMappedToMandatoryRole(e, domain.getMappingRules())) {
+										res.add(struct);
+										break;
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+		return res;
+	}
 
 	
 	/**
+	 * Returns standalone structures where we can insert 'ent'.
+	 * From all the mapped structure. We check that it is not contained in an Embedded Structure mapped to a role. If yes we remove this structure.
+	 * In Key Value we check that key elements are not mapped to another entity type or a role. 
 	 * @param ent
 	 * @param domain
 	 * @return
@@ -155,6 +317,22 @@ public class MappingRuleService {
 			if(struct instanceof KeyValuePair)
 				continue;
 			boolean flag = false;
+			//Detect if the embedded objects are of cardinality 1 and mapped to a role. 
+			if(struct instanceof Collection) {
+				for(PhysicalField f : ((Collection)struct).getFields()) {
+					if(f instanceof EmbeddedObject) {
+						if(isMappedToRole(f, domain.getMappingRules())
+								&& (((EmbeddedObject) f).getCardinality()==Cardinality.ONE ||((EmbeddedObject) f).getCardinality()==Cardinality.ONE_MANY))
+							flag=true;
+					}
+				}
+				if(flag) {
+					res.remove(i);
+					i--;
+					continue;
+				}
+			}
+			flag=false;
 			for (Attribute attr : ent.getAttributes()) {
 				java.util.Collection<PhysicalField> fields = getMappedPhysicalFields(attr, domain.getMappingRules());
 				for (PhysicalField field : fields) {
@@ -227,6 +405,66 @@ public class MappingRuleService {
 
 		}
 		return false;
+	}
+	
+	public static Role getMappedRoleOfPhysicalField(PhysicalField e) {
+		MappingRules rules = ((Domainmodel) getFirstAncestor(Domainmodel.class, e)).getMappingRules();
+		for(AbstractMappingRule rule : rules.getMappingRules()) {
+			if(rule instanceof RoleToEmbbededObjectMappingRule) {
+				if(((RoleToEmbbededObjectMappingRule) rule).getPhysicalStructure().equals(e))
+					return ((RoleToEmbbededObjectMappingRule) rule).getRoleConceptual();
+			}
+			if(rule instanceof RoleToKeyBracketsFieldMappingRule) {
+				if((((RoleToKeyBracketsFieldMappingRule)rule).getPhysicalStructure().equals(e)))
+					return ((RoleToKeyBracketsFieldMappingRule)rule).getRoleConceptual();
+			}
+
+		}
+		return null;
+	}
+	
+	public static boolean isMappedToMandatoryRole(EObject e, MappingRules rules) {
+		for(AbstractMappingRule rule : rules.getMappingRules()) {
+			if(rule instanceof RoleToEmbbededObjectMappingRule) {
+				if(((RoleToEmbbededObjectMappingRule) rule).getPhysicalStructure().equals(e) && isMandatoryRole(((RoleToEmbbededObjectMappingRule) rule).getRoleConceptual()))
+					return true;
+			}
+			if(rule instanceof RoleToKeyBracketsFieldMappingRule) {
+				if((((RoleToKeyBracketsFieldMappingRule)rule).getPhysicalStructure().equals(e) && isMandatoryRole(((RoleToEmbbededObjectMappingRule) rule).getRoleConceptual())))
+					return true;
+			}
+		}
+		return false;
+	}
+	
+	public static boolean isMappedToRoleWhoseOppositeIsMandatory(EObject e, MappingRules rules) {
+		for(AbstractMappingRule rule : rules.getMappingRules()) {
+			if(rule instanceof RoleToEmbbededObjectMappingRule) {
+				if(((RoleToEmbbededObjectMappingRule) rule).getPhysicalStructure().equals(e) && isMandatoryRole(getOppositeOfRole(((RoleToEmbbededObjectMappingRule) rule).getRoleConceptual())))
+					return true;
+			}
+			if(rule instanceof RoleToKeyBracketsFieldMappingRule) {
+				if((((RoleToKeyBracketsFieldMappingRule)rule).getPhysicalStructure().equals(e) && isMandatoryRole(getOppositeOfRole(((RoleToEmbbededObjectMappingRule) rule).getRoleConceptual()))))
+					return true;
+			}
+		}
+		return false;
+	}
+	
+	public static Role getOppositeOfRole(Role role) {
+		RelationshipType rel = (RelationshipType) role.eContainer();
+		for (Role roleOpposite : rel.getRoles()) {
+			if(!role.equals(roleOpposite))
+				return roleOpposite;
+		}
+		return null;
+	}
+	
+	public static boolean isMandatoryRole(Role role) {
+		if(role.getCardinality().equals(Cardinality.ONE)|| role.getCardinality().equals(Cardinality.ONE_MANY))
+			return true;
+		else
+			return false;
 	}
 	
 	public static boolean isMappedToEntity(EObject e, EntityType ent, MappingRules rules) {

@@ -73,7 +73,7 @@ public java.util.List<pojo.[rel.name.toUpperFirst()/]> get[rel.name.toUpperFirst
 	return get[rel.name.toUpperFirst() /]List([getListOfNullValues(i - 1) /][if(i - 1 > 0)], [/if][role.name/]_condition[getListOfNullValues(rel.roles->size() -  i, true) /][if (rel.attributes->size() > 0)], null[/if]);
 }
 
-public [if (isMaxOne(role) = false)]java.util.List<pojo.[rel.name.toUpperFirst() /]>[else]pojo.[rel.name.toUpperFirst() /][/if] get[rel.name.toUpperFirst() /][if (isMaxOne(role) = false)]List[/if]By[role.name.toUpperFirst() /](pojo.[role.entity.name.toUpperFirst()/] [role.name /]) {
+public [if (isCardinalityMaxOne(role) = false)]java.util.List<pojo.[rel.name.toUpperFirst() /]>[else]pojo.[rel.name.toUpperFirst() /][/if] get[rel.name.toUpperFirst() /][if (isCardinalityMaxOne(role) = false)]List[/if]By[role.name.toUpperFirst() /](pojo.[role.entity.name.toUpperFirst()/] [role.name /]) {
 	// TODO using id for selecting
 	return null;
 }

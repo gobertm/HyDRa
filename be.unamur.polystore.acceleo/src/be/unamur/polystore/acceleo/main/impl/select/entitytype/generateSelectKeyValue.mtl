@@ -292,11 +292,9 @@
 				[let refFields : Sequence(PhysicalField) = pair->at(2)]
 				[for (refField : PhysicalField | refFields)]
 				[if (refField.oclIsUndefined() = false)]
-				key = r.getAs("id");
 				//Checking that reference field '[refField.getPhysicalName()/]' is mapped in Key
 				if(fieldsListInKey.contains("[refField.getPhysicalName()/]")){
 					//Retrieving reference field '[refField.getPhysicalName()/]' in Key
-					// Spark Redis automatically strips leading character if the pattern provided contains a single '*' at the end.				
 					Pattern pattern_[refField.getPhysicalName()/] = Pattern.compile("\\*");
 			        Matcher match_[refField.getPhysicalName()/] = pattern_[refField.getPhysicalName()/].matcher(finalKeypattern);
 					groupindex = fieldsListInKey.indexOf("[refField.getPhysicalName()/]")+1;

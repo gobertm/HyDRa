@@ -89,7 +89,13 @@
 	getRelationShipType(role).roles->select(r: Role | r <> role)
 /]
 
-[query public isMaxOne(role: Role) : Boolean = role.cardinality = pml::Cardinality::ONE or role.cardinality = pml::Cardinality::ZERO_ONE /]
+[query public getOppositeRoleInBinaryRel(role: Role) : Role =
+	getRelationShipType(role).roles->select(r: Role | r <> role and getRelationShipType(role).roles->size() = 2)->any(true)
+/]
+
+[query public isCardinalityMaxOne(role: Role) : Boolean = role.cardinality = pml::Cardinality::ONE or role.cardinality = pml::Cardinality::ZERO_ONE /]
+
+[query public isCardinalityMaxN(role: Role) : Boolean = role.cardinality = pml::Cardinality::ZERO_MANY or role.cardinality = pml::Cardinality::ONE_MANY /]
 
 [query public getMandatoryRoles(entityType: EntityType, conceptualSchema: ConceptualSchema): Collection(Role) = 
 	conceptualSchema.eAllContents(pml::Role)->select(role: pml::Role | role.entity = entityType and isMandatoryRole(role))
@@ -154,6 +160,7 @@ field.eContainer(AbstractPhysicalSchema).name + '_' + field.getAbstractPhysicalS
 [query public getAbstractPhysicalStructureNotEmbeddedObject(o : OclAny) : AbstractPhysicalStructure =
 	invoke('be.unamur.polystore.acceleo.main.utils.MappingRuleService', 'getPhysicalStructureNotEmbeddedObject(org.eclipse.emf.ecore.EObject)', Sequence{o})
 /]
+
 
 [query public getPhysicalSchema(o : OclAny) : AbstractPhysicalSchema =
 	invoke('be.unamur.polystore.acceleo.main.utils.MappingRuleService', 'getPhysicalSchema(org.eclipse.emf.ecore.EObject)', Sequence{o})

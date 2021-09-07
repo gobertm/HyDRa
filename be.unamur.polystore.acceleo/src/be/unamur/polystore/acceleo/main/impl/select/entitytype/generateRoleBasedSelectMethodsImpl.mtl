@@ -170,13 +170,13 @@
 	[/for]
 	
 	[let rel : RelationshipType = role.getRelationShipType()]
+	Dataset<[rel.name.toUpperFirst()/]> res_[rel.name/]_[role.name/];
+	Dataset<[entity.name.toUpperFirst()/]> res_[entity.name/];
 	[comment A(B) embedded B in A, getAbyB /]
 	[for (embedded : EmbeddedObject | getMappedEmbeddedObjects(role, conceptualSchema.getMappingRules()))]
 	// Role '[role.name/]' mapped to EmbeddedObject '[embedded.getPhysicalName()/]' - '[role2.entity.name/]' containing '[entity.name/]'
 	[role2.name/]_refilter = new MutableBoolean(false);
-	Dataset<[rel.name.toUpperFirst()/]> res_[rel.name/]_[role.name/];
 	res_[rel.name/]_[role.name/] = [rel.name.toLowerFirst()/]Service.get[rel.name.toUpperFirst()/]ListIn[ getPhysicalFieldAbsolutePath(embedded) /]([role.name/]_condition, [role2.name/]_condition, [role.name/]_refilter, [role2.name/]_refilter);
-	Dataset<[entity.name.toUpperFirst()/]> res_[entity.name/];
 	if([role2.name/]_refilter.booleanValue()) {
 		joinCondition = null;
 	[if (role2.entity.identifier.oclIsUndefined() = false and role2.entity.identifier.attributes->size() > 0)]
@@ -203,8 +203,6 @@
 	[for (embedded : EmbeddedObject | getMappedEmbeddedObjects(role2, conceptualSchema.getMappingRules()))]
 	// Role '[role2.name/]' mapped to EmbeddedObject '[embedded.getPhysicalName()/]' '[entity.name/]' containing '[role2.entity.name/]' 
 	[role2.name/]_refilter = new MutableBoolean(false);
-	Dataset<[entity.name.toUpperFirst()/]> res_[entity.name/];
-	Dataset<[rel.name.toUpperFirst()/]> res_[rel.name/]_[role.name/];
 	res_[rel.name/]_[role.name/] = [rel.name.toLowerFirst()/]Service.get[rel.name.toUpperFirst()/]ListIn[ getPhysicalFieldAbsolutePath(embedded) /]([role2.name/]_condition, [role.name/]_condition, [role2.name/]_refilter, [role.name/]_refilter);
 	if([role2.name/]_refilter.booleanValue()) {
 		joinCondition = null;
