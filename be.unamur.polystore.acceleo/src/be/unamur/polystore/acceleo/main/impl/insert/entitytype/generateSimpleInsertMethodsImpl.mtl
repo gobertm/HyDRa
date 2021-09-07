@@ -76,20 +76,25 @@
 [/template]
 
 [template public insertInDescendingStructure(entityType: EntityType, struct : AbstractPhysicalStructure, db : Database)]
-[comment  /]
-
+[comment generate structType for Ent and for subsequent roles. Join them together in descending way. /]
 	 // Implement Insert in descending complex struct
-			return false;
+	[comment TODO. Descending structures only arises in Collection at the moment./]
+	[generateStructField(entityType,struct.oclAsType(pml::Collection).fields, struct.oclAsType(pml::Collection).name,1,false)/]
+	List<Row> listRows=new ArrayList<Row>();
+	StructType struct = DataTypes.createStructType(new ArrayList<>(listOfStructField[struct.oclAsType(pml::Collection).name/]_1));
+	listRows.add(RowFactory.create(values[struct.oclAsType(pml::Collection).name/]_1.toArray()));
+	SparkConnectionMgr.writeDataset(listRows, struct, "mongo", "[struct.name/]", "[db.name/]");
+	return true;
 [/template]
 
 [template public insertInAscendingStructure(entityType: EntityType, struct : AbstractPhysicalStructure, db : Database)]
 	 // Implement Insert in ascending complex struct
-			return false;
+	return false;
 [/template]
 	
 [template public insertInJoinStructure(entityType: EntityType, struct : AbstractPhysicalStructure, db : Database)]
 	 // Implement Insert in join complex struct
-			return false;
+	return false;
 [/template]
 
 
@@ -98,11 +103,20 @@
 For each PhysicalFIeld get the mapped conceptual attribute of ENT
  /]
 	List<Row> listRows=new ArrayList<Row>();
-	[generateStructField(entityType,struct.oclAsType(Table).columns, struct.oclAsType(Table).name,1)/]
-	StructType structType = DataTypes.createStructType(listOfStructField[struct.oclAsType(Table).name/]_1);
+	[generateStructField(entityType,struct.oclAsType(Table).columns, struct.oclAsType(Table).name,1,false)/]
+	StructType structType = DataTypes.createStructType(new ArrayList<>(listOfStructField[struct.oclAsType(Table).name/]_1));
 	listRows.add(RowFactory.create(values[struct.oclAsType(Table).name/]_1.toArray()));
 	SparkConnectionMgr.writeDataset(listRows, structType, "jdbc", "[struct.name/]", "[db.name/]");
 [/template]
+
+[template public insertInMongoDBImpl(entityType : EntityType, struct : AbstractPhysicalStructure, db : Database)]
+	List<Row> listRows=new ArrayList<Row>();
+	[generateStructField(entityType, struct.oclAsType(pml::Collection).fields,struct.oclAsType(pml::Collection).name,1,false)/]
+	StructType struct = DataTypes.createStructType(new ArrayList<>(listOfStructField[struct.oclAsType(pml::Collection).name/]_1));
+	listRows.add(RowFactory.create(values[struct.oclAsType(pml::Collection).name/]_1.toArray()));
+	SparkConnectionMgr.writeDataset(listRows, struct, "mongo", "[struct.name/]", "[db.name/]");
+[/template]
+
 
 [template public insertInRedisImpl(entityType : EntityType, struct : AbstractPhysicalStructure, db : Database)]
 [comment insertEInREDIS(ENT e)
@@ -232,17 +246,11 @@ For each PhysicalFIeld get the mapped conceptual attribute of ENT
 		[/if]
 [/template]
 
-[template public insertInMongoDBImpl(entityType : EntityType, struct : AbstractPhysicalStructure, db : Database)]
-	List<Row> listRows=new ArrayList<Row>();
-	[generateStructField(entityType, struct.oclAsType(pml::Collection).fields,struct.oclAsType(pml::Collection).name,1)/]
-	StructType struct = DataTypes.createStructType(listOfStructField[struct.oclAsType(pml::Collection).name/]_1);
-	listRows.add(RowFactory.create(values[struct.oclAsType(pml::Collection).name/]_1.toArray()));
-	SparkConnectionMgr.writeDataset(listRows, struct, "mongo", "[struct.name/]", "[db.name/]");
-[/template]
-
-[template public generateStructField(entityType : EntityType, fields : Collection(PhysicalField), objectName : String, level : Integer)]
+[template public generateStructField(entityType : EntityType, fields : Collection(PhysicalField), objectName : String, level : Integer, inEmbeddedRole : Boolean)]
+[if (not inEmbeddedRole)]
 List<Object> values[objectName/]_[level/] = new ArrayList<>();
-List<StructField> listOfStructField[objectName/]_[level/] = new ArrayList<StructField>();
+Set<StructField> listOfStructField[objectName/]_[level/] = new HashSet<StructField>();
+[/if]
 [for (field : PhysicalField | fields)]
 	[if (field.oclIsTypeOf(ShortField))]
 		[let attr : Attribute = getMappedAttributes(field, entityType, entityType.getMappingRules())->any(true)]
@@ -287,8 +295,8 @@ values[objectName/]_[level/].add(value_[objectName/]_[getPhysicalName(field)/]_[
 // Embedded structure [field.getPhysicalName()/]
 		[if (getMappedAttributes(field, entityType, entityType.getMappingRules())->size()>0 or getDescendentsLongField(field)->exists(lf | lf.pattern->size()=1 and lf.pattern->any(true).oclIsTypeOf(BracketsField)=false))]
 		[comment Generate only for embedded objects with at least one field mapped to the concerned ENT or a field composed only of a constant string. /]
-				[generateStructField(entityType, field.oclAsType(EmbeddedObject).fields, field.getPhysicalName(), level+1)/]
-		StructType structType_[objectName/]_[level/] = DataTypes.createStructType(listOfStructField[field.getPhysicalName()/]_[level+1/]);
+				[generateStructField(entityType, field.oclAsType(EmbeddedObject).fields, field.getPhysicalName(), level+1,false)/]
+		StructType structType_[objectName/]_[level/] = DataTypes.createStructType(new ArrayList<>(listOfStructField[field.getPhysicalName()/]_[level+1/]));
 				[if (field.oclAsType(EmbeddedObject).cardinality= pml::Cardinality::ONE_MANY) or (field.oclAsType(EmbeddedObject).cardinality= pml::Cardinality::ZERO_MANY)]
 		ArrayType array[field.getPhysicalName()/]_[level/] = DataTypes.createArrayType(structType_[objectName/]_[level/]);
 		listOfStructField[objectName/]_[level/].add(DataTypes.createStructField("[field.getPhysicalName()/]",array[field.getPhysicalName()/]_[level/],true));
@@ -299,6 +307,31 @@ values[objectName/]_[level/].add(value_[objectName/]_[getPhysicalName(field)/]_[
 				[/if]
 		values[objectName/]_[level/].add(row_value_[field.getPhysicalName()/]_[level+1/]);
 		[/if]
+	[else]
+	[let role : Role = getMappedRoleOfPhysicalField(field)]
+	[if (role.isMandatoryRole())]
+// field '[field.getPhysicalName()/]' is mapped to mandatory role '[role.name/]' with opposite role of type '[role.getOppositeRoleInBinaryRel().entity.name/]'
+	List<Object> values[field.getPhysicalName()/]_[level+1/] = new ArrayList<>();
+	Set<StructField> listOfStructField[field.getPhysicalName()/]_[level+1/] = new HashSet<StructField>();
+	List<Row> row_value_[field.getPhysicalName()/]_[level+1/] = new ArrayList<>();
+	if([role.getOppositeRoleInBinaryRel().name.toLowerFirst()/][getRelationShipType(role).name.toUpperFirst()/]!=null){
+	[if (role.isCardinalityMaxN())]
+		for([role.getOppositeRoleInBinaryRel().entity.name.toUpperFirst()/] [role.getOppositeRoleInBinaryRel().entity.name.toLowerFirst()/] : [role.getOppositeRoleInBinaryRel().name.toLowerFirst()/][getRelationShipType(role).name.toUpperFirst()/]){
+			values[field.getPhysicalName()/]_[level+1/].clear();
+			[generateStructField(role.getOppositeRoleInBinaryRel().entity, field.oclAsType(EmbeddedObject).fields, field.getPhysicalName(), level+1, true)/]
+			row_value_[field.getPhysicalName()/]_[level+1/].add(RowFactory.create(values[field.getPhysicalName()/]_[level+1/].toArray()));
+		}
+	StructType structType_[field.getPhysicalName()/]_[level/] = DataTypes.createStructType(new ArrayList<>(listOfStructField[field.getPhysicalName()/]_[level+1/]));
+	ArrayType array[field.getPhysicalName()/]_[level/] = DataTypes.createArrayType(structType_[field.getPhysicalName()/]_[level/]);
+	listOfStructField[objectName/]_[level/].add(DataTypes.createStructField("[field.getPhysicalName()/]",array[field.getPhysicalName()/]_[level/],true));
+	values[objectName/]_[level/].add(row_value_[field.getPhysicalName()/]_[level+1/]);
+	[else]
+		[generateStructField(role.getOppositeRoleInBinaryRel().entity, field.oclAsType(EmbeddedObject).fields, field.getPhysicalName(), level+1,true)/]
+		values[objectName/]_[level/].add(row_value_[field.getPhysicalName()/]_[level+1/]);
+	[/if]
+	}
+	[/if]
+	[/let]
 	[/if]
 [/for]
 [/template]

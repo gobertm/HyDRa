@@ -50,6 +50,7 @@ public [if (override = false)]abstract [/if]boolean insert[entityType.name.toUpp
 [/for]
 [/for]
 
+[if (getMandatoryRoles(entityType, conceptualSchema)->size() > 0)]
 [comment Insert in structure with roles /]
 [comment Insert in 'Complex Embedded Structure' with at least 2 cascading embedded structure with roles /]
 [for (struct: AbstractPhysicalStructure | getMappedComplexEmbeddedStructureOfEntity(entityType, entityType.ancestors(Domainmodel)->first()))]
@@ -107,4 +108,5 @@ public [if (override = false)]abstract [/if]boolean insert[entityType.name.toUpp
 	}[/if]
 [/for]
 [/for]
+[/if]
 [/template]

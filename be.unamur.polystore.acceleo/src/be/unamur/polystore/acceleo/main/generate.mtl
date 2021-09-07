@@ -15,7 +15,6 @@
 [template public generateElement(conceptualSchema : ConceptualSchema)]
 [comment @main/]
 [generateGenericClasses(conceptualSchema) /]
-[generateTestClasses()/]
 [generateDBConnectionClasses(conceptualSchema) /]
 [generateIPojo() /]
 [generateLoggingPojo() /]

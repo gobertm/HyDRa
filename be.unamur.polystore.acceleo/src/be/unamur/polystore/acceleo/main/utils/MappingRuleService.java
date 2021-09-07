@@ -407,6 +407,22 @@ public class MappingRuleService {
 		return false;
 	}
 	
+	public static Role getMappedRoleOfPhysicalField(PhysicalField e) {
+		MappingRules rules = ((Domainmodel) getFirstAncestor(Domainmodel.class, e)).getMappingRules();
+		for(AbstractMappingRule rule : rules.getMappingRules()) {
+			if(rule instanceof RoleToEmbbededObjectMappingRule) {
+				if(((RoleToEmbbededObjectMappingRule) rule).getPhysicalStructure().equals(e))
+					return ((RoleToEmbbededObjectMappingRule) rule).getRoleConceptual();
+			}
+			if(rule instanceof RoleToKeyBracketsFieldMappingRule) {
+				if((((RoleToKeyBracketsFieldMappingRule)rule).getPhysicalStructure().equals(e)))
+					return ((RoleToKeyBracketsFieldMappingRule)rule).getRoleConceptual();
+			}
+
+		}
+		return null;
+	}
+	
 	public static boolean isMappedToMandatoryRole(EObject e, MappingRules rules) {
 		for(AbstractMappingRule rule : rules.getMappingRules()) {
 			if(rule instanceof RoleToEmbbededObjectMappingRule) {
