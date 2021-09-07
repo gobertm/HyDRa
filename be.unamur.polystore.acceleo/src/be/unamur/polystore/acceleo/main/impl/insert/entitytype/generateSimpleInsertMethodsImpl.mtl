@@ -249,13 +249,14 @@ For each PhysicalFIeld get the mapped conceptual attribute of ENT
 [template public generateStructField(entityType : EntityType, fields : Collection(PhysicalField), objectName : String, level : Integer, inEmbeddedRole : Boolean)]
 [if (not inEmbeddedRole)]
 List<Object> values[objectName/]_[level/] = new ArrayList<>();
-Set<StructField> listOfStructField[objectName/]_[level/] = new HashSet<StructField>();
+List<StructField> listOfStructField[objectName/]_[level/] = new ArrayList<StructField>();
 [/if]
 [for (field : PhysicalField | fields)]
 	[if (field.oclIsTypeOf(ShortField))]
 		[let attr : Attribute = getMappedAttributes(field, entityType, entityType.getMappingRules())->any(true)]
 			[if (attr.oclIsUndefined()=false)]
-listOfStructField[objectName/]_[level/].add(DataTypes.createStructField("[getPhysicalName(field)/]",[generateSparkDataType(attr.type)/], true));
+if(!listOfStructField[objectName/]_[level/].contains(DataTypes.createStructField("[getPhysicalName(field)/]",[generateSparkDataType(attr.type)/], true)))
+	listOfStructField[objectName/]_[level/].add(DataTypes.createStructField("[getPhysicalName(field)/]",[generateSparkDataType(attr.type)/], true));
 values[objectName/]_[level/].add([entityType.name.toLowerFirst()/].get[attr.name.toUpperFirst()/]());
 			[/if]
 		[/let] 
@@ -285,7 +286,8 @@ value_[objectName/]_[getPhysicalName(field)/]_[level/] += [entityType.name.toLow
 value_[objectName/]_[getPhysicalName(field)/]_[level/] += "[component.literal/]";
 					[/if]
 				[/for]
-listOfStructField[objectName/]_[level/].add(DataTypes.createStructField("[getPhysicalName(field)/]",DataTypes.StringType, true));
+if(!listOfStructField[objectName/]_[level/].contains(DataTypes.createStructField("[getPhysicalName(field)/]",DataTypes.StringType, true)))
+	listOfStructField[objectName/]_[level/].add(DataTypes.createStructField("[getPhysicalName(field)/]",DataTypes.StringType, true));
 values[objectName/]_[level/].add(value_[objectName/]_[getPhysicalName(field)/]_[level/]);
 			[/if]
 		[/if]
@@ -296,7 +298,7 @@ values[objectName/]_[level/].add(value_[objectName/]_[getPhysicalName(field)/]_[
 		[if (getMappedAttributes(field, entityType, entityType.getMappingRules())->size()>0 or getDescendentsLongField(field)->exists(lf | lf.pattern->size()=1 and lf.pattern->any(true).oclIsTypeOf(BracketsField)=false))]
 		[comment Generate only for embedded objects with at least one field mapped to the concerned ENT or a field composed only of a constant string. /]
 				[generateStructField(entityType, field.oclAsType(EmbeddedObject).fields, field.getPhysicalName(), level+1,false)/]
-		StructType structType_[objectName/]_[level/] = DataTypes.createStructType(new ArrayList<>(listOfStructField[field.getPhysicalName()/]_[level+1/]));
+		StructType structType_[objectName/]_[level/] = DataTypes.createStructType(listOfStructField[field.getPhysicalName()/]_[level+1/]);
 				[if (field.oclAsType(EmbeddedObject).cardinality= pml::Cardinality::ONE_MANY) or (field.oclAsType(EmbeddedObject).cardinality= pml::Cardinality::ZERO_MANY)]
 		ArrayType array[field.getPhysicalName()/]_[level/] = DataTypes.createArrayType(structType_[objectName/]_[level/]);
 		listOfStructField[objectName/]_[level/].add(DataTypes.createStructField("[field.getPhysicalName()/]",array[field.getPhysicalName()/]_[level/],true));
@@ -312,7 +314,7 @@ values[objectName/]_[level/].add(value_[objectName/]_[getPhysicalName(field)/]_[
 	[if (role.isMandatoryRole())]
 // field '[field.getPhysicalName()/]' is mapped to mandatory role '[role.name/]' with opposite role of type '[role.getOppositeRoleInBinaryRel().entity.name/]'
 	List<Object> values[field.getPhysicalName()/]_[level+1/] = new ArrayList<>();
-	Set<StructField> listOfStructField[field.getPhysicalName()/]_[level+1/] = new HashSet<StructField>();
+	List<StructField> listOfStructField[field.getPhysicalName()/]_[level+1/] = new ArrayList<StructField>();
 	List<Row> row_value_[field.getPhysicalName()/]_[level+1/] = new ArrayList<>();
 	if([role.getOppositeRoleInBinaryRel().name.toLowerFirst()/][getRelationShipType(role).name.toUpperFirst()/]!=null){
 	[if (role.isCardinalityMaxN())]
@@ -321,7 +323,7 @@ values[objectName/]_[level/].add(value_[objectName/]_[getPhysicalName(field)/]_[
 			[generateStructField(role.getOppositeRoleInBinaryRel().entity, field.oclAsType(EmbeddedObject).fields, field.getPhysicalName(), level+1, true)/]
 			row_value_[field.getPhysicalName()/]_[level+1/].add(RowFactory.create(values[field.getPhysicalName()/]_[level+1/].toArray()));
 		}
-	StructType structType_[field.getPhysicalName()/]_[level/] = DataTypes.createStructType(new ArrayList<>(listOfStructField[field.getPhysicalName()/]_[level+1/]));
+	StructType structType_[field.getPhysicalName()/]_[level/] = DataTypes.createStructType(listOfStructField[field.getPhysicalName()/]_[level+1/]);
 	ArrayType array[field.getPhysicalName()/]_[level/] = DataTypes.createArrayType(structType_[field.getPhysicalName()/]_[level/]);
 	listOfStructField[objectName/]_[level/].add(DataTypes.createStructField("[field.getPhysicalName()/]",array[field.getPhysicalName()/]_[level/],true));
 	values[objectName/]_[level/].add(row_value_[field.getPhysicalName()/]_[level+1/]);
