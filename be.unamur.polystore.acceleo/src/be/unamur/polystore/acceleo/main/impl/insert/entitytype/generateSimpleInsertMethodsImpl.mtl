@@ -96,8 +96,18 @@
 		[if (field.isMappedToRoleWhoseOppositeIsMandatory(entityType.getMappingRules()))]
 			[let role : Role = field.getMappedRoleOfPhysicalField()]
 	[comment for each mandatory role object in list, in ascending structure we need to update the document. /]
+	Bson filter, updateOp;
 	for([role.entity.name.toUpperFirst()/] [role.entity.name.toLowerFirst()/] : [role.name/][getRelationShipType(role).name.toUpperFirst()/]){
-							
+		[for (attr : Attribute | role.entity.identifier.attributes)]
+		[if (i=1)]
+		filter = eq("[getPhysicalName(getMappedPhysicalField(attr, struct, db, entityType.getMappingRules()))/]",[role.entity.name.toLowerFirst()/].get[attr.name.toUpperFirst()/]());
+		[else]
+		filter = and(filter,eq("[getPhysicalName(getMappedPhysicalField(attr, struct, db, entityType.getMappingRules()))/]",[role.entity.name.toLowerFirst()/].get[attr.name.toUpperFirst()/]());
+		[/if]
+		[/for]
+		[generateDocument(entityType,field.oclAsType(EmbeddedObject).fields, getPhysicalName(field),1)/]
+		updateOp = push("[field.getPhysicalName()/]", doc[getPhysicalName(field)/]_1);
+		DBConnectionMgr.upsertInArray(filter, updateOp, "[struct.name/]", "[db.name/]");					
 	} 
 			[/let]
 		[/if]
@@ -257,6 +267,67 @@ For each PhysicalFIeld get the mapped conceptual attribute of ENT
 		if(toAdd)
 			SparkConnectionMgr.writeKeyValue(key,value,"[db.name/]");
 		[/if]
+[/template]
+
+[template public generateDocument(entityType : EntityType, fields : Collection(PhysicalField), objectName : String, level : Integer)]
+Document doc[objectName/]_[level/] = new Document();
+[for (field : PhysicalField | fields)]
+	[if (field.oclIsTypeOf(ShortField))]
+		[let attr : Attribute = getMappedAttributes(field, entityType, entityType.getMappingRules())->any(true)]
+			[if (attr.oclIsUndefined()=false)]
+doc[objectName/]_[level/].append("[getPhysicalName(field)/]",[entityType.name.toLowerFirst()/].get[attr.name.toUpperFirst()/]());
+			[/if]
+		[/let] 
+	[/if]
+	[if (field.oclIsTypeOf(LongField))]
+		[comment LongField with only one component and is BracketsField /]
+		[if (field.oclAsType(LongField).pattern->size()=1 and field.oclAsType(LongField).pattern->any(true).oclIsTypeOf(BracketsField))]
+			[let brackets : BracketsField = field.oclAsType(LongField).pattern->any(true).oclAsType(BracketsField)]
+				[let attr : Attribute = getMappedAttributes(field, entityType, entityType.getMappingRules())->any(true)]
+				[if (attr.oclIsUndefined()=false)]
+doc[objectName/]_[level/].append("[getPhysicalName(field)/]",[entityType.name.toLowerFirst()/].get[attr.name.toUpperFirst()/]());
+				[/if]
+				[/let] 
+			[/let]
+		[else]
+			[if (field.oclAsType(LongField).pattern->filter(BracketsField)->exists(b |getMappedAttributes(b, entityType, entityType.getMappingRules())->size()=0)=false)]
+				[comment All BracketsField are mapped to the corresponding entity or composed of only one Terminal expression/]
+				[comment LongField is composed of component, therefore can only be StringType /]
+String value_[objectName/]_[getPhysicalName(field)/]_[level/] = "";
+				[for (component : TerminalExpression | field.oclAsType(LongField).pattern)]
+					[if (component.oclIsTypeOf(BracketsField))]
+						[let attr : Attribute = getMappedAttributes(component.oclAsType(BracketsField), entityType, entityType.getMappingRules())->any(true)]
+value_[objectName/]_[getPhysicalName(field)/]_[level/] += [entityType.name.toLowerFirst()/].get[attr.name.toUpperFirst()/]();
+						[/let]
+					[else]
+value_[objectName/]_[getPhysicalName(field)/]_[level/] += "[component.literal/]";
+					[/if]
+				[/for]
+doc[objectName/]_[level/].append("[getPhysicalName(field)/]",value_[objectName/]_[getPhysicalName(field)/]_[level/]);
+			[/if]
+		[/if]
+	[/if]
+	[if (field.oclIsTypeOf(EmbeddedObject) and field.isMappedToRole(entityType.getMappingRules())=false)]
+// Embedded structure [field.getPhysicalName()/]
+		[if (getMappedAttributes(field, entityType, entityType.getMappingRules())->size()>0 or getDescendentsLongField(field)->exists(lf | lf.pattern->size()=1 and lf.pattern->any(true).oclIsTypeOf(BracketsField)=false))]
+		[comment Generate only for embedded objects with at least one field mapped to the concerned ENT or a field composed only of a constant string. /]
+	[generateDocument(entityType, field.oclAsType(EmbeddedObject).fields, field.getPhysicalName(), level+1)/]
+				[if (field.oclAsType(EmbeddedObject).cardinality= pml::Cardinality::ONE_MANY) or (field.oclAsType(EmbeddedObject).cardinality= pml::Cardinality::ZERO_MANY)]
+	List<Document> array[field.getPhysicalName()/]_[level/] = new ArrayList();
+	array[field.getPhysicalName()/]_[level/].add(doc_[field.getPhysicalName()/]_[level+1/]);
+	doc[objectName/]_[level/].append("[field.getPhysicalName()/]", array[field.getPhysicalName()/]_[level/]);
+				[else]
+	doc[objectName/]_[level/].append("[field.getPhysicalName()/]", doc[field.getPhysicalName()/]_[level+1/]);
+				[/if]
+		[/if]
+	[else]
+	[let role : Role = getMappedRoleOfPhysicalField(field)]
+	[if (role.isMandatoryRole())]
+	[comment Shoult not happen, as we come from ascending structure insert. If happen, it means we are in double embedded role strucutre. /]
+	[/if]
+	[/let]
+	[/if]
+[/for]
 [/template]
 
 [template public generateStructField(entityType : EntityType, fields : Collection(PhysicalField), objectName : String, level : Integer, inEmbeddedRole : Boolean)]
