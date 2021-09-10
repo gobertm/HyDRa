@@ -120,11 +120,6 @@ physical schemas {
 				actors [1-N]{
 					actorid,
 					name
-				},
-				directors [1-N]{
-					 directorid,
-					 firstname,
-					 lastname
 				}
 			}
 		}
@@ -182,8 +177,6 @@ mapping rules{
 	// Descending structure 
 	conceptualSchema.Movie(id,primaryTitle) -> IMDB_Mongo.movieCol(idmovie, title),
 	conceptualSchema.movieActor.movie -> IMDB_Mongo.movieCol.actors(),
-	conceptualSchema.movieDirector.directed_movie -> IMDB_Mongo.movieCol.directors(),
-	conceptualSchema.Director(id,firstName,lastName) -> IMDB_Mongo.movieCol.directors(directorid,firstname,lastname),
 	conceptualSchema.Actor(id,fullName) -> IMDB_Mongo.movieCol.actors(actorid,name)
 	// Ascending structure 
 }

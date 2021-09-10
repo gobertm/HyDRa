@@ -16,6 +16,8 @@ import dao.impl.MovieServiceImpl;
 import dao.services.ActorService;
 import dao.services.DirectorService;
 import dao.services.MovieService;
+import dao.services.ReviewService;
+import org.apache.commons.lang.mutable.MutableBoolean;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.RowFactory;
 import org.apache.spark.sql.types.ArrayType;
@@ -26,12 +28,16 @@ import org.bson.Document;
 import org.bson.conversions.Bson;
 import static com.mongodb.client.model.Filters.eq;
 import static com.mongodb.client.model.Updates.push;
+
+import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import pojo.Actor;
 import pojo.Director;
 import pojo.Movie;
+import pojo.Review;
 
+import java.sql.*;
 import java.util.*;
 
 import static com.mongodb.client.model.Accumulators.addToSet;
@@ -45,16 +51,34 @@ public class InsertWithRoleTests {
     Dataset<Movie> movieDataset;
     ActorService actorService = new ActorServiceImpl();
     Dataset<Actor> actorsDataset;
+    ReviewService reviewService;
+    Dataset<Review> reviewDataset;
     static List<Actor> actors = new ArrayList<>();
     static List<Movie> movies = new ArrayList<>();
     static List<Director> directors = new ArrayList<>();
+    static List<Review> reviews = new ArrayList<>();
+    static MongoClient mongoClient;
+    static Connection connection;
+    static final int NBINSTANCE = 10;
     /*
     To use with code generated based on 'insertR.pml'
      */
 
     @BeforeClass
     public static void setUp() {
-        for (int i = 0; i < 10 ; i++) {
+        mongoClient = MongoClients.create(
+                MongoClientSettings.builder()
+                        .applyToClusterSettings(builder ->
+                                builder.hosts(Arrays.asList(new ServerAddress("localhost", 27100))))
+                        .build());
+
+        try {
+            connection = DriverManager.getConnection("jdbc:mysql://" + "localhost" + ":" + 3307 + "/" + "mydb", "root", "password");
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        for (int i = 0; i < NBINSTANCE ; i++) {
             Movie m = new Movie();
             m.setId(""+i);
             m.setPrimaryTitle("FAKETITLE"+i);
@@ -62,7 +86,7 @@ public class InsertWithRoleTests {
             movies.add(m);
         }
         // Actors
-        for (int i = 0; i<5; i++) {
+        for (int i = 0; i<NBINSTANCE; i++) {
             Actor a = new Actor();
             a.setId(""+i);
             a.setFullName("fullname"+i);
@@ -71,7 +95,7 @@ public class InsertWithRoleTests {
             actors.add(a);
         }
         // Directors
-        for (int i = 0; i<2; i++) {
+        for (int i = 0; i<NBINSTANCE; i++) {
             Director d = new Director();
             d.setId(""+i);
             d.setLastName("lastname"+i);
@@ -79,7 +103,29 @@ public class InsertWithRoleTests {
             d.setYearOfBirth(i);
             directors.add(d);
         }
+
+        for (int i = 0; i < NBINSTANCE; i++) {
+            Review r = new Review();
+            r.setId("" + i);
+            r.setContent("reviewcontent"+i);
+            reviews.add(r);
+        }
     }
+
+    @Before
+    public void truncate() throws SQLException {
+
+        logger.info("START TRUNCATE TABLE AND COLLECTION");
+        MongoDatabase mongoDatabase = mongoClient.getDatabase("mymongo");
+        mongoDatabase.getCollection("actorCollection").drop();
+        mongoDatabase.getCollection("movieCol").drop();
+
+        Statement statement = connection.createStatement();
+        statement.execute("truncate directorTable");
+        statement.execute("truncate directed");
+        logger.info("TRUNCATE TABLE AND COLLECTION SUCCESSFULLY");
+    }
+
     @Test
     public void insertDescendingInDocumentDB(){
         movieService.insertMovieInMovieColFromMymongo(movies.get(0),directors,actors);
@@ -91,36 +137,45 @@ public class InsertWithRoleTests {
 
     @Test
     public void insertAscendingInDocumentDB(){
-        Movie m = new Movie();
-        m.setId("999");
-        m.setPrimaryTitle("MOVIETITLE");
         // Insert Actors first. As Ascending need preexisting actors. Implementation will insert in standalone structure 'actorCollection' (because no mandatory roles on actors)
         for (Actor a : actors) {
             actorService.insertActor(a);
         }
         //Insert Movie in ascending structure.
-        movieService.insertMovieInActorCollectionFromMymongo(m,directors,actors);
-        actorsDataset = actorService.getActorList(Actor.movieActor.character, Condition.simple(MovieAttribute.id, Operator.EQUALS, "999"));
+        movieService.insertMovieInActorCollectionFromMymongo(movies.get(0),directors,actors);
+        actorsDataset = actorService.getActorList(Actor.movieActor.character, Condition.simple(MovieAttribute.id, Operator.EQUALS, "0"));
         actorsDataset.show();
-        assertEquals(5, actorsDataset.count());
+        assertEquals(NBINSTANCE, actorsDataset.count());
     }
 
     @Test
-    public void testUpsertArrayMongo() {
-        MongoClient mongoClient;
-        MongoDatabase mongoDatabase;
-        mongoClient = MongoClients.create(
-                MongoClientSettings.builder()
-                        .applyToClusterSettings(builder ->
-                                builder.hosts(Arrays.asList(new ServerAddress("localhost", 27100))))
-                        .build());
+    public void insertComplexEmbeddedStructureDocumentDB(){
+    }
 
-        mongoDatabase = mongoClient.getDatabase("mymongo");
-        MongoCollection<Document> actorCollection = mongoDatabase.getCollection("actorCollection");
-        Bson filter = eq("id","11");
-        Bson updateOp = push("movies", new Document("idmovie", "111").append("title", "FAKETITLE111"));
-//        Bson updateOp = addToSet("movies", new Document("idmovie", "111").append("title", "FAKETITLE111"));
-        actorCollection.updateMany(filter, updateOp);
+    @Test
+    public void testInsertMovie() {
+        // Precondition : Opposite entity types of mandatory roles must already be persisted.
+        for (Director d : directors) {
+            directorService.insertDirector(d);
+        }
+        assertEquals(10, directorService.getDirectorList(null).count());
+        for (Actor a : actors) {
+            actorService.insertActor(a);
+        }
+        assertEquals(10, actorService.getActorList(null).count());
+
+        Condition condition = Condition.simple(MovieAttribute.id, Operator.EQUALS, "0");
+        // Insert 1 Movie, gives list of NBINSTANCE of Actors and Directors.
+        movieService.insertMovie(movies.get(0), directors, actors);
+        movieDataset=movieService.getMovieListInMovieColFromMymongo(condition, new MutableBoolean(false));
+        movieDataset.show();
+        assertEquals(1,movieDataset.count());
+        actorsDataset = actorService.getActorList(Actor.movieActor.character, condition);
+        actorsDataset.show();
+        assertEquals(10,actorsDataset.count());
+        directorDataset = directorService.getDirectorList(Director.movieDirector.director,condition);
+        directorDataset.show();
+        assertEquals(10,directorDataset.count());
     }
 
 }
