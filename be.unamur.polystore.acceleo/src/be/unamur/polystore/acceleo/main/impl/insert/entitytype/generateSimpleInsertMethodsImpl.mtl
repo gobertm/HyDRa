@@ -73,6 +73,9 @@
 				throw new PhysicalStructureException("Attribute entity type Actor in r_reviewed_movieMovieReview Movie object must be set in order to correctly insert in collection ['['/]ReviewCol[']'/]");
 			}
 	*/
+
+	[generateDocument(entityType, struct.oclAsType(pml::Collection).fields, struct.oclAsType(pml::Collection).name,1,0)/]
+	DBConnectionMgr.insertMany(List.of(doc[struct.name/]_1), "[struct.name/]", "[db.name/]");
 	return false;
 	
 [/template]
@@ -97,7 +100,11 @@
 			[let role : Role = field.getMappedRoleOfPhysicalField()]
 	[comment for each mandatory role object in list, in ascending structure we need to update the document. /]
 	Bson filter, updateOp;
+	[if (role.isCardinalityMaxN())]
 	for([role.entity.name.toUpperFirst()/] [role.entity.name.toLowerFirst()/] : [role.name/][getRelationShipType(role).name.toUpperFirst()/]){
+	[else]
+	[role.entity.name.toUpperFirst()/] [role.entity.name.toLowerFirst()/] = [role.name/][getRelationShipType(role).name.toUpperFirst()/];
+	[/if]
 		[for (attr : Attribute | role.entity.identifier.attributes)]
 		[if (i=1)]
 		filter = eq("[getPhysicalName(getMappedPhysicalField(attr, struct, db, entityType.getMappingRules()))/]",[role.entity.name.toLowerFirst()/].get[attr.name.toUpperFirst()/]());
@@ -105,10 +112,12 @@
 		filter = and(filter,eq("[getPhysicalName(getMappedPhysicalField(attr, struct, db, entityType.getMappingRules()))/]",[role.entity.name.toLowerFirst()/].get[attr.name.toUpperFirst()/]());
 		[/if]
 		[/for]
-		[generateDocument(entityType,field.oclAsType(EmbeddedObject).fields, getPhysicalName(field),1)/]
+		[generateDocument(entityType,field.oclAsType(EmbeddedObject).fields, getPhysicalName(field),1,0)/]
 		updateOp = push("[field.getPhysicalName()/]", doc[getPhysicalName(field)/]_1);
 		DBConnectionMgr.upsertInArray(filter, updateOp, "[struct.name/]", "[db.name/]");					
-	} 
+	[if (role.isCardinalityMaxN())]
+	}
+	[/if] 
 			[/let]
 		[/if]
 	[/for]
@@ -269,7 +278,7 @@ For each PhysicalFIeld get the mapped conceptual attribute of ENT
 		[/if]
 [/template]
 
-[template public generateDocument(entityType : EntityType, fields : Collection(PhysicalField), objectName : String, level : Integer)]
+[template public generateDocument(entityType : EntityType, fields : Collection(PhysicalField), objectName : String, level : Integer, embeddedRoleLevel : Integer)]
 Document doc[objectName/]_[level/] = new Document();
 [for (field : PhysicalField | fields)]
 	[if (field.oclIsTypeOf(ShortField))]
@@ -311,7 +320,7 @@ doc[objectName/]_[level/].append("[getPhysicalName(field)/]",value_[objectName/]
 // Embedded structure [field.getPhysicalName()/]
 		[if (getMappedAttributes(field, entityType, entityType.getMappingRules())->size()>0 or getDescendentsLongField(field)->exists(lf | lf.pattern->size()=1 and lf.pattern->any(true).oclIsTypeOf(BracketsField)=false))]
 		[comment Generate only for embedded objects with at least one field mapped to the concerned ENT or a field composed only of a constant string. /]
-	[generateDocument(entityType, field.oclAsType(EmbeddedObject).fields, field.getPhysicalName(), level+1)/]
+	[generateDocument(entityType, field.oclAsType(EmbeddedObject).fields, field.getPhysicalName(), level+1,embeddedRoleLevel)/]
 				[if (field.oclAsType(EmbeddedObject).cardinality= pml::Cardinality::ONE_MANY) or (field.oclAsType(EmbeddedObject).cardinality= pml::Cardinality::ZERO_MANY)]
 	List<Document> array[field.getPhysicalName()/]_[level/] = new ArrayList();
 	array[field.getPhysicalName()/]_[level/].add(doc_[field.getPhysicalName()/]_[level+1/]);
@@ -323,7 +332,30 @@ doc[objectName/]_[level/].append("[getPhysicalName(field)/]",value_[objectName/]
 	[else]
 	[let role : Role = getMappedRoleOfPhysicalField(field)]
 	[if (role.isMandatoryRole())]
-	[comment Shoult not happen, as we come from ascending structure insert. If happen, it means we are in double embedded role strucutre. /]
+// field '[field.getPhysicalName()/]' is mapped to mandatory role '[role.name/]' with opposite role of type '[role.getOppositeRoleInBinaryRel().entity.name/]'
+	[if(embeddedRoleLevel>0)]
+		[if (role.isCardinalityMaxN())]
+	List<[role.getOppositeRoleInBinaryRel().entity.name.toUpperFirst()/]> [role.getOppositeRoleInBinaryRel().name.toLowerFirst()/][getRelationShipType(role).name.toUpperFirst()/] = [entityType.name.toLowerFirst()/]._get[role.getOppositeRoleInBinaryRel().name.toUpperFirst()/]List();
+		[else]
+		[role.getOppositeRoleInBinaryRel().entity.name.toUpperFirst()/] [role.getOppositeRoleInBinaryRel().name.toLowerFirst()/][getRelationShipType(role).name.toUpperFirst()/] = [entityType.name.toLowerFirst()/]._get[role.getOppositeRoleInBinaryRel().name/]();
+		[/if]
+	[/if]
+	if([role.getOppositeRoleInBinaryRel().name.toLowerFirst()/][getRelationShipType(role).name.toUpperFirst()/]!=null){
+	[if (role.isCardinalityMaxN())]
+	List<Document> array[field.getPhysicalName()/]_[level/] = new ArrayList();
+		for([role.getOppositeRoleInBinaryRel().entity.name.toUpperFirst()/] [role.getOppositeRoleInBinaryRel().entity.name.toLowerFirst()/] : [role.getOppositeRoleInBinaryRel().name.toLowerFirst()/][getRelationShipType(role).name.toUpperFirst()/]){
+			[generateDocument(role.getOppositeRoleInBinaryRel().entity, field.oclAsType(EmbeddedObject).fields, field.getPhysicalName(), level+1,embeddedRoleLevel+1)/]
+			array[field.getPhysicalName()/]_[level/].add(doc[field.getPhysicalName()/]_[level+1/]);
+		}
+	doc[objectName/]_[level/].append("[field.getPhysicalName()/]", array[field.getPhysicalName()/]_[level/]);
+	[else]
+		[role.getOppositeRoleInBinaryRel().entity.name.toUpperFirst()/] [role.getOppositeRoleInBinaryRel().entity.name.toLowerFirst()/] = [role.getOppositeRoleInBinaryRel().name.toLowerFirst()/][getRelationShipType(role).name.toUpperFirst()/];
+		[generateDocument(role.getOppositeRoleInBinaryRel().entity, field.oclAsType(EmbeddedObject).fields, field.getPhysicalName(), level+1,embeddedRoleLevel+1)/]
+		doc[objectName/]_[level/].append("[field.getPhysicalName()/]", doc[field.getPhysicalName()/]_[level+1/]);
+	[/if]
+	}else{
+		throw new PhysicalStructureException("Physical Structure contains embedded objects with roles. Please set role attribute '[role.getOppositeRoleInBinaryRel().name/]' of type '[role.getOppositeRoleInBinaryRel().entity.name.toUpperFirst()/]' in entity object '[entityType.name.toUpperFirst()/]");
+	}
 	[/if]
 	[/let]
 	[/if]

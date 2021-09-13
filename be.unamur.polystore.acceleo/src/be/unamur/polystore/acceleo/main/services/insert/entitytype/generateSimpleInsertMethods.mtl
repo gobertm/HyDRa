@@ -12,7 +12,7 @@ public [if (override = false)]abstract [/if]boolean insert[entityType.name.toUpp
 	[if (complexStructList -> size()>0)]
 	/**
 	[entityType.name.toUpperFirst() /] is mapped to complex embedded physical structures : ['['/][for (complexStruct : AbstractPhysicalStructure | complexStructList) separator(',')][complexStruct.name/][/for][']'/]
-	Please make sure parameters have their mandatory role objects setted (not null).
+	Please make sure parameters have their mandatory role objects set (not null).
 [for (opp: Role | getRolesOppositeToMandatoryEntityRole(entityType, conceptualSchema)) separator('\n')],
 	 @param [opp.name.toLowerFirst()/][getRelationShipType(opp).name.toUpperFirst()/][/for]
 	*/
