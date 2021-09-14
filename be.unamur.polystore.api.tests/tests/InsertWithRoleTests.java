@@ -6,17 +6,16 @@ import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoClients;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
-import conditions.ActorAttribute;
-import conditions.Condition;
-import conditions.MovieAttribute;
-import conditions.Operator;
+import conditions.*;
 import dao.impl.ActorServiceImpl;
 import dao.impl.DirectorServiceImpl;
 import dao.impl.MovieServiceImpl;
+import dao.impl.ReviewServiceImpl;
 import dao.services.ActorService;
 import dao.services.DirectorService;
 import dao.services.MovieService;
 import dao.services.ReviewService;
+import exceptions.PhysicalStructureException;
 import org.apache.commons.lang.mutable.MutableBoolean;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.RowFactory;
@@ -32,10 +31,7 @@ import static com.mongodb.client.model.Updates.push;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import pojo.Actor;
-import pojo.Director;
-import pojo.Movie;
-import pojo.Review;
+import pojo.*;
 
 import java.sql.*;
 import java.util.*;
@@ -51,7 +47,7 @@ public class InsertWithRoleTests {
     Dataset<Movie> movieDataset;
     ActorService actorService = new ActorServiceImpl();
     Dataset<Actor> actorsDataset;
-    ReviewService reviewService;
+    ReviewService reviewService = new ReviewServiceImpl();
     Dataset<Review> reviewDataset;
     static List<Actor> actors = new ArrayList<>();
     static List<Movie> movies = new ArrayList<>();
@@ -119,6 +115,7 @@ public class InsertWithRoleTests {
         MongoDatabase mongoDatabase = mongoClient.getDatabase("mymongo");
         mongoDatabase.getCollection("actorCollection").drop();
         mongoDatabase.getCollection("movieCol").drop();
+        mongoDatabase.getCollection("reviewCol").drop();
 
         Statement statement = connection.createStatement();
         statement.execute("truncate directorTable");
@@ -148,12 +145,48 @@ public class InsertWithRoleTests {
         assertEquals(NBINSTANCE, actorsDataset.count());
     }
 
-    @Test
-    public void insertComplexEmbeddedStructureDocumentDB(){
+    @Test(expected= PhysicalStructureException.class)
+    public void testExceptionWhenEmbeddedMandatoryRoleObjectsAreNotSet(){
+        User author = new User();
+        author.setId("0");
+        author.setCity("NAMUR");
+        movies.get(0)._setCharacterList(null);
+        Condition condition = Condition.simple(ReviewAttribute.id, Operator.EQUALS, "0");
+        reviewService.insertReviewInReviewColFromMymongo(reviews.get(0), movies.get(0), author);
     }
 
     @Test
-    public void testInsertMovie() {
+    public void insertComplexEmbeddedStructureDocumentDB() {
+        User author = new User();
+        author.setId("0");
+        author.setCity("NAMUR");
+        Condition condition = Condition.simple(ReviewAttribute.id, Operator.EQUALS, "0");
+        Movie m = movies.get(0);
+        m._setCharacterList(actors);
+        reviewService.insertReviewInReviewColFromMymongo(reviews.get(0), m, author);
+        reviewDataset = reviewService.getReviewListInReviewColFromMymongo(condition, new MutableBoolean(false));
+        reviewDataset.show();
+        assertEquals(1, reviewDataset.count());
+    }
+
+    @Test
+    public void insertInJoinStructure(){
+        // Precondition : Opposite entity types of mandatory roles must already be persisted.
+        for (Director d : directors) {
+            directorService.insertDirector(d);
+        }
+        //Movies must also exist in 'actorCollection' in order to be able to retrieve Movie object and to satisfy the declared references in 'directed' table.
+        actorService.insertActorInActorCollectionFromMymongo(actors.get(0));
+        movieService.insertMovieInActorCollectionFromMymongo(movies.get(0), directors, List.of(actors.get(0)));
+        Condition condition = Condition.simple(MovieAttribute.id, Operator.EQUALS, "0");
+        movieService.insertMovieInDirectedFromMydb(movies.get(0),directors,actors);
+        directorDataset = directorService.getDirectorList(Director.movieDirector.director,condition);
+        directorDataset.show();
+        assertEquals(10,directorDataset.count());
+    }
+
+    @Test
+    public void testInsertMovieFull() {
         // Precondition : Opposite entity types of mandatory roles must already be persisted.
         for (Director d : directors) {
             directorService.insertDirector(d);

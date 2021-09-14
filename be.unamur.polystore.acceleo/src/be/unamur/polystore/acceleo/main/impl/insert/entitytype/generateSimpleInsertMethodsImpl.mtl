@@ -67,13 +67,6 @@
 [/template]
 
 [template public insertInComplexEmbeddedStructure(entityType: EntityType, struct : AbstractPhysicalStructure, db : Database)]
-	// Implement Insert In Complex Embedded struct. So we must check that POJO attributes are set.
-	/*if(r_reviewed_movieMovieReview._getCharacterList().isEmpty() || r_reviewed_movieMovieReview._getCharacterList() == null){
-				logger.error("Attribute entity type Actor in r_reviewed_movieMovieReview Movie object must be set in order to correctly insert in collection ['['/]ReviewCol[']'/]");
-				throw new PhysicalStructureException("Attribute entity type Actor in r_reviewed_movieMovieReview Movie object must be set in order to correctly insert in collection ['['/]ReviewCol[']'/]");
-			}
-	*/
-
 	[generateDocument(entityType, struct.oclAsType(pml::Collection).fields, struct.oclAsType(pml::Collection).name,1,0)/]
 	DBConnectionMgr.insertMany(List.of(doc[struct.name/]_1), "[struct.name/]", "[db.name/]");
 	return false;
@@ -126,14 +119,44 @@
 	
 [template public insertInJoinStructure(entityType: EntityType, struct : AbstractPhysicalStructure, db : Database)]
 	 // Implement Insert in join complex struct
-	return false;
+	List<String> columns = new ArrayList<>();
+	List<Object> values = new ArrayList<>();
+	List<List<Object>> rows = new ArrayList<>();
+	[for (ref : Reference | getRefOfPhysicalStructure(struct))]
+		[let role : Role = getMappedRoleOfReference(ref)]
+		[if (role.entity.name = entityType.name)]
+	columns.add("[ref.sourceField->any(true).oclAsType(PhysicalField).getPhysicalName()/]");
+	Object [entityType.name.toLowerFirst()/]Id = [entityType.name.toLowerFirst()/].get[ref.targetField->any(true).oclAsType(PhysicalField).getPhysicalName().toUpperFirst()/]();
+	[/if]
+	[/let]
+	[/for]
+	[for (ref : Reference | getRefOfPhysicalStructure(struct))]
+		[let role : Role = getMappedRoleOfReference(ref)]
+		[if (not (role.entity.name = entityType.name))]
+	columns.add("[ref.sourceField->any(true).oclAsType(PhysicalField).getPhysicalName()/]");
+		[if (role.isCardinalityMaxN())]
+	for([role.entity.name.toUpperFirst()/] [role.entity.name.toLowerFirst()/] : [role.name.toLowerFirst()/][getRelationShipType(role).name.toUpperFirst()/]){
+		[else]
+	[role.entity.name.toUpperFirst()/] [role.entity.name.toLowerFirst()/] = [role.name.toLowerFirst()/][getRelationShipType(role).name.toUpperFirst()/];
+		[/if]
+		values = new ArrayList<>();
+		values.add([entityType.name.toLowerFirst()/]Id);
+		values.add([role.entity.name.toLowerFirst()/].get[ref.targetField->any(true).oclAsType(PhysicalField).getPhysicalName().toUpperFirst()/]());
+		rows.add(values);
+		[if (role.isCardinalityMaxN())]
+	}
+		[/if]
+		[/if]
+		[/let] 
+	[/for]
+	[if (struct.oclIsTypeOf(Table))]
+	DBConnectionMgr.insertInTable(columns, rows, "[struct.name/]", "[db.name/]");					
+	[/if]
+	return true;
 [/template]
 
 
 [template public insertInSQLDBImpl(entityType : EntityType, struct : AbstractPhysicalStructure, db : Database)]
-[comment insertEInRELTABLE(ENT e)
-For each PhysicalFIeld get the mapped conceptual attribute of ENT
- /]
 	List<Row> listRows=new ArrayList<Row>();
 	[generateStructField(entityType,struct.oclAsType(Table).columns, struct.oclAsType(Table).name,1,false)/]
 	StructType structType = DataTypes.createStructType(listOfStructField[struct.oclAsType(Table).name/]_1);
@@ -454,11 +477,3 @@ values[objectName/]_[level/].add(value_[objectName/]_[getPhysicalName(field)/]_[
 [/for]
 [/template]
 
-[query private getMappedAttributesInStructure(ent: EntityType, struct : AbstractPhysicalStructure, db : Database, rules: MappingRules) : Collection(Attribute) =  
-	invoke('be.unamur.polystore.acceleo.main.utils.Util', 'getMappedAttributes(be.unamur.polystore.pml.EntityType, be.unamur.polystore.pml.AbstractPhysicalStructure, be.unamur.polystore.pml.Database, be.unamur.polystore.pml.MappingRules)', Sequence{ent, struct, db, rules})
-/]
-
-
-[query private getRefOfPhysicalStructure(struct : AbstractPhysicalStructure) : Collection(Reference) =  
-	invoke('be.unamur.polystore.acceleo.main.utils.MappingRuleService', 'getRefOfPhysicalStructure(be.unamur.polystore.pml.AbstractPhysicalStructure)', Sequence{struct})
-/]
