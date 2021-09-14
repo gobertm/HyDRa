@@ -423,6 +423,17 @@ public class MappingRuleService {
 		return null;
 	}
 	
+	public static Role getMappedRoleOfReference(Reference ref) {
+		MappingRules rules = ((Domainmodel) getFirstAncestor(Domainmodel.class, ref)).getMappingRules();
+		for(AbstractMappingRule rule : rules.getMappingRules()) {
+			if(rule instanceof RoleToReferenceMappingRule) {
+				if(((RoleToReferenceMappingRule) rule).getReference().equals(ref))
+					return ((RoleToReferenceMappingRule) rule).getRoleConceptual();
+			}
+		}
+		return null;
+	}
+	
 	public static boolean isMappedToMandatoryRole(EObject e, MappingRules rules) {
 		for(AbstractMappingRule rule : rules.getMappingRules()) {
 			if(rule instanceof RoleToEmbbededObjectMappingRule) {

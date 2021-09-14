@@ -12,13 +12,13 @@ public [if (override = false)]abstract [/if]boolean insert[entityType.name.toUpp
 	[if (complexStructList -> size()>0)]
 	/**
 	[entityType.name.toUpperFirst() /] is mapped to complex embedded physical structures : ['['/][for (complexStruct : AbstractPhysicalStructure | complexStructList) separator(',')][complexStruct.name/][/for][']'/]
-	Please make sure parameters have their mandatory role objects setted (not null).
+	Please make sure parameters have their mandatory role objects set (not null).
 [for (opp: Role | getRolesOppositeToMandatoryEntityRole(entityType, conceptualSchema)) separator('\n')],
 	 @param [opp.name.toLowerFirst()/][getRelationShipType(opp).name.toUpperFirst()/][/for]
 	*/
 [/if]
 [/let]
-public [if (override = false)]abstract [/if]void insert[entityType.name.toUpperFirst() /](
+public [if (override = false)]abstract [/if]boolean insert[entityType.name.toUpperFirst() /](
 	[entityType.name.toUpperFirst() /] [entityType.name.toLowerFirst() /][for (role: Role | getMandatoryRoles(entityType, conceptualSchema))],
 	[if (isCardinalityMaxN(role))] List<[role.getOppositeRoleInBinaryRel().entity.name.toUpperFirst() /]> [else][role.getOppositeRoleInBinaryRel().entity.name.toUpperFirst() /]	[/if][role.getOppositeRoleInBinaryRel().name.toLowerFirst()/][getRelationShipType(role).name.toUpperFirst()/][/for][for (attr: Attribute | getAttributesFromMandatoryRoles(entityType, conceptualSchema))],
 	[generateJavaType(attr.type)/] [getRelationshipType(attr).name /]_[attr.name /]

@@ -4,40 +4,42 @@
 [import be::unamur::polystore::acceleo::main::util /]
 
 [template public insertPOJOInRImpl(entityType: EntityType, roles : Collection(Role), conceptualSchema: ConceptualSchema)]{
+	boolean inserted = false;
 	// Insert in structures containing double embedded role
 	[for (struct: AbstractPhysicalStructure | getMappedComplexEmbeddedStructureOfEntity(entityType, entityType.ancestors(Domainmodel)->first()))]
 	[for (db: Database | getConcernedDatabases(struct, entityType.ancestors(Domainmodel)->first()))]
-    insert[entityType.name.toUpperFirst() /]In[struct.name.toUpperFirst()/]From[db.name.toUpperFirst() /]([entityType.name.toLowerFirst() /][for (role: Role | getMandatoryRoles(entityType, conceptualSchema))],[role.getOppositeRoleInBinaryRel().name.toLowerFirst()/][getRelationShipType(role).name.toUpperFirst()/][/for]);
+    inserted = insert[entityType.name.toUpperFirst() /]In[struct.name.toUpperFirst()/]From[db.name.toUpperFirst() /]([entityType.name.toLowerFirst() /][for (role: Role | getMandatoryRoles(entityType, conceptualSchema))],[role.getOppositeRoleInBinaryRel().name.toLowerFirst()/][getRelationShipType(role).name.toUpperFirst()/][/for]) || inserted ;
 	[/for]
 	[/for]
 	// Insert in descending structures
 	[for (struct: AbstractPhysicalStructure | getDescendingOneLevelPhysicalStructuresOfEntity(entityType, entityType.ancestors(Domainmodel)->first()))]
 	[for (db: Database | getConcernedDatabases(struct, entityType.ancestors(Domainmodel)->first()))]
-	insert[entityType.name.toUpperFirst() /]In[struct.name.toUpperFirst()/]From[db.name.toUpperFirst() /]([entityType.name.toLowerFirst() /][for (role: Role | getMandatoryRoles(entityType, conceptualSchema))],[role.getOppositeRoleInBinaryRel().name.toLowerFirst()/][getRelationShipType(role).name.toUpperFirst()/][/for]);
+	inserted = insert[entityType.name.toUpperFirst() /]In[struct.name.toUpperFirst()/]From[db.name.toUpperFirst() /]([entityType.name.toLowerFirst() /][for (role: Role | getMandatoryRoles(entityType, conceptualSchema))],[role.getOppositeRoleInBinaryRel().name.toLowerFirst()/][getRelationShipType(role).name.toUpperFirst()/][/for])|| inserted ;
 	[/for]
 	[/for]
 	// Insert in ascending structures 
 	[for (struct: AbstractPhysicalStructure | getAscendingPhysicalStructuresOfEntity(entityType, entityType.ancestors(Domainmodel)->first()))]
 	[for (db: Database | getConcernedDatabases(struct, entityType.ancestors(Domainmodel)->first()))]
-	insert[entityType.name.toUpperFirst() /]In[struct.name.toUpperFirst()/]From[db.name.toUpperFirst() /]([entityType.name.toLowerFirst() /][for (role: Role | getMandatoryRoles(entityType, conceptualSchema))],[role.getOppositeRoleInBinaryRel().name.toLowerFirst()/][getRelationShipType(role).name.toUpperFirst()/][/for]);
+	inserted = insert[entityType.name.toUpperFirst() /]In[struct.name.toUpperFirst()/]From[db.name.toUpperFirst() /]([entityType.name.toLowerFirst() /][for (role: Role | getMandatoryRoles(entityType, conceptualSchema))],[role.getOppositeRoleInBinaryRel().name.toLowerFirst()/][getRelationShipType(role).name.toUpperFirst()/][/for])|| inserted ;
 	[/for]
 	[/for]
 	// Insert in join structures 
 	[for (struct: AbstractPhysicalStructure | getJoinStructureOfMappedMandatoryRoleOfEntity(entityType, entityType.ancestors(Domainmodel)->first()))]
 	[for (db: Database | getConcernedDatabases(struct, entityType.ancestors(Domainmodel)->first()))]
-	insert[entityType.name.toUpperFirst() /]In[struct.name.toUpperFirst()/]From[db.name.toUpperFirst() /]([entityType.name.toLowerFirst() /][for (role: Role | getMandatoryRoles(entityType, conceptualSchema))],[role.getOppositeRoleInBinaryRel().name.toLowerFirst()/][getRelationShipType(role).name.toUpperFirst()/][/for]);
+	inserted = insert[entityType.name.toUpperFirst() /]In[struct.name.toUpperFirst()/]From[db.name.toUpperFirst() /]([entityType.name.toLowerFirst() /][for (role: Role | getMandatoryRoles(entityType, conceptualSchema))],[role.getOppositeRoleInBinaryRel().name.toLowerFirst()/][getRelationShipType(role).name.toUpperFirst()/][/for])|| inserted ;
 	[/for]
 	[/for]
 	// Insert in standalone structures
 	[for (struct: AbstractPhysicalStructure | getMappedPhysicalStructureToInsertSingleE(entityType, entityType.ancestors(Domainmodel)->first()))]
 	[for (db: Database | getConcernedDatabases(struct, entityType.ancestors(Domainmodel)->first()))]
-	insert[entityType.name.toUpperFirst() /]In[struct.name.toUpperFirst()/]From[db.name.toUpperFirst() /]([entityType.name.toLowerFirst()/]);
+	inserted = insert[entityType.name.toUpperFirst() /]In[struct.name.toUpperFirst()/]From[db.name.toUpperFirst() /]([entityType.name.toLowerFirst()/])|| inserted ;
 	[/for]
 	[/for]
+	return inserted;
 }[/template]
 
 [template public insertPOJOImpl(entityType: EntityType, conceptualSchema: ConceptualSchema)]{
-	// Insert into all mapped AbstractPhysicalStructure 
+	// Insert into all mapped standalone AbstractPhysicalStructure 
 	boolean inserted = false;
 	[for (struct: AbstractPhysicalStructure | getMappedPhysicalStructureToInsertSingleE(entityType, entityType.ancestors(Domainmodel)->first()))]
 	[for (db: Database | getConcernedDatabases(struct, entityType.ancestors(Domainmodel)->first()))]
@@ -65,12 +67,8 @@
 [/template]
 
 [template public insertInComplexEmbeddedStructure(entityType: EntityType, struct : AbstractPhysicalStructure, db : Database)]
-	// Implement Insert In Complex Embedded struct. So we must check that POJO attributes are set.
-	/*if(r_reviewed_movieMovieReview._getCharacterList().isEmpty() || r_reviewed_movieMovieReview._getCharacterList() == null){
-				logger.error("Attribute entity type Actor in r_reviewed_movieMovieReview Movie object must be set in order to correctly insert in collection ['['/]ReviewCol[']'/]");
-				throw new PhysicalStructureException("Attribute entity type Actor in r_reviewed_movieMovieReview Movie object must be set in order to correctly insert in collection ['['/]ReviewCol[']'/]");
-			}
-	*/
+	[generateDocument(entityType, struct.oclAsType(pml::Collection).fields, struct.oclAsType(pml::Collection).name,1,0)/]
+	DBConnectionMgr.insertMany(List.of(doc[struct.name/]_1), "[struct.name/]", "[db.name/]");
 	return false;
 	
 [/template]
@@ -81,7 +79,7 @@
 	[comment TODO. Descending structures only arises in Collection at the moment./]
 	[generateStructField(entityType,struct.oclAsType(pml::Collection).fields, struct.oclAsType(pml::Collection).name,1,false)/]
 	List<Row> listRows=new ArrayList<Row>();
-	StructType struct = DataTypes.createStructType(new ArrayList<>(listOfStructField[struct.oclAsType(pml::Collection).name/]_1));
+	StructType struct = DataTypes.createStructType(listOfStructField[struct.oclAsType(pml::Collection).name/]_1);
 	listRows.add(RowFactory.create(values[struct.oclAsType(pml::Collection).name/]_1.toArray()));
 	SparkConnectionMgr.writeDataset(listRows, struct, "mongo", "[struct.name/]", "[db.name/]");
 	return true;
@@ -89,22 +87,79 @@
 
 [template public insertInAscendingStructure(entityType: EntityType, struct : AbstractPhysicalStructure, db : Database)]
 	 // Implement Insert in ascending complex struct
+	[comment Get Entity type of opposite mandatory role /]
+	[for (field : PhysicalField | struct.oclAsType(pml::Collection).fields)]
+		[if (field.isMappedToRoleWhoseOppositeIsMandatory(entityType.getMappingRules()))]
+			[let role : Role = field.getMappedRoleOfPhysicalField()]
+	[comment for each mandatory role object in list, in ascending structure we need to update the document. /]
+	Bson filter, updateOp;
+	[if (role.isCardinalityMaxN())]
+	for([role.entity.name.toUpperFirst()/] [role.entity.name.toLowerFirst()/] : [role.name/][getRelationShipType(role).name.toUpperFirst()/]){
+	[else]
+	[role.entity.name.toUpperFirst()/] [role.entity.name.toLowerFirst()/] = [role.name/][getRelationShipType(role).name.toUpperFirst()/];
+	[/if]
+		[for (attr : Attribute | role.entity.identifier.attributes)]
+		[if (i=1)]
+		filter = eq("[getPhysicalName(getMappedPhysicalField(attr, struct, db, entityType.getMappingRules()))/]",[role.entity.name.toLowerFirst()/].get[attr.name.toUpperFirst()/]());
+		[else]
+		filter = and(filter,eq("[getPhysicalName(getMappedPhysicalField(attr, struct, db, entityType.getMappingRules()))/]",[role.entity.name.toLowerFirst()/].get[attr.name.toUpperFirst()/]());
+		[/if]
+		[/for]
+		[generateDocument(entityType,field.oclAsType(EmbeddedObject).fields, getPhysicalName(field),1,0)/]
+		updateOp = push("[field.getPhysicalName()/]", doc[getPhysicalName(field)/]_1);
+		DBConnectionMgr.upsertInArray(filter, updateOp, "[struct.name/]", "[db.name/]");					
+	[if (role.isCardinalityMaxN())]
+	}
+	[/if] 
+			[/let]
+		[/if]
+	[/for]
 	return false;
 [/template]
 	
 [template public insertInJoinStructure(entityType: EntityType, struct : AbstractPhysicalStructure, db : Database)]
 	 // Implement Insert in join complex struct
-	return false;
+	List<String> columns = new ArrayList<>();
+	List<Object> values = new ArrayList<>();
+	List<List<Object>> rows = new ArrayList<>();
+	[for (ref : Reference | getRefOfPhysicalStructure(struct))]
+		[let role : Role = getMappedRoleOfReference(ref)]
+		[if (role.entity.name = entityType.name)]
+	columns.add("[ref.sourceField->any(true).oclAsType(PhysicalField).getPhysicalName()/]");
+	Object [entityType.name.toLowerFirst()/]Id = [entityType.name.toLowerFirst()/].get[ref.targetField->any(true).oclAsType(PhysicalField).getPhysicalName().toUpperFirst()/]();
+	[/if]
+	[/let]
+	[/for]
+	[for (ref : Reference | getRefOfPhysicalStructure(struct))]
+		[let role : Role = getMappedRoleOfReference(ref)]
+		[if (not (role.entity.name = entityType.name))]
+	columns.add("[ref.sourceField->any(true).oclAsType(PhysicalField).getPhysicalName()/]");
+		[if (role.isCardinalityMaxN())]
+	for([role.entity.name.toUpperFirst()/] [role.entity.name.toLowerFirst()/] : [role.name.toLowerFirst()/][getRelationShipType(role).name.toUpperFirst()/]){
+		[else]
+	[role.entity.name.toUpperFirst()/] [role.entity.name.toLowerFirst()/] = [role.name.toLowerFirst()/][getRelationShipType(role).name.toUpperFirst()/];
+		[/if]
+		values = new ArrayList<>();
+		values.add([entityType.name.toLowerFirst()/]Id);
+		values.add([role.entity.name.toLowerFirst()/].get[ref.targetField->any(true).oclAsType(PhysicalField).getPhysicalName().toUpperFirst()/]());
+		rows.add(values);
+		[if (role.isCardinalityMaxN())]
+	}
+		[/if]
+		[/if]
+		[/let] 
+	[/for]
+	[if (struct.oclIsTypeOf(Table))]
+	DBConnectionMgr.insertInTable(columns, rows, "[struct.name/]", "[db.name/]");					
+	[/if]
+	return true;
 [/template]
 
 
 [template public insertInSQLDBImpl(entityType : EntityType, struct : AbstractPhysicalStructure, db : Database)]
-[comment insertEInRELTABLE(ENT e)
-For each PhysicalFIeld get the mapped conceptual attribute of ENT
- /]
 	List<Row> listRows=new ArrayList<Row>();
 	[generateStructField(entityType,struct.oclAsType(Table).columns, struct.oclAsType(Table).name,1,false)/]
-	StructType structType = DataTypes.createStructType(new ArrayList<>(listOfStructField[struct.oclAsType(Table).name/]_1));
+	StructType structType = DataTypes.createStructType(listOfStructField[struct.oclAsType(Table).name/]_1);
 	listRows.add(RowFactory.create(values[struct.oclAsType(Table).name/]_1.toArray()));
 	SparkConnectionMgr.writeDataset(listRows, structType, "jdbc", "[struct.name/]", "[db.name/]");
 [/template]
@@ -112,7 +167,7 @@ For each PhysicalFIeld get the mapped conceptual attribute of ENT
 [template public insertInMongoDBImpl(entityType : EntityType, struct : AbstractPhysicalStructure, db : Database)]
 	List<Row> listRows=new ArrayList<Row>();
 	[generateStructField(entityType, struct.oclAsType(pml::Collection).fields,struct.oclAsType(pml::Collection).name,1,false)/]
-	StructType struct = DataTypes.createStructType(new ArrayList<>(listOfStructField[struct.oclAsType(pml::Collection).name/]_1));
+	StructType struct = DataTypes.createStructType(listOfStructField[struct.oclAsType(pml::Collection).name/]_1);
 	listRows.add(RowFactory.create(values[struct.oclAsType(pml::Collection).name/]_1.toArray()));
 	SparkConnectionMgr.writeDataset(listRows, struct, "mongo", "[struct.name/]", "[db.name/]");
 [/template]
@@ -246,6 +301,90 @@ For each PhysicalFIeld get the mapped conceptual attribute of ENT
 		[/if]
 [/template]
 
+[template public generateDocument(entityType : EntityType, fields : Collection(PhysicalField), objectName : String, level : Integer, embeddedRoleLevel : Integer)]
+Document doc[objectName/]_[level/] = new Document();
+[for (field : PhysicalField | fields)]
+	[if (field.oclIsTypeOf(ShortField))]
+		[let attr : Attribute = getMappedAttributes(field, entityType, entityType.getMappingRules())->any(true)]
+			[if (attr.oclIsUndefined()=false)]
+doc[objectName/]_[level/].append("[getPhysicalName(field)/]",[entityType.name.toLowerFirst()/].get[attr.name.toUpperFirst()/]());
+			[/if]
+		[/let] 
+	[/if]
+	[if (field.oclIsTypeOf(LongField))]
+		[comment LongField with only one component and is BracketsField /]
+		[if (field.oclAsType(LongField).pattern->size()=1 and field.oclAsType(LongField).pattern->any(true).oclIsTypeOf(BracketsField))]
+			[let brackets : BracketsField = field.oclAsType(LongField).pattern->any(true).oclAsType(BracketsField)]
+				[let attr : Attribute = getMappedAttributes(field, entityType, entityType.getMappingRules())->any(true)]
+				[if (attr.oclIsUndefined()=false)]
+doc[objectName/]_[level/].append("[getPhysicalName(field)/]",[entityType.name.toLowerFirst()/].get[attr.name.toUpperFirst()/]());
+				[/if]
+				[/let] 
+			[/let]
+		[else]
+			[if (field.oclAsType(LongField).pattern->filter(BracketsField)->exists(b |getMappedAttributes(b, entityType, entityType.getMappingRules())->size()=0)=false)]
+				[comment All BracketsField are mapped to the corresponding entity or composed of only one Terminal expression/]
+				[comment LongField is composed of component, therefore can only be StringType /]
+String value_[objectName/]_[getPhysicalName(field)/]_[level/] = "";
+				[for (component : TerminalExpression | field.oclAsType(LongField).pattern)]
+					[if (component.oclIsTypeOf(BracketsField))]
+						[let attr : Attribute = getMappedAttributes(component.oclAsType(BracketsField), entityType, entityType.getMappingRules())->any(true)]
+value_[objectName/]_[getPhysicalName(field)/]_[level/] += [entityType.name.toLowerFirst()/].get[attr.name.toUpperFirst()/]();
+						[/let]
+					[else]
+value_[objectName/]_[getPhysicalName(field)/]_[level/] += "[component.literal/]";
+					[/if]
+				[/for]
+doc[objectName/]_[level/].append("[getPhysicalName(field)/]",value_[objectName/]_[getPhysicalName(field)/]_[level/]);
+			[/if]
+		[/if]
+	[/if]
+	[if (field.oclIsTypeOf(EmbeddedObject) and field.isMappedToRole(entityType.getMappingRules())=false)]
+// Embedded structure [field.getPhysicalName()/]
+		[if (getMappedAttributes(field, entityType, entityType.getMappingRules())->size()>0 or getDescendentsLongField(field)->exists(lf | lf.pattern->size()=1 and lf.pattern->any(true).oclIsTypeOf(BracketsField)=false))]
+		[comment Generate only for embedded objects with at least one field mapped to the concerned ENT or a field composed only of a constant string. /]
+	[generateDocument(entityType, field.oclAsType(EmbeddedObject).fields, field.getPhysicalName(), level+1,embeddedRoleLevel)/]
+				[if (field.oclAsType(EmbeddedObject).cardinality= pml::Cardinality::ONE_MANY) or (field.oclAsType(EmbeddedObject).cardinality= pml::Cardinality::ZERO_MANY)]
+	List<Document> array[field.getPhysicalName()/]_[level/] = new ArrayList();
+	array[field.getPhysicalName()/]_[level/].add(doc_[field.getPhysicalName()/]_[level+1/]);
+	doc[objectName/]_[level/].append("[field.getPhysicalName()/]", array[field.getPhysicalName()/]_[level/]);
+				[else]
+	doc[objectName/]_[level/].append("[field.getPhysicalName()/]", doc[field.getPhysicalName()/]_[level+1/]);
+				[/if]
+		[/if]
+	[else]
+	[let role : Role = getMappedRoleOfPhysicalField(field)]
+	[if (role.isMandatoryRole())]
+// field '[field.getPhysicalName()/]' is mapped to mandatory role '[role.name/]' with opposite role of type '[role.getOppositeRoleInBinaryRel().entity.name/]'
+	[if(embeddedRoleLevel>0)]
+		[if (role.isCardinalityMaxN())]
+	List<[role.getOppositeRoleInBinaryRel().entity.name.toUpperFirst()/]> [role.getOppositeRoleInBinaryRel().name.toLowerFirst()/][getRelationShipType(role).name.toUpperFirst()/] = [entityType.name.toLowerFirst()/]._get[role.getOppositeRoleInBinaryRel().name.toUpperFirst()/]List();
+		[else]
+		[role.getOppositeRoleInBinaryRel().entity.name.toUpperFirst()/] [role.getOppositeRoleInBinaryRel().name.toLowerFirst()/][getRelationShipType(role).name.toUpperFirst()/] = [entityType.name.toLowerFirst()/]._get[role.getOppositeRoleInBinaryRel().name/]();
+		[/if]
+	[/if]
+	if([role.getOppositeRoleInBinaryRel().name.toLowerFirst()/][getRelationShipType(role).name.toUpperFirst()/]!=null){
+	[if (role.isCardinalityMaxN())]
+	List<Document> array[field.getPhysicalName()/]_[level/] = new ArrayList();
+		for([role.getOppositeRoleInBinaryRel().entity.name.toUpperFirst()/] [role.getOppositeRoleInBinaryRel().entity.name.toLowerFirst()/] : [role.getOppositeRoleInBinaryRel().name.toLowerFirst()/][getRelationShipType(role).name.toUpperFirst()/]){
+			[generateDocument(role.getOppositeRoleInBinaryRel().entity, field.oclAsType(EmbeddedObject).fields, field.getPhysicalName(), level+1,embeddedRoleLevel+1)/]
+			array[field.getPhysicalName()/]_[level/].add(doc[field.getPhysicalName()/]_[level+1/]);
+		}
+	doc[objectName/]_[level/].append("[field.getPhysicalName()/]", array[field.getPhysicalName()/]_[level/]);
+	[else]
+		[role.getOppositeRoleInBinaryRel().entity.name.toUpperFirst()/] [role.getOppositeRoleInBinaryRel().entity.name.toLowerFirst()/] = [role.getOppositeRoleInBinaryRel().name.toLowerFirst()/][getRelationShipType(role).name.toUpperFirst()/];
+		[generateDocument(role.getOppositeRoleInBinaryRel().entity, field.oclAsType(EmbeddedObject).fields, field.getPhysicalName(), level+1,embeddedRoleLevel+1)/]
+		doc[objectName/]_[level/].append("[field.getPhysicalName()/]", doc[field.getPhysicalName()/]_[level+1/]);
+	[/if]
+	}else{
+		throw new PhysicalStructureException("Physical Structure contains embedded objects with roles. Please set role attribute '[role.getOppositeRoleInBinaryRel().name/]' of type '[role.getOppositeRoleInBinaryRel().entity.name.toUpperFirst()/]' in entity object '[entityType.name.toUpperFirst()/]");
+	}
+	[/if]
+	[/let]
+	[/if]
+[/for]
+[/template]
+
 [template public generateStructField(entityType : EntityType, fields : Collection(PhysicalField), objectName : String, level : Integer, inEmbeddedRole : Boolean)]
 [if (not inEmbeddedRole)]
 List<Object> values[objectName/]_[level/] = new ArrayList<>();
@@ -338,11 +477,3 @@ values[objectName/]_[level/].add(value_[objectName/]_[getPhysicalName(field)/]_[
 [/for]
 [/template]
 
-[query private getMappedAttributesInStructure(ent: EntityType, struct : AbstractPhysicalStructure, db : Database, rules: MappingRules) : Collection(Attribute) =  
-	invoke('be.unamur.polystore.acceleo.main.utils.Util', 'getMappedAttributes(be.unamur.polystore.pml.EntityType, be.unamur.polystore.pml.AbstractPhysicalStructure, be.unamur.polystore.pml.Database, be.unamur.polystore.pml.MappingRules)', Sequence{ent, struct, db, rules})
-/]
-
-
-[query private getRefOfPhysicalStructure(struct : AbstractPhysicalStructure) : Collection(Reference) =  
-	invoke('be.unamur.polystore.acceleo.main.utils.MappingRuleService', 'getRefOfPhysicalStructure(be.unamur.polystore.pml.AbstractPhysicalStructure)', Sequence{struct})
-/]

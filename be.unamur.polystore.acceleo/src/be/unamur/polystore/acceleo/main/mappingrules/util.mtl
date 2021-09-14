@@ -73,9 +73,29 @@
 = invoke('be.unamur.polystore.acceleo.main.utils.MappingRuleService','isMappedToRole(org.eclipse.emf.ecore.EObject,be.unamur.polystore.pml.MappingRules)',Sequence{o,rule})
  /]
 
+[query public isMappedToMandatoryRole(o: OclAny, rule : MappingRules) : Boolean
+= invoke('be.unamur.polystore.acceleo.main.utils.MappingRuleService','isMappedToMandatoryRole(org.eclipse.emf.ecore.EObject,be.unamur.polystore.pml.MappingRules)',Sequence{o,rule})
+ /]
+
+[query public isMappedToRoleWhoseOppositeIsMandatory(o: OclAny, rule : MappingRules) : Boolean
+= invoke('be.unamur.polystore.acceleo.main.utils.MappingRuleService','isMappedToRoleWhoseOppositeIsMandatory(org.eclipse.emf.ecore.EObject,be.unamur.polystore.pml.MappingRules)',Sequence{o,rule})
+ /]
+
 [query public getMappedRoleOfPhysicalField(f: PhysicalField) : Role
 = invoke('be.unamur.polystore.acceleo.main.utils.MappingRuleService','getMappedRoleOfPhysicalField(be.unamur.polystore.pml.PhysicalField)',Sequence{f})
  /]
+
+[query public getMappedRoleOfReference(ref: Reference) : Role
+= invoke('be.unamur.polystore.acceleo.main.utils.MappingRuleService','getMappedRoleOfReference(be.unamur.polystore.pml.Reference)',Sequence{ref})
+ /]
+
+[query public getMappedAttributesInStructure(ent: EntityType, struct : AbstractPhysicalStructure, db : Database, rules: MappingRules) : Collection(Attribute) =  
+	invoke('be.unamur.polystore.acceleo.main.utils.Util', 'getMappedAttributes(be.unamur.polystore.pml.EntityType, be.unamur.polystore.pml.AbstractPhysicalStructure, be.unamur.polystore.pml.Database, be.unamur.polystore.pml.MappingRules)', Sequence{ent, struct, db, rules})
+/]
+
+[query public getRefOfPhysicalStructure(struct : AbstractPhysicalStructure) : Collection(Reference) =  
+	invoke('be.unamur.polystore.acceleo.main.utils.MappingRuleService', 'getRefOfPhysicalStructure(be.unamur.polystore.pml.AbstractPhysicalStructure)', Sequence{struct})
+/]
 
 [query public getMappedReferenceInSamePhysicalStructureForOppositeRole(role : Role, struct: AbstractPhysicalStructure) : Reference = 
 	getMappedReferences(role, role.getMappingRules()) -> select(ref : Reference | ref.getAbstractPhysicalStructureNotEmbeddedObject() = struct) -> any(true) /]
