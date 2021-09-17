@@ -380,7 +380,25 @@ public class MappingRuleService {
 		}
 		return res;
 	}
+	
+	public static PhysicalField getMappedPhysicalFieldOfRoleOfEntityWhereOppositeRoleIsMandatory(AbstractPhysicalStructure struct, EntityType entity, MappingRules rules) {
+		if(struct instanceof Collection) {
+			return getMappedPhysicalFieldOfRoleOfEntityWhereOppositeRoleIsMandatory(((Collection)struct).getFields(),entity, rules);
+		}
+		return null;
+	}
 
+	public static PhysicalField getMappedPhysicalFieldOfRoleOfEntityWhereOppositeRoleIsMandatory(List<PhysicalField> fields, EntityType entity, MappingRules rules) {
+		for(PhysicalField field : fields) {
+			if(isMappedToRoleWhoseOppositeIsMandatoryForGivenEntity(field, entity, rules))
+				return field;
+			if(field instanceof EmbeddedObject)
+				return getMappedPhysicalFieldOfRoleOfEntityWhereOppositeRoleIsMandatory(((EmbeddedObject)field).getFields(), entity, rules);
+		}
+		return null;
+	}
+	
+	
 	public static EList<PhysicalField> getPhysicalFieldsFromKey(Key key){
 		EList<PhysicalField> fields = new BasicEList<PhysicalField>();
 		for(TerminalExpression terminal : key.getPattern()) {
@@ -480,6 +498,7 @@ public class MappingRuleService {
 		}
 		return false;
 	}
+	
 	
 	public static Role getOppositeOfRole(Role role) {
 		RelationshipType rel = (RelationshipType) role.eContainer();

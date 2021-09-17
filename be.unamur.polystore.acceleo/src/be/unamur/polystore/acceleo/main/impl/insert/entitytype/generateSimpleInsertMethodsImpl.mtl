@@ -87,41 +87,64 @@
 
 [template public insertInAscendingStructure(entityType: EntityType, struct : AbstractPhysicalStructure, db : Database)]
 	 // Implement Insert in ascending complex struct
-	
 
-	Bson filter, updateOp;
-	[for (field : PhysicalField | struct.oclAsType(pml::Collection).fields)]
-		[if (field.isMappedToRoleWhoseOppositeIsMandatory(entityType.getMappingRules()))]
-		[let role : Role = field.getMappedRoleOfPhysicalField()]
-	[comment for each mandatory role object in list, in ascending structure we need to update the document. /]
-				[if (role.getOppositeRoleInBinaryRel().isCardinalityMaxN())]
-	for([role.entity.name.toUpperFirst()/] [role.entity.name.toLowerFirst()/] : [role.name/][getRelationShipType(role).name.toUpperFirst()/]){
-				[else]
-	[role.entity.name.toUpperFirst()/] [role.entity.name.toLowerFirst()/] = [role.name/][getRelationShipType(role).name.toUpperFirst()/];
-				[/if]
-			[for (attr : Attribute | role.entity.identifier.attributes)]
-				[if (i=1)]
-		filter = eq("[getPhysicalName(getMappedPhysicalField(attr, struct, db, entityType.getMappingRules()))/]",[role.entity.name.toLowerFirst()/].get[attr.name.toUpperFirst()/]());
-				[else]
-		filter = and(filter,eq("[getPhysicalName(getMappedPhysicalField(attr, struct, db, entityType.getMappingRules()))/]",[role.entity.name.toLowerFirst()/].get[attr.name.toUpperFirst()/]());
-				[/if]
-			[/for]
-		[generateDocument(entityType,field.oclAsType(EmbeddedObject).fields, getPhysicalName(field),1,0)/]
-		updateOp = push("[field.getPhysicalName()/]", doc[getPhysicalName(field)/]_1);
-		DBConnectionMgr.upsertInArray(filter, updateOp, "[struct.name/]", "[db.name/]");					
-	[if (role.getOppositeRoleInBinaryRel().isCardinalityMaxN())]
-	}
-	[/if] 
-			[/let]
-		[/if]
-	[/for]
+	Bson filter= new Document();
+	Bson updateOp;
+	String updatePush;
+	List<String> fieldName= new ArrayList();
+	List<Bson> arrayFilterCond = new ArrayList();
+	[let field : PhysicalField = getMappedPhysicalFieldOfRoleOfEntityWhereOppositeRoleIsMandatory(struct, entityType, entityType.getMappingRules())]
+	[let role : Role = getMappedRoleOfPhysicalField(field)]
+	[generateDocument(entityType,field.oclAsType(EmbeddedObject).fields, getPhysicalName(field),1,0)/]
+	[/let]
+	[if (field.eContainer(EmbeddedObject).oclIsUndefined()=false)]
+	[ascendInStruct(field.eContainer(EmbeddedObject), getMappedRoleOfPhysicalField(field),struct, db, 0, entityType)/]
+	[/if]	
+	fieldName.add("[getPhysicalName(field)/]");
+	updatePush = String.join(".",fieldName);
+	updateOp = push(updatePush,doc[getPhysicalName(field)/]_1);
+	[/let]
+	DBConnectionMgr.upsertInArray(filter, updateOp, arrayFilterCond, "[struct.name/]", "[db.name/]");
 	return true;
 [/template]
 
-[template public insertAscendingRecursive(entityType: EntityType, struct : AbstractPhysicalStructure, db : Database)]
-
+[template public ascendInStruct(embeddedObj : EmbeddedObject, role : Role, struct: AbstractPhysicalStructure, db:Database, level : Integer, roleEntityType : EntityType) ]
+fieldName.add("[embeddedObj.getPhysicalName()/].$['['/][embeddedObj.getPhysicalName()/][']'/]");
+[if (level>0)]
+	[if (role.getOppositeRoleInBinaryRel().isCardinalityMaxN())]
+	List<[role.entity.name.toUpperFirst()/]> [role.name.toLowerFirst()/][getRelationShipType(role).name.toUpperFirst()/] = [roleEntityType.name.toLowerFirst()/]._get[role.getOppositeRoleInBinaryRel().name.toUpperFirst()/]List();
+	[else]
+		[role.entity.name.toUpperFirst()/] [role.name.toLowerFirst()/][getRelationShipType(role).name.toUpperFirst()/] = [roleEntityType.name.toLowerFirst()/]._get[role.getOppositeRoleInBinaryRel().name/]();
+	[/if]
+[/if]
+[if (role.getOppositeRoleInBinaryRel().isCardinalityMaxN())]
+List<String> idvalues = new ArrayList<>();
+for([role.entity.name.toUpperFirst()/] [role.entity.name.toLowerFirst()/] : [role.name.toLowerFirst()/][getRelationShipType(role).name.toUpperFirst()/]){
+	[for (attr : Attribute | role.entity.identifier.attributes)]
+				[if (i=1)]
+	idvalues.add([role.entity.name.toLowerFirst()/].get[attr.name.toUpperFirst()/]());
+				[else]
+// TODO Handle multi attributes identifier
+throw new UnsupportedOperationException("Multi component identifier not supported");
+				[/if]
+arrayFilterCond.add(in("[embeddedObj.getPhysicalName()/].[getPhysicalName(getMappedPhysicalField(attr, struct, db, attr.getMappingRules()))/]",idvalues));
+	[/for]
+}
+[else]
+[role.entity.name.toUpperFirst()/] [role.entity.name.toLowerFirst()/] = [role.name.toLowerFirst()/][getRelationShipType(role).name.toUpperFirst()/];
+	[for (attr : Attribute | role.entity.identifier.attributes)]
+				[if (i=1)]
+arrayFilterCond.add(eq("[embeddedObj.getPhysicalName()/].[getPhysicalName(getMappedPhysicalField(attr, struct, db, attr.getMappingRules()))/]",[role.entity.name.toLowerFirst()/].get[attr.name.toUpperFirst()/]()));
+				[else]
+// TODO Handle multi attributes identifier
+throw new UnsupportedOperationException("Multi component identifier not supported");
+				[/if]
+	[/for]
+[/if]
+[if (embeddedObj.eContainer(EmbeddedObject).oclIsUndefined()=false)]
+[ascendInStruct(embeddedObj.eContainer(EmbeddedObject),getMappedRoleOfPhysicalField(embeddedObj), struct, db,level+1, role.entity)/]
+[/if]
 [/template]
-
 	
 [template public insertInJoinStructure(entityType: EntityType, struct : AbstractPhysicalStructure, db : Database)]
 	 // Implement Insert in join complex struct

@@ -94,11 +94,12 @@ public class DBConnectionMgr {
 		}
 	}
 
-	public static void upsertInArray(Bson filter, Bson updateOp, UpdateOptions updateOptions, String struct, String db){
+	public static void upsertInArray(Bson filter, Bson updateOp, List<Bson> arrayFiltersConditions, String struct, String db){
 		DBCredentials credentials = dbPorts.get(db);
 		if(credentials.dbType.equals("mongodb")){ 
 			MongoDatabase mongoDatabase = getMongoClient(credentials).getDatabase(db);
 	        MongoCollection<Document> structCollection = mongoDatabase.getCollection(struct);
+			UpdateOptions updateOptions = new UpdateOptions().arrayFilters(arrayFiltersConditions);
 	        structCollection.updateMany(filter, updateOp, updateOptions);
 		}
 		else{

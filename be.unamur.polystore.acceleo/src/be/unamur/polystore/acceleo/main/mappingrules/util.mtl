@@ -89,6 +89,10 @@
 = invoke('be.unamur.polystore.acceleo.main.utils.MappingRuleService','getRoleMappedPhysicalFieldsWhereEntity(be.unamur.polystore.pml.AbstractPhysicalStructure, be.unamur.polystore.pml.EntityType)',Sequence{s,e})
  /]
 
+[query public getMappedPhysicalFieldOfRoleOfEntityWhereOppositeRoleIsMandatory(s: AbstractPhysicalStructure, e: EntityType, rule :MappingRules) : PhysicalField
+= invoke('be.unamur.polystore.acceleo.main.utils.MappingRuleService','getMappedPhysicalFieldOfRoleOfEntityWhereOppositeRoleIsMandatory(be.unamur.polystore.pml.AbstractPhysicalStructure, be.unamur.polystore.pml.EntityType, be.unamur.polystore.pml.MappingRules)',Sequence{s,e,rule})
+ /]
+
 [query public getMappedRoleOfPhysicalField(f: PhysicalField) : Role
 = invoke('be.unamur.polystore.acceleo.main.utils.MappingRuleService','getMappedRoleOfPhysicalField(be.unamur.polystore.pml.PhysicalField)',Sequence{f})
  /]
