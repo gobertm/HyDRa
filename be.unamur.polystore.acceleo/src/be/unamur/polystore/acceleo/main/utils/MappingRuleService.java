@@ -205,10 +205,12 @@ public class MappingRuleService {
 					if(isMappedToEntity(field, entity, domain.getMappingRules()))
 						firstlevelFieldMappedToEntity=true;
 				}
+				// at this time add descendents embeddedobjects to iterate also on them in order to verify their mappings.
 				for(PhysicalField field : fields) {
-					if(field instanceof EmbeddedObject) {
+					List<EObject> embeddedDescendents = getDescendents(EmbeddedObject.class, field);
+					for(EObject embedded : embeddedDescendents) {
 						if(!firstlevelFieldMappedToEntity // No firstlevel field is of Entity 
-								&& isMappedToRoleWhoseOppositeIsMandatory(field, domain.getMappingRules())) {
+								&& isMappedToRoleWhoseOppositeIsMandatoryForGivenEntity(embedded, entity, domain.getMappingRules())) {
 							res.add(struct);
 						}
 					}
@@ -219,25 +221,22 @@ public class MappingRuleService {
 		return res;
 	}
 	
-	/** Returns concerned physical structure (physical structure of field mapped to attribute of given entity type) that are not Standalone structure of ent , nor ComplexEmbedded (2 cascading role embeddeded).
-	 * Also returns structures of mapped mandatory role of Ent 
-	 * @param ent
-	 * @param domain
-	 * @return
-	 */
-	public static Set<AbstractPhysicalStructure> getComplexPhysicalStructures(EntityType ent, Domainmodel domain) {
-		Set<AbstractPhysicalStructure> res = new HashSet<AbstractPhysicalStructure>();
-		for (Attribute attr : ent.getAttributes()) {
-			java.util.Collection<PhysicalField> fields = getMappedPhysicalFields(attr, domain.getMappingRules());
-			for (PhysicalField field : fields) {
-				AbstractPhysicalStructure struct = getPhysicalStructureNotEmbeddedObject(field);
-				if (struct != null)
-					res.add(struct);
+	public static Set<PhysicalField> getRoleMappedPhysicalFieldsWhereEntity(AbstractPhysicalStructure struct, EntityType entity){
+		Set<PhysicalField> res = new HashSet();
+		List<PhysicalField> fields;
+		MappingRules rules = ((Domainmodel) getFirstAncestor(Domainmodel.class, struct)).getMappingRules();
+		if(struct instanceof Collection) {
+			fields = ((Collection) struct).getFields();
+			for(PhysicalField field : fields) {
+				List<EObject> embeddedDescendents = getDescendents(EmbeddedObject.class, field);
+				for(EObject embedded : embeddedDescendents) {
+					if(isMappedToRoleWhoseOppositeIsMandatoryForGivenEntity(embedded, entity, rules)) {
+						res.add((PhysicalField)embedded);
+						res.add(field);
+					}
+				}
 			}
 		}
-		res.removeAll(getMappedComplexEmbeddedStructureOfEntity(ent, domain));
-		res.removeAll(getMappedPhysicalStructureToInsertSingleE(ent, domain));
-		res.addAll(getJoinStructureOfMappedMandatoryRoleOfEntity(ent, domain));
 		return res;
 	}
 	
@@ -298,7 +297,6 @@ public class MappingRuleService {
 		}
 		return res;
 	}
-
 	
 	/**
 	 * Returns standalone structures where we can insert 'ent'.
@@ -461,6 +459,27 @@ public class MappingRuleService {
 		}
 		return false;
 	}
+
+	public static boolean isMappedToRoleWhoseOppositeIsMandatoryForGivenEntity(EObject e, EntityType entity, MappingRules rules) {
+		for(AbstractMappingRule rule : rules.getMappingRules()) {
+			if(rule instanceof RoleToEmbbededObjectMappingRule) {
+				RoleToEmbbededObjectMappingRule embeddedRule = (RoleToEmbbededObjectMappingRule) rule;
+				if(embeddedRule.getPhysicalStructure().equals(e) 
+						&& isMandatoryRole(getOppositeOfRole(embeddedRule.getRoleConceptual()))
+						&& getOppositeOfRole(embeddedRule.getRoleConceptual()).getEntity().equals(entity)
+						)
+					return true;
+			}
+			if(rule instanceof RoleToKeyBracketsFieldMappingRule) {
+				RoleToKeyBracketsFieldMappingRule keybracketsRule = (RoleToKeyBracketsFieldMappingRule) rule;
+				if(keybracketsRule.getPhysicalStructure().equals(e) 
+						&& isMandatoryRole(getOppositeOfRole(keybracketsRule.getRoleConceptual()))
+						&& getOppositeOfRole((Role)keybracketsRule.getRoleConceptual()).getEntity().equals(entity))
+					return true;
+			}
+		}
+		return false;
+	}
 	
 	public static Role getOppositeOfRole(Role role) {
 		RelationshipType rel = (RelationshipType) role.eContainer();
@@ -603,7 +622,7 @@ public class MappingRuleService {
 		}
 		return res;
 	}
-
+	
 	private static List<EObject> getAscendents(final Class cl, EObject obj) {
 		List<EObject> res = new ArrayList<EObject>();
 		EObject object = getFirstAncestor(cl, obj.eContainer());

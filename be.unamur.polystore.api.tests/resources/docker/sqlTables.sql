@@ -15,6 +15,13 @@ create table mydb.directed
 create table mydb.reviewTable
 (
 	id varchar(20) primary key,
-	content varchar(180)
-)
+	content varchar(180) null
+);
+
+create table mydb.movieTable
+(
+	id varchar(20) primary key,
+	title varchar(140) null,
+	director_id varchar(20) null
+);
 

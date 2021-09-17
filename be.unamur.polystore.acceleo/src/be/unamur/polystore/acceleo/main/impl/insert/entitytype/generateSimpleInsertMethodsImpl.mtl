@@ -87,35 +87,41 @@
 
 [template public insertInAscendingStructure(entityType: EntityType, struct : AbstractPhysicalStructure, db : Database)]
 	 // Implement Insert in ascending complex struct
-	[comment Get Entity type of opposite mandatory role /]
+	
+
+	Bson filter, updateOp;
 	[for (field : PhysicalField | struct.oclAsType(pml::Collection).fields)]
 		[if (field.isMappedToRoleWhoseOppositeIsMandatory(entityType.getMappingRules()))]
-			[let role : Role = field.getMappedRoleOfPhysicalField()]
+		[let role : Role = field.getMappedRoleOfPhysicalField()]
 	[comment for each mandatory role object in list, in ascending structure we need to update the document. /]
-	Bson filter, updateOp;
-	[if (role.isCardinalityMaxN())]
+				[if (role.getOppositeRoleInBinaryRel().isCardinalityMaxN())]
 	for([role.entity.name.toUpperFirst()/] [role.entity.name.toLowerFirst()/] : [role.name/][getRelationShipType(role).name.toUpperFirst()/]){
-	[else]
+				[else]
 	[role.entity.name.toUpperFirst()/] [role.entity.name.toLowerFirst()/] = [role.name/][getRelationShipType(role).name.toUpperFirst()/];
-	[/if]
-		[for (attr : Attribute | role.entity.identifier.attributes)]
-		[if (i=1)]
+				[/if]
+			[for (attr : Attribute | role.entity.identifier.attributes)]
+				[if (i=1)]
 		filter = eq("[getPhysicalName(getMappedPhysicalField(attr, struct, db, entityType.getMappingRules()))/]",[role.entity.name.toLowerFirst()/].get[attr.name.toUpperFirst()/]());
-		[else]
+				[else]
 		filter = and(filter,eq("[getPhysicalName(getMappedPhysicalField(attr, struct, db, entityType.getMappingRules()))/]",[role.entity.name.toLowerFirst()/].get[attr.name.toUpperFirst()/]());
-		[/if]
-		[/for]
+				[/if]
+			[/for]
 		[generateDocument(entityType,field.oclAsType(EmbeddedObject).fields, getPhysicalName(field),1,0)/]
 		updateOp = push("[field.getPhysicalName()/]", doc[getPhysicalName(field)/]_1);
 		DBConnectionMgr.upsertInArray(filter, updateOp, "[struct.name/]", "[db.name/]");					
-	[if (role.isCardinalityMaxN())]
+	[if (role.getOppositeRoleInBinaryRel().isCardinalityMaxN())]
 	}
 	[/if] 
 			[/let]
 		[/if]
 	[/for]
-	return false;
+	return true;
 [/template]
+
+[template public insertAscendingRecursive(entityType: EntityType, struct : AbstractPhysicalStructure, db : Database)]
+
+[/template]
+
 	
 [template public insertInJoinStructure(entityType: EntityType, struct : AbstractPhysicalStructure, db : Database)]
 	 // Implement Insert in join complex struct
@@ -354,32 +360,32 @@ doc[objectName/]_[level/].append("[getPhysicalName(field)/]",value_[objectName/]
 		[/if]
 	[else]
 	[let role : Role = getMappedRoleOfPhysicalField(field)]
-	[if (role.isMandatoryRole())]
+		[if (role.isMandatoryRole())]
 // field '[field.getPhysicalName()/]' is mapped to mandatory role '[role.name/]' with opposite role of type '[role.getOppositeRoleInBinaryRel().entity.name/]'
-	[if(embeddedRoleLevel>0)]
-		[if (role.isCardinalityMaxN())]
+			[if(embeddedRoleLevel>0)]
+				[if (role.isCardinalityMaxN())]
 	List<[role.getOppositeRoleInBinaryRel().entity.name.toUpperFirst()/]> [role.getOppositeRoleInBinaryRel().name.toLowerFirst()/][getRelationShipType(role).name.toUpperFirst()/] = [entityType.name.toLowerFirst()/]._get[role.getOppositeRoleInBinaryRel().name.toUpperFirst()/]List();
-		[else]
+				[else]
 		[role.getOppositeRoleInBinaryRel().entity.name.toUpperFirst()/] [role.getOppositeRoleInBinaryRel().name.toLowerFirst()/][getRelationShipType(role).name.toUpperFirst()/] = [entityType.name.toLowerFirst()/]._get[role.getOppositeRoleInBinaryRel().name/]();
-		[/if]
-	[/if]
+				[/if]
+			[/if]
 	if([role.getOppositeRoleInBinaryRel().name.toLowerFirst()/][getRelationShipType(role).name.toUpperFirst()/]!=null){
-	[if (role.isCardinalityMaxN())]
+			[if (role.isCardinalityMaxN())]
 	List<Document> array[field.getPhysicalName()/]_[level/] = new ArrayList();
 		for([role.getOppositeRoleInBinaryRel().entity.name.toUpperFirst()/] [role.getOppositeRoleInBinaryRel().entity.name.toLowerFirst()/] : [role.getOppositeRoleInBinaryRel().name.toLowerFirst()/][getRelationShipType(role).name.toUpperFirst()/]){
 			[generateDocument(role.getOppositeRoleInBinaryRel().entity, field.oclAsType(EmbeddedObject).fields, field.getPhysicalName(), level+1,embeddedRoleLevel+1)/]
 			array[field.getPhysicalName()/]_[level/].add(doc[field.getPhysicalName()/]_[level+1/]);
 		}
 	doc[objectName/]_[level/].append("[field.getPhysicalName()/]", array[field.getPhysicalName()/]_[level/]);
-	[else]
+			[else]
 		[role.getOppositeRoleInBinaryRel().entity.name.toUpperFirst()/] [role.getOppositeRoleInBinaryRel().entity.name.toLowerFirst()/] = [role.getOppositeRoleInBinaryRel().name.toLowerFirst()/][getRelationShipType(role).name.toUpperFirst()/];
 		[generateDocument(role.getOppositeRoleInBinaryRel().entity, field.oclAsType(EmbeddedObject).fields, field.getPhysicalName(), level+1,embeddedRoleLevel+1)/]
 		doc[objectName/]_[level/].append("[field.getPhysicalName()/]", doc[field.getPhysicalName()/]_[level+1/]);
-	[/if]
+			[/if]
 	}else{
 		throw new PhysicalStructureException("Physical Structure contains embedded objects with roles. Please set role attribute '[role.getOppositeRoleInBinaryRel().name/]' of type '[role.getOppositeRoleInBinaryRel().entity.name.toUpperFirst()/]' in entity object '[entityType.name.toUpperFirst()/]");
 	}
-	[/if]
+		[/if]
 	[/let]
 	[/if]
 [/for]
@@ -467,6 +473,7 @@ values[objectName/]_[level/].add(value_[objectName/]_[getPhysicalName(field)/]_[
 	listOfStructField[objectName/]_[level/].add(DataTypes.createStructField("[field.getPhysicalName()/]",array[field.getPhysicalName()/]_[level/],true));
 	values[objectName/]_[level/].add(row_value_[field.getPhysicalName()/]_[level+1/]);
 	[else]
+		[role.getOppositeRoleInBinaryRel().entity.name.toUpperFirst()/] [role.getOppositeRoleInBinaryRel().entity.name.toLowerFirst()/] = [role.getOppositeRoleInBinaryRel().name.toLowerFirst()/][getRelationShipType(role).name.toUpperFirst()/];
 		[generateStructField(role.getOppositeRoleInBinaryRel().entity, field.oclAsType(EmbeddedObject).fields, field.getPhysicalName(), level+1,true)/]
 		values[objectName/]_[level/].add(row_value_[field.getPhysicalName()/]_[level+1/]);
 	[/if]
