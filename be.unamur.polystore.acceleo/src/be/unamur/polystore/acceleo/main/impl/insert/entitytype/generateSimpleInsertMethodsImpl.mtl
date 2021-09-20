@@ -96,15 +96,36 @@
 	[let field : PhysicalField = getMappedPhysicalFieldOfRoleOfEntityWhereOppositeRoleIsMandatory(struct, entityType, entityType.getMappingRules())]
 	[let role : Role = getMappedRoleOfPhysicalField(field)]
 	[generateDocument(entityType,field.oclAsType(EmbeddedObject).fields, getPhysicalName(field),1,0)/]
-	[/let]
 	[if (field.eContainer(EmbeddedObject).oclIsUndefined()=false)]
 	[ascendInStruct(field.eContainer(EmbeddedObject), getMappedRoleOfPhysicalField(field),struct, db, 0, entityType)/]
-	[/if]	
 	fieldName.add("[getPhysicalName(field)/]");
 	updatePush = String.join(".",fieldName);
 	updateOp = push(updatePush,doc[getPhysicalName(field)/]_1);
-	[/let]
 	DBConnectionMgr.upsertInArray(filter, updateOp, arrayFilterCond, "[struct.name/]", "[db.name/]");
+	[else] 
+	// level 1 ascending
+	[comment for each mandatory role object in list, in ascending structure we need to update the document. /]
+				[if (role.getOppositeRoleInBinaryRel().isCardinalityMaxN())]
+	for([role.entity.name.toUpperFirst()/] [role.entity.name.toLowerFirst()/] : [role.name/][getRelationShipType(role).name.toUpperFirst()/]){
+				[else]
+	[role.entity.name.toUpperFirst()/] [role.entity.name.toLowerFirst()/] = [role.name/][getRelationShipType(role).name.toUpperFirst()/];
+				[/if]
+			[for (attr : Attribute | role.entity.identifier.attributes)]
+				[if (i=1)]
+		filter = eq("[getPhysicalName(getMappedPhysicalField(attr, struct, db, entityType.getMappingRules()))/]",[role.entity.name.toLowerFirst()/].get[attr.name.toUpperFirst()/]());
+				[else]
+		filter = and(filter,eq("[getPhysicalName(getMappedPhysicalField(attr, struct, db, entityType.getMappingRules()))/]",[role.entity.name.toLowerFirst()/].get[attr.name.toUpperFirst()/]());
+				[/if]
+			[/for]
+		updateOp = push("[field.getPhysicalName()/]", doc[getPhysicalName(field)/]_1);
+		DBConnectionMgr.upsertInArray(filter, updateOp, "[struct.name/]", "[db.name/]");					
+	[if (role.getOppositeRoleInBinaryRel().isCardinalityMaxN())]
+	}
+	[/if] 
+
+	[/if]	
+	[/let]
+	[/let]
 	return true;
 [/template]
 
