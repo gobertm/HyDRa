@@ -63,7 +63,7 @@ public class MappingRuleService {
 		return res;
 	}
 	
-	public static Set<AbstractPhysicalStructure> getMappedPhysicalStructureOfRole(Role role, MappingRules rules) {
+	public static Set<AbstractPhysicalStructure> getMappedPhysicalStructureOfRoleToReference(Role role, MappingRules rules) {
 		Set<AbstractPhysicalStructure> res = new HashSet<>();
 		for (AbstractMappingRule rule : rules.getMappingRules()) {
 			if (rule instanceof RoleToReferenceMappingRule) {
@@ -240,16 +240,14 @@ public class MappingRuleService {
 		return res;
 	}
 	
-	public static Set<AbstractPhysicalStructure> getJoinStructureOfMappedMandatoryRoleOfEntity(EntityType ent, Domainmodel model){
+	public static Set<AbstractPhysicalStructure> getRefStructureOfMappedMandatoryRoleOfEntity(EntityType ent, Domainmodel model){
 		Set<AbstractPhysicalStructure> res = new HashSet<AbstractPhysicalStructure>();
 		for(RelationshipType rel : model.getConceptualSchema().getRelationships()) {
 			for(Role role : rel.getRoles()) {
 				if(role.getEntity().equals(ent) 
 						&& isMandatoryRole(role)
-						// And is a join structure (both roles are in the same struct
-						&& getMappedPhysicalStructureOfRole(role,model.getMappingRules()).equals(getMappedPhysicalStructureOfRole(getOppositeOfRole(role),model.getMappingRules()))
 					) {
-					res.addAll(getMappedPhysicalStructureOfRole(role,model.getMappingRules()));
+					res.addAll(getMappedPhysicalStructureOfRoleToReference(role,model.getMappingRules()));
 				}
 			}
 		}
@@ -302,6 +300,7 @@ public class MappingRuleService {
 	 * Returns standalone structures where we can insert 'ent'.
 	 * From all the mapped structure. We check that it is not contained in an Embedded Structure mapped to a role. If yes we remove this structure.
 	 * In Key Value we check that key elements are not mapped to another entity type or a role. 
+	 * In a reldb we check that there is no reference block. Usage of 'getRefStructureOfMappedMandatoryRoleOfEntity' to remove structures.
 	 * @param ent
 	 * @param domain
 	 * @return
@@ -378,6 +377,7 @@ public class MappingRuleService {
 				}
 			}
 		}
+		res.removeAll(getRefStructureOfMappedMandatoryRoleOfEntity(ent,domain));
 		return res;
 	}
 	

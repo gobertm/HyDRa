@@ -23,8 +23,8 @@
 	inserted = insert[entityType.name.toUpperFirst() /]In[struct.name.toUpperFirst()/]From[db.name.toUpperFirst() /]([entityType.name.toLowerFirst() /][for (role: Role | getMandatoryRoles(entityType, conceptualSchema))],[role.getOppositeRoleInBinaryRel().name.toLowerFirst()/][getRelationShipType(role).name.toUpperFirst()/][/for])|| inserted ;
 	[/for]
 	[/for]
-	// Insert in join structures 
-	[for (struct: AbstractPhysicalStructure | getJoinStructureOfMappedMandatoryRoleOfEntity(entityType, entityType.ancestors(Domainmodel)->first()))]
+	// Insert in ref structures 
+	[for (struct: AbstractPhysicalStructure | getRefStructureOfMappedMandatoryRoleOfEntity(entityType, entityType.ancestors(Domainmodel)->first()))]
 	[for (db: Database | getConcernedDatabases(struct, entityType.ancestors(Domainmodel)->first()))]
 	inserted = insert[entityType.name.toUpperFirst() /]In[struct.name.toUpperFirst()/]From[db.name.toUpperFirst() /]([entityType.name.toLowerFirst() /][for (role: Role | getMandatoryRoles(entityType, conceptualSchema))],[role.getOppositeRoleInBinaryRel().name.toLowerFirst()/][getRelationShipType(role).name.toUpperFirst()/][/for])|| inserted ;
 	[/for]
@@ -167,7 +167,7 @@ throw new UnsupportedOperationException("Multi component identifier not supporte
 [/if]
 [/template]
 	
-[template public insertInJoinStructure(entityType: EntityType, struct : AbstractPhysicalStructure, db : Database)]
+[template public insertInRefStructure(entityType: EntityType, struct : AbstractPhysicalStructure, db : Database)]
 	 // Implement Insert in join complex struct
 	List<String> columns = new ArrayList<>();
 	List<Object> values = new ArrayList<>();
@@ -504,9 +504,9 @@ values[objectName/]_[level/].add(value_[objectName/]_[getPhysicalName(field)/]_[
 // field '[field.getPhysicalName()/]' is mapped to mandatory role '[role.name/]' with opposite role of type '[role.getOppositeRoleInBinaryRel().entity.name/]'
 	List<Object> values[field.getPhysicalName()/]_[level+1/] = new ArrayList<>();
 	List<StructField> listOfStructField[field.getPhysicalName()/]_[level+1/] = new ArrayList<StructField>();
-	List<Row> row_value_[field.getPhysicalName()/]_[level+1/] = new ArrayList<>();
 	if([role.getOppositeRoleInBinaryRel().name.toLowerFirst()/][getRelationShipType(role).name.toUpperFirst()/]!=null){
 	[if (role.isCardinalityMaxN())]
+	List<Row> row_value_[field.getPhysicalName()/]_[level+1/] = new ArrayList<>();
 		for([role.getOppositeRoleInBinaryRel().entity.name.toUpperFirst()/] [role.getOppositeRoleInBinaryRel().entity.name.toLowerFirst()/] : [role.getOppositeRoleInBinaryRel().name.toLowerFirst()/][getRelationShipType(role).name.toUpperFirst()/]){
 			values[field.getPhysicalName()/]_[level+1/].clear();
 			[generateStructField(role.getOppositeRoleInBinaryRel().entity, field.oclAsType(EmbeddedObject).fields, field.getPhysicalName(), level+1, true)/]
@@ -517,8 +517,12 @@ values[objectName/]_[level/].add(value_[objectName/]_[getPhysicalName(field)/]_[
 	listOfStructField[objectName/]_[level/].add(DataTypes.createStructField("[field.getPhysicalName()/]",array[field.getPhysicalName()/]_[level/],true));
 	values[objectName/]_[level/].add(row_value_[field.getPhysicalName()/]_[level+1/]);
 	[else]
+		Row row_value_[field.getPhysicalName()/]_[level+1/];
 		[role.getOppositeRoleInBinaryRel().entity.name.toUpperFirst()/] [role.getOppositeRoleInBinaryRel().entity.name.toLowerFirst()/] = [role.getOppositeRoleInBinaryRel().name.toLowerFirst()/][getRelationShipType(role).name.toUpperFirst()/];
 		[generateStructField(role.getOppositeRoleInBinaryRel().entity, field.oclAsType(EmbeddedObject).fields, field.getPhysicalName(), level+1,true)/]
+		StructType structType_[field.getPhysicalName()/]_[level/] = DataTypes.createStructType(listOfStructField[field.getPhysicalName()/]_[level+1/]);
+		listOfStructField[objectName/]_[level/].add(DataTypes.createStructField("[field.getPhysicalName()/]",structType_[field.getPhysicalName()/]_[level/],true));
+		row_value_[field.getPhysicalName()/]_[level+1/] = RowFactory.create(values[field.getPhysicalName()/]_[level+1/].toArray());
 		values[objectName/]_[level/].add(row_value_[field.getPhysicalName()/]_[level+1/]);
 	[/if]
 	}

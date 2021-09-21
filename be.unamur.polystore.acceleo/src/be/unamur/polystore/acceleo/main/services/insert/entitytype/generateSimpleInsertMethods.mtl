@@ -94,8 +94,8 @@ public [if (override = false)]abstract [/if]boolean insert[entityType.name.toUpp
 	}[/if]
 [/for]
 [/for]
-[comment Insert in Join structures/]
-[for (struct: AbstractPhysicalStructure | getJoinStructureOfMappedMandatoryRoleOfEntity(entityType, entityType.ancestors(Domainmodel)->first()))]
+[comment Insert in Ref structures/]
+[for (struct: AbstractPhysicalStructure | getRefStructureOfMappedMandatoryRoleOfEntity(entityType, entityType.ancestors(Domainmodel)->first()))]
 [for (db: Database | getConcernedDatabases(struct, entityType.ancestors(Domainmodel)->first()))]
 
 public [if (override = false)]abstract [/if]boolean insert[entityType.name.toUpperFirst() /]In[struct.name.toUpperFirst()/]From[db.name.toUpperFirst() /]([entityType.name.toUpperFirst() /] [entityType.name.toLowerFirst() /][for (role: Role | getMandatoryRoles(entityType, conceptualSchema))],
@@ -104,7 +104,7 @@ public [if (override = false)]abstract [/if]boolean insert[entityType.name.toUpp
 	[/for]
 )[if (override = false)];[else]
 	{
-	[insertInJoinStructure(entityType, struct, db)/]
+	[insertInRefStructure(entityType, struct, db)/]
 	}[/if]
 [/for]
 [/for]

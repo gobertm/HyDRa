@@ -56,7 +56,7 @@ conceptual schema conceptualSchema{
 	
 	entity type Account {
 		id: string,
-		profilepic : blob,
+		email : string,
 		pass : string
 		identifier{
 			id
@@ -93,7 +93,7 @@ physical schemas {
 				iduser,
 				account[1]{
 					idaccount,
-					profilepic
+					email
 				}
 			}
 		}
@@ -118,8 +118,7 @@ physical schemas {
 		table directorTable {
 			columns{
 				id,
-				firstname,
-				lastname
+				fullname : [firstname]" "[lastname]
 			}
 		}
 		
@@ -140,7 +139,7 @@ physical schemas {
 
 mapping rules{
 	conceptualSchema.User(id) -> IMDB_Mongo.userCol(iduser),
-	conceptualSchema.Account(id, profilepic) -> IMDB_Mongo.userCol.account(idaccount, profilepic),
+	conceptualSchema.Account(id, email) -> IMDB_Mongo.userCol.account(idaccount, email),
 	conceptualSchema.userAccount.user -> IMDB_Mongo.userCol.account(),
 	
 	conceptualSchema.Actor(id) -> IMDB_Mongo.actorCol(idactor),

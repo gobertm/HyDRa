@@ -19,8 +19,8 @@
 [query public getComplexPhysicalStructures(ent : EntityType, model: Domainmodel) : Set(AbstractPhysicalStructure) 
 = invoke('be.unamur.polystore.acceleo.main.utils.MappingRuleService', 'getComplexPhysicalStructures(be.unamur.polystore.pml.EntityType, be.unamur.polystore.pml.Domainmodel)', Sequence{ent, model}) /]
 
-[query public getJoinStructureOfMappedMandatoryRoleOfEntity(ent : EntityType, model: Domainmodel) : Set(AbstractPhysicalStructure) 
-= invoke('be.unamur.polystore.acceleo.main.utils.MappingRuleService', 'getJoinStructureOfMappedMandatoryRoleOfEntity(be.unamur.polystore.pml.EntityType, be.unamur.polystore.pml.Domainmodel)', Sequence{ent, model}) /]
+[query public getRefStructureOfMappedMandatoryRoleOfEntity(ent : EntityType, model: Domainmodel) : Set(AbstractPhysicalStructure) 
+= invoke('be.unamur.polystore.acceleo.main.utils.MappingRuleService', 'getRefStructureOfMappedMandatoryRoleOfEntity(be.unamur.polystore.pml.EntityType, be.unamur.polystore.pml.Domainmodel)', Sequence{ent, model}) /]
 
 [query public getMappedPhysicalStructureToInsertSingleE(ent : EntityType, model: Domainmodel) : Collection(AbstractPhysicalStructure) 
 = invoke('be.unamur.polystore.acceleo.main.utils.MappingRuleService', 'getMappedPhysicalStructureToInsertSingleE(be.unamur.polystore.pml.EntityType, be.unamur.polystore.pml.Domainmodel)', Sequence{ent, model}) /]
