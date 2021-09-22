@@ -168,13 +168,60 @@ throw new UnsupportedOperationException("Multi component identifier not supporte
 [/template]
 	
 [template public insertInRefStructure(entityType: EntityType, struct : AbstractPhysicalStructure, db : Database)]
-	 // Implement Insert in join complex struct
+	 // Implement Insert in structures with mandatory references
 	List<String> columns = new ArrayList<>();
 	List<Object> values = new ArrayList<>();
 	List<List<Object>> rows = new ArrayList<>();
+[comment]//TODO Docdb ref support. Only for relational reference for now[/comment]
+[if (struct.oclIsTypeOf(Table))]
+[comment]Normal fields [/comment]
+[for (field : PhysicalField | struct.oclAsType(Table).columns)]
+	[if (field.oclIsTypeOf(ShortField))]
+		[let attr : Attribute = getMappedAttributes(field, entityType, entityType.getMappingRules())->any(true)]
+			[if (attr.oclIsUndefined()=false)]
+columns.add("[getPhysicalName(field)/]");
+values.add([entityType.name.toLowerFirst()/].get[attr.name.toUpperFirst()/]());
+			[/if]
+		[/let] 
+	[/if]
+	[if (field.oclIsTypeOf(LongField))]
+		[comment LongField with only one component and is BracketsField /]
+		[if (field.oclAsType(LongField).pattern->size()=1 and field.oclAsType(LongField).pattern->any(true).oclIsTypeOf(BracketsField))]
+			[let brackets : BracketsField = field.oclAsType(LongField).pattern->any(true).oclAsType(BracketsField)]
+				[let attr : Attribute = getMappedAttributes(field, entityType, entityType.getMappingRules())->any(true)]
+				[if (attr.oclIsUndefined()=false)]
+columns.add("[getPhysicalName(field)/]");
+values.add([entityType.name.toLowerFirst()/].get[attr.name.toUpperFirst()/]());
+				[/if]
+				[/let] 
+			[/let]
+		[else]
+			[if (field.oclAsType(LongField).pattern->filter(BracketsField)->exists(b |getMappedAttributes(b, entityType, entityType.getMappingRules())->size()=0)=false)]
+				[comment All BracketsField are mapped to the corresponding entity or composed of only one Terminal expression/]
+				[comment LongField is composed of component, therefore can only be StringType /]
+String value_[getPhysicalName(field)/] = "";
+				[for (component : TerminalExpression | field.oclAsType(LongField).pattern)]
+					[if (component.oclIsTypeOf(BracketsField))]
+						[let attr : Attribute = getMappedAttributes(component.oclAsType(BracketsField), entityType, entityType.getMappingRules())->any(true)]
+value_[getPhysicalName(field)/] += [entityType.name.toLowerFirst()/].get[attr.name.toUpperFirst()/]();
+						[/let]
+					[else]
+value_[getPhysicalName(field)/] += "[component.literal/]";
+					[/if]
+				[/for]
+columns.add("[getPhysicalName(field)/]");
+values.add(value_[getPhysicalName(field)/]);
+			[/if]
+		[/if]
+	[/if]
+[/for]
+[comment]	Reference fields [/comment]
+[if (isJoinStructureOfMappedMandatoryRoleOfEntity(entityType, struct, entityType.ancestors(Domainmodel)->first()))]
+[comment]Join structure  A <- AB -> B[/comment]
 	[for (ref : Reference | getRefOfPhysicalStructure(struct))]
 		[let role : Role = getMappedRoleOfReference(ref)]
 		[if (role.entity.name = entityType.name)]
+	// Role in join structure 
 	columns.add("[ref.sourceField->any(true).oclAsType(PhysicalField).getPhysicalName()/]");
 	Object [entityType.name.toLowerFirst()/]Id = [entityType.name.toLowerFirst()/].get[ref.targetField->any(true).oclAsType(PhysicalField).getPhysicalName().toUpperFirst()/]();
 	[/if]
@@ -187,21 +234,31 @@ throw new UnsupportedOperationException("Multi component identifier not supporte
 		[if (role.isCardinalityMaxN())]
 	for([role.entity.name.toUpperFirst()/] [role.entity.name.toLowerFirst()/] : [role.name.toLowerFirst()/][getRelationShipType(role).name.toUpperFirst()/]){
 		[else]
-	[role.entity.name.toUpperFirst()/] [role.entity.name.toLowerFirst()/] = [role.name.toLowerFirst()/][getRelationShipType(role).name.toUpperFirst()/];
+		[role.entity.name.toUpperFirst()/] [role.entity.name.toLowerFirst()/] = [role.name.toLowerFirst()/][getRelationShipType(role).name.toUpperFirst()/];
 		[/if]
 		values = new ArrayList<>();
 		values.add([entityType.name.toLowerFirst()/]Id);
 		values.add([role.entity.name.toLowerFirst()/].get[ref.targetField->any(true).oclAsType(PhysicalField).getPhysicalName().toUpperFirst()/]());
 		rows.add(values);
 		[if (role.isCardinalityMaxN())]
-	}
+	}	
 		[/if]
 		[/if]
 		[/let] 
 	[/for]
-	[if (struct.oclIsTypeOf(Table))]
+[else]
+[comment]// A -> B[/comment]
+	[for (ref : Reference | getRefOfPhysicalStructure(struct))]
+		[let role : Role = getMappedRoleOfReference(ref)]
+	// Ref '[ref.name/]' mapped to role '[role.name/]'
+	columns.add("[ref.sourceField->any(true).oclAsType(PhysicalField).getPhysicalName()/]");
+	values.add([role.getOppositeRoleInBinaryRel().name.toLowerFirst()/][role.getRelationShipType().name.toUpperFirst()/].get[ref.targetField->any(true).oclAsType(PhysicalField).getPhysicalName().toUpperFirst()/]());
+	rows.add(values);
+	[/let]
+	[/for]
+[/if]
 	DBConnectionMgr.insertInTable(columns, rows, "[struct.name/]", "[db.name/]");					
-	[/if]
+[/if]
 	return true;
 [/template]
 

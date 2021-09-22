@@ -254,6 +254,24 @@ public class MappingRuleService {
 		return res;
 	}
 	
+	public static boolean isJoinStructureOfMappedMandatoryRoleOfEntity(EntityType ent, AbstractPhysicalStructure struct, Domainmodel model){
+		Set<AbstractPhysicalStructure> res = new HashSet<AbstractPhysicalStructure>();
+		for(RelationshipType rel : model.getConceptualSchema().getRelationships()) {
+			for(Role role : rel.getRoles()) {
+				if(role.getEntity().equals(ent) 
+						&& isMandatoryRole(role)
+						&& getMappedPhysicalStructureOfRoleToReference(role, model.getMappingRules()).contains(struct)
+						// And is a join structure (both roles are in the same struct
+						&& getMappedPhysicalStructureOfRoleToReference(role,model.getMappingRules()).equals(getMappedPhysicalStructureOfRoleToReference(getOppositeOfRole(role),model.getMappingRules()))
+					) {
+					return true;
+				}
+			}
+		}
+		return false;
+	}
+
+	
 	
 	/** Returns PhysicalStructures where the given entity is mapped to the first level fields and where there exists cascading mandatory embedded structures mapped to roles. (Identifies structures where we need POJO attribute set.) 
 	 * @param entity
