@@ -254,6 +254,15 @@ public class MappingRuleService {
 		return res;
 	}
 	
+	public static Set<AbstractPhysicalStructure> getRemainingRefStructureOfMappedMandatoryRoleOfEntity(EntityType ent, Domainmodel model){
+		Set<AbstractPhysicalStructure> res = new HashSet<AbstractPhysicalStructure>();
+		res.removeAll(getAscendingPhysicalStructuresOfEntity(ent, model));
+		res.removeAll(getDescendingOneLevelPhysicalStructuresOfEntity(ent, model));
+		res.removeAll(getAscendingPhysicalStructuresOfEntity(ent, model));
+		res.removeAll(getMappedPhysicalStructureToInsertSingleE(ent, model));
+		return res;
+	}
+	
 	public static boolean isJoinStructureOfMappedMandatoryRoleOfEntity(EntityType ent, AbstractPhysicalStructure struct, Domainmodel model){
 		Set<AbstractPhysicalStructure> res = new HashSet<AbstractPhysicalStructure>();
 		for(RelationshipType rel : model.getConceptualSchema().getRelationships()) {
@@ -456,6 +465,40 @@ public class MappingRuleService {
 		}
 		return null;
 	}
+	
+	public static List<Reference> getReferenceOfPhysicalField(PhysicalField e) {
+		MappingRules rules = ((Domainmodel) getFirstAncestor(Domainmodel.class, e)).getMappingRules();
+		List<Reference> res = new ArrayList<>();
+		Reference ref;
+		for(AbstractMappingRule rule : rules.getMappingRules()) {
+			if(rule instanceof RoleToReferenceMappingRule) {
+				ref = ((RoleToReferenceMappingRule) rule).getReference();
+				if(ref.getSourceField().contains(e))
+					res.add(ref);
+			}
+		}
+		return res;
+	}
+	
+	public static Attribute getMappedAttributeOfFieldInStructure(PhysicalField field, AbstractPhysicalStructure structure){
+		MappingRules rules = ((Domainmodel) getFirstAncestor(Domainmodel.class, field)).getMappingRules();
+		for (AbstractMappingRule rule : rules.getMappingRules()) {
+			if (rule instanceof EntityMappingRule) {
+				EntityMappingRule r = (EntityMappingRule) rule;
+				if(r.getPhysicalStructure()== structure) {
+					if (r.getAttributesConceptual().size() > 0) {
+						List<PhysicalField> fields = r.getPhysicalFields();
+						for (int i = 0; i < fields.size(); i++) {
+							if(fields.get(i).equals(field));
+								return r.getAttributesConceptual().get(i); 
+						}
+					}
+				}
+			}
+		}	
+		return null;
+	}
+	
 	
 	public static Role getMappedRoleOfReference(Reference ref) {
 		MappingRules rules = ((Domainmodel) getFirstAncestor(Domainmodel.class, ref)).getMappingRules();

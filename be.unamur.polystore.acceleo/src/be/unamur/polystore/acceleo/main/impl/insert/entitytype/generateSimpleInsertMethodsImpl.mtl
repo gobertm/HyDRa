@@ -24,7 +24,7 @@
 	[/for]
 	[/for]
 	// Insert in ref structures 
-	[for (struct: AbstractPhysicalStructure | getRefStructureOfMappedMandatoryRoleOfEntity(entityType, entityType.ancestors(Domainmodel)->first()))]
+	[for (struct: AbstractPhysicalStructure | getRemainingRefStructureOfMappedMandatoryRoleOfEntity(entityType, entityType.ancestors(Domainmodel)->first()))]
 	[for (db: Database | getConcernedDatabases(struct, entityType.ancestors(Domainmodel)->first()))]
 	inserted = insert[entityType.name.toUpperFirst() /]In[struct.name.toUpperFirst()/]From[db.name.toUpperFirst() /]([entityType.name.toLowerFirst() /][for (role: Role | getMandatoryRoles(entityType, conceptualSchema))],[role.getOppositeRoleInBinaryRel().name.toLowerFirst()/][getRelationShipType(role).name.toUpperFirst()/][/for])|| inserted ;
 	[/for]
@@ -223,7 +223,7 @@ values.add(value_[getPhysicalName(field)/]);
 		[if (role.entity.name = entityType.name)]
 	// Role in join structure 
 	columns.add("[ref.sourceField->any(true).oclAsType(PhysicalField).getPhysicalName()/]");
-	Object [entityType.name.toLowerFirst()/]Id = [entityType.name.toLowerFirst()/].get[ref.targetField->any(true).oclAsType(PhysicalField).getPhysicalName().toUpperFirst()/]();
+	Object [entityType.name.toLowerFirst()/]Id = [entityType.name.toLowerFirst()/].get[getMappedAttributeOfFieldInStructure(ref.targetField->any(true).oclAsType(PhysicalField), ref.targetField->any(true).oclAsType(PhysicalField).getAbstractPhysicalStructureNotEmbeddedObject()).name.toUpperFirst()/]());
 	[/if]
 	[/let]
 	[/for]
@@ -238,7 +238,7 @@ values.add(value_[getPhysicalName(field)/]);
 		[/if]
 		values = new ArrayList<>();
 		values.add([entityType.name.toLowerFirst()/]Id);
-		values.add([role.entity.name.toLowerFirst()/].get[ref.targetField->any(true).oclAsType(PhysicalField).getPhysicalName().toUpperFirst()/]());
+		values.add([role.entity.name.toLowerFirst()/].get[getMappedAttributeOfFieldInStructure(ref.targetField->any(true).oclAsType(PhysicalField), ref.targetField->any(true).oclAsType(PhysicalField).getAbstractPhysicalStructureNotEmbeddedObject()).name.toUpperFirst()/]());
 		rows.add(values);
 		[if (role.isCardinalityMaxN())]
 	}	
@@ -252,7 +252,7 @@ values.add(value_[getPhysicalName(field)/]);
 		[let role : Role = getMappedRoleOfReference(ref)]
 	// Ref '[ref.name/]' mapped to role '[role.name/]'
 	columns.add("[ref.sourceField->any(true).oclAsType(PhysicalField).getPhysicalName()/]");
-	values.add([role.getOppositeRoleInBinaryRel().name.toLowerFirst()/][role.getRelationShipType().name.toUpperFirst()/].get[ref.targetField->any(true).oclAsType(PhysicalField).getPhysicalName().toUpperFirst()/]());
+	values.add([role.getOppositeRoleInBinaryRel().name.toLowerFirst()/][role.getRelationShipType().name.toUpperFirst()/].get[getMappedAttributeOfFieldInStructure(ref.targetField->any(true).oclAsType(PhysicalField), ref.targetField->any(true).oclAsType(PhysicalField).getAbstractPhysicalStructureNotEmbeddedObject()).name.toUpperFirst()/]());
 	rows.add(values);
 	[/let]
 	[/for]
@@ -538,6 +538,17 @@ values[objectName/]_[level/].add(value_[objectName/]_[getPhysicalName(field)/]_[
 			[/if]
 		[/if]
 	[/if]
+[comment]Verify if field mapped to reference[/comment]
+[comment]	Reference fields [/comment]
+[comment]// A -> B[/comment]
+	[for (ref : Reference | getReferenceOfPhysicalField(field))]
+		[let role : Role = getMappedRoleOfReference(ref)]
+// Ref '[ref.name/]' mapped to role '[role.name/]'
+listOfStructField[objectName/]_[level/].add(DataTypes.createStructField("[ref.sourceField->any(true).oclAsType(PhysicalField).getPhysicalName()/]",DataTypes.StringType, true));
+values[objectName/]_[level/].add([role.getOppositeRoleInBinaryRel().name.toLowerFirst()/][role.getRelationShipType().name.toUpperFirst()/].get[getMappedAttributeOfFieldInStructure(ref.targetField->any(true).oclAsType(PhysicalField), ref.targetField->any(true).oclAsType(PhysicalField).getAbstractPhysicalStructureNotEmbeddedObject()).name.toUpperFirst()/]());
+	[/let]
+	[/for]
+[comment][/comment]
 	[if (field.oclIsTypeOf(EmbeddedObject) and field.isMappedToRole(entityType.getMappingRules())=false)]
 	Object row_value_[field.getPhysicalName()/]_[level+1/] = null;
 // Embedded structure [field.getPhysicalName()/]

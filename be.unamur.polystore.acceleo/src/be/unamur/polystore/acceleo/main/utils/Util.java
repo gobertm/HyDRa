@@ -202,7 +202,7 @@ public class Util {
 
 	public static java.util.Collection<Attribute> getMappedAttributes(EntityType entity, AbstractPhysicalStructure structure, Database db, MappingRules rules){
 		Set<Attribute> res = new HashSet<Attribute>();
-
+		
 		for (AbstractMappingRule rule : rules.getMappingRules()) {
 			if (rule instanceof EntityMappingRule) {
 				EntityMappingRule r = (EntityMappingRule) rule;
@@ -218,6 +218,7 @@ public class Util {
 		}	
 		return res;
 	}
+
 	
 	public static java.util.Collection<EmbeddedObject> getChildrenArrayPhysicalFieldsHavingDescendantMappedToGivenEntityType(Object arg, Object entOrRel, MappingRules rules){
 		return getChildrenArrayPhysicalFieldsHavingDescendantMappedToGivenEntityTypeOrToRefField(arg, entOrRel, rules, null);

@@ -25,6 +25,9 @@
 [query public getRefStructureOfMappedMandatoryRoleOfEntity(ent : EntityType, model: Domainmodel) : Set(AbstractPhysicalStructure) 
 = invoke('be.unamur.polystore.acceleo.main.utils.MappingRuleService', 'getRefStructureOfMappedMandatoryRoleOfEntity(be.unamur.polystore.pml.EntityType, be.unamur.polystore.pml.Domainmodel)', Sequence{ent, model}) /]
 
+[query public getRemainingRefStructureOfMappedMandatoryRoleOfEntity(ent : EntityType, model: Domainmodel) : Set(AbstractPhysicalStructure) 
+= invoke('be.unamur.polystore.acceleo.main.utils.MappingRuleService', 'getRemainingRefStructureOfMappedMandatoryRoleOfEntity(be.unamur.polystore.pml.EntityType, be.unamur.polystore.pml.Domainmodel)', Sequence{ent, model}) /]
+
 
 [query public getMappedPhysicalStructureToInsertSingleE(ent : EntityType, model: Domainmodel) : Collection(AbstractPhysicalStructure) 
 = invoke('be.unamur.polystore.acceleo.main.utils.MappingRuleService', 'getMappedPhysicalStructureToInsertSingleE(be.unamur.polystore.pml.EntityType, be.unamur.polystore.pml.Domainmodel)', Sequence{ent, model}) /]
@@ -109,8 +112,16 @@
 	invoke('be.unamur.polystore.acceleo.main.utils.Util', 'getMappedAttributes(be.unamur.polystore.pml.EntityType, be.unamur.polystore.pml.AbstractPhysicalStructure, be.unamur.polystore.pml.Database, be.unamur.polystore.pml.MappingRules)', Sequence{ent, struct, db, rules})
 /]
 
+[query public getMappedAttributeOfFieldInStructure(f: PhysicalField, struct : AbstractPhysicalStructure) :Attribute =  
+	invoke('be.unamur.polystore.acceleo.main.utils.MappingRuleService', 'getMappedAttributeOfFieldInStructure(be.unamur.polystore.pml.PhysicalField, be.unamur.polystore.pml.AbstractPhysicalStructure)', Sequence{f, struct})
+/]
+
 [query public getRefOfPhysicalStructure(struct : AbstractPhysicalStructure) : Collection(Reference) =  
 	invoke('be.unamur.polystore.acceleo.main.utils.MappingRuleService', 'getRefOfPhysicalStructure(be.unamur.polystore.pml.AbstractPhysicalStructure)', Sequence{struct})
+/]
+
+[query public getReferenceOfPhysicalField(f : PhysicalField) : Collection(Reference) =  
+	invoke('be.unamur.polystore.acceleo.main.utils.MappingRuleService', 'getReferenceOfPhysicalField(be.unamur.polystore.pml.PhysicalField)', Sequence{f})
 /]
 
 [query public getMappedReferenceInSamePhysicalStructureForOppositeRole(role : Role, struct: AbstractPhysicalStructure) : Reference = 
