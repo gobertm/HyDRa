@@ -256,7 +256,7 @@ public class MappingRuleService {
 	
 	public static Set<AbstractPhysicalStructure> getRemainingRefStructureOfMappedMandatoryRoleOfEntity(EntityType ent, Domainmodel model){
 		Set<AbstractPhysicalStructure> res = new HashSet<AbstractPhysicalStructure>();
-		res.removeAll(getAscendingPhysicalStructuresOfEntity(ent, model));
+		res.addAll(getRefStructureOfMappedMandatoryRoleOfEntity(ent, model));
 		res.removeAll(getDescendingOneLevelPhysicalStructuresOfEntity(ent, model));
 		res.removeAll(getAscendingPhysicalStructuresOfEntity(ent, model));
 		res.removeAll(getMappedPhysicalStructureToInsertSingleE(ent, model));

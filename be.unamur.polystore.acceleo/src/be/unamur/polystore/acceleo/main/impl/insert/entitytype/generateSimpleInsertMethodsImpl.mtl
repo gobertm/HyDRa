@@ -227,7 +227,7 @@ values.add(value_[getPhysicalName(field)/]);
 		[if (role.entity.name = entityType.name)]
 	// Role in join structure 
 	columns.add("[ref.sourceField->any(true).oclAsType(PhysicalField).getPhysicalName()/]");
-	Object [entityType.name.toLowerFirst()/]Id = [entityType.name.toLowerFirst()/].get[getMappedAttributeOfFieldInStructure(ref.targetField->any(true).oclAsType(PhysicalField), ref.targetField->any(true).oclAsType(PhysicalField).getAbstractPhysicalStructureNotEmbeddedObject()).name.toUpperFirst()/]());
+	Object [entityType.name.toLowerFirst()/]Id = [entityType.name.toLowerFirst()/].get[getMappedAttributeOfFieldInStructure(ref.targetField->any(true).oclAsType(PhysicalField), ref.targetField->any(true).oclAsType(PhysicalField).getAbstractPhysicalStructureNotEmbeddedObject()).name.toUpperFirst()/]();
 	[/if]
 	[/let]
 	[/for]
