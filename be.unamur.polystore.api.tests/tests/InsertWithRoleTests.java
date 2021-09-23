@@ -4,7 +4,6 @@
 //import com.mongodb.ServerAddress;
 //import com.mongodb.client.MongoClient;
 //import com.mongodb.client.MongoClients;
-//import com.mongodb.client.MongoCollection;
 //import com.mongodb.client.MongoDatabase;
 //import conditions.*;
 //import dao.impl.ActorServiceImpl;
@@ -18,15 +17,6 @@
 //import exceptions.PhysicalStructureException;
 //import org.apache.commons.lang.mutable.MutableBoolean;
 //import org.apache.spark.sql.Dataset;
-//import org.apache.spark.sql.RowFactory;
-//import org.apache.spark.sql.types.ArrayType;
-//import org.apache.spark.sql.types.DataTypes;
-//import org.apache.spark.sql.types.StructField;
-//import org.apache.spark.sql.types.StructType;
-//import org.bson.Document;
-//import org.bson.conversions.Bson;
-//import static com.mongodb.client.model.Filters.eq;
-//import static com.mongodb.client.model.Updates.push;
 //
 //import org.junit.Before;
 //import org.junit.BeforeClass;
@@ -36,7 +26,6 @@
 //import java.sql.*;
 //import java.util.*;
 //
-//import static com.mongodb.client.model.Accumulators.addToSet;
 //import static org.junit.Assert.assertEquals;
 //
 //public class InsertWithRoleTests {
@@ -216,5 +205,25 @@
 //        directorDataset.show();
 //        assertEquals(10,directorDataset.count());
 //    }
+//
+//    @Test
+//    public void testDuplicateInsertSameIDAscending(){
+//        // !!!!! Manual verification !!!!
+//        // Insert Actors first. As Ascending need preexisting actors. Implementation will insert in standalone structure 'actorCollection' (because no mandatory roles on actors)
+//        for (Actor a : actors) {
+//            actorService.insertActor(a);
+//        }
+//        assertEquals(10, actorService.getActorList(null).count());
+//        //Insert Movie in ascending structure, to actor 0 & 1
+//        movieService.insertMovieInActorCollectionFromMymongo(movies.get(0),directors,Arrays.asList(actors.get(0), actors.get(1)));
+//        movieService.insertMovieInActorCollectionFromMymongo(movies.get(0),directors,Arrays.asList(actors.get(0), actors.get(1)));
+//    }
+//
+//    @Test
+//    public void insertDuplicateDescendingInDocumentDB(){
+//        movieService.insertMovieInMovieColFromMymongo(movies.get(0),directors,actors);
+//        movieService.insertMovieInMovieColFromMymongo(movies.get(0),directors,actors);
+//    }
+//
 //
 //}

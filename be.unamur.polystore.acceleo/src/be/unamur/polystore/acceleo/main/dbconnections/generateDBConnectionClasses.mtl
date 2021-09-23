@@ -81,12 +81,13 @@ public class DBConnectionMgr {
 		return mapDB;
 	}
 
-	public static void upsertInArray(Bson filter, Bson updateOp, String struct, String db){
+	public static void upsertMany(Bson filter, Bson updateOp, String struct, String db){
 		DBCredentials credentials = dbPorts.get(db);
 		if(credentials.dbType.equals("mongodb")){ 
 			MongoDatabase mongoDatabase = getMongoClient(credentials).getDatabase(db);
 	        MongoCollection<Document> structCollection = mongoDatabase.getCollection(struct);
-	        structCollection.updateMany(filter, updateOp);
+			UpdateOptions options = new UpdateOptions().upsert(true);
+	        structCollection.updateMany(filter, updateOp, options);
 		}
 		else{
 			logger.error("Can't perform update, wrong database type, need document db. Database : '{}' , type : '{}' ",credentials.dbName, credentials.dbType);
@@ -94,7 +95,7 @@ public class DBConnectionMgr {
 		}
 	}
 
-	public static void upsertInArray(Bson filter, Bson updateOp, List<Bson> arrayFiltersConditions, String struct, String db){
+	public static void upsertMany(Bson filter, Bson updateOp, List<Bson> arrayFiltersConditions, String struct, String db){
 		DBCredentials credentials = dbPorts.get(db);
 		if(credentials.dbType.equals("mongodb")){ 
 			MongoDatabase mongoDatabase = getMongoClient(credentials).getDatabase(db);

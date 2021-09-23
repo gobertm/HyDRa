@@ -49,7 +49,8 @@ import scala.Tuple2;
 import org.bson.Document;
 import org.bson.conversions.Bson;
 import static com.mongodb.client.model.Filters.eq;
-import static com.mongodb.client.model.Updates.push;
+import static com.mongodb.client.model.Updates.*;
+
 
 public class [entityType.name.toUpperFirst() + 'ServiceImpl' /] extends [entityType.name.toUpperFirst() + 'Service' /] {
 	[instantiateLogger(entityType.name.toUpperFirst() + 'ServiceImpl') /]

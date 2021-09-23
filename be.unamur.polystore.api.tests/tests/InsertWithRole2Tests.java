@@ -116,7 +116,7 @@ public class InsertWithRole2Tests {
         for (int i = 0; i < NBINSTANCE; i++) {
             Account a = new Account();
             a.setId("" + i);
-            a.setProfilepic(Byte.parseByte("123"));
+            a.setEmail(i + "_user@fakemail.com");
             accounts.add(a);
         }
     }
@@ -186,46 +186,36 @@ public class InsertWithRole2Tests {
     }
 
     @Test
-    public void testUpdateArrayFilter(){
-        actorService.insertActor(actors.get(0));
-        actorService.insertActor(actors.get(1));
-        movieService.insertMovieInActorColFromMymongo(movies.get(0), null, Arrays.asList(actors.get(0)));
-        movieService.insertMovieInActorColFromMymongo(movies.get(1), null, Arrays.asList(actors.get(1)));
-        // Inserting of Review which is at nested level 3 of collection.
-        Bson filter, updateOp;
-        filter = new Document();
-        //add review to movies array
-        Document doc = new Document("idreview","0");
-        updateOp = push("movies.$[elem].reviews", doc);
-        DBConnectionMgr.upsertInArray(filter, updateOp, Arrays.asList(eq("elem.idmovie", "0")), "actorCol","mymongo");
-        // add User to Review element array
-        doc = new Document("iduser","0");
-        updateOp = push("movies.$[idm].reviews.$[elem].user", doc);
-        DBConnectionMgr.upsertInArray(filter, updateOp, Arrays.asList(eq("idm.idmovie","0"),eq("elem.idreview", "0")), "actorCol","mymongo");
-    }
-
-    @Test
     public void testInsertFull() {
         // Precondition : Opposite entity types of mandatory roles must already be persisted.
         for (Director d : directors) {
             directorService.insertDirector(d);
         }
-        assertEquals(10, directorService.getDirectorList(null).count());
+        assertEquals(NBINSTANCE, directorService.getDirectorList(null).count());
+        assertEquals(NBINSTANCE, directorService.getDirectorListInDirectorTableFromMydb(null, new MutableBoolean(false)).count());
         for (Actor a : actors) {
             actorService.insertActor(a);
         }
-        assertEquals(10, actorService.getActorList(null).count());
+        assertEquals(NBINSTANCE, actorService.getActorList(null).count());
         int i=0;
         for (User u : users) {
             userService.insertUser(u, accounts.get(i));
             i++;
         }
+        assertEquals(NBINSTANCE, accountService.getAccountList(null).count());
+        assertEquals(NBINSTANCE, userService.getUserListInUserColFromMymongo(null, new MutableBoolean(false)).count());
+        // Users are not inserted in 'actorCol' because it relies on Review embedded structure, and Review is not a mandaotry role.
         i=0;
         for (Movie m : movies) {
             movieService.insertMovie(m, directors.get(i), actors);
             i++;
         }
-
+        assertEquals(NBINSTANCE, movieService.getMovieList(null).count());
+        assertEquals(NBINSTANCE, movieService.getMovieListInActorColFromMymongo(null, new MutableBoolean(false)).count());
+        assertEquals(NBINSTANCE, movieService.getMovieListInMovieTableFromMydb(null, new MutableBoolean(false)).count());
+        assertEquals(NBINSTANCE, movieService.getMovieList(Movie.movieActor.movie,actors.get(0)).count());
+        assertEquals(directors.get(0).getId(), directorService.getDirector(Director.movieDirector.director, movies.get(0)).getId());
+        assertEquals(1, movieService.getMovieList(Movie.movieDirector.directed_movie, directors.get(0)).count());
     }
 
 }

@@ -69,19 +69,31 @@
 [template public insertInComplexEmbeddedStructure(entityType: EntityType, struct : AbstractPhysicalStructure, db : Database)]
 	[generateDocument(entityType, struct.oclAsType(pml::Collection).fields, struct.oclAsType(pml::Collection).name,1,0)/]
 	DBConnectionMgr.insertMany(List.of(doc[struct.name/]_1), "[struct.name/]", "[db.name/]");
-	return false;
+	return true;
 	
 [/template]
 
 [template public insertInDescendingStructure(entityType: EntityType, struct : AbstractPhysicalStructure, db : Database)]
 [comment generate structType for Ent and for subsequent roles. Join them together in descending way. /]
 	 // Implement Insert in descending complex struct
-	[comment TODO. Descending structures only arises in Collection at the moment./]
-	[generateStructField(entityType,struct.oclAsType(pml::Collection).fields, struct.oclAsType(pml::Collection).name,1,false)/]
+[comment]Insert using Spark[/comment]
+[comment]	[generateStructField(entityType,struct.oclAsType(pml::Collection).fields, struct.oclAsType(pml::Collection).name,1,false)/]
 	List<Row> listRows=new ArrayList<Row>();
 	StructType struct = DataTypes.createStructType(listOfStructField[struct.oclAsType(pml::Collection).name/]_1);
 	listRows.add(RowFactory.create(values[struct.oclAsType(pml::Collection).name/]_1.toArray()));
-	SparkConnectionMgr.writeDataset(listRows, struct, "mongo", "[struct.name/]", "[db.name/]");
+	SparkConnectionMgr.writeDataset(listRows, struct, "mongo", "[struct.name/]", "[db.name/]");[/comment]
+	Bson filter = new Document();
+	Bson updateOp;
+	[generateDocument(entityType, struct.oclAsType(pml::Collection).fields, struct.oclAsType(pml::Collection).name,1,0)/]
+	[for (attr : Attribute | entityType.identifier.attributes)]
+				[if (i=1)]
+	filter = eq("[getPhysicalName(getMappedPhysicalField(attr, struct, db, entityType.getMappingRules()))/]",[entityType.name.toLowerFirst()/].get[attr.name.toUpperFirst()/]());
+				[else]
+	filter = and(filter,eq("[getPhysicalName(getMappedPhysicalField(attr, struct, db, entityType.getMappingRules()))/]",[entityType.name.toLowerFirst()/].get[attr.name.toUpperFirst()/]());
+				[/if]
+	[/for]
+	updateOp = setOnInsert(doc[struct.name/]_1);
+	DBConnectionMgr.upsertMany(filter, updateOp, "[struct.name/]", "[db.name/]");
 	return true;
 [/template]
 
@@ -90,7 +102,7 @@
 
 	Bson filter= new Document();
 	Bson updateOp;
-	String updatePush;
+	String addToSet;
 	List<String> fieldName= new ArrayList();
 	List<Bson> arrayFilterCond = new ArrayList();
 	[let field : PhysicalField = getMappedPhysicalFieldOfRoleOfEntityWhereOppositeRoleIsMandatory(struct, entityType, entityType.getMappingRules())]
@@ -99,9 +111,9 @@
 	[if (field.eContainer(EmbeddedObject).oclIsUndefined()=false)]
 	[ascendInStruct(field.eContainer(EmbeddedObject), getMappedRoleOfPhysicalField(field),struct, db, 0, entityType)/]
 	fieldName.add("[getPhysicalName(field)/]");
-	updatePush = String.join(".",fieldName);
-	updateOp = push(updatePush,doc[getPhysicalName(field)/]_1);
-	DBConnectionMgr.upsertInArray(filter, updateOp, arrayFilterCond, "[struct.name/]", "[db.name/]");
+	addToSet = String.join(".",fieldName);
+	updateOp = addToSet(addToSet,doc[getPhysicalName(field)/]_1);
+	DBConnectionMgr.upsertMany(filter, updateOp, arrayFilterCond, "[struct.name/]", "[db.name/]");
 	[else] 
 	// level 1 ascending
 	[comment for each mandatory role object in list, in ascending structure we need to update the document. /]
@@ -117,8 +129,8 @@
 		filter = and(filter,eq("[getPhysicalName(getMappedPhysicalField(attr, struct, db, entityType.getMappingRules()))/]",[role.entity.name.toLowerFirst()/].get[attr.name.toUpperFirst()/]());
 				[/if]
 			[/for]
-		updateOp = push("[field.getPhysicalName()/]", doc[getPhysicalName(field)/]_1);
-		DBConnectionMgr.upsertInArray(filter, updateOp, "[struct.name/]", "[db.name/]");					
+		updateOp = addToSet("[field.getPhysicalName()/]", doc[getPhysicalName(field)/]_1);
+		DBConnectionMgr.upsertMany(filter, updateOp, "[struct.name/]", "[db.name/]");					
 	[if (role.getOppositeRoleInBinaryRel().isCardinalityMaxN())]
 	}
 	[/if] 
