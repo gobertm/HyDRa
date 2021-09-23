@@ -98,9 +98,13 @@ physical schemas {
 					note,
 					author[1]{
 						iduser,
-						username
+						username,
+						idaccount
 						}
 					}
+			}
+			references{
+				account : reviews.author.idaccount -> accountCol.id
 			}
 		}
 			
@@ -119,6 +123,13 @@ physical schemas {
 				movie : idmovie -> movieCol.movieid
 			}
 		}
+		
+		collection accountCol{
+			fields{
+				id,
+				email
+			}
+		}
 	}
 }
 	
@@ -130,11 +141,13 @@ mapping rules{
 	conceptualSchema.Review(id, content, note) -> IMDB_Mongo.reviewCol(idreview,content,note),
 	conceptualSchema.User(id,username) -> IMDB_Mongo.movieCol.reviews.author(iduser,username),
 	conceptualSchema.User(id,username) -> IMDB_Mongo.reviewCol.author(iduser,username),
+	conceptualSchema.Account(id,email) -> IMDB_Mongo.accountCol(id,email),
 	
 	conceptualSchema.reviewUser.r_review1 -> IMDB_Mongo.movieCol.reviews.author(),
 	conceptualSchema.reviewUser.r_review1 -> IMDB_Mongo.reviewCol.author(),
 	conceptualSchema.movieReview.r_reviewed_movie -> IMDB_Mongo.movieCol.reviews(),
-	conceptualSchema.movieReview.r_review -> IMDB_Mongo.reviewCol.movie
+	conceptualSchema.movieReview.r_review -> IMDB_Mongo.reviewCol.movie,
+	conceptualSchema.userAccount.user -> IMDB_Mongo.movieCol.account
 }
 
 databases {
