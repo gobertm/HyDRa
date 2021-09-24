@@ -1,8 +1,0 @@
-[comment encoding = UTF-8 /]
-[module generateSelectMethodsImpl('http://www.unamur.be/polystore/Pml')]
-
-
-[template public implMethod1(rel: RelationshipType)]{
-	//TODO
-	return null;
-}[/template]

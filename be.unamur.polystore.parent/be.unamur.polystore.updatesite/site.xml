@@ -1,5 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<site>
-   <feature url="features/be.unamur.polystore.acceleo.feature_1.0.0.202104301720.jar" id="be.unamur.polystore.acceleo.feature" version="1.0.0.202104301720"/>
-   <feature url="features/be.unamur.polystore.feature_1.0.0.202104301720.jar" id="be.unamur.polystore.feature" version="1.0.0.202104301720"/>
-</site>
