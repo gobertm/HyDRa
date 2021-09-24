@@ -1,0 +1,45 @@
+[comment encoding = UTF-8 /]
+[module generateSimpleDeleteMethods('http://www.unamur.be/polystore/Pml')]
+[import be::unamur::polystore::acceleo::main::util /]
+[import be::unamur::polystore::acceleo::main::impl::delete::entitytype::generateSimpleDeleteMethodsImpl /]
+
+[template public generateSimpleDeleteMethods(entityType: EntityType, conceptualSchema: ConceptualSchema, override: Boolean)]
+public [if (override = false)]abstract [/if]void delete[entityType.name.toUpperFirst() /]List(conditions.Condition<conditions.[entityType.name.toUpperFirst() /]Attribute> condition)[if (override = false)];[else][implMethod1(entityType, conceptualSchema) /][/if]
+
+public void delete[entityType.name.toUpperFirst() /](pojo.[entityType.name.toUpperFirst() /] [entityType.name.toLower() /]) {
+	//TODO using the id
+	return;
+}
+[for (role: Role | getRolesFromEntityType(entityType, conceptualSchema))]
+public [if (override = false)]abstract [/if]void delete[role.name.toUpperFirst() /]ListIn[getRelationShipType(role).name.toUpperFirst() /]([for(role2: Role | getRelationShipType(role).roles)][if(i > 1)],[/if]	
+	conditions.Condition<conditions.[role2.entity.name.toUpperFirst()/]Attribute> [role2.name.toLowerFirst()/]_condition[/for][if (getRelationShipType(role).attributes->size() > 0)],
+	conditions.Condition<conditions.[getRelationShipType(role).name.toUpperFirst() /]Attribute> [getRelationShipType(role).name.toLowerFirst() /][/if]
+)[if (override = false)];[else][implMethod2(entityType, conceptualSchema) /][/if]
+
+[for (role2: Role | getRelationShipType(role).roles)]
+public void delete[role.name.toUpperFirst() /]ListIn[getRelationShipType(role).name.toUpperFirst() /]By[role2.name.toUpperFirst() /]Condition(
+	conditions.Condition<conditions.[role2.entity.name.toUpperFirst()/]Attribute> [role2.name/]_condition
+){
+	delete[role.name.toUpperFirst() /]ListIn[getRelationShipType(role).name.toUpperFirst() /]([getListOfNullValues(i - 1) /][if(i - 1 > 0)], [/if][role2.name/]_condition[getListOfNullValues(getRelationShipType(role).roles->size() -  i, true) /][if (getRelationShipType(role).attributes->size() > 0)], null[/if]);
+}
+[if (role2 <> role)]
+
+public void delete[role.name.toUpperFirst() /][if (isCardinalityMaxOne(role2) = false)]List[/if]In[getRelationShipType(role).name.toUpperFirst() /]By[role2.name.toUpperFirst() /](
+	pojo.[role2.entity.name.toUpperFirst()/] [role2.name/] 
+){
+	//TODO get id in condition
+	return;	
+}
+
+[/if]
+[/for]
+[if (getRelationShipType(role).attributes->size() > 0)]
+public void delete[role.name.toUpperFirst() /]ListIn[getRelationShipType(role).name.toUpperFirst() /]By[getRelationShipType(role).name.toUpperFirst() /]Condition(
+	conditions.Condition<conditions.[getRelationShipType(role).name.toUpperFirst()/]Attribute> [getRelationShipType(role).name/]_condition
+){
+	delete[role.name.toUpperFirst() /]ListIn[getRelationShipType(role).name.toUpperFirst() /]([getListOfNullValues(getRelationShipType(role).roles->size()) /], [getRelationShipType(role).name/]_condition);
+}
+[/if]
+[/for]
+[/template]
+

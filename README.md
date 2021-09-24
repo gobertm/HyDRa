@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # HyDRa
 HyDRa (Hybrid Data Representation and Access) is a hybrid polystore management framework providing a modeling language and a conceptual API generation tool.
 
@@ -45,8 +46,3 @@ The HyDRa framework also includes a conceptual access API generation process.
 A HyDRa polystore schema is given as input of this process. The generation itself is implemented using an Acceleo-based tool (see [acceleo sources](be.unamur.polystore.parent/be.unamur.polystore.acceleo)) which generates object classes and data manipulation classes. The API generation tool can be launched by right-clicking on a .pml HyDRa polystore schema.
 
 ![API](Use-Cases/resources/ApiGeneration.PNG)
-
-
-
-
-

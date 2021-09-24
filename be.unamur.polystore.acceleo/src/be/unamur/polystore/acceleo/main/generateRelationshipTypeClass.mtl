@@ -1,0 +1,102 @@
+[comment encoding = UTF-8 /]
+[module generateRelationshipTypeClass('http://www.unamur.be/polystore/Pml')]
+[import be::unamur::polystore::acceleo::main::util /]
+[import be::unamur::polystore::acceleo::main::services::generateRelationshipTypeServices /]
+[import be::unamur::polystore::acceleo::main::impl::generateRelationshipTypeServicesImpl /]
+[import be::unamur::polystore::acceleo::main::mappingrules::util /]
+ [query public isRelationshipTypeComplex(rel : RelationshipType) : Boolean = rel.attributes->size() > 0 or rel.roles->size() > 2 /]
+
+[template public generateAllLevelsRelationshipTypeClass(rel: RelationshipType, conceptualSchema: ConceptualSchema)]
+[generateRelationshipTypeServices(rel, conceptualSchema) /]
+[generateRelationshipTypeServicesImpl(rel, conceptualSchema) /]
+[/template]
+
+[template public generateRelationshipTypePojoClass(rel : RelationshipType, conceptualSchema: ConceptualSchema)]
+[if (true or isRelationshipTypeComplex(rel))]
+[file ('src/main/java/pojo/' + rel.name.toUpperFirst().concat('.java'), false, 'UTF-8')]
+package pojo;
+
+public class [rel.name.toUpperFirst() /] extends LoggingPojo {
+
+[for (role: Role | rel.roles)]
+	private [role.entity.name.toUpperFirst()/] [role.name/];	
+[/for]
+[for (attr: Attribute | rel.attributes)]
+	private [generateJavaType(attr.type)/] [attr.name/];	
+[/for]
+
+	public [rel.name.toUpperFirst() /]() {}
+
+	@Override
+    public Object clone() throws CloneNotSupportedException {
+        [rel.name.toUpperFirst() /] cloned = ([rel.name.toUpperFirst() /]) super.clone();
+		[for (role: Role | rel.roles)]
+		cloned.set[role.name.toUpperFirst()/](([role.entity.name.toUpperFirst()/])cloned.get[role.name.toUpperFirst()/]().clone());	
+		[/for]
+		return cloned;
+    }
+
+[for (role: Role | rel.roles)]
+	public [role.entity.name.toUpperFirst()/] get[role.name.toUpperFirst()/]() {
+		return [role.name/];
+	}	
+
+	public void set[role.name.toUpperFirst()/]([role.entity.name.toUpperFirst()/] [role.name/]) {
+		this.[role.name/] = [role.name/];
+	}
+	
+[/for]
+[for (attr: Attribute | rel.attributes)]
+	public [generateJavaType(attr.type)/] get[attr.name.toUpperFirst()/]() {
+		return [attr.name/];
+	}
+
+	public void set[attr.name.toUpperFirst()/]([generateJavaType(attr.type)/] [attr.name/]) {
+		this.[attr.name/] = [attr.name/];
+	}
+	
+[/for]
+
+}
+[/file]	
+[/if]
+[/template]
+
+[template public generateRelationshipTypeTechnicalDataObjectsClass(rel : RelationshipType, conceptualSchema: ConceptualSchema)]
+[file ('src/main/java/tdo/' + rel.name.toUpperFirst().concat('TDO.java'), false, 'UTF-8')]
+	package tdo;
+
+	import pojo.[rel.name.toUpperFirst() /];
+	
+	public class [rel.name.toUpperFirst() /]TDO extends [rel.name.toUpperFirst() /] {
+	
+	[for (role : Role | rel.roles)]
+	[for (ref: Reference | getMappedReferences(role, conceptualSchema.getMappingRules()))]
+	[for (field : PhysicalField | ref.sourceField)]
+	private String [getJavaAbsolutePath(ref) /]_[field.getPhysicalName() /];
+	public String get[getJavaAbsolutePath(ref).toUpperFirst() /]_[field.getPhysicalName() /]() {
+		return this.[getJavaAbsolutePath(ref) /]_[field.getPhysicalName() /];
+	}
+
+	public void set[getJavaAbsolutePath(ref).toUpperFirst() /]_[field.getPhysicalName() /]( String [getJavaAbsolutePath(ref) /]_[field.getPhysicalName() /]) {
+		this.[getJavaAbsolutePath(ref) /]_[field.getPhysicalName() /] = [getJavaAbsolutePath(ref) /]_[field.getPhysicalName() /];
+	}
+
+	[/for]
+	[for (field : PhysicalField | ref.targetField)]
+	private String [getJavaAbsolutePath(ref) /]_[field.getPhysicalName() /];
+	public String get[getJavaAbsolutePath(ref).toUpperFirst() /]_[field.getPhysicalName() /]() {
+		return this.[getJavaAbsolutePath(ref) /]_[field.getPhysicalName() /];
+	}
+
+	public void set[getJavaAbsolutePath(ref).toUpperFirst() /]_[field.getPhysicalName() /]( String [getJavaAbsolutePath(ref) /]_[field.getPhysicalName() /]) {
+		this.[getJavaAbsolutePath(ref) /]_[field.getPhysicalName() /] = [getJavaAbsolutePath(ref) /]_[field.getPhysicalName() /];
+	}
+
+	[/for]
+	[/for]
+	[/for]
+	
+	}
+[/file]	
+[/template]

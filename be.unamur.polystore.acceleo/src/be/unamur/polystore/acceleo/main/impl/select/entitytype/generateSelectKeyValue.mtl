@@ -1,0 +1,362 @@
+[comment encoding = UTF-8 /]
+[module generateSelectKeyValue('http://www.unamur.be/polystore/Pml')]
+[import be::unamur::polystore::acceleo::main::mappingrules::util /]
+[import be::unamur::polystore::acceleo::main::util /]
+
+[template public generateSelectKeyValue(ent : EntityType, struct : KeyValuePair, db : Database)]
+[generateSelectKeyValue(ent , struct, db, Sequence{})/]
+[/template]
+
+[template public generateSelectKeyValue(ent : EntityType, struct : KeyValuePair, db : Database, references : Sequence(Sequence(OclAny)))]
+[generateSelectKeyValue(ent.name.toUpperFirst(), ent.attributes, struct, ent, db, references)/]
+[/template]
+
+[template public generateSelectKeyValue(rel : RelationshipType, struct : KeyValuePair, db : Database)]
+[generateSelectKeyValue(rel , struct, db, Sequence{})/]
+[/template]
+
+[template public generateSelectKeyValue(rel : RelationshipType, struct : KeyValuePair, db : Database, references : Sequence(Sequence(OclAny)))]
+[generateSelectKeyValue(rel.name.toUpperFirst(), rel.attributes, struct, rel, db, references)/]
+[/template]
+
+[template public generateSelectKeyValue(pojoName : String, attributes : Collection(Attribute), struct : KeyValuePair, entOrRel : OclAny, db : Database, references : Sequence(Sequence(OclAny)))]
+	// Build the key pattern
+	//  - If the condition attribute is in the key pattern, replace by the value. Only if operator is EQUALS.
+	//  - Replace all other fields of key pattern by a '*' 
+	String keypattern= "", keypatternAllVariables="";
+	String valueCond=null;
+	String finalKeypattern;
+	List<String> fieldsListInKey = new ArrayList<>();
+	Set<[pojoName.toUpperFirst()/]Attribute> keyAttributes = new HashSet<>();
+	[for (expr : TerminalExpression | struct.key.pattern)]
+		[if (expr.oclIsTypeOf(pml::BracketsField) = true)]
+		[let field : BracketsField = expr.oclAsType(BracketsField)]
+			[let attr : Attribute = getMappedAttributes(field, entOrRel, entOrRel.getMappingRules())->any(true)]
+				[if (attr.oclIsUndefined()=false)]
+	if(!Util.containsOrCondition(condition)){
+		valueCond=Util.getStringValue(Util.getValueOfAttributeInEqualCondition(condition,[pojoName.toUpperFirst() /]Attribute.[attr.name /]));
+		keyAttributes.add([pojoName.toUpperFirst() /]Attribute.[attr.name /]);
+	}
+	else{
+		valueCond=null;
+		refilterFlag.setValue(true);
+	}
+				[else]
+	valueCond=null;
+				[/if]
+			[/let]
+		[/let]
+	if(valueCond==null)
+		keypattern=keypattern.concat("*");
+	else
+		keypattern=keypattern.concat(valueCond);
+	fieldsListInKey.add("[expr.oclAsType(pml::BracketsField).name/]");
+	keypatternAllVariables=keypatternAllVariables.concat("*");
+		[else]
+	keypattern=keypattern.concat("[expr.literal/]");
+	keypatternAllVariables=keypatternAllVariables.concat("[expr.literal/]");
+		[/if]
+	[/for]
+	if(!refilterFlag.booleanValue()){
+		Set<MovieAttribute> conditionAttributes = Util.getConditionAttributes(condition);
+		for (MovieAttribute a : conditionAttributes) {
+			if (!keyAttributes.contains(a)) {
+				refilterFlag.setValue(true);
+				break;
+			}
+		}
+	}
+		
+	// Find the type of query to perform in order to retrieve a Dataset<Row>
+	// Based on the type of the value. Is a it a simple string or a hash or a list... 
+	Dataset<Row> rows;
+	[if struct.value.oclIsTypeOf(pml::KVComplexField)=false]
+	[comment Retrieve data and build POJO based on Dataset<Row> containing only 'key' and 'value' attributes. /]
+	rows = SparkConnectionMgr.getRowsFromKeyValue("[db.name/]",keypattern);
+	// Transform to POJO. Based on Row containing (String key, String value)
+	finalKeypattern = keypatternAllVariables;
+	Dataset<[pojoName /][if (references->size() > 0)][getTDOLiteral('') /][/if]> res = rows.map((MapFunction<Row, [pojoName /][if (references->size() > 0)][getTDOLiteral('') /][/if]>) r -> {
+				[pojoName /][if (references->size() > 0)][getTDOLiteral('') /][/if] [pojoName.toLowerFirst() /]_res = new [pojoName /][if (references->size() > 0)][getTDOLiteral('') /][/if]();
+				Integer groupindex = null;
+				String regex = null;
+				String value = null;
+				Pattern p, pattern = null;
+				Matcher m, match = null;
+				String key="";
+				boolean matches = false;
+				[for (attr : Attribute | attributes)]
+				[let field : PhysicalField = getMappedPhysicalField(attr, struct, db, struct.ancestors(Domainmodel)->first().mappingRules)]
+				[if (field <> null)]
+				[if (not (field.ancestors(Key) -> size() = 0))]
+				[comment Attribute mapped in a Key /]
+				// attribute [ '[' /][pojoName/].[attr.name.toUpperFirst() /][ ']' /]
+				// Attribute mapped in a key.
+				key = r.getAs("key");
+				regex = finalKeypattern.replaceAll("\\*","(.*)");
+				groupindex = fieldsListInKey.indexOf("[field.getPhysicalName()/]")+1;
+				if(groupindex==null) {
+					logger.warn("Attribute of '[pojoName /]' mapped physical field '[field.getPhysicalName()/]' found in key but can't get index in build keypattern '{}'.", finalKeypattern);
+				}
+				p = Pattern.compile(regex);
+				m = p.matcher(key);
+				matches = m.find();
+				String [attr.name.toLowerFirst()/] = null;
+				if(matches) {
+					[attr.name.toLowerFirst()/] = m.group(groupindex.intValue());
+				} else {
+					logger.warn("Cannot retrieve value for [pojoName /][attr.name /] attribute stored in db [db.name/]. Probably due to an ambiguous regex.");
+					[pojoName.toLowerFirst() /]_res.addLogEvent("Cannot retrieve value for [pojoName /].[attr.name /] attribute stored in db [db.name/]. Probably due to an ambiguous regex.");
+				}
+				[pojoName.toLowerFirst() /]_res.set[attr.name.toUpperFirst()/]([generateParsingFunctionJavaType(attr.type, attr.name.toLowerFirst())/]);
+				[else]
+				[comment Attribute mapped in value part of KVPair/]
+				// attribute [ '[' /][pojoName /].[attr.name.toUpperFirst() /][ ']' /]
+				// Attribute mapped in value part.
+				value = r.getAs("value");
+				[if (field.ancestors(LongField) -> size() = 0)]
+				[comment shortField or bracketfield/]
+				[generateJavaType(attr.type)/] [attr.name.toLowerFirst()/] = [generateParsingFunctionJavaType(attr.type,'value')/];
+				[pojoName.toLowerFirst() /]_res.set[attr.name.toUpperFirst()/]([attr.name.toLowerFirst()/]);
+				[else]
+				[comment LongField /]
+				regex = "[getJavaRegexFromLongField(field.ancestors(LongField) -> first().oclAsType(LongField)) /]";
+				groupindex = [getPositionInLongField(field, field.ancestors(LongField) -> first().oclAsType(LongField))/];
+				if(groupindex == null) {
+					logger.warn("Cannot retrieve value for [pojoName /][attr.name /] attribute stored in db [db.name/]. Probably due to an ambiguous regex.");
+					[pojoName.toLowerFirst() /]_res.addLogEvent("Cannot retrieve value for [pojoName /].[attr.name /] attribute stored in db [db.name/]. Probably due to an ambiguous regex.");
+				}
+				p = Pattern.compile(regex);
+				m = p.matcher(value);
+				matches = m.find();
+				String [attr.name.toLowerFirst()/] = null;
+				if(matches) {
+					[attr.name.toLowerFirst()/] = m.group(groupindex.intValue());
+				} else {
+					logger.warn("Cannot retrieve value for [pojoName/][attr.name /] attribute stored in db [db.name/]. Probably due to an ambiguous regex.");
+					[pojoName.toLowerFirst() /]_res.addLogEvent("Cannot retrieve value for [pojoName/].[attr.name /] attribute stored in db [db.name/]. Probably due to an ambiguous regex.");
+				}
+				[pojoName.toLowerFirst() /]_res.set[attr.name.toUpperFirst()/]([generateParsingFunctionJavaType(attr.type, attr.name.toLowerFirst())/]);
+				[/if]
+				[/if]
+				[/if]
+				[/let]
+				[/for]
+				
+				[for (pair : Sequence(OclAny) | references)]
+				[let ref : Reference = pair->at(1)]
+				[let refFields : Sequence(PhysicalField) = pair->at(2)]
+					[for (refField : PhysicalField | refFields)]
+						[comment For refField /]
+					[if (refField.oclIsUndefined()=false)]
+				//Checking that reference field '[refField.getPhysicalName()/]' is mapped in Key
+				if(fieldsListInKey.contains("[refField.getPhysicalName()/]")){
+					//Retrieving reference field '[refField.getPhysicalName()/]' in Key
+					groupindex = fieldsListInKey.indexOf("[refField.getPhysicalName()/]")+1;
+					if(groupindex==null) {
+						logger.warn("Attribute '[pojoName /]' mapped physical field '[refField.getPhysicalName()/]' found in key but can't get index in build keypattern '{}'.", finalKeypattern);
+					}
+					p = Pattern.compile(regex);
+					m = p.matcher(key);
+					matches = m.find();
+					String [refField.getPhysicalName()/] = null;
+					if(matches) {
+					[refField.getPhysicalName()/] = m.group(groupindex.intValue());
+					} else {
+					logger.warn("Cannot retrieve value '[refField.getPhysicalName()/]'. Probably due to an ambiguous regex.");
+					[pojoName.toLowerFirst() /]_res.addLogEvent("Cannot retrieve value for '[refField.getPhysicalName()/]' attribute stored in db [db.name/]. Probably due to an ambiguous regex.");
+					}
+					[pojoName.toLowerFirst() /]_res.set[getJavaAbsolutePath(ref).toUpperFirst() /]_[refField.getPhysicalName() /]([refField.getPhysicalName()/]);
+				}else {
+					//Retrieving reference field '[refField.getPhysicalName()/]' in Value
+					value = r.getAs("value");
+					[if (refField.ancestors(LongField) -> size() = 0)]
+					[comment shortField or bracketfield/]
+					[pojoName.toLowerFirst() /]_res.set[getJavaAbsolutePath(ref).toUpperFirst() /]_[refField.getPhysicalName() /]([getJavaAbsolutePath(ref) /]_[refField.getPhysicalName() /]);
+					[else]
+					[comment LongField /]
+					regex = "[getJavaRegexFromLongField(refField.ancestors(LongField) -> first().oclAsType(LongField)) /]";
+					groupindex = [getPositionInLongField(refField, refField.ancestors(LongField) -> first().oclAsType(LongField))/];
+					if(groupindex == null) {
+						logger.warn("Cannot retrieve value for [pojoName /][refField.getPhysicalName() /] attribute stored in db [db.name/]. Probably due to an ambiguous regex.");
+						[pojoName.toLowerFirst() /]_res.addLogEvent("Cannot retrieve value for [pojoName /].[refField.getPhysicalName() /] . Probably due to an ambiguous regex.");
+					}
+					p = Pattern.compile(regex);
+					m = p.matcher(value);
+					matches = m.find();
+					String [refField.getPhysicalName() /]_ref = null;
+					if(matches) {
+						[refField.getPhysicalName() /]_ref = m.group(groupindex.intValue());
+					} else {
+						logger.warn("Cannot retrieve value for [pojoName/][refField.getPhysicalName() /] attribute stored in db [db.name/]. Probably due to an ambiguous regex.");
+						[pojoName.toLowerFirst() /]_res.addLogEvent("Cannot retrieve value for [pojoName /].[refField.getPhysicalName() /] attribute stored in db [db.name/]. Probably due to an ambiguous regex.");
+					}
+					[pojoName.toLowerFirst() /]_res.set[getJavaAbsolutePath(ref).toUpperFirst() /]_[refField.getPhysicalName() /]([refField.getPhysicalName() /]_ref);
+					[/if]
+					}
+					[/if]
+					[/for]
+				[/let]
+				[/let]
+				[/for]
+					
+				return [pojoName.toLowerFirst() /]_res;
+			}, Encoders.bean([pojoName /][if (references->size() > 0)][getTDOLiteral('') /][/if].class));
+	[else]
+		[comment Retrieve Dataset<Row> containing field of hashes. TODO other Redis dataTypes. /]
+		// TODO only handles 'hash' for now
+	StructType structTypeHash = new StructType(new StructField['['/][']'/] {
+	[for (field : PhysicalField | struct.key.pattern->filter(BracketsField)) separator(',')]
+		DataTypes.createStructField("[getPhysicalName(field)/]", DataTypes.StringType, true)
+	[/for]
+	[if (struct.key.pattern->filter(BracketsField)->size()>0)],[/if]
+	[for (field : PhysicalField | struct.value.oclAsType(KVComplexField).fields) separator(',')]
+		DataTypes.createStructField("[getPhysicalName(field)/]", DataTypes.StringType, true)
+	[/for]
+	});
+	rows = SparkConnectionMgr.getRowsFromKeyValueHashes("[db.name/]",keypattern, structTypeHash);
+	boolean isStriped = (StringUtils.countMatches(keypattern, "*") == 1 && keypattern.endsWith("*"));
+	String prefix=isStriped?keypattern.substring(0, keypattern.length() - 1):"";
+	finalKeypattern = keypatternAllVariables;
+	Dataset<[pojoName /][if (references->size() > 0)][getTDOLiteral('') /][/if]> res = rows.map((MapFunction<Row, [pojoName /][if (references->size() > 0)][getTDOLiteral('') /][/if]>) r -> {
+				[pojoName/][if (references->size() > 0)][getTDOLiteral('') /][/if] [pojoName.toLowerFirst() /]_res = new [pojoName/][if (references->size() > 0)][getTDOLiteral('') /][/if]();
+				Integer groupindex = null;
+				String regex = null;
+				String value = null;
+				Pattern p, pattern = null;
+				Matcher m, match = null;
+				boolean matches = false;
+				String key = isStriped ? prefix + r.getAs("id") : r.getAs("id");
+				[comment Spark Redis automatically strips leading character if the pattern provided contains a single '*' at the end. /]
+				// Spark Redis automatically strips leading character if the pattern provided contains a single '*' at the end.				
+				pattern = Pattern.compile("\\*");
+		        match = pattern.matcher(finalKeypattern);
+				regex = finalKeypattern.replaceAll("\\*","(.*)");
+				p = Pattern.compile(regex);
+				m = p.matcher(key);
+				matches = m.find();
+				[for (attr : Attribute | attributes)]
+				[let field : PhysicalField = getMappedPhysicalField(attr, struct, db, struct.ancestors(Domainmodel)->first().mappingRules)]
+				[if (field <> null)]
+				[if (not (field.ancestors(Key) -> size() = 0))]
+				[comment Attribute mapped in a Key /]
+				// attribute [ '[' /][pojoName/].[attr.name.toUpperFirst() /][ ']' /]
+				// Attribute mapped in a key.
+				groupindex = fieldsListInKey.indexOf("[field.getPhysicalName()/]")+1;
+				if(groupindex==null) {
+					logger.warn("Attribute '[pojoName /]' mapped physical field '[field.getPhysicalName()/]' found in key but can't get index in build keypattern '{}'.", finalKeypattern);
+				}
+				String [attr.name.toLowerFirst()/] = null;
+				if(matches) {
+					[attr.name.toLowerFirst()/] = m.group(groupindex.intValue());
+				} else {
+					logger.warn("Cannot retrieve value for [pojoName/][attr.name /] attribute stored in db [db.name/]. Probably due to an ambiguous regex.");
+					[pojoName.toLowerFirst() /]_res.addLogEvent("Cannot retrieve value for [pojoName /].[attr.name /] attribute stored in db [db.name/]. Probably due to an ambiguous regex.");
+				}
+				[pojoName.toLowerFirst() /]_res.set[attr.name.toUpperFirst()/]([generateParsingFunctionJavaType(attr.type, attr.name.toLowerFirst())/]);
+				[else]
+				// attribute [ '[' /][pojoName/].[attr.name.toUpperFirst() /][ ']' /]
+				[if (field.ancestors(LongField) -> size() = 0)]
+				[comment shortField or bracketfield/]
+				[generateJavaType(attr.type)/] [attr.name.toLowerFirst()/] = [generateParsingFunctionJavaType(attr.type, 'r.getAs("' + getPhysicalName(field) + '")' )/];
+				[pojoName.toLowerFirst() /]_res.set[attr.name.toUpperFirst()/]([attr.name.toLowerFirst()/]);
+				[else]
+				[comment LongField /]
+				regex = "[getJavaRegexFromLongField(field.ancestors(LongField) -> first().oclAsType(LongField)) /]";
+				groupindex = [getPositionInLongField(field, field.ancestors(LongField) -> first().oclAsType(LongField))/];
+				if(groupindex == null) {
+					logger.warn("Cannot retrieve value for [pojoName /][attr.name /] attribute stored in db [db.name/]. Probably due to an ambiguous regex.");
+					[pojoName.toLowerFirst() /]_res.addLogEvent("Cannot retrieve value for [pojoName /].[attr.name /] attribute stored in db [db.name/]. Probably due to an ambiguous regex.");
+				}
+				value = r.getAs("[field.ancestors(LongField) -> first().oclAsType(LongField).physicalName /]");
+				if(value!=null){
+					p = Pattern.compile(regex);
+					m = p.matcher(value);
+					matches = m.find();
+					String [attr.name.toLowerFirst()/] = null;
+					if(matches) {
+						[attr.name.toLowerFirst()/] = m.group(groupindex.intValue());
+					} else {
+						logger.warn("Cannot retrieve value for [pojoName /][attr.name /] attribute stored in db [db.name/]. Probably due to an ambiguous regex.");
+						[pojoName.toLowerFirst() /]_res.addLogEvent("Cannot retrieve value for [pojoName /].[attr.name /] attribute stored in db [db.name/]. Probably due to an ambiguous regex.");
+					}
+					[pojoName.toLowerFirst() /]_res.set[attr.name.toUpperFirst()/]([generateParsingFunctionJavaType(attr.type, attr.name.toLowerFirst())/]);
+				}
+				[/if]
+				[/if]
+				[/if]
+				[/let]
+				[/for]
+				[comment For refField /]
+				[for (pair : Sequence(OclAny) | references)]
+				[let ref : Reference = pair->at(1)]
+				[let refFields : Sequence(PhysicalField) = pair->at(2)]
+				[for (refField : PhysicalField | refFields)]
+				[if (refField.oclIsUndefined() = false)]
+				//Checking that reference field '[refField.getPhysicalName()/]' is mapped in Key
+				if(fieldsListInKey.contains("[refField.getPhysicalName()/]")){
+					//Retrieving reference field '[refField.getPhysicalName()/]' in Key
+					Pattern pattern_[refField.getPhysicalName()/] = Pattern.compile("\\*");
+			        Matcher match_[refField.getPhysicalName()/] = pattern_[refField.getPhysicalName()/].matcher(finalKeypattern);
+					groupindex = fieldsListInKey.indexOf("[refField.getPhysicalName()/]")+1;
+					if(groupindex==null) {
+						logger.warn("Attribute '[pojoName /]' mapped physical field '[refField.getPhysicalName()/]' found in key but can't get index in build keypattern '{}'.", finalKeypattern);
+					}
+					p = Pattern.compile(regex);
+					m = p.matcher(key);
+					matches = m.find();
+					String [ref.name/]_[refField.getPhysicalName()/] = null;
+					if(matches) {
+					[ref.name/]_[refField.getPhysicalName()/] = m.group(groupindex.intValue());
+					} else {
+					logger.warn("Cannot retrieve value '[refField.getPhysicalName()/]'. Probably due to an ambiguous regex.");
+					[pojoName.toLowerFirst() /]_res.addLogEvent("Cannot retrieve value for '[refField.getPhysicalName()/]' attribute stored in db [db.name/]. Probably due to an ambiguous regex.");
+					}
+					[pojoName.toLowerFirst() /]_res.set[getJavaAbsolutePath(ref).toUpperFirst() /]_[refField.getPhysicalName() /]([ref.name/]_[refField.getPhysicalName()/]);
+				}else{
+				// Get reference column in value [ '[' /][refField.getPhysicalName()/] [ ']' /] for reference [ '[' /][ref.name/][ ']' /]
+				[if (refField.ancestors(LongField) -> size() = 0)]
+				[comment shortField or bracketfield/]
+				String [getJavaAbsolutePath(ref) /]_[refField.getPhysicalName() /] = r.getAs("[getPhysicalName(refField) /]");
+				[pojoName.toLowerFirst() /]_res.set[getJavaAbsolutePath(ref).toUpperFirst() /]_[refField.getPhysicalName() /]([getJavaAbsolutePath(ref) /]_[refField.getPhysicalName() /]);
+				[else]
+				[comment LongField /]
+				regex = "[getJavaRegexFromLongField(refField.ancestors(LongField) -> first().oclAsType(LongField)) /]";
+				groupIndex = [getPositionInLongField(refField, refField.ancestors(LongField) -> first().oclAsType(LongField))/];
+				if(groupIndex == null) {
+					logger.warn("Cannot retrieve value for [pojoName /].[refField.getPhysicalName() /] attribute stored in db [db.name/]. Probably due to an ambiguous regex.");
+					[pojoName.toLowerFirst() /]_res.addLogEvent("Cannot retrieve value for BLABLABLA. Probably due to an ambiguous regex.");
+				}
+				value = r.getAs("[refField.ancestors(LongField) -> first().oclAsType(LongField).physicalName /]");
+				p = Pattern.compile(regex);
+				m = p.matcher(value);
+				matches = m.find();
+				String [getJavaAbsolutePath(ref) /]_[refField.getPhysicalName() /] = null;
+				if(matches) {
+					[getJavaAbsolutePath(ref) /]_[refField.getPhysicalName() /] = m.group(groupIndex.intValue());
+				} else {
+					logger.warn("Cannot retrieve value for [pojoName /][refField.getPhysicalName() /] attribute stored in db [db.name/]. Probably due to an ambiguous regex.");
+					[pojoName.toLowerFirst() /]_res.addLogEvent("Cannot retrieve value for BLABLABLA. Probably due to an ambiguous regex.");
+				}
+				[pojoName.toLowerFirst() /]_res.set[getJavaAbsolutePath(ref).toUpperFirst() /]_[refField.getPhysicalName() /]([getJavaAbsolutePath(ref) /]_[refField.getPhysicalName() /]);
+				[/if]
+				}
+				[/if]
+				[/for]
+				[/let]
+				[/let]
+				[/for]
+
+					return [pojoName.toLowerFirst() /]_res;
+			}, Encoders.bean([pojoName /][if (references->size() > 0)][getTDOLiteral('') /][/if].class));
+	[/if]
+	[comment Contrary to other dbs, we perform the filter here, as in case of role based selection, at least one of the retrieved TDO datasets must be filtered in order to join. But refilterFlag is not available at the caller level
+	And to not refactor everything we do it here. As the refilterFlag is always true. /]
+	if(refilterFlag.booleanValue())
+		res = res.filter((FilterFunction<[pojoName /][if (references->size() > 0)][getTDOLiteral('') /][/if]>) r -> condition == null || condition.evaluate(r));
+	[comment 
+	 This drop duplicates is necessary when readin data from a key value db, with key structures such as PRODUCT:id:REVIEW:reviewid . /]
+	res=res.dropDuplicates();
+	return res;
+[/template]
+
+[template public getTDOLiteral(o : OclAny)][if (o.oclIsUndefined() = false)]TDO[/if][/template]

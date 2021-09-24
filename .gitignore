@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 data/backup/*
 APIs/IMDB/.classpath
 /.idea/*
@@ -20,3 +21,27 @@ Use-Cases/uc1-imdb/uc1.iml
 Use-Cases/usecases.iml
 Use-Cases/uc2-datainconsistency/bin/src/main/java/conditions/Condition.class
 Use-Cases/*/bin/*
+target
+src-gen
+xtend-gen
+.settings
+.metadata
+bin
+generated
+test-bin
+.classpath
+.idea
+be.unamur.polystore.dbinitialization/.project
+be.unamur.polystore.dbinitialization/src/main/resources/imdb/name-basics.tsv
+be.unamur.polystore.dbinitialization/src/main/resources/imdb/title-basics.tsv
+be.unamur.polystore.dbinitialization/src/main/resources/imdb/title-crew.tsv
+be.unamur.polystore.dbinitialization/src/main/resources/imdb/title-principals.tsv
+be.unamur.polystore.dbinitialization/src/main/resources/imdb/title-ratings.tsv
+be.unamur.polystore.dbinitialization/dbinitialization.iml
+be.unamur.polystore.dbinitialization/src/main/resources/imdb/actorCollection.json
+be.unamur.polystore.dbinitialization/src/main/resources/imdb/mydb_directed.sql
+be.unamur.polystore.dbinitialization/src/main/resources/imdb/mydb_directorTable.sql
+be.unamur.polystore.dbinitialization/src/main/resources/imdb/dump.rdb
+be.unamur.polystore.dbinitialization/src/main/resources/imdb/dump.rdb
+be.unamur.polystore.feature/.project
+Other resources/.~lock.ALgo-Insert-Final.lun#

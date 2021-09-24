@@ -1,0 +1,143 @@
+[comment encoding = Cp1252 /]
+[module util('http://www.unamur.be/polystore/Pml')/]
+[import be::unamur::polystore::acceleo::main::util /]
+
+[query public getMappedPhysicalFields(arg0 : Attribute, arg1 : MappingRules) : Collection(PhysicalField)
+	= invoke('be.unamur.polystore.acceleo.main.utils.MappingRuleService', 'getMappedPhysicalFields(be.unamur.polystore.pml.Attribute, be.unamur.polystore.pml.MappingRules)', Sequence{arg0, arg1})
+/]
+
+[query public getConcernedDatabases(ent : EntityType, model: Domainmodel) : Set(Database) 
+= invoke('be.unamur.polystore.acceleo.main.utils.MappingRuleService', 'getConcernedDatabases(be.unamur.polystore.pml.EntityType, be.unamur.polystore.pml.Domainmodel)', Sequence{ent, model}) /]
+
+[query public getConcernedDatabases(attr : Attribute, model: Domainmodel) : Set(Database) 
+= invoke('be.unamur.polystore.acceleo.main.utils.MappingRuleService', 'getConcernedDatabases(be.unamur.polystore.pml.Attribute, be.unamur.polystore.pml.Domainmodel)', Sequence{attr, model}) /]
+
+
+[query public getConcernedPhysicalStructures(ent : EntityType, model: Domainmodel) : Set(AbstractPhysicalStructure) 
+= invoke('be.unamur.polystore.acceleo.main.utils.MappingRuleService', 'getConcernedPhysicalStructures(be.unamur.polystore.pml.EntityType, be.unamur.polystore.pml.Domainmodel)', Sequence{ent, model}) /]
+
+[query public getComplexPhysicalStructures(ent : EntityType, model: Domainmodel) : Set(AbstractPhysicalStructure) 
+= invoke('be.unamur.polystore.acceleo.main.utils.MappingRuleService', 'getComplexPhysicalStructures(be.unamur.polystore.pml.EntityType, be.unamur.polystore.pml.Domainmodel)', Sequence{ent, model}) /]
+
+[query public isJoinStructureOfMappedMandatoryRoleOfEntity(ent : EntityType, struct : AbstractPhysicalStructure, model: Domainmodel) : Boolean 
+= invoke('be.unamur.polystore.acceleo.main.utils.MappingRuleService', 'isJoinStructureOfMappedMandatoryRoleOfEntity(be.unamur.polystore.pml.EntityType, be.unamur.polystore.pml.AbstractPhysicalStructure, be.unamur.polystore.pml.Domainmodel)', Sequence{ent,struct, model}) /]
+
+[query public getRefStructureOfMappedMandatoryRoleOfEntity(ent : EntityType, model: Domainmodel) : Set(AbstractPhysicalStructure) 
+= invoke('be.unamur.polystore.acceleo.main.utils.MappingRuleService', 'getRefStructureOfMappedMandatoryRoleOfEntity(be.unamur.polystore.pml.EntityType, be.unamur.polystore.pml.Domainmodel)', Sequence{ent, model}) /]
+
+[query public getRemainingRefStructureOfMappedMandatoryRoleOfEntity(ent : EntityType, model: Domainmodel) : Set(AbstractPhysicalStructure) 
+= invoke('be.unamur.polystore.acceleo.main.utils.MappingRuleService', 'getRemainingRefStructureOfMappedMandatoryRoleOfEntity(be.unamur.polystore.pml.EntityType, be.unamur.polystore.pml.Domainmodel)', Sequence{ent, model}) /]
+
+
+[query public getMappedPhysicalStructureToInsertSingleE(ent : EntityType, model: Domainmodel) : Collection(AbstractPhysicalStructure) 
+= invoke('be.unamur.polystore.acceleo.main.utils.MappingRuleService', 'getMappedPhysicalStructureToInsertSingleE(be.unamur.polystore.pml.EntityType, be.unamur.polystore.pml.Domainmodel)', Sequence{ent, model}) /]
+
+[query public getMappedComplexEmbeddedStructureOfEntity(e : EntityType, model: Domainmodel) : Collection(AbstractPhysicalStructure) =
+	invoke('be.unamur.polystore.acceleo.main.utils.MappingRuleService', 'getMappedComplexEmbeddedStructureOfEntity(be.unamur.polystore.pml.EntityType, be.unamur.polystore.pml.Domainmodel)', Sequence{e, model})
+/]
+
+[query public getDescendingOneLevelPhysicalStructuresOfEntity(e : EntityType, model: Domainmodel) : Collection(AbstractPhysicalStructure) =
+	invoke('be.unamur.polystore.acceleo.main.utils.MappingRuleService', 'getDescendingOneLevelPhysicalStructuresOfEntity(be.unamur.polystore.pml.EntityType, be.unamur.polystore.pml.Domainmodel)', Sequence{e, model})
+/]
+
+[query public getAscendingPhysicalStructuresOfEntity(e : EntityType, model: Domainmodel) : Collection(AbstractPhysicalStructure) =
+	invoke('be.unamur.polystore.acceleo.main.utils.MappingRuleService', 'getAscendingPhysicalStructuresOfEntity(be.unamur.polystore.pml.EntityType, be.unamur.polystore.pml.Domainmodel)', Sequence{e, model})
+/]
+
+[query public getConcernedDatabases(struct : AbstractPhysicalStructure, model: Domainmodel) : Set(Database) 
+= invoke('be.unamur.polystore.acceleo.main.utils.MappingRuleService', 'getConcernedDatabases(be.unamur.polystore.pml.AbstractPhysicalStructure, be.unamur.polystore.pml.Domainmodel)', Sequence{struct, model}) /]
+
+[query public getMappedPhysicalField(attr : Attribute, struct: AbstractPhysicalStructure, db: Database, rules: MappingRules) : PhysicalField 
+= invoke('be.unamur.polystore.acceleo.main.utils.MappingRuleService', 'getMappedPhysicalField(be.unamur.polystore.pml.Attribute, be.unamur.polystore.pml.AbstractPhysicalStructure, be.unamur.polystore.pml.Database, be.unamur.polystore.pml.MappingRules)', Sequence{attr, struct, db, rules}) /]
+
+[query public getPhysicalName(field : PhysicalField): String
+= invoke('be.unamur.polystore.acceleo.main.utils.MappingRuleService', 'getPhysicalName(be.unamur.polystore.pml.PhysicalField)', Sequence{field}) /]
+
+
+[query public getPreparedValue(attr: Attribute, field: PhysicalField, parent : LongField, escapeSQLReservedChar :  Boolean, escapeMongoReservedChar :  Boolean): String
+= invoke('be.unamur.polystore.acceleo.main.utils.MappingRuleService', 'getPreparedValue(be.unamur.polystore.pml.Attribute, be.unamur.polystore.pml.PhysicalField, be.unamur.polystore.pml.LongField, boolean, boolean)', Sequence{attr, field, parent, escapeSQLReservedChar, escapeMongoReservedChar}) /]
+
+[query public getPatternValue(): String
+= invoke('be.unamur.polystore.acceleo.main.utils.MappingRuleService', 'getPatternValue()', Sequence{}) /]
+
+[query public getPatternOtherValue(): String
+= invoke('be.unamur.polystore.acceleo.main.utils.MappingRuleService', 'getPatternOtherValue()', Sequence{}) /]
+
+[query public getMappedReferences(role: Role, rules: MappingRules ): Set(Reference) 
+= invoke('be.unamur.polystore.acceleo.main.utils.MappingRuleService', 'getMappedReferences(be.unamur.polystore.pml.Role, be.unamur.polystore.pml.MappingRules)', Sequence{role, rules}) /]
+
+[query public getMappingRules(o: OclAny) : MappingRules = 
+	o.ancestors(Domainmodel)->first().mappingRules /]
+
+[query public hasMappedReferenceInSamePhysicalStructureForOppoisteRole(role : Role, struct: AbstractPhysicalStructure) : Boolean = 
+	getMappedReferences(role, role.getMappingRules()) -> select(ref : Reference | ref.getAbstractPhysicalStructureNotEmbeddedObject() = struct) -> size() > 0 /]
+
+[query public getDescendentsLongField(o: OclAny) : Collection(LongField) 
+= invoke('be.unamur.polystore.acceleo.main.utils.MappingRuleService','getDescendentsLongField(org.eclipse.emf.ecore.EObject)',Sequence{o})
+ /]
+
+[query public isMappedToRole(o: OclAny, rule : MappingRules) : Boolean
+= invoke('be.unamur.polystore.acceleo.main.utils.MappingRuleService','isMappedToRole(org.eclipse.emf.ecore.EObject,be.unamur.polystore.pml.MappingRules)',Sequence{o,rule})
+ /]
+
+[query public isMappedToMandatoryRole(o: OclAny, rule : MappingRules) : Boolean
+= invoke('be.unamur.polystore.acceleo.main.utils.MappingRuleService','isMappedToMandatoryRole(org.eclipse.emf.ecore.EObject,be.unamur.polystore.pml.MappingRules)',Sequence{o,rule})
+ /]
+
+[query public isMappedToRoleWhoseOppositeIsMandatory(o: OclAny, rule : MappingRules) : Boolean
+= invoke('be.unamur.polystore.acceleo.main.utils.MappingRuleService','isMappedToRoleWhoseOppositeIsMandatory(org.eclipse.emf.ecore.EObject,be.unamur.polystore.pml.MappingRules)',Sequence{o,rule})
+ /]
+
+[query public isMappedToRoleWhoseOppositeIsMandatoryForGivenEntity(o: OclAny, e : EntityType, rule : MappingRules) : Boolean
+= invoke('be.unamur.polystore.acceleo.main.utils.MappingRuleService','isMappedToRoleWhoseOppositeIsMandatoryForGivenEntity(org.eclipse.emf.ecore.EObject, be.unamur.polystore.pml.EntityType, be.unamur.polystore.pml.MappingRules)',Sequence{o,e,rule})
+ /]
+
+[query public getRoleMappedPhysicalFieldsWhereEntity(s: AbstractPhysicalStructure, e: EntityType) : Collection(PhysicalField)
+= invoke('be.unamur.polystore.acceleo.main.utils.MappingRuleService','getRoleMappedPhysicalFieldsWhereEntity(be.unamur.polystore.pml.AbstractPhysicalStructure, be.unamur.polystore.pml.EntityType)',Sequence{s,e})
+ /]
+
+[query public getMappedPhysicalFieldOfRoleOfEntityWhereOppositeRoleIsMandatory(s: AbstractPhysicalStructure, e: EntityType, rule :MappingRules) : PhysicalField
+= invoke('be.unamur.polystore.acceleo.main.utils.MappingRuleService','getMappedPhysicalFieldOfRoleOfEntityWhereOppositeRoleIsMandatory(be.unamur.polystore.pml.AbstractPhysicalStructure, be.unamur.polystore.pml.EntityType, be.unamur.polystore.pml.MappingRules)',Sequence{s,e,rule})
+ /]
+
+[query public getMappedRoleOfPhysicalField(f: PhysicalField) : Role
+= invoke('be.unamur.polystore.acceleo.main.utils.MappingRuleService','getMappedRoleOfPhysicalField(be.unamur.polystore.pml.PhysicalField)',Sequence{f})
+ /]
+
+[query public getMappedRoleOfReference(ref: Reference) : Role
+= invoke('be.unamur.polystore.acceleo.main.utils.MappingRuleService','getMappedRoleOfReference(be.unamur.polystore.pml.Reference)',Sequence{ref})
+ /]
+
+[query public getMappedAttributesInStructure(ent: EntityType, struct : AbstractPhysicalStructure, db : Database, rules: MappingRules) : Collection(Attribute) =  
+	invoke('be.unamur.polystore.acceleo.main.utils.Util', 'getMappedAttributes(be.unamur.polystore.pml.EntityType, be.unamur.polystore.pml.AbstractPhysicalStructure, be.unamur.polystore.pml.Database, be.unamur.polystore.pml.MappingRules)', Sequence{ent, struct, db, rules})
+/]
+
+[query public getMappedAttributeOfFieldInStructure(f: PhysicalField, struct : AbstractPhysicalStructure) :Attribute =  
+	invoke('be.unamur.polystore.acceleo.main.utils.MappingRuleService', 'getMappedAttributeOfFieldInStructure(be.unamur.polystore.pml.PhysicalField, be.unamur.polystore.pml.AbstractPhysicalStructure)', Sequence{f, struct})
+/]
+
+[query public getRefOfPhysicalStructure(struct : AbstractPhysicalStructure) : Collection(Reference) =  
+	invoke('be.unamur.polystore.acceleo.main.utils.MappingRuleService', 'getRefOfPhysicalStructure(be.unamur.polystore.pml.AbstractPhysicalStructure)', Sequence{struct})
+/]
+
+[query public getReferenceOfPhysicalField(f : PhysicalField) : Collection(Reference) =  
+	invoke('be.unamur.polystore.acceleo.main.utils.MappingRuleService', 'getReferenceOfPhysicalField(be.unamur.polystore.pml.PhysicalField)', Sequence{f})
+/]
+
+[query public getMappedReferenceInSamePhysicalStructureForOppositeRole(role : Role, struct: AbstractPhysicalStructure) : Reference = 
+	getMappedReferences(role, role.getMappingRules()) -> select(ref : Reference | ref.getAbstractPhysicalStructureNotEmbeddedObject() = struct) -> any(true) /]
+
+[query public getMappedReferencesInSamePhysicalStructureForOppositeRole(role : Role, struct: AbstractPhysicalStructure) : Set(Reference) = 
+	getMappedReferences(role, role.getMappingRules()) -> select(ref : Reference | ref.getAbstractPhysicalStructureNotEmbeddedObject() = struct) /]
+
+
+[query public getMappedEmbeddedObjects(role: Role, rules: MappingRules ) : Set(EmbeddedObject) 
+	= invoke('be.unamur.polystore.acceleo.main.utils.MappingRuleService', 'getMappedEmbeddedObjects(be.unamur.polystore.pml.Role, be.unamur.polystore.pml.MappingRules)', Sequence{role, rules}) /]
+
+[query public getMappedStructuresNotConcernedByRelationshipType(ent : EntityType, rel : RelationshipType, rules : MappingRules) : Set(AbstractPhysicalStructure)
+ 	= invoke('be.unamur.polystore.acceleo.main.utils.MappingRuleService', 'getMappedStructuresNotConcernedByRelationshipType(be.unamur.polystore.pml.EntityType, be.unamur.polystore.pml.RelationshipType, be.unamur.polystore.pml.MappingRules)', Sequence{ent, rel, rules}) 
+/]
+
+[query public getMappedAttributes(field: PhysicalField, entOrRel: OclAny, rules: MappingRules) : Collection(Attribute) =  
+	invoke('be.unamur.polystore.acceleo.main.utils.Util', 'getMappedAttributes(be.unamur.polystore.pml.PhysicalField, java.lang.Object, be.unamur.polystore.pml.MappingRules)', Sequence{field, entOrRel, rules})
+/]

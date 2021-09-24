@@ -1,0 +1,738 @@
+[comment encoding = UTF-8 /]
+[module generateDBConnectionClasses('http://www.unamur.be/polystore/Pml')]
+[import be::unamur::polystore::acceleo::main::util /]
+
+[template public generateDBConnectionClasses(conceptualSchema: ConceptualSchema)]
+[generateDBConnectionInterface()/]
+[generateDBConnectionMgr(conceptualSchema)/]
+[generateSparkConnectionMgr(conceptualSchema) /]
+[generateRelationalDBConnectionClasses(conceptualSchema) /]
+[comment][generateDocumentDBConnectionClasses(conceptualSchema) /]
+[generateKeyValueDBConnectionClasses(conceptualSchema) /]
+[generateColumnDBConnectionClasses(conceptualSchema) /]
+[generateGraphDBConnectionClasses(conceptualSchema) /][/comment]
+[/template]
+
+[template public generateDBConnectionInterface()]
+[file ('src/main/java/dbconnection/DBConnection.java', false, 'UTF-8')]
+package dbconnection;
+
+public interface DBConnection {
+	int insertOrUpdateOrDelete(String query, java.util.List<Object> inputs);
+}
+[/file]
+[/template]
+
+[template public generateDBConnectionMgr(conceptualSchema: ConceptualSchema)]
+[file ('src/main/java/dbconnection/DBConnectionMgr.java', false, 'UTF-8')]
+package dbconnection;
+
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
+import java.util.*;
+
+import org.bson.Document;
+import org.bson.conversions.Bson;
+import com.mongodb.MongoClientSettings;
+import com.mongodb.ServerAddress;
+import com.mongodb.client.MongoClient;
+import com.mongodb.client.MongoClients;
+import com.mongodb.client.MongoCollection;
+import com.mongodb.client.MongoDatabase;
+import com.mongodb.client.model.UpdateOptions;
+
+public class DBConnectionMgr {
+
+	[instantiateLogger('DBConnectionMgr') /]
+	private static Map<String, DBConnection> mapDB = new HashMap<String, DBConnection>(); 
+	private static Map<String, DBCredentials> dbPorts = new HashMap<String, DBCredentials>();
+	private static MongoClient mongoClient;
+	private static Connection connection;
+
+	private static class DBCredentials {
+
+		protected String dbName;
+		protected String url;
+		protected int port;
+		protected String userName;
+		protected String userPwd;
+		protected String dbType;
+
+		protected DBCredentials(String dbName, String url, int port, String userName, String userPwd, String dbType) {
+			this.dbName = dbName;
+			this.url = url;
+			this.port = port;
+			this.userName = userName;
+			this.userPwd = userPwd;
+			this.dbType = dbType;
+		}
+
+	}
+
+	static {
+		[for (db : Database | conceptualSchema.ancestors(Domainmodel)->first().databases.databases)]
+			dbPorts.put("[db.name /]", new DBCredentials("[db.databaseName /]", "[db.host /]", [db.port /], "[db.login /]", "[db.password /]","[db.dbType/]"));
+		[/for]
+	}
+
+	public static Map<String, DBConnection> getMapDB(){
+		return mapDB;
+	}
+
+	public static void upsertMany(Bson filter, Bson updateOp, String struct, String db){
+		DBCredentials credentials = dbPorts.get(db);
+		if(credentials.dbType.equals("mongodb")){ 
+			MongoDatabase mongoDatabase = getMongoClient(credentials).getDatabase(db);
+	        MongoCollection<Document> structCollection = mongoDatabase.getCollection(struct);
+			UpdateOptions options = new UpdateOptions().upsert(true);
+	        structCollection.updateMany(filter, updateOp, options);
+		}
+		else{
+			logger.error("Can't perform update, wrong database type, need document db. Database : '{}' , type : '{}' ",credentials.dbName, credentials.dbType);
+			throw new RuntimeException("Can't perform update, wrong database type, need document db");
+		}
+	}
+
+	public static void upsertMany(Bson filter, Bson updateOp, List<Bson> arrayFiltersConditions, String struct, String db){
+		DBCredentials credentials = dbPorts.get(db);
+		if(credentials.dbType.equals("mongodb")){ 
+			MongoDatabase mongoDatabase = getMongoClient(credentials).getDatabase(db);
+	        MongoCollection<Document> structCollection = mongoDatabase.getCollection(struct);
+			UpdateOptions updateOptions = new UpdateOptions().arrayFilters(arrayFiltersConditions);
+	        structCollection.updateMany(filter, updateOp, updateOptions);
+		}
+		else{
+			logger.error("Can't perform update, wrong database type, need document db. Database : '{}' , type : '{}' ",credentials.dbName, credentials.dbType);
+			throw new RuntimeException("Can't perform update, wrong database type, need document db");
+		}
+	}
+
+
+	public static void insertMany(List<Document> documents, String struct, String db) {
+		DBCredentials credentials = dbPorts.get(db);
+		if(!credentials.dbType.equals("mongodb")){
+			logger.error("Can't perform update, wrong database type, need document db. Database : '{}' , type : '{}' ",credentials.dbName, credentials.dbType);
+			throw new RuntimeException("Can't perform update, wrong database type, need document db");
+		}
+		else{
+			MongoDatabase mongoDatabase = getMongoClient(credentials).getDatabase(db);
+			MongoCollection<Document> structCollection = mongoDatabase.getCollection(struct);
+			structCollection.insertMany(documents);
+		}
+	}
+
+	private static MongoClient getMongoClient(DBCredentials credentials) {
+		if (mongoClient == null) {
+			mongoClient = MongoClients.create(
+					MongoClientSettings.builder()
+							.applyToClusterSettings(builder ->
+									builder.hosts(Arrays.asList(new ServerAddress(credentials.url, credentials.port))))
+							.build());
+		}
+		return mongoClient;
+	}
+
+	public static void insertInTable(List<String> columns, List<List<Object>> rows, String struct, String db) {
+		DBCredentials credentials = dbPorts.get(db);
+		if((credentials.dbType.equals("mariadb") || credentials.dbType.equals("sqlite"))){
+			try {
+				String sql = "INSERT INTO " + struct + "("+String.join(",",columns)+") VALUES ("+String.join(",", Collections.nCopies(columns.size(),"?"))+")";
+				PreparedStatement statement = getJDBCConnection(credentials).prepareStatement(sql);
+				for (List<Object> row : rows) {
+					for (int i = 1; i <= row.size(); i++) {
+						statement.setObject(i,row.get(i-1));
+					}
+					statement.addBatch();
+				}
+				statement.executeBatch();
+			} catch (SQLException e) {
+				e.printStackTrace();
+				logger.error("SQL Error in preparedStatement");
+			}
+		}
+		else{
+			logger.error("Can't perform update, wrong database type, need relational (mariadb or sqlite) database. Database : '{}' , type : '{}' ",credentials.dbName, credentials.dbType);
+			throw new RuntimeException("Can't perform update, wrong database type, need document db");
+		}
+	}
+
+	private static Connection getJDBCConnection(DBCredentials credentials) {
+		try {
+			if (connection == null) {
+				connection = DriverManager.getConnection("jdbc:mysql://" + credentials.url + ":" + credentials.port + "/" + credentials.dbName, credentials.userName, credentials.userPwd);
+			}
+		} catch (SQLException e) {
+			e.printStackTrace();
+			logger.error("Immpossible to connect to relational db ['['/]{} - {} : {}[']'/] ", credentials.dbName, credentials.url,credentials.port);
+		}
+		return connection;
+	}
+
+	
+}
+[/file]
+[/template]
+
+[template public generateSparkConnectionMgr(conceptualSchema: ConceptualSchema)]
+[file ('src/main/java/dbconnection/SparkConnectionMgr.java', false, 'UTF-8')]
+package dbconnection;
+
+import static java.util.Collections.singletonList;
+
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.List;
+
+import com.redislabs.provider.redis.ReadWriteConfig;
+import com.redislabs.provider.redis.RedisConfig;
+import com.redislabs.provider.redis.RedisContext;
+import org.apache.spark.SparkConf;
+import org.apache.spark.api.java.JavaRDD;
+import org.apache.spark.api.java.JavaSparkContext;
+import org.apache.spark.api.java.function.Function;
+import org.apache.spark.rdd.RDD;
+import org.apache.spark.sql.*;
+import org.apache.spark.sql.types.DataTypes;
+import org.apache.spark.sql.types.StructField;
+import org.apache.spark.sql.types.StructType;
+import org.bson.Document;
+
+import com.mongodb.spark.MongoSpark;
+import com.mongodb.spark.config.ReadConfig;
+import scala.Tuple2;
+
+public class SparkConnectionMgr {
+	[instantiateLogger('SparkConnectionMgr') /]
+	private static Map<String, DBCredentials> dbPorts = new HashMap<String, DBCredentials>();
+	private static SparkSession session = null;
+
+	private static class DBCredentials {
+
+		protected String dbName;
+		protected String url;
+		protected String port;
+		protected String userName;
+		protected String userPwd;
+
+		protected DBCredentials(String dbName, String url, String port, String userName, String userPwd) {
+			this.dbName = dbName;
+			this.url = url;
+			this.port = port;
+			this.userName = userName;
+			this.userPwd = userPwd;
+		}
+
+	}
+
+	static {
+		[for (db : Database | conceptualSchema.ancestors(Domainmodel)->first().databases.databases)]
+			dbPorts.put("[db.name /]", new DBCredentials("[db.databaseName /]", "[db.host /]", "[db.port /]", "[db.login /]", "[db.password /]"));
+		[/for]
+	}
+
+		private static SparkSession getSession() {
+		if (session == null) {
+			session = SparkSession.builder().appName("Polystore").config("spark.master", "local")
+					.config("spark.sql.shuffle.partitions", 5)
+					.config("spark.some.config.option", "some-value")
+					.config("spark.mongodb.input.uri", "mongodb://127.0.0.1:1/fakedb.fakecollection")
+//			.config("spark.mongodb.output.uri", "mongodb://127.0.0.1:1/mymongo.productCollection")
+					.getOrCreate();
+			// session.sparkContext().setLogLevel("ERROR");
+		}
+		return session;
+	}
+
+	public static Dataset<Row> getSparkSessionForMongoDB(String dbName, String collectionName, String bsonQuery) {
+		
+		// https://docs.mongodb.com/manual/core/read-preference/#replica-set-read-preference-modes
+		Map<String, String> readOverrides = new HashMap<String, String>();
+		DBCredentials credentials = dbPorts.get(dbName);
+		
+		String mongoURL = "mongodb://" + credentials.url + ":" + credentials.port + "/" + dbName + "." + collectionName;
+		getSession().sparkContext().conf().set("spark.mongodb.input.uri", mongoURL);
+		getSession().sparkContext().conf().set("spark.mongodb.output.uri", mongoURL);
+		
+//		readOverrides.put("uri", "mongodb://" + credentials.url + ":" + credentials.port);
+		readOverrides.put("database", dbName);
+		readOverrides.put("collection", collectionName);
+		readOverrides.put("readPreference.name", "primaryPreferred");
+		
+		JavaSparkContext jsc = new JavaSparkContext(getSession().sparkContext());
+		
+		ReadConfig readConfig = ReadConfig.create(jsc).withOptions(readOverrides);
+
+		Dataset<Row> res = (bsonQuery != null)
+				? MongoSpark.load(jsc, readConfig).withPipeline(singletonList(Document.parse(bsonQuery))).toDF()
+				: MongoSpark.load(jsc, readConfig).toDF();
+		return res;
+
+	}
+
+	public static Dataset<Row> getDataset(String dbName, String physicalStructName) {
+		DBCredentials credentials = dbPorts.get(dbName);
+		DataFrameReader dfr = getSession().sqlContext().read().format("jdbc")
+				.option("url", "jdbc:mysql://" + credentials.url + ":" + credentials.port + "/" + credentials.dbName)
+				.option("user", credentials.userName).option("password", credentials.userPwd);
+
+		Dataset<Row> d = dfr.option("dbtable", physicalStructName).load();
+		return d;
+	}
+
+	public static void writeDataset(List<Row> rows, StructType structType, String formattype, String physicalStructName, String dbName){
+		DBCredentials credentials = dbPorts.get(dbName);
+		Dataset<Row> data = getSession().createDataFrame(rows, structType);
+		String mongoURL = "mongodb://" + credentials.url + ":" + credentials.port + "/" + dbName + "." + physicalStructName;
+		
+		if(formattype.equals("mongo")){
+			data.write()
+                .format("mongo")
+                .option("spark.mongodb.output.uri", mongoURL)
+                .option("collection",physicalStructName)
+                .mode(SaveMode.Append)
+                .save();
+		}else if(formattype.equals("jdbc"))
+			{
+			data.write()
+				.format(formattype)
+				.option("url", "jdbc:mysql://" + credentials.url + ":" + credentials.port + "/" + credentials.dbName)
+				.option("dbtable",physicalStructName)
+				.option("user", credentials.userName).option("password", credentials.userPwd)
+				.mode(SaveMode.Append)
+				.save();
+			}
+	}
+
+	public static void writeKeyValue(String key, String value, String dbName){
+		DBCredentials credentials = dbPorts.get(dbName);
+		SparkConf sparkConf = new SparkConf()
+                .setAppName("MyApp")
+                .setMaster("local['['/]*[']'/]")
+                .set("spark.redis.host", credentials.url)
+                .set("spark.redis.port", credentials.port);
+        RedisConfig redisConfig = RedisConfig.fromSparkConf(sparkConf);
+        ReadWriteConfig readWriteConfig = ReadWriteConfig.fromSparkConf(sparkConf);
+		//        JavaSparkContext jsc = new JavaSparkContext(sparkConf);
+        JavaSparkContext jsc = JavaSparkContext.fromSparkContext(getSession().sparkContext());
+        RedisContext redisContext = new RedisContext(jsc.sc());
+
+		List<Tuple2<String, String>> data = Arrays.asList(new Tuple2<String, String>(key,value));
+		RDD<Tuple2<String, String>> items = jsc.parallelize(data,1).rdd();
+        redisContext.toRedisKV(items, 0, redisConfig, readWriteConfig);
+	}
+
+	public static void writeKeyValueHash(String key, List<Tuple2<String, String>> hash, String dbName){
+		DBCredentials credentials = dbPorts.get(dbName);
+		SparkConf sparkConf = new SparkConf()
+                .setAppName("MyApp")
+                .setMaster("local['['/]*[']'/]")
+                .set("spark.redis.host", credentials.url)
+                .set("spark.redis.port", credentials.port);
+        RedisConfig redisConfig = RedisConfig.fromSparkConf(sparkConf);
+        ReadWriteConfig readWriteConfig = ReadWriteConfig.fromSparkConf(sparkConf);
+		//        JavaSparkContext jsc = new JavaSparkContext(sparkConf);
+        JavaSparkContext jsc = JavaSparkContext.fromSparkContext(getSession().sparkContext());
+        RedisContext redisContext = new RedisContext(jsc.sc());
+
+		RDD<Tuple2<String, String>> items = jsc.parallelize(hash,1).rdd();
+		redisContext.toRedisHASH(items, key,0, redisConfig, readWriteConfig);
+	}
+
+	public static Dataset<Row> getRowsFromKeyValue(String dbName, String keypattern) {
+		DBCredentials credentials = dbPorts.get(dbName);
+		SparkConf sparkConf = new SparkConf()
+                .setAppName("MyApp")
+                .setMaster("local['['/]*[']'/]")
+                .set("spark.redis.host", credentials.url)
+                .set("spark.redis.port", credentials.port);
+        RedisConfig redisConfig = RedisConfig.fromSparkConf(sparkConf);
+        ReadWriteConfig readWriteConfig = ReadWriteConfig.fromSparkConf(sparkConf);
+		//        JavaSparkContext jsc = new JavaSparkContext(sparkConf);
+        JavaSparkContext jsc = JavaSparkContext.fromSparkContext(getSession().sparkContext());
+        RedisContext redisContext = new RedisContext(jsc.sc());
+
+        // Get key value pairs non specific type of values.
+        // Convert RDD to Dataset<Row>
+        RDD<Tuple2<String, String>> rdd = redisContext.fromRedisKV(keypattern, 1, redisConfig, readWriteConfig);
+        JavaRDD<Tuple2<String, String>> javaRDD = rdd.toJavaRDD();
+        JavaRDD<Row> rowRDD = javaRDD.map((Function<Tuple2<String, String>, Row>) record -> {
+            String key = record._1;
+            String value = record._2;
+            return RowFactory.create(key, value);
+        });
+		SparkSession spark = SparkSession.builder().config(sparkConf).getOrCreate();
+        StructType schema = DataTypes.createStructType(Arrays.asList(DataTypes.createStructField("key",DataTypes.StringType,true), DataTypes.createStructField("value",DataTypes.StringType,true)));
+        Dataset<Row> res = spark.createDataFrame(rowRDD, schema);
+		return res;
+	}
+
+	public static Dataset<Row> getRowsFromKeyValueHashes(String dbName, String keypattern, StructType structTypeHash){
+		DBCredentials credentials = dbPorts.get(dbName);
+		SparkConf sparkConf = new SparkConf()
+                .setAppName("MyApp")
+                .setMaster("local['['/]*[']'/]")
+                .set("spark.redis.host", credentials.url)
+                .set("spark.redis.port", credentials.port);
+		SparkSession spark = SparkSession.builder().config(sparkConf).getOrCreate();
+		Dataset<Row> res = spark.read().format("org.apache.spark.sql.redis")
+                .option("keys.pattern",keypattern)
+				.option("key.column", "id")
+                .schema(structTypeHash).load();
+		return res;
+	} 
+
+}
+[/file]
+[/template]
+
+[template public generateRelationalDBConnectionClasses(conceptualSchema: ConceptualSchema)]
+[file ('src/main/java/dbconnection/RelationalDBConnection.java', false, 'UTF-8')]
+package dbconnection;
+
+import java.sql.SQLException;
+
+public class RelationalDBConnection implements DBConnection{
+	[instantiateLogger('RelationalDBConnection') /]
+	protected String host;
+	protected String port;
+	protected String driverClass;
+	protected String schemaName;
+	protected String userName;
+	protected String userPassword;
+
+	protected String jdbcUrl;
+
+	private java.sql.Connection conn = null;
+
+	public RelationalDBConnection(String host, String port, String schemaName, String userName, String userPassword)
+			throws ClassNotFoundException, java.sql.SQLException {
+		this.host = host;
+		this.port = port;
+		this.schemaName = schemaName;
+		this.userName = userName;
+		this.userPassword = userPassword;
+
+		this.jdbcUrl = "jdbc:mysql://" + this.host + ":" + this.port + "/" + this.schemaName;
+		this.driverClass = "com.mysql.jdbc.Driver";
+
+		//Class.forName(this.driverClass);
+		openConnection();
+	}
+
+	public void openConnection(){
+		if(this.conn == null)
+			try{
+			logger.debug("Opening relational DB connection {}", jdbcUrl);
+			this.conn = java.sql.DriverManager.getConnection(this.jdbcUrl, this.userName, this.userPassword);
+			}catch(SQLException e){
+				logger.error("Impossible to connect to DB {}", jdbcUrl);
+				System.err.println(e);
+				System.exit(1);
+			}
+	}
+
+	public void closeConnection() {
+		try {
+			if(conn != null)
+				conn.close();
+		}catch(SQLException e){
+				logger.error("Impossible to close DB connection{}", jdbcUrl);
+				System.err.println(e);
+			} finally {
+			conn = null;
+		}
+	}
+
+	public java.sql.ResultSet select(String query) throws java.sql.SQLException {
+		return select(query, null);
+	}
+
+	public java.sql.ResultSet select(String query, java.util.List<Object> inputs) throws java.sql.SQLException {
+		openConnection();
+		java.sql.PreparedStatement st = null;
+		try {
+			st = conn.prepareStatement(query);
+			int i = 1;
+			if (inputs != null)
+				for (Object input : inputs) {
+					st.setObject(i, input);
+					i++;
+				}
+
+			return st.executeQuery();
+		} catch (java.sql.SQLException e) {
+			if (st != null)
+				st.close();
+			throw e;
+		}
+	}
+
+	public void closeStatement(java.sql.ResultSet r) throws java.sql.SQLException {
+		if (r != null) {
+			java.sql.Statement st = r.getStatement();
+			if (st != null)
+				st.close();
+		}
+	}
+
+	@Override
+	public int insertOrUpdateOrDelete(String query, java.util.List<Object> inputs) {
+		java.sql.PreparedStatement st = null;
+		try {
+			openConnection();
+			logger.debug("Executing insert/update/delete statement [ '['/]{}[ ']'/]",query);
+			st = conn.prepareStatement(query);
+			int i = 1;
+			if (inputs != null)
+				for (Object input : inputs) {
+					st.setObject(i, input);
+					i++;
+				}
+
+			return st.executeUpdate();
+		}catch(SQLException e){
+			logger.error("Error executing insert/update/delete statement");
+			System.err.println(e);
+			System.exit(1);
+		} finally {
+			if (st != null)
+			try{
+				st.close();
+			}catch(SQLException e){
+				logger.error("Impossible to close statement");
+				System.err.println(e);
+			}
+		}
+		return 0;
+	}
+
+	public int insertOrUpdateOrDelete(String query) throws java.sql.SQLException {
+		return insertOrUpdateOrDelete(query, null);
+	}
+
+}
+
+[/file]
+[/template]
+
+[template public generateDocumentDBConnectionClasses(conceptualSchema: ConceptualSchema)]
+[file ('src/main/java/dbconnection/DocumentDBConnection.java', false, 'UTF-8')]
+package dbconnection;
+
+public class DocumentDBConnection {
+	protected String host;
+	protected String port;
+	protected String dbName;
+	protected String userName;
+	protected String userPassword;
+
+	protected String mongoUrl;
+	protected com.mongodb.MongoClient mongoClient = null;
+	protected com.mongodb.client.MongoDatabase db = null;
+
+	public DocumentDBConnection(String host, String port, String dbName, String userName, String userPassword) throws java.sql.SQLException {
+		this.host = host;
+		this.port = port;
+		this.dbName = dbName;
+		this.userName = userName;
+		this.userPassword = userPassword;
+
+		this.mongoUrl = "mongodb://" + userName + ":" + userPassword + "@" + host + ":" + port;
+		openConnection();
+	}
+
+	public void openConnection() throws java.sql.SQLException {
+		if (this.db == null) {
+			com.mongodb.MongoClientURI uri = new com.mongodb.MongoClientURI(mongoUrl);
+			mongoClient = new com.mongodb.MongoClient(uri);
+			db = mongoClient.getDatabase(dbName);
+		}
+	}
+
+	public void closeConnection() {
+		try {
+			if (mongoClient != null)
+				mongoClient.close();
+
+		} finally {
+			this.db = null;
+		}
+	}
+
+}
+[/file]
+[/template]
+
+[template public generateKeyValueDBConnectionClasses(conceptualSchema: ConceptualSchema)]
+[file ('src/main/java/dbconnection/KeyValueDBConnection.java', false, 'UTF-8')]
+package dbconnection;
+
+public class KeyValueDBConnection {
+	
+	protected String host;
+	protected int port;
+	protected String userPassword;
+	
+	protected redis.clients.jedis.Jedis conn = null;
+	
+	public KeyValueDBConnection(String host, int port, String userPassword) {
+		this.host = host;
+		this.port = port;
+		this.userPassword = userPassword;
+		openConnection();
+	}
+	
+	public void openConnection() {
+		if(conn == null) {
+			conn = new redis.clients.jedis.Jedis(host, port);
+			conn.auth(userPassword);//password
+		}
+	}
+
+	public void closeConnection() {
+		if(conn != null) {
+			conn.close();
+		}
+	}
+	
+}
+
+[/file]
+[/template]
+
+[template public generateColumnDBConnectionClasses(conceptualSchema: ConceptualSchema)]
+[file ('src/main/java/dbconnection/ColumnDBConnection.java', false, 'UTF-8')]
+package dbconnection;
+
+public class ColumnDBConnection {
+	protected String host;
+	protected int port;
+	protected String userPassword;
+	protected String userName;
+	protected String keyspaceName;
+
+	private com.datastax.oss.driver.api.core.CqlSession session = null;
+
+	public ColumnDBConnection(String host, int port, String keyspaceName, String userName, String userPassword) {
+		this.host = host;
+		this.port = port;
+		this.userName = userName;
+		this.userPassword = userPassword;
+		this.keyspaceName = keyspaceName;
+		openConnection();
+	}
+
+	public void openConnection() {
+		if (session == null)
+			session = com.datastax.oss.driver.api.core.CqlSession.builder()
+					// make sure you change the path to the secure connect bundle below
+					// .withCloudSecureConnectBundle(Paths.get("/path/to/secure-connect-database_name.zip"))
+					.withAuthCredentials(this.userName, this.userPassword).withKeyspace(this.keyspaceName).build();
+	}
+
+	public void closeConnection() {
+		if (session != null)
+			session.close();
+	}
+	
+
+	public com.datastax.oss.driver.api.core.cql.ResultSet executeQuery(String query, java.util.List<Object> inputs) {
+		openConnection();
+		// ResultSet rs = session.execute("select release_version from system.local");
+		com.datastax.oss.driver.api.core.cql.PreparedStatement prepared = session.prepare(query);
+		com.datastax.oss.driver.api.core.cql.BoundStatement bound;
+		if (inputs == null || inputs.size() == 0)
+			bound = prepared.bind();
+		else
+			bound = prepared.bind(inputs);
+		
+		return session.execute(bound);
+	}
+
+	public com.datastax.oss.driver.api.core.cql.ResultSet select(String query, java.util.List<Object> inputs) {
+		return executeQuery(query, inputs);
+	}
+	
+	public com.datastax.oss.driver.api.core.cql.ResultSet select(String query) {
+		return select(query, null);
+	}
+	
+	public void insertOrUpdateOrDelete(String query, java.util.List<Object> inputs) {
+		executeQuery(query, inputs);
+	}
+	
+	public void insertOrUpdateOrDelete(String query) {
+		insertOrUpdateOrDelete(query, null);
+	}
+}
+
+[/file]
+[/template]
+
+[template public generateGraphDBConnectionClasses(conceptualSchema: ConceptualSchema)]
+[file ('src/main/java/dbconnection/GraphDBConnection.java', false, 'UTF-8')]
+package dbconnection;
+
+public class GraphDBConnection {
+
+	protected String host;
+	protected int port;
+	protected String userName;
+	protected String userPassword;
+	
+	private String neo4jUrl;
+
+	protected org.neo4j.driver.Driver driver;
+	protected org.neo4j.driver.Session session;
+
+	public GraphDBConnection(String host, int port, String userName, String userPassword) {
+		this.host = host;
+		this.port = port;
+		this.userName = userName;
+		this.userPassword = userPassword;
+		
+		// it can exist different ways to connect a Neo4j db (see https://neo4j.com/developer/java/)
+		this.neo4jUrl = "neo4j://" + this.host + ":" + this.port;
+		openConnection();
+	}
+
+	public void openConnection() {
+		if (driver == null) {
+			driver = org.neo4j.driver.GraphDatabase.driver(this.neo4jUrl,
+					org.neo4j.driver.AuthTokens.basic(this.userName, this.userPassword));
+			session = driver.session();
+		}
+	}
+
+	public void closeConnection() {
+		if (driver != null) {
+			session.close();
+			driver.close();
+		}
+	}
+	
+	public org.neo4j.driver.Result select(String cypher) {
+		return select(cypher, new java.util.HashMap<String, Object>());
+	}
+	
+	public org.neo4j.driver.Result select(String cypher, java.util.Map<String,Object> parameters) {
+		openConnection();
+		return session.run(cypher, parameters);
+	}
+	
+	public void insertOrUpdateorDelete(String cypher) {
+		insertOrUpdateorDelete(cypher, new java.util.HashMap<String, Object>());
+	}
+	
+	public void insertOrUpdateorDelete(String cypher, java.util.Map<String,Object> parameters) {
+		openConnection();
+		session.run(cypher, parameters);
+	}
+
+}
+
+[/file]
+[/template]

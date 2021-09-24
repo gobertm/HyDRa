@@ -1,0 +1,8 @@
+[comment encoding = UTF-8 /]
+[module generateInsertMethods('http://www.unamur.be/polystore/Pml')]
+[import be::unamur::polystore::acceleo::main::util /]
+[import be::unamur::polystore::acceleo::main::impl::insert::relationshiptype::generateInsertMethodsImpl /]
+
+[template public generateInsertMethods(rel: RelationshipType, override: Boolean)]
+public [if  (override = false)]abstract [/if]void insert[rel.name.toUpperFirst() /]([rel.name.toUpperFirst() /] [rel.name /])[if  (override = false)];[else][insertRImpl(rel) /][/if]
+[/template]

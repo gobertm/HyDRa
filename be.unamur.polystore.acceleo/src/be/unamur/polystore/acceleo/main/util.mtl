@@ -1,0 +1,185 @@
+[comment encoding = UTF-8 /]
+[module util('http://www.unamur.be/polystore/Pml')]
+
+[import be::unamur::polystore::acceleo::main::mappingrules::util /]
+
+[template public generateJavaType(type : DataType) post (replaceAll('\n', '').trim())]
+[if (type.oclIsTypeOf(pml::IntType))]Integer[/if]
+[if (type.oclIsTypeOf(pml::BigintType))]Long[/if]
+[if (type.oclIsTypeOf(pml::TextType))]String[/if]
+[if (type.oclIsTypeOf(pml::StringType))]String[/if]
+[if (type.oclIsTypeOf(pml::BoolType))]Boolean[/if]
+[if (type.oclIsTypeOf(pml::FloatType))]Double[/if]
+[if (type.oclIsTypeOf(pml::BlobType))]Byte[/if]
+[if (type.oclIsTypeOf(pml::DateType))]java.time.LocalDate[/if]
+[if (type.oclIsTypeOf(pml::DatetimeType))]java.time.LocalDate[/if]
+[/template]
+
+[template public generateSparkDataType(type : DataType) post (replaceAll('\n', '').trim())]
+[if (type.oclIsTypeOf(pml::IntType))]DataTypes.IntegerType[/if]
+[if (type.oclIsTypeOf(pml::BigintType))]DataTypes.LongType[/if]
+[if (type.oclIsTypeOf(pml::TextType))]DataTypes.StringType[/if]
+[if (type.oclIsTypeOf(pml::StringType))]DataTypes.StringType[/if]
+[if (type.oclIsTypeOf(pml::BoolType))]DataTypes.BooleanType[/if]
+[if (type.oclIsTypeOf(pml::FloatType))]DataTypes.FloatType[/if]
+[if (type.oclIsTypeOf(pml::BlobType))]DataTypes.ByteType[/if]
+[if (type.oclIsTypeOf(pml::DateType))]DataTypes.DateType[/if]
+[if (type.oclIsTypeOf(pml::DatetimeType))]DataTypes.TimestampType[/if]
+[/template]
+
+
+[template public generateParsingFunctionJavaType(type : DataType, varName: String) post (replaceAll('\n', '').trim())]
+[if (type.oclIsTypeOf(pml::IntType))][varName/] == null ? null : Integer.parseInt([varName/])[/if]
+[if (type.oclIsTypeOf(pml::BigintType))][varName/] == null ? null : Long.parseLong([varName/])[/if]
+[if (type.oclIsTypeOf(pml::TextType))][varName/] == null ? null : [varName/][/if]
+[if (type.oclIsTypeOf(pml::StringType))][varName/] == null ? null : [varName/][/if]
+[if (type.oclIsTypeOf(pml::BoolType))][varName/] == null ? null : Boolean.parseBoolean([varName/])[/if]
+[if (type.oclIsTypeOf(pml::FloatType))][varName/] == null ? null : Double.parseDouble([varName/])[/if]
+[if (type.oclIsTypeOf(pml::BlobType))][varName/] == null ? null : Byte.parseByte([varName/])[/if]
+[if (type.oclIsTypeOf(pml::DateType))]TODO[/if]
+[comment d�finir un format dans la grammaire pourles dates au niveau conceptuel ex: birthdate: date {MY_FORMAT}/]
+[if (type.oclIsTypeOf(pml::DatetimeType))]TODO[/if]
+[/template]
+
+[query public getConcernedRoles(rel : RelationshipType, ent : EntityType) : Collection(Role) =  
+	rel.roles->select(role : pml::Role | role.entity = ent)
+/]
+
+
+
+[query public getRolesFromEntityType(entityType: EntityType, conceptualSchema: ConceptualSchema) : Collection(pml::Role) = 
+	conceptualSchema.eAllContents(pml::Role)->select(role: pml::Role | role.entity = entityType)
+/]
+
+[query public getRolesFromEntityTypeInSimpleBinaryRel(entityType: EntityType, conceptualSchema: ConceptualSchema) : Collection(pml::Role) = 
+	conceptualSchema.eAllContents(pml::Role)->select(role: pml::Role | role.entity = entityType 
+	and getRelationShipType(role).roles->size() = 2 
+	and getRelationShipType(role).attributes->size() = 0)
+/]
+
+[query public getRolesFromEntityTypeInBinaryRelWithAttributes(entityType: EntityType, conceptualSchema: ConceptualSchema) : Collection(pml::Role) = 
+	conceptualSchema.eAllContents(pml::Role)->select(role: pml::Role | role.entity = entityType 
+	and getRelationShipType(role).roles->size() = 2 
+	and getRelationShipType(role).attributes->size() > 0)
+/]
+
+[query public getRolesFromEntityTypeInNAireRel (entityType: EntityType, conceptualSchema: ConceptualSchema) : Collection(Role) =
+	conceptualSchema.eAllContents(pml::Role)->select(role: pml::Role | role.entity = entityType 
+	and getRelationShipType(role).roles->size() > 2 )
+/]
+
+[query public getBinaryRelationshipTypesWithAttributes(conceptualSchema: ConceptualSchema) : Collection(pml::RelationshipType) = 
+	conceptualSchema.relationships->select(rel: pml::RelationshipType | rel.roles->size() = 2 and rel.attributes->size() > 0)
+/]
+
+[query public isBinaryWithAttributes(rel: RelationshipType) : Boolean = 
+	rel.roles->size() = 2 and rel.attributes->size() > 0
+/]
+
+[query public isNAire(rel: RelationshipType) : Boolean = 
+	rel.roles->size() > 2
+/]
+
+
+[query public getRelationShipType(role: Role) : RelationshipType = 
+	role.eContainer(pml::RelationshipType)
+/]
+
+[query public getOppositeRoles(role: Role) : Collection(pml::Role) =
+	getRelationShipType(role).roles->select(r: Role | r <> role)
+/]
+
+[query public getOppositeRoleInBinaryRel(role: Role) : Role =
+	getRelationShipType(role).roles->select(r: Role | r <> role and getRelationShipType(role).roles->size() = 2)->any(true)
+/]
+
+[query public isCardinalityMaxOne(role: Role) : Boolean = role.cardinality = pml::Cardinality::ONE or role.cardinality = pml::Cardinality::ZERO_ONE /]
+
+[query public isCardinalityMaxN(role: Role) : Boolean = role.cardinality = pml::Cardinality::ZERO_MANY or role.cardinality = pml::Cardinality::ONE_MANY /]
+
+[query public getMandatoryRoles(entityType: EntityType, conceptualSchema: ConceptualSchema): Collection(Role) = 
+	conceptualSchema.eAllContents(pml::Role)->select(role: pml::Role | role.entity = entityType and isMandatoryRole(role))
+/]
+
+[query public getMandatoryRoles(rel: RelationshipType) : Collection(Role) =
+	rel.roles -> select(role: Role | isMandatoryRole(role))
+ /]
+
+[query public isMandatoryRole(role: Role): Boolean = role.cardinality = pml::Cardinality::ONE or role.cardinality = pml::Cardinality::ONE_MANY
+/]
+
+[query public getOppositeMandatoryRoles(entityType: EntityType, conceptualSchema: ConceptualSchema): Collection(Role) =
+	conceptualSchema.eAllContents(pml::Role)->select(role: pml::Role | role.entity <> entityType and isMandatoryRole(role) and existsOppositeMandatoryRolesPlayedByGivenEntityType(role, entityType))
+/]
+
+[query private existsOppositeMandatoryRolesPlayedByGivenEntityType(role: Role, entityType: EntityType): Boolean =
+ 	(getOppositeRoles(role)->select(r: Role | r.entity = entityType and isMandatoryRole(r)))->size() > 0
+/]
+
+[query public getRolesOppositeToMandatoryEntityRole(entityType: EntityType, conceptualSchema: ConceptualSchema): Collection(Role) =
+	getOppositeRoles(getMandatoryRoles(entityType, conceptualSchema))
+/]
+
+[query private getOppositeRoles(roles: Collection(Role)): Collection(Role) = 
+	roles->collect(role | getOppositeRoles(role))
+/]
+
+[query public getAttributesFromMandatoryRoles(entityType: EntityType, conceptualSchema: ConceptualSchema): Collection(Attribute) =
+	conceptualSchema.eAllContents(pml::Attribute)->select(attr: Attribute | isRelationMandatorilyPlayedByGivenEntity(entityType, getRelationshipType(attr)))
+/]
+
+[query private isRelationMandatorilyPlayedByGivenEntity(entityType: EntityType, rel: RelationshipType): Boolean =
+	rel.oclIsUndefined() = false and (rel.roles->select(role: Role | role.entity = entityType and isMandatoryRole(role))->size() > 0)
+ /]
+
+[query public getRelationshipType(attr: Attribute): RelationshipType =
+	attr.eContainer(pml::RelationshipType)
+ /]
+
+[template public getListOfNullValues(nbOfValues: Integer)][getListOfNullValues(nbOfValues, false)/][/template]
+[template public getListOfNullValues(nbOfValues: Integer, hasPrevious: Boolean)][if (nbOfValues > 0)][if (hasPrevious)], [/if]null[getListOfNullValues(nbOfValues - 1, true)/][/if][/template]
+
+[query public getJavaRegexFromLongField(field : LongField) : String = 
+	invoke('be.unamur.polystore.acceleo.main.utils.Util', 'getJavaRegexFromLongField(be.unamur.polystore.pml.LongField)', Sequence{field})
+ /]
+
+[query public getPositionInLongField(field : PhysicalField, parent : LongField) : String = 
+	invoke('be.unamur.polystore.acceleo.main.utils.Util', 'getPositionInLongField(be.unamur.polystore.pml.PhysicalField, be.unamur.polystore.pml.LongField)', Sequence{field, parent})
+ /]
+
+
+[template public instantiateLogger(className : String)]static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger([className/].class);[/template]
+
+[query public getJavaAbsolutePath(ref : Reference) : String = 
+ref.eContainer(AbstractPhysicalSchema).name + '_' + ref.getAbstractPhysicalStructureNotEmbeddedObject().name + '_' + ref.name/]
+
+[query public getJavaAbsolutePath(field : PhysicalField) : String = 
+field.eContainer(AbstractPhysicalSchema).name + '_' + field.getAbstractPhysicalStructureNotEmbeddedObject().name + '_' + field.getPhysicalName()/]
+
+
+[query public getAbstractPhysicalStructureNotEmbeddedObject(o : OclAny) : AbstractPhysicalStructure =
+	invoke('be.unamur.polystore.acceleo.main.utils.MappingRuleService', 'getPhysicalStructureNotEmbeddedObject(org.eclipse.emf.ecore.EObject)', Sequence{o})
+/]
+
+
+[query public getPhysicalSchema(o : OclAny) : AbstractPhysicalSchema =
+	invoke('be.unamur.polystore.acceleo.main.utils.MappingRuleService', 'getPhysicalSchema(org.eclipse.emf.ecore.EObject)', Sequence{o})
+/]
+
+[query public getPhysicalFieldAbsolutePath(field : PhysicalField) : String =  
+invoke('be.unamur.polystore.acceleo.main.utils.Util', 'getPhysicalFieldAbsolutePath(be.unamur.polystore.pml.PhysicalField)', Sequence{field})
+/]
+
+[query public isRelational(dbType : DatabaseType) : Boolean = dbType = DatabaseType::MARIADB or  dbType = DatabaseType::SQLITE/]
+
+[query public getPomArtifactId() : String =  
+invoke('be.unamur.polystore.acceleo.main.utils.Util', 'getPomArtifactId()', Sequence{})
+/]
+
+[query public getPomGroupId() : String =  
+invoke('be.unamur.polystore.acceleo.main.utils.Util', 'getPomGroupId()', Sequence{})
+/]
+
+
+
+

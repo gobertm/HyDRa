@@ -1,0 +1,11 @@
+[comment encoding = UTF-8 /]
+[module generateSimpleUpdateMethodsImpl('http://www.unamur.be/polystore/Pml')]
+
+
+[template public implMethod1(entityType: EntityType, conceptualSchema: ConceptualSchema)]{
+	//TODO
+}[/template]
+
+[template public implMethod2(entityType: EntityType, conceptualSchema: ConceptualSchema)]{
+	//TODO
+}[/template]
