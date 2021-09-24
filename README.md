@@ -1,6 +1,20 @@
-<<<<<<< HEAD
+
 # HyDRa
 HyDRa (Hybrid Data Representation and Access) is a hybrid polystore management framework providing a modeling language and a conceptual API generation tool.
+
+Modeling language provides support for relational database (MySQL, MariaDB), document database (MongoDB), key value stores (Redis), graph database (Neo4j) and column database (HBase).
+
+Based on the designed model a data manipulation API can be generated.
+
+### API Operations Supported
+Here we list the operations manipulating modeled domain entities objects supported by the generated API.
+
+| Feature | Relational DB | Document DB | Key Value DB | Graph DB | Column DB |
+|----|:---:|:---:|:---:|:---:|---|
+| `Read ` | 🌕 | 🌓 (arrays containing refs missing) | 🌓 (partial role based selection, only supports string and hash datatypes) | 🌑 | 🌑 |
+| `Insert` | 🌕 | 🌕 | 🌓 (only for structures not mapped to roles) | 🌑 | 🌑 |
+| `Update` | 🌑 | 🌒 (via insert of embedded entities) | 🌑 | 🌑 | 🌑 |
+| `Delete` | 🌑 | 🌑 | 🌑 | 🌑 | 🌑 |
 
 ## Install
 
