@@ -1,0 +1,92 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	<groupId>hybridrel</groupId>
+	<artifactId>uc3</artifactId>
+	<version>0.0.1-SNAPSHOT</version>
+
+	<properties>
+		<maven.compiler.release>9</maven.compiler.release>
+		<maven.compiler.target>14</maven.compiler.target>
+		<maven.compiler.source>14</maven.compiler.source>
+	</properties>
+
+	<dependencies>
+		<!-- https://mvnrepository.com/artifact/com.redislabs/spark-redis -->
+		<dependency>
+		    <groupId>com.redislabs</groupId>
+		    <artifactId>spark-redis_2.12</artifactId>
+		    <version>2.6.0</version>
+		</dependency>
+
+
+
+		<dependency>
+		  <groupId>org.apache.maven.plugins</groupId>
+		  <artifactId>maven-compiler-plugin</artifactId>
+		  <version>3.8.1</version>
+		</dependency>
+		<!-- https://mvnrepository.com/artifact/mysql/mysql-connector-java -->
+		<dependency>
+			<groupId>mysql</groupId>
+			<artifactId>mysql-connector-java</artifactId>
+			<version>8.0.22</version>
+		</dependency>
+
+		<!-- https://mvnrepository.com/artifact/org.apache.spark/spark-core -->
+		<dependency>
+		    <groupId>org.apache.spark</groupId>
+		    <artifactId>spark-core_2.12</artifactId>
+		    <version>3.1.2</version>
+		</dependency>
+
+		<!-- https://mvnrepository.com/artifact/org.apache.spark/spark-streaming -->
+		<dependency>
+		    <groupId>org.apache.spark</groupId>
+		    <artifactId>spark-streaming_2.12</artifactId>
+		    <version>3.1.2</version>
+		    <scope>provided</scope>
+		</dependency>
+
+
+
+		<!-- https://mvnrepository.com/artifact/org.apache.spark/spark-sql -->
+		<dependency>
+			<groupId>org.apache.spark</groupId>
+			<artifactId>spark-sql_2.12</artifactId>
+			<version>3.0.1</version>
+		</dependency>
+
+		<!-- https://mvnrepository.com/artifact/mysql/mysql-connector-java -->
+		<dependency>
+			<groupId>mysql</groupId>
+			<artifactId>mysql-connector-java</artifactId>
+			<version>8.0.22</version>
+		</dependency>
+
+		<dependency>
+		    <groupId>org.mongodb.spark</groupId>
+		    <artifactId>mongo-spark-connector_2.12</artifactId>
+		    <version>3.0.0</version>
+		</dependency>
+
+		<!--SL4J-->
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-log4j12</artifactId>
+            <version>1.7.28</version>
+        </dependency>
+	
+		<!-- https://mvnrepository.com/artifact/junit/junit -->
+		<dependency>
+    		<groupId>junit</groupId>
+    		<artifactId>junit</artifactId>
+    		<version>4.13.1</version>
+    		<scope>test</scope>
+		</dependency>
+
+
+	</dependencies>
+</project>
+
