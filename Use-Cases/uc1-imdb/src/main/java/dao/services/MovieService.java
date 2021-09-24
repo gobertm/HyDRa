@@ -12,6 +12,7 @@ import org.apache.spark.api.java.function.FilterFunction;
 import org.apache.commons.lang.mutable.MutableBoolean;
 import conditions.Condition;
 import conditions.Operator;
+import util.Util;
 import conditions.MovieAttribute;
 import conditions.DirectorAttribute;
 import pojo.Director;
@@ -92,154 +93,7 @@ public abstract class MovieService {
 	
 		d = datasets.get(0);
 		if(datasets.size() > 1) {
-	
-		
-			List<String> idFields = new ArrayList<String>();
-			idFields.add("id");
-			scala.collection.Seq<String> seq = scala.collection.JavaConverters.asScalaIteratorConverter(idFields.iterator()).asScala().toSeq();
-			Dataset<Row> res = d.join(datasets.get(1)
-								.withColumnRenamed("primaryTitle", "primaryTitle_1")
-								.withColumnRenamed("originalTitle", "originalTitle_1")
-								.withColumnRenamed("isAdult", "isAdult_1")
-								.withColumnRenamed("startYear", "startYear_1")
-								.withColumnRenamed("runtimeMinutes", "runtimeMinutes_1")
-								.withColumnRenamed("averageRating", "averageRating_1")
-								.withColumnRenamed("numVotes", "numVotes_1")
-								.withColumnRenamed("logEvents", "logEvents_1")
-							, seq, "fullouter");
-			for(int i = 2; i < datasets.size(); i++) {
-				res = res.join(datasets.get(i)
-								.withColumnRenamed("primaryTitle", "primaryTitle_" + i)
-								.withColumnRenamed("originalTitle", "originalTitle_" + i)
-								.withColumnRenamed("isAdult", "isAdult_" + i)
-								.withColumnRenamed("startYear", "startYear_" + i)
-								.withColumnRenamed("runtimeMinutes", "runtimeMinutes_" + i)
-								.withColumnRenamed("averageRating", "averageRating_" + i)
-								.withColumnRenamed("numVotes", "numVotes_" + i)
-								.withColumnRenamed("logEvents", "logEvents_" + i)
-							, seq, "fullouter");
-			} 
-			d = res.map((MapFunction<Row, Movie>) r -> {
-					Movie movie_res = new Movie();
-					
-					// attribute 'Movie.id'
-					String firstNotNull_id = r.getAs("id");
-					movie_res.setId(firstNotNull_id);
-					
-					// attribute 'Movie.primaryTitle'
-					String firstNotNull_primaryTitle = r.getAs("primaryTitle");
-					for (int i = 1; i < datasets.size(); i++) {
-						String primaryTitle2 = r.getAs("primaryTitle_" + i);
-						if (firstNotNull_primaryTitle != null && primaryTitle2 != null && !firstNotNull_primaryTitle.equals(primaryTitle2)) {
-							movie_res.addLogEvent("Data consistency problem: duplicate values found for attribute 'Movie.primaryTitle': " + firstNotNull_primaryTitle + " and " + primaryTitle2 + "." );
-							logger.warn("data consistency problem: duplicate values for attribute : 'Movie.primaryTitle' ==> " + firstNotNull_primaryTitle + " and " + primaryTitle2);
-						}
-						if (firstNotNull_primaryTitle == null && primaryTitle2 != null) {
-							firstNotNull_primaryTitle = primaryTitle2;
-						}
-					}
-					movie_res.setPrimaryTitle(firstNotNull_primaryTitle);
-					
-					// attribute 'Movie.originalTitle'
-					String firstNotNull_originalTitle = r.getAs("originalTitle");
-					for (int i = 1; i < datasets.size(); i++) {
-						String originalTitle2 = r.getAs("originalTitle_" + i);
-						if (firstNotNull_originalTitle != null && originalTitle2 != null && !firstNotNull_originalTitle.equals(originalTitle2)) {
-							movie_res.addLogEvent("Data consistency problem: duplicate values found for attribute 'Movie.originalTitle': " + firstNotNull_originalTitle + " and " + originalTitle2 + "." );
-							logger.warn("data consistency problem: duplicate values for attribute : 'Movie.originalTitle' ==> " + firstNotNull_originalTitle + " and " + originalTitle2);
-						}
-						if (firstNotNull_originalTitle == null && originalTitle2 != null) {
-							firstNotNull_originalTitle = originalTitle2;
-						}
-					}
-					movie_res.setOriginalTitle(firstNotNull_originalTitle);
-					
-					// attribute 'Movie.isAdult'
-					Boolean firstNotNull_isAdult = r.getAs("isAdult");
-					for (int i = 1; i < datasets.size(); i++) {
-						Boolean isAdult2 = r.getAs("isAdult_" + i);
-						if (firstNotNull_isAdult != null && isAdult2 != null && !firstNotNull_isAdult.equals(isAdult2)) {
-							movie_res.addLogEvent("Data consistency problem: duplicate values found for attribute 'Movie.isAdult': " + firstNotNull_isAdult + " and " + isAdult2 + "." );
-							logger.warn("data consistency problem: duplicate values for attribute : 'Movie.isAdult' ==> " + firstNotNull_isAdult + " and " + isAdult2);
-						}
-						if (firstNotNull_isAdult == null && isAdult2 != null) {
-							firstNotNull_isAdult = isAdult2;
-						}
-					}
-					movie_res.setIsAdult(firstNotNull_isAdult);
-					
-					// attribute 'Movie.startYear'
-					Integer firstNotNull_startYear = r.getAs("startYear");
-					for (int i = 1; i < datasets.size(); i++) {
-						Integer startYear2 = r.getAs("startYear_" + i);
-						if (firstNotNull_startYear != null && startYear2 != null && !firstNotNull_startYear.equals(startYear2)) {
-							movie_res.addLogEvent("Data consistency problem: duplicate values found for attribute 'Movie.startYear': " + firstNotNull_startYear + " and " + startYear2 + "." );
-							logger.warn("data consistency problem: duplicate values for attribute : 'Movie.startYear' ==> " + firstNotNull_startYear + " and " + startYear2);
-						}
-						if (firstNotNull_startYear == null && startYear2 != null) {
-							firstNotNull_startYear = startYear2;
-						}
-					}
-					movie_res.setStartYear(firstNotNull_startYear);
-					
-					// attribute 'Movie.runtimeMinutes'
-					Integer firstNotNull_runtimeMinutes = r.getAs("runtimeMinutes");
-					for (int i = 1; i < datasets.size(); i++) {
-						Integer runtimeMinutes2 = r.getAs("runtimeMinutes_" + i);
-						if (firstNotNull_runtimeMinutes != null && runtimeMinutes2 != null && !firstNotNull_runtimeMinutes.equals(runtimeMinutes2)) {
-							movie_res.addLogEvent("Data consistency problem: duplicate values found for attribute 'Movie.runtimeMinutes': " + firstNotNull_runtimeMinutes + " and " + runtimeMinutes2 + "." );
-							logger.warn("data consistency problem: duplicate values for attribute : 'Movie.runtimeMinutes' ==> " + firstNotNull_runtimeMinutes + " and " + runtimeMinutes2);
-						}
-						if (firstNotNull_runtimeMinutes == null && runtimeMinutes2 != null) {
-							firstNotNull_runtimeMinutes = runtimeMinutes2;
-						}
-					}
-					movie_res.setRuntimeMinutes(firstNotNull_runtimeMinutes);
-					
-					// attribute 'Movie.averageRating'
-					String firstNotNull_averageRating = r.getAs("averageRating");
-					for (int i = 1; i < datasets.size(); i++) {
-						String averageRating2 = r.getAs("averageRating_" + i);
-						if (firstNotNull_averageRating != null && averageRating2 != null && !firstNotNull_averageRating.equals(averageRating2)) {
-							movie_res.addLogEvent("Data consistency problem: duplicate values found for attribute 'Movie.averageRating': " + firstNotNull_averageRating + " and " + averageRating2 + "." );
-							logger.warn("data consistency problem: duplicate values for attribute : 'Movie.averageRating' ==> " + firstNotNull_averageRating + " and " + averageRating2);
-						}
-						if (firstNotNull_averageRating == null && averageRating2 != null) {
-							firstNotNull_averageRating = averageRating2;
-						}
-					}
-					movie_res.setAverageRating(firstNotNull_averageRating);
-					
-					// attribute 'Movie.numVotes'
-					Integer firstNotNull_numVotes = r.getAs("numVotes");
-					for (int i = 1; i < datasets.size(); i++) {
-						Integer numVotes2 = r.getAs("numVotes_" + i);
-						if (firstNotNull_numVotes != null && numVotes2 != null && !firstNotNull_numVotes.equals(numVotes2)) {
-							movie_res.addLogEvent("Data consistency problem: duplicate values found for attribute 'Movie.numVotes': " + firstNotNull_numVotes + " and " + numVotes2 + "." );
-							logger.warn("data consistency problem: duplicate values for attribute : 'Movie.numVotes' ==> " + firstNotNull_numVotes + " and " + numVotes2);
-						}
-						if (firstNotNull_numVotes == null && numVotes2 != null) {
-							firstNotNull_numVotes = numVotes2;
-						}
-					}
-					movie_res.setNumVotes(firstNotNull_numVotes);
-					
-					scala.collection.mutable.WrappedArray<String> logEvents = r.getAs("logEvents");
-					if(logEvents != null)
-						for (int i = 0; i < logEvents.size(); i++){
-							movie_res.addLogEvent(logEvents.apply(i));
-						}
-		
-					for (int i = 1; i < datasets.size(); i++) {
-						logEvents = r.getAs("logEvents_" + i);
-						if(logEvents != null)
-						for (int j = 0; j < logEvents.size(); j++){
-							movie_res.addLogEvent(logEvents.apply(j));
-						}
-					}
-					
-					return movie_res;
-				}, Encoders.bean(Movie.class));
+			d=fullOuterJoinsMovie(datasets);
 		}
 		if(refilterFlag.booleanValue())
 			d = d.filter((FilterFunction<Movie>) r -> condition == null || condition.evaluate(r));
@@ -249,12 +103,13 @@ public abstract class MovieService {
 	
 	
 	
-	public abstract Dataset<Movie> getMovieListInMovieKVFromMyredis(conditions.Condition<conditions.MovieAttribute> condition, MutableBoolean refilterFlag);
-	
-	
-	
 	
 	public abstract Dataset<Movie> getMovieListInActorCollectionFromMymongo(conditions.Condition<conditions.MovieAttribute> condition, MutableBoolean refilterFlag);
+	
+	
+	
+	
+	public abstract Dataset<Movie> getMovieListInMovieKVFromMyredis(conditions.Condition<conditions.MovieAttribute> condition, MutableBoolean refilterFlag);
 	
 	
 	// TODO get based on id(s). Ex:public Client getClientById(Long id)
@@ -318,6 +173,7 @@ public abstract class MovieService {
 								.withColumnRenamed("runtimeMinutes", "runtimeMinutes_1")
 								.withColumnRenamed("averageRating", "averageRating_1")
 								.withColumnRenamed("numVotes", "numVotes_1")
+								.withColumnRenamed("logEvents", "logEvents_1")
 							, seq, joinMode);
 			for(int i = 2; i < datasetsPOJO.size(); i++) {
 				res = res.join(datasetsPOJO.get(i)
@@ -328,19 +184,20 @@ public abstract class MovieService {
 								.withColumnRenamed("runtimeMinutes", "runtimeMinutes_" + i)
 								.withColumnRenamed("averageRating", "averageRating_" + i)
 								.withColumnRenamed("numVotes", "numVotes_" + i)
-							, seq, joinMode);
+								.withColumnRenamed("logEvents", "logEvents_" + i)
+						, seq, joinMode);
 			} 
 			d = res.map((MapFunction<Row, Movie>) r -> {
 					Movie movie_res = new Movie();
 					
 					// attribute 'Movie.id'
-					String firstNotNull_id = r.getAs("id");
+					String firstNotNull_id = Util.getStringValue(r.getAs("id"));
 					movie_res.setId(firstNotNull_id);
 					
 					// attribute 'Movie.primaryTitle'
-					String firstNotNull_primaryTitle = r.getAs("primaryTitle");
+					String firstNotNull_primaryTitle = Util.getStringValue(r.getAs("primaryTitle"));
 					for (int i = 1; i < datasetsPOJO.size(); i++) {
-						String primaryTitle2 = r.getAs("primaryTitle_" + i);
+						String primaryTitle2 = Util.getStringValue(r.getAs("primaryTitle_" + i));
 						if (firstNotNull_primaryTitle != null && primaryTitle2 != null && !firstNotNull_primaryTitle.equals(primaryTitle2)) {
 							movie_res.addLogEvent("Data consistency problem: duplicate values found for attribute 'Movie.primaryTitle': " + firstNotNull_primaryTitle + " and " + primaryTitle2 + "." );
 							logger.warn("data consistency problem: duplicate values for attribute : 'Movie.primaryTitle' ==> " + firstNotNull_primaryTitle + " and " + primaryTitle2);
@@ -352,9 +209,9 @@ public abstract class MovieService {
 					movie_res.setPrimaryTitle(firstNotNull_primaryTitle);
 					
 					// attribute 'Movie.originalTitle'
-					String firstNotNull_originalTitle = r.getAs("originalTitle");
+					String firstNotNull_originalTitle = Util.getStringValue(r.getAs("originalTitle"));
 					for (int i = 1; i < datasetsPOJO.size(); i++) {
-						String originalTitle2 = r.getAs("originalTitle_" + i);
+						String originalTitle2 = Util.getStringValue(r.getAs("originalTitle_" + i));
 						if (firstNotNull_originalTitle != null && originalTitle2 != null && !firstNotNull_originalTitle.equals(originalTitle2)) {
 							movie_res.addLogEvent("Data consistency problem: duplicate values found for attribute 'Movie.originalTitle': " + firstNotNull_originalTitle + " and " + originalTitle2 + "." );
 							logger.warn("data consistency problem: duplicate values for attribute : 'Movie.originalTitle' ==> " + firstNotNull_originalTitle + " and " + originalTitle2);
@@ -366,9 +223,9 @@ public abstract class MovieService {
 					movie_res.setOriginalTitle(firstNotNull_originalTitle);
 					
 					// attribute 'Movie.isAdult'
-					Boolean firstNotNull_isAdult = r.getAs("isAdult");
+					Boolean firstNotNull_isAdult = Util.getBooleanValue(r.getAs("isAdult"));
 					for (int i = 1; i < datasetsPOJO.size(); i++) {
-						Boolean isAdult2 = r.getAs("isAdult_" + i);
+						Boolean isAdult2 = Util.getBooleanValue(r.getAs("isAdult_" + i));
 						if (firstNotNull_isAdult != null && isAdult2 != null && !firstNotNull_isAdult.equals(isAdult2)) {
 							movie_res.addLogEvent("Data consistency problem: duplicate values found for attribute 'Movie.isAdult': " + firstNotNull_isAdult + " and " + isAdult2 + "." );
 							logger.warn("data consistency problem: duplicate values for attribute : 'Movie.isAdult' ==> " + firstNotNull_isAdult + " and " + isAdult2);
@@ -380,9 +237,9 @@ public abstract class MovieService {
 					movie_res.setIsAdult(firstNotNull_isAdult);
 					
 					// attribute 'Movie.startYear'
-					Integer firstNotNull_startYear = r.getAs("startYear");
+					Integer firstNotNull_startYear = Util.getIntegerValue(r.getAs("startYear"));
 					for (int i = 1; i < datasetsPOJO.size(); i++) {
-						Integer startYear2 = r.getAs("startYear_" + i);
+						Integer startYear2 = Util.getIntegerValue(r.getAs("startYear_" + i));
 						if (firstNotNull_startYear != null && startYear2 != null && !firstNotNull_startYear.equals(startYear2)) {
 							movie_res.addLogEvent("Data consistency problem: duplicate values found for attribute 'Movie.startYear': " + firstNotNull_startYear + " and " + startYear2 + "." );
 							logger.warn("data consistency problem: duplicate values for attribute : 'Movie.startYear' ==> " + firstNotNull_startYear + " and " + startYear2);
@@ -394,9 +251,9 @@ public abstract class MovieService {
 					movie_res.setStartYear(firstNotNull_startYear);
 					
 					// attribute 'Movie.runtimeMinutes'
-					Integer firstNotNull_runtimeMinutes = r.getAs("runtimeMinutes");
+					Integer firstNotNull_runtimeMinutes = Util.getIntegerValue(r.getAs("runtimeMinutes"));
 					for (int i = 1; i < datasetsPOJO.size(); i++) {
-						Integer runtimeMinutes2 = r.getAs("runtimeMinutes_" + i);
+						Integer runtimeMinutes2 = Util.getIntegerValue(r.getAs("runtimeMinutes_" + i));
 						if (firstNotNull_runtimeMinutes != null && runtimeMinutes2 != null && !firstNotNull_runtimeMinutes.equals(runtimeMinutes2)) {
 							movie_res.addLogEvent("Data consistency problem: duplicate values found for attribute 'Movie.runtimeMinutes': " + firstNotNull_runtimeMinutes + " and " + runtimeMinutes2 + "." );
 							logger.warn("data consistency problem: duplicate values for attribute : 'Movie.runtimeMinutes' ==> " + firstNotNull_runtimeMinutes + " and " + runtimeMinutes2);
@@ -408,9 +265,9 @@ public abstract class MovieService {
 					movie_res.setRuntimeMinutes(firstNotNull_runtimeMinutes);
 					
 					// attribute 'Movie.averageRating'
-					String firstNotNull_averageRating = r.getAs("averageRating");
+					String firstNotNull_averageRating = Util.getStringValue(r.getAs("averageRating"));
 					for (int i = 1; i < datasetsPOJO.size(); i++) {
-						String averageRating2 = r.getAs("averageRating_" + i);
+						String averageRating2 = Util.getStringValue(r.getAs("averageRating_" + i));
 						if (firstNotNull_averageRating != null && averageRating2 != null && !firstNotNull_averageRating.equals(averageRating2)) {
 							movie_res.addLogEvent("Data consistency problem: duplicate values found for attribute 'Movie.averageRating': " + firstNotNull_averageRating + " and " + averageRating2 + "." );
 							logger.warn("data consistency problem: duplicate values for attribute : 'Movie.averageRating' ==> " + firstNotNull_averageRating + " and " + averageRating2);
@@ -422,9 +279,9 @@ public abstract class MovieService {
 					movie_res.setAverageRating(firstNotNull_averageRating);
 					
 					// attribute 'Movie.numVotes'
-					Integer firstNotNull_numVotes = r.getAs("numVotes");
+					Integer firstNotNull_numVotes = Util.getIntegerValue(r.getAs("numVotes"));
 					for (int i = 1; i < datasetsPOJO.size(); i++) {
-						Integer numVotes2 = r.getAs("numVotes_" + i);
+						Integer numVotes2 = Util.getIntegerValue(r.getAs("numVotes_" + i));
 						if (firstNotNull_numVotes != null && numVotes2 != null && !firstNotNull_numVotes.equals(numVotes2)) {
 							movie_res.addLogEvent("Data consistency problem: duplicate values found for attribute 'Movie.numVotes': " + firstNotNull_numVotes + " and " + numVotes2 + "." );
 							logger.warn("data consistency problem: duplicate values for attribute : 'Movie.numVotes' ==> " + firstNotNull_numVotes + " and " + numVotes2);
@@ -434,6 +291,21 @@ public abstract class MovieService {
 						}
 					}
 					movie_res.setNumVotes(firstNotNull_numVotes);
+	
+					scala.collection.mutable.WrappedArray<String> logEvents = r.getAs("logEvents");
+					if(logEvents != null)
+						for (int i = 0; i < logEvents.size(); i++){
+							movie_res.addLogEvent(logEvents.apply(i));
+						}
+		
+					for (int i = 1; i < datasetsPOJO.size(); i++) {
+						logEvents = r.getAs("logEvents_" + i);
+						if(logEvents != null)
+						for (int j = 0; j < logEvents.size(); j++){
+							movie_res.addLogEvent(logEvents.apply(j));
+						}
+					}
+	
 					return movie_res;
 				}, Encoders.bean(Movie.class));
 			return d;
@@ -533,10 +405,10 @@ public abstract class MovieService {
 		return getMovieListInMovieActor(null, movie_condition);
 	}
 	
-	public abstract void insertMovieAndLinkedItems(Movie movie);
-	public abstract void insertMovie(Movie movie);
+	public abstract boolean insertMovie(Movie movie);
 	
-	public abstract void insertMovieInMovieKVFromMyredis(Movie movie); public abstract void insertMovieInActorCollectionFromMymongo(Movie movie); 
+	public abstract boolean insertMovieInMovieKVFromMyredis(Movie movie); 
+	
 	public abstract void updateMovieList(conditions.Condition<conditions.MovieAttribute> condition, conditions.SetClause<conditions.MovieAttribute> set);
 	
 	public void updateMovie(pojo.Movie movie) {

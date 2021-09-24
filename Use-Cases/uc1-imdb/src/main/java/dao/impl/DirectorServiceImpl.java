@@ -1,7 +1,10 @@
 package dao.impl;
-
+import exceptions.PhysicalStructureException;
 import java.util.Arrays;
 import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
+import org.apache.commons.lang3.StringUtils;
 import pojo.Director;
 import conditions.*;
 import dao.services.DirectorService;
@@ -11,6 +14,7 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Encoders;
 import org.apache.spark.sql.Row;
+import org.apache.spark.sql.RowFactory;
 import org.apache.spark.api.java.function.MapFunction;
 import java.util.regex.Pattern;
 import java.util.regex.Matcher;
@@ -28,9 +32,20 @@ import java.util.ArrayList;
 import org.apache.commons.lang.mutable.MutableBoolean;
 import tdo.*;
 import pojo.*;
+import org.apache.spark.sql.types.DataTypes;
+import org.apache.spark.sql.types.StructField;
+import org.apache.spark.sql.types.StructType;
+import org.apache.spark.sql.types.ArrayType;
+import scala.Tuple2;
+import org.bson.Document;
+import org.bson.conversions.Bson;
+import static com.mongodb.client.model.Filters.eq;
+import static com.mongodb.client.model.Updates.*;
+
 
 public class DirectorServiceImpl extends DirectorService {
 	static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DirectorServiceImpl.class);
+	
 	
 	
 	public static Pair<String, List<String>> getSQLWhereClauseInDirectorTableFromMydb(Condition<DirectorAttribute> condition, MutableBoolean refilterFlag) {
@@ -225,7 +240,7 @@ public class DirectorServiceImpl extends DirectorService {
 					boolean matches = false;
 					
 					// attribute [Director.Id]
-					String id = r.getAs("id");
+					String id = Util.getStringValue(r.getAs("id"));
 					director_res.setId(id);
 					
 					// attribute [Director.FirstName]
@@ -269,11 +284,11 @@ public class DirectorServiceImpl extends DirectorService {
 					director_res.setLastName(lastName == null ? null : lastName);
 					
 					// attribute [Director.YearOfBirth]
-					Integer yearOfBirth = r.getAs("birth");
+					Integer yearOfBirth = Util.getIntegerValue(r.getAs("birth"));
 					director_res.setYearOfBirth(yearOfBirth);
 					
 					// attribute [Director.YearOfDeath]
-					Integer yearOfDeath = r.getAs("death");
+					Integer yearOfDeath = Util.getIntegerValue(r.getAs("death"));
 					director_res.setYearOfDeath(yearOfDeath);
 	
 	
@@ -320,8 +335,8 @@ public class DirectorServiceImpl extends DirectorService {
 		MutableBoolean directed_movie_refilter;
 		org.apache.spark.sql.Column joinCondition = null;
 		// join physical structure
-	
 		//join between 2 SQL tables and a non-relational structure
+		// (A - AB) (B)
 		directed_movie_refilter = new MutableBoolean(false);
 		Dataset<MovieDirectorTDO> res_movieDirector_directed_by_has_directed = movieDirectorService.getMovieDirectorTDOListIndirectorTableAnddirectedFrommydb(director_condition, director_refilter);
 		Dataset<MovieTDO> res_has_directed_directed_by = movieDirectorService.getMovieTDOListDirected_movieInHas_directedInMovieKVFromMovieRedis(directed_movie_condition, directed_movie_refilter);
@@ -332,12 +347,14 @@ public class DirectorServiceImpl extends DirectorService {
 		}
 		
 		Dataset<Row> res_row_directed_by_has_directed = res_movieDirector_directed_by_has_directed.join(res_has_directed_directed_by.withColumnRenamed("logEvents", "movieDirector_logEvents"),
-			res_has_directed_directed_by.col("myRelSchema_directed_has_directed_id").equalTo(res_movieDirector_directed_by_has_directed.col("myRelSchema_directed_has_directed_movie_id")));
+															res_has_directed_directed_by.col("myRelSchema_directed_has_directed_id").equalTo(res_movieDirector_directed_by_has_directed.col("myRelSchema_directed_has_directed_movie_id")));
 		Dataset<Director> res_Director_directed_by = res_row_directed_by_has_directed.select("director.*").as(Encoders.bean(Director.class));
 		datasetsPOJO.add(res_Director_directed_by.dropDuplicates(new String[] {"id"}));	
 		
 		
 		
+		Dataset<MovieDirector> res_movieDirector_director;
+		Dataset<Director> res_Director;
 		
 		
 		//Join datasets or return 
@@ -369,28 +386,52 @@ public class DirectorServiceImpl extends DirectorService {
 		return getDirectorListInMovieDirector(null, director_condition);
 	}
 	
-	public void insertDirectorAndLinkedItems(Director director){
-		//TODO
-	}
-	public void insertDirector(Director director){
-		// Insert into all mapped AbstractPhysicalStructure 
-			insertDirectorInDirectorTableFromMydb(director);
+	public boolean insertDirector(Director director){
+		// Insert into all mapped standalone AbstractPhysicalStructure 
+		boolean inserted = false;
+			inserted = insertDirectorInDirectorTableFromMydb(director) || inserted ;
+		return inserted;
 	}
 	
-	public void insertDirectorInDirectorTableFromMydb(Director director){
-		//Read mapping rules and find attributes of the POJO that are mapped to the corresponding AbstractPhysicalStructure
-		// Insert in SQL DB 
-	String query = "INSERT INTO directorTable(fullname,id,death,birth,fullname) VALUES (?,?,?,?,?)";
+	public boolean insertDirectorInDirectorTableFromMydb(Director director)	{
+		Condition<DirectorAttribute> conditionID;
+		String idvalue="";
+		conditionID = Condition.simple(DirectorAttribute.id, Operator.EQUALS, director.getId());
+		idvalue+=director.getId();
+		boolean entityExists=false;
+		entityExists = !getDirectorListInDirectorTableFromMydb(conditionID,new MutableBoolean(false)).isEmpty();
+				
+		if(!entityExists){
+		List<Row> listRows=new ArrayList<Row>();
+		List<Object> valuesdirectorTable_1 = new ArrayList<>();
+		List<StructField> listOfStructFielddirectorTable_1 = new ArrayList<StructField>();
+		if(!listOfStructFielddirectorTable_1.contains(DataTypes.createStructField("id",DataTypes.StringType, true)))
+			listOfStructFielddirectorTable_1.add(DataTypes.createStructField("id",DataTypes.StringType, true));
+		valuesdirectorTable_1.add(director.getId());
+		String value_directorTable_fullname_1 = "";
+		value_directorTable_fullname_1 += director.getFirstName();
+		value_directorTable_fullname_1 += " ";
+		value_directorTable_fullname_1 += director.getLastName();
+		if(!listOfStructFielddirectorTable_1.contains(DataTypes.createStructField("fullname",DataTypes.StringType, true)))
+			listOfStructFielddirectorTable_1.add(DataTypes.createStructField("fullname",DataTypes.StringType, true));
+		valuesdirectorTable_1.add(value_directorTable_fullname_1);
+		if(!listOfStructFielddirectorTable_1.contains(DataTypes.createStructField("birth",DataTypes.IntegerType, true)))
+			listOfStructFielddirectorTable_1.add(DataTypes.createStructField("birth",DataTypes.IntegerType, true));
+		valuesdirectorTable_1.add(director.getYearOfBirth());
+		if(!listOfStructFielddirectorTable_1.contains(DataTypes.createStructField("death",DataTypes.IntegerType, true)))
+			listOfStructFielddirectorTable_1.add(DataTypes.createStructField("death",DataTypes.IntegerType, true));
+		valuesdirectorTable_1.add(director.getYearOfDeath());
+		
+		StructType structType = DataTypes.createStructType(listOfStructFielddirectorTable_1);
+		listRows.add(RowFactory.create(valuesdirectorTable_1.toArray()));
+		SparkConnectionMgr.writeDataset(listRows, structType, "jdbc", "directorTable", "mydb");
+			logger.info("Inserted [Director] entity ID [{}] in [DirectorTable] in database [Mydb]", idvalue);
+		}
+		else
+			logger.warn("[Director] entity ID [{}] already present in [DirectorTable] in database [Mydb]", idvalue);
+		return !entityExists;
+	} 
 	
-	List<Object> inputs = new ArrayList<>();
-	inputs.add(director.getFirstName());
-	inputs.add(director.getId());
-	inputs.add(director.getYearOfDeath());
-	inputs.add(director.getYearOfBirth());
-	inputs.add(director.getLastName());
-	// Get the reference attribute. Either via a TDO Object or using the Pojo reference TODO
-	DBConnectionMgr.getMapDB().get("mydb").insertOrUpdateOrDelete(query,inputs);
-	}
 	
 	public void updateDirectorList(conditions.Condition<conditions.DirectorAttribute> condition, conditions.SetClause<conditions.DirectorAttribute> set){
 		//TODO

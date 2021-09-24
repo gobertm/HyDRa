@@ -20,7 +20,13 @@ public class Actor extends LoggingPojo {
         return super.clone();
     }
 	
-
+	@Override
+	public String toString(){
+		return "Actor { " + "id="+id +", "+
+"fullName="+fullName +", "+
+"yearOfBirth="+yearOfBirth +", "+
+"yearOfDeath="+yearOfDeath +"}"; 
+	}
 	
 	public String getId() {
 		return id;

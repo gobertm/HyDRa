@@ -7,11 +7,13 @@ import pojo.MovieDirector;
 import tdo.MovieTDO;
 import tdo.MovieDirectorTDO;
 import pojo.Movie;
+import pojo.MovieDirector;
 import conditions.MovieAttribute;
 import org.apache.commons.lang.mutable.MutableBoolean;
 import tdo.DirectorTDO;
 import tdo.MovieDirectorTDO;
 import pojo.Director;
+import pojo.MovieDirector;
 import conditions.DirectorAttribute;
 import org.apache.commons.lang.mutable.MutableBoolean;
 
@@ -24,18 +26,15 @@ public abstract class MovieDirectorService {
 	/* Retrieve the Technical Data Object (TDO) for a Role in a mapped reference declared in a specific Abstract Physical Structure. 
 		The entity mapped on the right hand side of the reference may be stored in another physical structure than where the ref is declared. 
 		Leading to apparent inconsistency in the method name. But it is actually the physical structure of the ref and not the EntityDTO.*/
-	
 	//join structure
 	// Left side 'movie_id' of reference [has_directed ]
 	public abstract Dataset<MovieTDO> getMovieTDOListDirected_movieInHas_directedInMovieKVFromMovieRedis(Condition<MovieAttribute> condition, MutableBoolean refilterFlag);
 	
 	
 	
-	
 	//join structure
 	// Left side 'movie_id' of reference [movie_info ]
 	public abstract Dataset<MovieTDO> getMovieTDOListDirected_movieInMovie_infoInActorCollectionFromIMDB_Mongo(Condition<MovieAttribute> condition, MutableBoolean refilterFlag);
-	
 	
 	
 	
@@ -73,12 +72,7 @@ public abstract class MovieDirectorService {
 		return null;
 	}
 	
-	public abstract void insertMovieDirectorAndLinkedItems(pojo.MovieDirector movieDirector);
-	
-	public abstract void attachPersistentItemsByMovieDirector(
-		pojo.Movie directed_movie,
-		pojo.Director director);
-	
+	public abstract void insertMovieDirector(MovieDirector movieDirector);
 	
 	public abstract void deleteMovieDirectorList(
 		conditions.Condition<conditions.MovieAttribute> directed_movie_condition,

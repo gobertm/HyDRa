@@ -12,6 +12,7 @@ import org.apache.spark.api.java.function.FilterFunction;
 import org.apache.commons.lang.mutable.MutableBoolean;
 import conditions.Condition;
 import conditions.Operator;
+import util.Util;
 import conditions.OrderAttribute;
 import conditions.CustomerAttribute;
 import pojo.Customer;
@@ -94,64 +95,14 @@ public abstract class OrderService {
 	
 		d = datasets.get(0);
 		if(datasets.size() > 1) {
-	
-		
-			List<String> idFields = new ArrayList<String>();
-			idFields.add("id");
-			scala.collection.Seq<String> seq = scala.collection.JavaConverters.asScalaIteratorConverter(idFields.iterator()).asScala().toSeq();
-			Dataset<Row> res = d.join(datasets.get(1)
-								.withColumnRenamed("quantity", "quantity_1")
-								.withColumnRenamed("logEvents", "logEvents_1")
-							, seq, "fullouter");
-			for(int i = 2; i < datasets.size(); i++) {
-				res = res.join(datasets.get(i)
-								.withColumnRenamed("quantity", "quantity_" + i)
-								.withColumnRenamed("logEvents", "logEvents_" + i)
-							, seq, "fullouter");
-			} 
-			d = res.map((MapFunction<Row, Order>) r -> {
-					Order order_res = new Order();
-					
-					// attribute 'Order.id'
-					Integer firstNotNull_id = r.getAs("id");
-					order_res.setId(firstNotNull_id);
-					
-					// attribute 'Order.quantity'
-					Integer firstNotNull_quantity = r.getAs("quantity");
-					for (int i = 1; i < datasets.size(); i++) {
-						Integer quantity2 = r.getAs("quantity_" + i);
-						if (firstNotNull_quantity != null && quantity2 != null && !firstNotNull_quantity.equals(quantity2)) {
-							order_res.addLogEvent("Data consistency problem: duplicate values found for attribute 'Order.quantity': " + firstNotNull_quantity + " and " + quantity2 + "." );
-							logger.warn("data consistency problem: duplicate values for attribute : 'Order.quantity' ==> " + firstNotNull_quantity + " and " + quantity2);
-						}
-						if (firstNotNull_quantity == null && quantity2 != null) {
-							firstNotNull_quantity = quantity2;
-						}
-					}
-					order_res.setQuantity(firstNotNull_quantity);
-					
-					scala.collection.mutable.WrappedArray<String> logEvents = r.getAs("logEvents");
-					if(logEvents != null)
-						for (int i = 0; i < logEvents.size(); i++){
-							order_res.addLogEvent(logEvents.apply(i));
-						}
-		
-					for (int i = 1; i < datasets.size(); i++) {
-						logEvents = r.getAs("logEvents_" + i);
-						if(logEvents != null)
-						for (int j = 0; j < logEvents.size(); j++){
-							order_res.addLogEvent(logEvents.apply(j));
-						}
-					}
-					
-					return order_res;
-				}, Encoders.bean(Order.class));
+			d=fullOuterJoinsOrder(datasets);
 		}
 		if(refilterFlag.booleanValue())
 			d = d.filter((FilterFunction<Order>) r -> condition == null || condition.evaluate(r));
 		d=d.dropDuplicates();
 		return d;
 	}
+	
 	
 	
 	
@@ -189,23 +140,25 @@ public abstract class OrderService {
 			scala.collection.Seq<String> seq = scala.collection.JavaConverters.asScalaIteratorConverter(idFields.iterator()).asScala().toSeq();
 			Dataset<Row> res = d.join(datasetsPOJO.get(1)
 								.withColumnRenamed("quantity", "quantity_1")
+								.withColumnRenamed("logEvents", "logEvents_1")
 							, seq, joinMode);
 			for(int i = 2; i < datasetsPOJO.size(); i++) {
 				res = res.join(datasetsPOJO.get(i)
 								.withColumnRenamed("quantity", "quantity_" + i)
-							, seq, joinMode);
+								.withColumnRenamed("logEvents", "logEvents_" + i)
+						, seq, joinMode);
 			} 
 			d = res.map((MapFunction<Row, Order>) r -> {
 					Order order_res = new Order();
 					
 					// attribute 'Order.id'
-					Integer firstNotNull_id = r.getAs("id");
+					Integer firstNotNull_id = Util.getIntegerValue(r.getAs("id"));
 					order_res.setId(firstNotNull_id);
 					
 					// attribute 'Order.quantity'
-					Integer firstNotNull_quantity = r.getAs("quantity");
+					Integer firstNotNull_quantity = Util.getIntegerValue(r.getAs("quantity"));
 					for (int i = 1; i < datasetsPOJO.size(); i++) {
-						Integer quantity2 = r.getAs("quantity_" + i);
+						Integer quantity2 = Util.getIntegerValue(r.getAs("quantity_" + i));
 						if (firstNotNull_quantity != null && quantity2 != null && !firstNotNull_quantity.equals(quantity2)) {
 							order_res.addLogEvent("Data consistency problem: duplicate values found for attribute 'Order.quantity': " + firstNotNull_quantity + " and " + quantity2 + "." );
 							logger.warn("data consistency problem: duplicate values for attribute : 'Order.quantity' ==> " + firstNotNull_quantity + " and " + quantity2);
@@ -215,6 +168,21 @@ public abstract class OrderService {
 						}
 					}
 					order_res.setQuantity(firstNotNull_quantity);
+	
+					scala.collection.mutable.WrappedArray<String> logEvents = r.getAs("logEvents");
+					if(logEvents != null)
+						for (int i = 0; i < logEvents.size(); i++){
+							order_res.addLogEvent(logEvents.apply(i));
+						}
+		
+					for (int i = 1; i < datasetsPOJO.size(); i++) {
+						logEvents = r.getAs("logEvents_" + i);
+						if(logEvents != null)
+						for (int j = 0; j < logEvents.size(); j++){
+							order_res.addLogEvent(logEvents.apply(j));
+						}
+					}
+	
 					return order_res;
 				}, Encoders.bean(Order.class));
 			return d;
@@ -359,14 +327,18 @@ public abstract class OrderService {
 		return getOrderListInFrom(null, order_condition);
 	}
 	
-	public abstract void insertOrderAndLinkedItems(Order order);
-	public abstract void insertOrder(
+	public abstract boolean insertOrder(
 		Order order,
-		pojo.Customer persistentPlacesBuyer,
-		pojo.Product persistentOfBought_item,
-		pojo.Store persistentFromStore);
+		Customer	buyerPlaces,
+		Product	bought_itemOf,
+		Store	storeFrom);
 	
-	public abstract void insertOrderInClientCollectionFromMongo(Order order); 
+	
+	
+	public abstract boolean insertOrderInClientCollectionFromMongo(Order order,
+		Customer	buyerPlaces,
+		Product	bought_itemOf,
+		Store	storeFrom);
 	public abstract void updateOrderList(conditions.Condition<conditions.OrderAttribute> condition, conditions.SetClause<conditions.OrderAttribute> set);
 	
 	public void updateOrder(pojo.Order order) {

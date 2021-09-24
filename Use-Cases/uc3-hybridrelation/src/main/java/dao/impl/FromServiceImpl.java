@@ -1,8 +1,12 @@
 package dao.impl;
 
+import exceptions.PhysicalStructureException;
 import java.util.Arrays;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.spark.sql.Dataset;
 import conditions.Condition;
+import java.util.HashSet;
+import java.util.Set;
 import conditions.AndCondition;
 import conditions.OrCondition;
 import conditions.SimpleCondition;
@@ -32,6 +36,11 @@ import java.util.regex.Matcher;
 import scala.collection.mutable.WrappedArray;
 import org.apache.spark.api.java.function.FlatMapFunction;
 import dbconnection.SparkConnectionMgr;
+import org.apache.spark.sql.types.DataTypes;
+import org.apache.spark.sql.types.StructField;
+import org.apache.spark.sql.types.StructType;
+import org.apache.spark.sql.types.ArrayType;
+import static com.mongodb.client.model.Updates.addToSet;
 
 
 public class FromServiceImpl extends dao.services.FromService {
@@ -159,15 +168,15 @@ public class FromServiceImpl extends dao.services.FromService {
 					boolean matches = false;
 					
 					// attribute [Store.Id]
-					Integer id = r.getAs("ID");
+					Integer id = Util.getIntegerValue(r.getAs("ID"));
 					store_res.setId(id);
 					
 					// attribute [Store.VAT]
-					String vAT = r.getAs("VAT");
+					String vAT = Util.getStringValue(r.getAs("VAT"));
 					store_res.setVAT(vAT);
 					
 					// attribute [Store.Address]
-					String address = r.getAs("ADDR");
+					String address = Util.getStringValue(r.getAs("ADDR"));
 					store_res.setAddress(address);
 	
 					// Get reference column [ID ] for reference [buys_in]
@@ -214,11 +223,9 @@ public class FromServiceImpl extends dao.services.FromService {
 		return null;
 	}
 	
-	public void insertFromAndLinkedItems(pojo.From from){
+	public void insertFrom(From from){
 		//TODO
 	}
-	
-	
 	
 	public void deleteFromList(
 		conditions.Condition<conditions.StoreAttribute> store_condition,

@@ -1,7 +1,10 @@
 package dao.impl;
-
+import exceptions.PhysicalStructureException;
 import java.util.Arrays;
 import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
+import org.apache.commons.lang3.StringUtils;
 import pojo.Customer;
 import conditions.*;
 import dao.services.CustomerService;
@@ -11,6 +14,7 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Encoders;
 import org.apache.spark.sql.Row;
+import org.apache.spark.sql.RowFactory;
 import org.apache.spark.api.java.function.MapFunction;
 import java.util.regex.Pattern;
 import java.util.regex.Matcher;
@@ -28,9 +32,20 @@ import java.util.ArrayList;
 import org.apache.commons.lang.mutable.MutableBoolean;
 import tdo.*;
 import pojo.*;
+import org.apache.spark.sql.types.DataTypes;
+import org.apache.spark.sql.types.StructField;
+import org.apache.spark.sql.types.StructType;
+import org.apache.spark.sql.types.ArrayType;
+import scala.Tuple2;
+import org.bson.Document;
+import org.bson.conversions.Bson;
+import static com.mongodb.client.model.Filters.eq;
+import static com.mongodb.client.model.Updates.*;
+
 
 public class CustomerServiceImpl extends CustomerService {
 	static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(CustomerServiceImpl.class);
+	
 	
 	
 	
@@ -322,11 +337,11 @@ public class CustomerServiceImpl extends CustomerService {
 		org.apache.spark.sql.Column joinCondition = null;
 		
 		
+		Dataset<Places> res_places_buyer;
+		Dataset<Customer> res_Customer;
 		// Role 'buyer' mapped to EmbeddedObject 'orders' - 'Order' containing 'Customer'
 		order_refilter = new MutableBoolean(false);
-		Dataset<Places> res_places_buyer;
 		res_places_buyer = placesService.getPlacesListInmongoSchemaClientCollectionorders(buyer_condition, order_condition, buyer_refilter, order_refilter);
-		Dataset<Customer> res_Customer;
 		if(order_refilter.booleanValue()) {
 			joinCondition = null;
 			joinCondition = res_places_buyer.col("order.id").equalTo(all.col("id"));
@@ -366,22 +381,53 @@ public class CustomerServiceImpl extends CustomerService {
 		Condition c;
 		c=Condition.simple(OrderAttribute.id,Operator.EQUALS, order.getId());
 		Dataset<Customer> res = getBuyerListInPlacesByOrderCondition(c);
-		return res.first();
+		return !res.isEmpty()?res.first():null;
 	}
 	
 	
-	public void insertCustomerAndLinkedItems(Customer customer){
-		//TODO
-	}
-	public void insertCustomer(Customer customer){
-		// Insert into all mapped AbstractPhysicalStructure 
-			insertCustomerInClientCollectionFromMongo(customer);
+	public boolean insertCustomer(Customer customer){
+		// Insert into all mapped standalone AbstractPhysicalStructure 
+		boolean inserted = false;
+			inserted = insertCustomerInClientCollectionFromMongo(customer) || inserted ;
+		return inserted;
 	}
 	
-	public void insertCustomerInClientCollectionFromMongo(Customer customer){
-		//Read mapping rules and find attributes of the POJO that are mapped to the corresponding AbstractPhysicalStructure
-		// Insert in MongoDB
-	}
+	public boolean insertCustomerInClientCollectionFromMongo(Customer customer)	{
+		Condition<CustomerAttribute> conditionID;
+		String idvalue="";
+		conditionID = Condition.simple(CustomerAttribute.id, Operator.EQUALS, customer.getId());
+		idvalue+=customer.getId();
+		boolean entityExists=false;
+		entityExists = !getCustomerListInClientCollectionFromMongo(conditionID,new MutableBoolean(false)).isEmpty();
+				
+		if(!entityExists){
+		List<Row> listRows=new ArrayList<Row>();
+		List<Object> valuesClientCollection_1 = new ArrayList<>();
+		List<StructField> listOfStructFieldClientCollection_1 = new ArrayList<StructField>();
+		if(!listOfStructFieldClientCollection_1.contains(DataTypes.createStructField("id",DataTypes.IntegerType, true)))
+			listOfStructFieldClientCollection_1.add(DataTypes.createStructField("id",DataTypes.IntegerType, true));
+		valuesClientCollection_1.add(customer.getId());
+		String value_ClientCollection_fullName_1 = "";
+		value_ClientCollection_fullName_1 += customer.getFirstName();
+		value_ClientCollection_fullName_1 += " ";
+		value_ClientCollection_fullName_1 += customer.getLastName();
+		if(!listOfStructFieldClientCollection_1.contains(DataTypes.createStructField("fullName",DataTypes.StringType, true)))
+			listOfStructFieldClientCollection_1.add(DataTypes.createStructField("fullName",DataTypes.StringType, true));
+		valuesClientCollection_1.add(value_ClientCollection_fullName_1);
+		if(!listOfStructFieldClientCollection_1.contains(DataTypes.createStructField("postalAddress",DataTypes.StringType, true)))
+			listOfStructFieldClientCollection_1.add(DataTypes.createStructField("postalAddress",DataTypes.StringType, true));
+		valuesClientCollection_1.add(customer.getAddress());
+		
+		StructType struct = DataTypes.createStructType(listOfStructFieldClientCollection_1);
+		listRows.add(RowFactory.create(valuesClientCollection_1.toArray()));
+		SparkConnectionMgr.writeDataset(listRows, struct, "mongo", "ClientCollection", "mongo");
+			logger.info("Inserted [Customer] entity ID [{}] in [ClientCollection] in database [Mongo]", idvalue);
+		}
+		else
+			logger.warn("[Customer] entity ID [{}] already present in [ClientCollection] in database [Mongo]", idvalue);
+		return !entityExists;
+	} 
+	
 	
 	public void updateCustomerList(conditions.Condition<conditions.CustomerAttribute> condition, conditions.SetClause<conditions.CustomerAttribute> set){
 		//TODO

@@ -19,7 +19,12 @@ public class Product extends LoggingPojo {
         return super.clone();
     }
 	
-
+	@Override
+	public String toString(){
+		return "Product { " + "id="+id +", "+
+"label="+label +", "+
+"price="+price +"}"; 
+	}
 	
 	public Integer getId() {
 		return id;

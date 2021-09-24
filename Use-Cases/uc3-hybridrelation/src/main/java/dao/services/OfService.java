@@ -7,11 +7,13 @@ import pojo.Of;
 import tdo.ProductTDO;
 import tdo.OfTDO;
 import pojo.Product;
+import pojo.Of;
 import conditions.ProductAttribute;
 import org.apache.commons.lang.mutable.MutableBoolean;
 import tdo.OrderTDO;
 import tdo.OfTDO;
 import pojo.Order;
+import pojo.Of;
 import conditions.OrderAttribute;
 import org.apache.commons.lang.mutable.MutableBoolean;
 
@@ -62,9 +64,7 @@ public abstract class OfService {
 		return null;
 	}
 	
-	public abstract void insertOfAndLinkedItems(pojo.Of of);
-	
-	
+	public abstract void insertOf(Of of);
 	
 	public abstract void deleteOfList(
 		conditions.Condition<conditions.ProductAttribute> bought_item_condition,

@@ -1,7 +1,10 @@
 package dao.impl;
-
+import exceptions.PhysicalStructureException;
 import java.util.Arrays;
 import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
+import org.apache.commons.lang3.StringUtils;
 import pojo.Order;
 import conditions.*;
 import dao.services.OrderService;
@@ -11,6 +14,7 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Encoders;
 import org.apache.spark.sql.Row;
+import org.apache.spark.sql.RowFactory;
 import org.apache.spark.api.java.function.MapFunction;
 import java.util.regex.Pattern;
 import java.util.regex.Matcher;
@@ -28,9 +32,20 @@ import java.util.ArrayList;
 import org.apache.commons.lang.mutable.MutableBoolean;
 import tdo.*;
 import pojo.*;
+import org.apache.spark.sql.types.DataTypes;
+import org.apache.spark.sql.types.StructField;
+import org.apache.spark.sql.types.StructType;
+import org.apache.spark.sql.types.ArrayType;
+import scala.Tuple2;
+import org.bson.Document;
+import org.bson.conversions.Bson;
+import static com.mongodb.client.model.Filters.eq;
+import static com.mongodb.client.model.Updates.*;
+
 
 public class OrderServiceImpl extends OrderService {
 	static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(OrderServiceImpl.class);
+	
 	
 	
 	
@@ -214,10 +229,10 @@ public class OrderServiceImpl extends OrderService {
 		org.apache.spark.sql.Column joinCondition = null;
 		
 		
+		Dataset<Places> res_places_order;
+		Dataset<Order> res_Order;
 		// Role 'buyer' mapped to EmbeddedObject 'orders' 'Order' containing 'Customer' 
 		buyer_refilter = new MutableBoolean(false);
-		Dataset<Order> res_Order;
-		Dataset<Places> res_places_order;
 		res_places_order = placesService.getPlacesListInmongoSchemaClientCollectionorders(buyer_condition, order_condition, buyer_refilter, order_refilter);
 		if(buyer_refilter.booleanValue()) {
 			joinCondition = null;
@@ -268,7 +283,6 @@ public class OrderServiceImpl extends OrderService {
 		boolean all_already_persisted = false;
 		MutableBoolean bought_item_refilter;
 		org.apache.spark.sql.Column joinCondition = null;
-	
 		// For role 'order' in reference 'buys' 
 		Dataset<OrderTDO> orderTDObuysorder = ofService.getOrderTDOListOrderInBuysInClientCollectionFromMongoSchema(order_condition, order_refilter);
 		bought_item_refilter = new MutableBoolean(false);
@@ -282,6 +296,7 @@ public class OrderServiceImpl extends OrderService {
 				productTDObuysbought_item = productTDObuysbought_item.as("A").join(all, joinCondition).select("A.*").as(Encoders.bean(ProductTDO.class));
 		}
 	
+		
 		Dataset<Row> res_buys = orderTDObuysorder.join(productTDObuysbought_item
 				.withColumnRenamed("id", "Product_id")
 				.withColumnRenamed("label", "Product_label")
@@ -294,6 +309,8 @@ public class OrderServiceImpl extends OrderService {
 		datasetsPOJO.add(res_Order_buys);
 		
 		
+		Dataset<Of> res_of_order;
+		Dataset<Order> res_Order;
 		
 		
 		//Join datasets or return 
@@ -331,7 +348,6 @@ public class OrderServiceImpl extends OrderService {
 		boolean all_already_persisted = false;
 		MutableBoolean store_refilter;
 		org.apache.spark.sql.Column joinCondition = null;
-	
 		// For role 'order' in reference 'buys_in' 
 		Dataset<OrderTDO> orderTDObuys_inorder = fromService.getOrderTDOListOrderInBuys_inInClientCollectionFromMongoSchema(order_condition, order_refilter);
 		store_refilter = new MutableBoolean(false);
@@ -345,6 +361,7 @@ public class OrderServiceImpl extends OrderService {
 				storeTDObuys_instore = storeTDObuys_instore.as("A").join(all, joinCondition).select("A.*").as(Encoders.bean(StoreTDO.class));
 		}
 	
+		
 		Dataset<Row> res_buys_in = orderTDObuys_inorder.join(storeTDObuys_instore
 				.withColumnRenamed("id", "Store_id")
 				.withColumnRenamed("vAT", "Store_vAT")
@@ -357,6 +374,8 @@ public class OrderServiceImpl extends OrderService {
 		datasetsPOJO.add(res_Order_buys_in);
 		
 		
+		Dataset<From> res_from_order;
+		Dataset<Order> res_Order;
 		
 		
 		//Join datasets or return 
@@ -388,22 +407,50 @@ public class OrderServiceImpl extends OrderService {
 		return getOrderListInFrom(null, order_condition);
 	}
 	
-	public void insertOrderAndLinkedItems(Order order){
-		//TODO
-	}
-	public void insertOrder(
+	public boolean insertOrder(
 		Order order,
-		pojo.Customer persistentPlacesBuyer,
-		pojo.Product persistentOfBought_item,
-		pojo.Store persistentFromStore){
-			//TODO
+		Customer	buyerPlaces,
+		Product	bought_itemOf,
+		Store	storeFrom){
+			boolean inserted = false;
+			// Insert in structures containing double embedded role
+			// Insert in descending structures
+			// Insert in ascending structures 
+			inserted = insertOrderInClientCollectionFromMongo(order,buyerPlaces,bought_itemOf,storeFrom)|| inserted ;
+			// Insert in ref structures 
+			// Insert in standalone structures
+			return inserted;
 		}
 	
-	public void insertOrderInClientCollectionFromMongo(Order order){
-		//Read mapping rules and find attributes of the POJO that are mapped to the corresponding AbstractPhysicalStructure
-		// Insert in MongoDB
-	}
 	
+	
+	public boolean insertOrderInClientCollectionFromMongo(Order order,
+		Customer	buyerPlaces,
+		Product	bought_itemOf,
+		Store	storeFrom)	{
+			 // Implement Insert in ascending complex struct
+		
+			Bson filter= new Document();
+			Bson updateOp;
+			String addToSet;
+			List<String> fieldName= new ArrayList();
+			List<Bson> arrayFilterCond = new ArrayList();
+			Document docorders_1 = new Document();
+			docorders_1.append("orderId",order.getId());
+			docorders_1.append("qty",order.getQuantity());
+			// Ref 'buys' mapped to role 'order'
+			docorders_1.append("productId",bought_itemOf.getId());
+			// Ref 'buys_in' mapped to role 'order'
+			docorders_1.append("storeId",storeFrom.getId());
+			
+			// level 1 ascending
+			Customer customer = buyerPlaces;
+				filter = eq("id",customer.getId());
+				updateOp = addToSet("orders", docorders_1);
+				DBConnectionMgr.upsertMany(filter, updateOp, "ClientCollection", "mongo");					
+		
+			return true;
+		}
 	public void updateOrderList(conditions.Condition<conditions.OrderAttribute> condition, conditions.SetClause<conditions.OrderAttribute> set){
 		//TODO
 	}

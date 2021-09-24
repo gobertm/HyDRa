@@ -1,8 +1,12 @@
 package dao.impl;
 
+import exceptions.PhysicalStructureException;
 import java.util.Arrays;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.spark.sql.Dataset;
 import conditions.Condition;
+import java.util.HashSet;
+import java.util.Set;
 import conditions.AndCondition;
 import conditions.OrCondition;
 import conditions.SimpleCondition;
@@ -32,6 +36,11 @@ import java.util.regex.Matcher;
 import scala.collection.mutable.WrappedArray;
 import org.apache.spark.api.java.function.FlatMapFunction;
 import dbconnection.SparkConnectionMgr;
+import org.apache.spark.sql.types.DataTypes;
+import org.apache.spark.sql.types.StructField;
+import org.apache.spark.sql.types.StructType;
+import org.apache.spark.sql.types.ArrayType;
+import static com.mongodb.client.model.Updates.addToSet;
 
 
 public class PlacesServiceImpl extends dao.services.PlacesService {
@@ -220,11 +229,9 @@ public class PlacesServiceImpl extends dao.services.PlacesService {
 		return null;
 	}
 	
-	public void insertPlacesAndLinkedItems(pojo.Places places){
+	public void insertPlaces(Places places){
 		//TODO
 	}
-	
-	
 	
 	public void deletePlacesList(
 		conditions.Condition<conditions.CustomerAttribute> buyer_condition,

@@ -12,6 +12,7 @@ import org.apache.spark.api.java.function.FilterFunction;
 import org.apache.commons.lang.mutable.MutableBoolean;
 import conditions.Condition;
 import conditions.Operator;
+import util.Util;
 import conditions.CustomerAttribute;
 import conditions.OrderAttribute;
 import pojo.Order;
@@ -84,96 +85,14 @@ public abstract class CustomerService {
 	
 		d = datasets.get(0);
 		if(datasets.size() > 1) {
-	
-		
-			List<String> idFields = new ArrayList<String>();
-			idFields.add("id");
-			scala.collection.Seq<String> seq = scala.collection.JavaConverters.asScalaIteratorConverter(idFields.iterator()).asScala().toSeq();
-			Dataset<Row> res = d.join(datasets.get(1)
-								.withColumnRenamed("firstName", "firstName_1")
-								.withColumnRenamed("lastName", "lastName_1")
-								.withColumnRenamed("address", "address_1")
-								.withColumnRenamed("logEvents", "logEvents_1")
-							, seq, "fullouter");
-			for(int i = 2; i < datasets.size(); i++) {
-				res = res.join(datasets.get(i)
-								.withColumnRenamed("firstName", "firstName_" + i)
-								.withColumnRenamed("lastName", "lastName_" + i)
-								.withColumnRenamed("address", "address_" + i)
-								.withColumnRenamed("logEvents", "logEvents_" + i)
-							, seq, "fullouter");
-			} 
-			d = res.map((MapFunction<Row, Customer>) r -> {
-					Customer customer_res = new Customer();
-					
-					// attribute 'Customer.id'
-					Integer firstNotNull_id = r.getAs("id");
-					customer_res.setId(firstNotNull_id);
-					
-					// attribute 'Customer.firstName'
-					String firstNotNull_firstName = r.getAs("firstName");
-					for (int i = 1; i < datasets.size(); i++) {
-						String firstName2 = r.getAs("firstName_" + i);
-						if (firstNotNull_firstName != null && firstName2 != null && !firstNotNull_firstName.equals(firstName2)) {
-							customer_res.addLogEvent("Data consistency problem: duplicate values found for attribute 'Customer.firstName': " + firstNotNull_firstName + " and " + firstName2 + "." );
-							logger.warn("data consistency problem: duplicate values for attribute : 'Customer.firstName' ==> " + firstNotNull_firstName + " and " + firstName2);
-						}
-						if (firstNotNull_firstName == null && firstName2 != null) {
-							firstNotNull_firstName = firstName2;
-						}
-					}
-					customer_res.setFirstName(firstNotNull_firstName);
-					
-					// attribute 'Customer.lastName'
-					String firstNotNull_lastName = r.getAs("lastName");
-					for (int i = 1; i < datasets.size(); i++) {
-						String lastName2 = r.getAs("lastName_" + i);
-						if (firstNotNull_lastName != null && lastName2 != null && !firstNotNull_lastName.equals(lastName2)) {
-							customer_res.addLogEvent("Data consistency problem: duplicate values found for attribute 'Customer.lastName': " + firstNotNull_lastName + " and " + lastName2 + "." );
-							logger.warn("data consistency problem: duplicate values for attribute : 'Customer.lastName' ==> " + firstNotNull_lastName + " and " + lastName2);
-						}
-						if (firstNotNull_lastName == null && lastName2 != null) {
-							firstNotNull_lastName = lastName2;
-						}
-					}
-					customer_res.setLastName(firstNotNull_lastName);
-					
-					// attribute 'Customer.address'
-					String firstNotNull_address = r.getAs("address");
-					for (int i = 1; i < datasets.size(); i++) {
-						String address2 = r.getAs("address_" + i);
-						if (firstNotNull_address != null && address2 != null && !firstNotNull_address.equals(address2)) {
-							customer_res.addLogEvent("Data consistency problem: duplicate values found for attribute 'Customer.address': " + firstNotNull_address + " and " + address2 + "." );
-							logger.warn("data consistency problem: duplicate values for attribute : 'Customer.address' ==> " + firstNotNull_address + " and " + address2);
-						}
-						if (firstNotNull_address == null && address2 != null) {
-							firstNotNull_address = address2;
-						}
-					}
-					customer_res.setAddress(firstNotNull_address);
-					
-					scala.collection.mutable.WrappedArray<String> logEvents = r.getAs("logEvents");
-					if(logEvents != null)
-						for (int i = 0; i < logEvents.size(); i++){
-							customer_res.addLogEvent(logEvents.apply(i));
-						}
-		
-					for (int i = 1; i < datasets.size(); i++) {
-						logEvents = r.getAs("logEvents_" + i);
-						if(logEvents != null)
-						for (int j = 0; j < logEvents.size(); j++){
-							customer_res.addLogEvent(logEvents.apply(j));
-						}
-					}
-					
-					return customer_res;
-				}, Encoders.bean(Customer.class));
+			d=fullOuterJoinsCustomer(datasets);
 		}
 		if(refilterFlag.booleanValue())
 			d = d.filter((FilterFunction<Customer>) r -> condition == null || condition.evaluate(r));
 		d=d.dropDuplicates();
 		return d;
 	}
+	
 	
 	
 	
@@ -221,25 +140,27 @@ public abstract class CustomerService {
 								.withColumnRenamed("firstName", "firstName_1")
 								.withColumnRenamed("lastName", "lastName_1")
 								.withColumnRenamed("address", "address_1")
+								.withColumnRenamed("logEvents", "logEvents_1")
 							, seq, joinMode);
 			for(int i = 2; i < datasetsPOJO.size(); i++) {
 				res = res.join(datasetsPOJO.get(i)
 								.withColumnRenamed("firstName", "firstName_" + i)
 								.withColumnRenamed("lastName", "lastName_" + i)
 								.withColumnRenamed("address", "address_" + i)
-							, seq, joinMode);
+								.withColumnRenamed("logEvents", "logEvents_" + i)
+						, seq, joinMode);
 			} 
 			d = res.map((MapFunction<Row, Customer>) r -> {
 					Customer customer_res = new Customer();
 					
 					// attribute 'Customer.id'
-					Integer firstNotNull_id = r.getAs("id");
+					Integer firstNotNull_id = Util.getIntegerValue(r.getAs("id"));
 					customer_res.setId(firstNotNull_id);
 					
 					// attribute 'Customer.firstName'
-					String firstNotNull_firstName = r.getAs("firstName");
+					String firstNotNull_firstName = Util.getStringValue(r.getAs("firstName"));
 					for (int i = 1; i < datasetsPOJO.size(); i++) {
-						String firstName2 = r.getAs("firstName_" + i);
+						String firstName2 = Util.getStringValue(r.getAs("firstName_" + i));
 						if (firstNotNull_firstName != null && firstName2 != null && !firstNotNull_firstName.equals(firstName2)) {
 							customer_res.addLogEvent("Data consistency problem: duplicate values found for attribute 'Customer.firstName': " + firstNotNull_firstName + " and " + firstName2 + "." );
 							logger.warn("data consistency problem: duplicate values for attribute : 'Customer.firstName' ==> " + firstNotNull_firstName + " and " + firstName2);
@@ -251,9 +172,9 @@ public abstract class CustomerService {
 					customer_res.setFirstName(firstNotNull_firstName);
 					
 					// attribute 'Customer.lastName'
-					String firstNotNull_lastName = r.getAs("lastName");
+					String firstNotNull_lastName = Util.getStringValue(r.getAs("lastName"));
 					for (int i = 1; i < datasetsPOJO.size(); i++) {
-						String lastName2 = r.getAs("lastName_" + i);
+						String lastName2 = Util.getStringValue(r.getAs("lastName_" + i));
 						if (firstNotNull_lastName != null && lastName2 != null && !firstNotNull_lastName.equals(lastName2)) {
 							customer_res.addLogEvent("Data consistency problem: duplicate values found for attribute 'Customer.lastName': " + firstNotNull_lastName + " and " + lastName2 + "." );
 							logger.warn("data consistency problem: duplicate values for attribute : 'Customer.lastName' ==> " + firstNotNull_lastName + " and " + lastName2);
@@ -265,9 +186,9 @@ public abstract class CustomerService {
 					customer_res.setLastName(firstNotNull_lastName);
 					
 					// attribute 'Customer.address'
-					String firstNotNull_address = r.getAs("address");
+					String firstNotNull_address = Util.getStringValue(r.getAs("address"));
 					for (int i = 1; i < datasetsPOJO.size(); i++) {
-						String address2 = r.getAs("address_" + i);
+						String address2 = Util.getStringValue(r.getAs("address_" + i));
 						if (firstNotNull_address != null && address2 != null && !firstNotNull_address.equals(address2)) {
 							customer_res.addLogEvent("Data consistency problem: duplicate values found for attribute 'Customer.address': " + firstNotNull_address + " and " + address2 + "." );
 							logger.warn("data consistency problem: duplicate values for attribute : 'Customer.address' ==> " + firstNotNull_address + " and " + address2);
@@ -277,6 +198,21 @@ public abstract class CustomerService {
 						}
 					}
 					customer_res.setAddress(firstNotNull_address);
+	
+					scala.collection.mutable.WrappedArray<String> logEvents = r.getAs("logEvents");
+					if(logEvents != null)
+						for (int i = 0; i < logEvents.size(); i++){
+							customer_res.addLogEvent(logEvents.apply(i));
+						}
+		
+					for (int i = 1; i < datasetsPOJO.size(); i++) {
+						logEvents = r.getAs("logEvents_" + i);
+						if(logEvents != null)
+						for (int j = 0; j < logEvents.size(); j++){
+							customer_res.addLogEvent(logEvents.apply(j));
+						}
+					}
+	
 					return customer_res;
 				}, Encoders.bean(Customer.class));
 			return d;
@@ -329,14 +265,14 @@ public abstract class CustomerService {
 		Condition c;
 		c=Condition.simple(OrderAttribute.id,Operator.EQUALS, order.getId());
 		Dataset<Customer> res = getBuyerListInPlacesByOrderCondition(c);
-		return res.first();
+		return !res.isEmpty()?res.first():null;
 	}
 	
 	
-	public abstract void insertCustomerAndLinkedItems(Customer customer);
-	public abstract void insertCustomer(Customer customer);
+	public abstract boolean insertCustomer(Customer customer);
 	
-	public abstract void insertCustomerInClientCollectionFromMongo(Customer customer); 
+	public abstract boolean insertCustomerInClientCollectionFromMongo(Customer customer); 
+	
 	public abstract void updateCustomerList(conditions.Condition<conditions.CustomerAttribute> condition, conditions.SetClause<conditions.CustomerAttribute> set);
 	
 	public void updateCustomer(pojo.Customer customer) {

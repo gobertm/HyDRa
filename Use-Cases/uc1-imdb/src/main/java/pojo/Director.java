@@ -21,7 +21,14 @@ public class Director extends LoggingPojo {
         return super.clone();
     }
 	
-
+	@Override
+	public String toString(){
+		return "Director { " + "id="+id +", "+
+"firstName="+firstName +", "+
+"lastName="+lastName +", "+
+"yearOfBirth="+yearOfBirth +", "+
+"yearOfDeath="+yearOfDeath +"}"; 
+	}
 	
 	public String getId() {
 		return id;

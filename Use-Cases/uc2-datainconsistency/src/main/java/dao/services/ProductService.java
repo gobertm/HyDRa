@@ -12,6 +12,7 @@ import org.apache.spark.api.java.function.FilterFunction;
 import org.apache.commons.lang.mutable.MutableBoolean;
 import conditions.Condition;
 import conditions.Operator;
+import util.Util;
 
 public abstract class ProductService {
 	static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ProductService.class);
@@ -73,13 +74,13 @@ public abstract class ProductService {
 		d = getProductListInCategoryCollectionFromMymongo2(condition, refilterFlag);
 		if(d != null)
 			datasets.add(d);
-		d = getProductListInProductCatalogTableFromMyproductdb(condition, refilterFlag);
-		if(d != null)
-			datasets.add(d);
 		d = getProductListInKVProdPriceFromMyredis(condition, refilterFlag);
 		if(d != null)
 			datasets.add(d);
 		d = getProductListInKVProdPhotosFromMyredis(condition, refilterFlag);
+		if(d != null)
+			datasets.add(d);
+		d = getProductListInProductCatalogTableFromMyproductdb(condition, refilterFlag);
 		if(d != null)
 			datasets.add(d);
 		
@@ -88,122 +89,7 @@ public abstract class ProductService {
 	
 		d = datasets.get(0);
 		if(datasets.size() > 1) {
-	
-		
-			List<String> idFields = new ArrayList<String>();
-			idFields.add("id");
-			scala.collection.Seq<String> seq = scala.collection.JavaConverters.asScalaIteratorConverter(idFields.iterator()).asScala().toSeq();
-			Dataset<Row> res = d.join(datasets.get(1)
-								.withColumnRenamed("name", "name_1")
-								.withColumnRenamed("photo", "photo_1")
-								.withColumnRenamed("price", "price_1")
-								.withColumnRenamed("description", "description_1")
-								.withColumnRenamed("category", "category_1")
-								.withColumnRenamed("logEvents", "logEvents_1")
-							, seq, "fullouter");
-			for(int i = 2; i < datasets.size(); i++) {
-				res = res.join(datasets.get(i)
-								.withColumnRenamed("name", "name_" + i)
-								.withColumnRenamed("photo", "photo_" + i)
-								.withColumnRenamed("price", "price_" + i)
-								.withColumnRenamed("description", "description_" + i)
-								.withColumnRenamed("category", "category_" + i)
-								.withColumnRenamed("logEvents", "logEvents_" + i)
-							, seq, "fullouter");
-			} 
-			d = res.map((MapFunction<Row, Product>) r -> {
-					Product product_res = new Product();
-					
-					// attribute 'Product.id'
-					String firstNotNull_id = r.getAs("id");
-					product_res.setId(firstNotNull_id);
-					
-					// attribute 'Product.name'
-					String firstNotNull_Name = r.getAs("name");
-					for (int i = 1; i < datasets.size(); i++) {
-						String name2 = r.getAs("name_" + i);
-						if (firstNotNull_Name != null && name2 != null && !firstNotNull_Name.equals(name2)) {
-							product_res.addLogEvent("Data consistency problem: duplicate values found for attribute 'Product.name': " + firstNotNull_Name + " and " + name2 + "." );
-							logger.warn("data consistency problem: duplicate values for attribute : 'Product.name' ==> " + firstNotNull_Name + " and " + name2);
-						}
-						if (firstNotNull_Name == null && name2 != null) {
-							firstNotNull_Name = name2;
-						}
-					}
-					product_res.setName(firstNotNull_Name);
-					
-					// attribute 'Product.photo'
-					String firstNotNull_photo = r.getAs("photo");
-					for (int i = 1; i < datasets.size(); i++) {
-						String photo2 = r.getAs("photo_" + i);
-						if (firstNotNull_photo != null && photo2 != null && !firstNotNull_photo.equals(photo2)) {
-							product_res.addLogEvent("Data consistency problem: duplicate values found for attribute 'Product.photo': " + firstNotNull_photo + " and " + photo2 + "." );
-							logger.warn("data consistency problem: duplicate values for attribute : 'Product.photo' ==> " + firstNotNull_photo + " and " + photo2);
-						}
-						if (firstNotNull_photo == null && photo2 != null) {
-							firstNotNull_photo = photo2;
-						}
-					}
-					product_res.setPhoto(firstNotNull_photo);
-					
-					// attribute 'Product.price'
-					Integer firstNotNull_price = r.getAs("price");
-					for (int i = 1; i < datasets.size(); i++) {
-						Integer price2 = r.getAs("price_" + i);
-						if (firstNotNull_price != null && price2 != null && !firstNotNull_price.equals(price2)) {
-							product_res.addLogEvent("Data consistency problem: duplicate values found for attribute 'Product.price': " + firstNotNull_price + " and " + price2 + "." );
-							logger.warn("data consistency problem: duplicate values for attribute : 'Product.price' ==> " + firstNotNull_price + " and " + price2);
-						}
-						if (firstNotNull_price == null && price2 != null) {
-							firstNotNull_price = price2;
-						}
-					}
-					product_res.setPrice(firstNotNull_price);
-					
-					// attribute 'Product.description'
-					String firstNotNull_description = r.getAs("description");
-					for (int i = 1; i < datasets.size(); i++) {
-						String description2 = r.getAs("description_" + i);
-						if (firstNotNull_description != null && description2 != null && !firstNotNull_description.equals(description2)) {
-							product_res.addLogEvent("Data consistency problem: duplicate values found for attribute 'Product.description': " + firstNotNull_description + " and " + description2 + "." );
-							logger.warn("data consistency problem: duplicate values for attribute : 'Product.description' ==> " + firstNotNull_description + " and " + description2);
-						}
-						if (firstNotNull_description == null && description2 != null) {
-							firstNotNull_description = description2;
-						}
-					}
-					product_res.setDescription(firstNotNull_description);
-					
-					// attribute 'Product.category'
-					String firstNotNull_category = r.getAs("category");
-					for (int i = 1; i < datasets.size(); i++) {
-						String category2 = r.getAs("category_" + i);
-						if (firstNotNull_category != null && category2 != null && !firstNotNull_category.equals(category2)) {
-							product_res.addLogEvent("Data consistency problem: duplicate values found for attribute 'Product.category': " + firstNotNull_category + " and " + category2 + "." );
-							logger.warn("data consistency problem: duplicate values for attribute : 'Product.category' ==> " + firstNotNull_category + " and " + category2);
-						}
-						if (firstNotNull_category == null && category2 != null) {
-							firstNotNull_category = category2;
-						}
-					}
-					product_res.setCategory(firstNotNull_category);
-					
-					scala.collection.mutable.WrappedArray<String> logEvents = r.getAs("logEvents");
-					if(logEvents != null)
-						for (int i = 0; i < logEvents.size(); i++){
-							product_res.addLogEvent(logEvents.apply(i));
-						}
-		
-					for (int i = 1; i < datasets.size(); i++) {
-						logEvents = r.getAs("logEvents_" + i);
-						if(logEvents != null)
-						for (int j = 0; j < logEvents.size(); j++){
-							product_res.addLogEvent(logEvents.apply(j));
-						}
-					}
-					
-					return product_res;
-				}, Encoders.bean(Product.class));
+			d=fullOuterJoinsProduct(datasets);
 		}
 		if(refilterFlag.booleanValue())
 			d = d.filter((FilterFunction<Product>) r -> condition == null || condition.evaluate(r));
@@ -213,12 +99,8 @@ public abstract class ProductService {
 	
 	
 	
+	
 	public abstract Dataset<Product> getProductListInCategoryCollectionFromMymongo2(conditions.Condition<conditions.ProductAttribute> condition, MutableBoolean refilterFlag);
-	
-	
-	
-	
-	public abstract Dataset<Product> getProductListInProductCatalogTableFromMyproductdb(conditions.Condition<conditions.ProductAttribute> condition, MutableBoolean refilterFlag);
 	
 	
 	
@@ -229,6 +111,11 @@ public abstract class ProductService {
 	
 	
 	public abstract Dataset<Product> getProductListInKVProdPhotosFromMyredis(conditions.Condition<conditions.ProductAttribute> condition, MutableBoolean refilterFlag);
+	
+	
+	
+	
+	public abstract Dataset<Product> getProductListInProductCatalogTableFromMyproductdb(conditions.Condition<conditions.ProductAttribute> condition, MutableBoolean refilterFlag);
 	
 	
 	// TODO get based on id(s). Ex:public Client getClientById(Long id)
@@ -282,6 +169,7 @@ public abstract class ProductService {
 								.withColumnRenamed("price", "price_1")
 								.withColumnRenamed("description", "description_1")
 								.withColumnRenamed("category", "category_1")
+								.withColumnRenamed("logEvents", "logEvents_1")
 							, seq, joinMode);
 			for(int i = 2; i < datasetsPOJO.size(); i++) {
 				res = res.join(datasetsPOJO.get(i)
@@ -290,19 +178,20 @@ public abstract class ProductService {
 								.withColumnRenamed("price", "price_" + i)
 								.withColumnRenamed("description", "description_" + i)
 								.withColumnRenamed("category", "category_" + i)
-							, seq, joinMode);
+								.withColumnRenamed("logEvents", "logEvents_" + i)
+						, seq, joinMode);
 			} 
 			d = res.map((MapFunction<Row, Product>) r -> {
 					Product product_res = new Product();
 					
 					// attribute 'Product.id'
-					String firstNotNull_id = r.getAs("id");
+					String firstNotNull_id = Util.getStringValue(r.getAs("id"));
 					product_res.setId(firstNotNull_id);
 					
 					// attribute 'Product.name'
-					String firstNotNull_Name = r.getAs("name");
+					String firstNotNull_Name = Util.getStringValue(r.getAs("name"));
 					for (int i = 1; i < datasetsPOJO.size(); i++) {
-						String name2 = r.getAs("name_" + i);
+						String name2 = Util.getStringValue(r.getAs("name_" + i));
 						if (firstNotNull_Name != null && name2 != null && !firstNotNull_Name.equals(name2)) {
 							product_res.addLogEvent("Data consistency problem: duplicate values found for attribute 'Product.name': " + firstNotNull_Name + " and " + name2 + "." );
 							logger.warn("data consistency problem: duplicate values for attribute : 'Product.name' ==> " + firstNotNull_Name + " and " + name2);
@@ -314,9 +203,9 @@ public abstract class ProductService {
 					product_res.setName(firstNotNull_Name);
 					
 					// attribute 'Product.photo'
-					String firstNotNull_photo = r.getAs("photo");
+					String firstNotNull_photo = Util.getStringValue(r.getAs("photo"));
 					for (int i = 1; i < datasetsPOJO.size(); i++) {
-						String photo2 = r.getAs("photo_" + i);
+						String photo2 = Util.getStringValue(r.getAs("photo_" + i));
 						if (firstNotNull_photo != null && photo2 != null && !firstNotNull_photo.equals(photo2)) {
 							product_res.addLogEvent("Data consistency problem: duplicate values found for attribute 'Product.photo': " + firstNotNull_photo + " and " + photo2 + "." );
 							logger.warn("data consistency problem: duplicate values for attribute : 'Product.photo' ==> " + firstNotNull_photo + " and " + photo2);
@@ -328,9 +217,9 @@ public abstract class ProductService {
 					product_res.setPhoto(firstNotNull_photo);
 					
 					// attribute 'Product.price'
-					Integer firstNotNull_price = r.getAs("price");
+					Integer firstNotNull_price = Util.getIntegerValue(r.getAs("price"));
 					for (int i = 1; i < datasetsPOJO.size(); i++) {
-						Integer price2 = r.getAs("price_" + i);
+						Integer price2 = Util.getIntegerValue(r.getAs("price_" + i));
 						if (firstNotNull_price != null && price2 != null && !firstNotNull_price.equals(price2)) {
 							product_res.addLogEvent("Data consistency problem: duplicate values found for attribute 'Product.price': " + firstNotNull_price + " and " + price2 + "." );
 							logger.warn("data consistency problem: duplicate values for attribute : 'Product.price' ==> " + firstNotNull_price + " and " + price2);
@@ -342,9 +231,9 @@ public abstract class ProductService {
 					product_res.setPrice(firstNotNull_price);
 					
 					// attribute 'Product.description'
-					String firstNotNull_description = r.getAs("description");
+					String firstNotNull_description = Util.getStringValue(r.getAs("description"));
 					for (int i = 1; i < datasetsPOJO.size(); i++) {
-						String description2 = r.getAs("description_" + i);
+						String description2 = Util.getStringValue(r.getAs("description_" + i));
 						if (firstNotNull_description != null && description2 != null && !firstNotNull_description.equals(description2)) {
 							product_res.addLogEvent("Data consistency problem: duplicate values found for attribute 'Product.description': " + firstNotNull_description + " and " + description2 + "." );
 							logger.warn("data consistency problem: duplicate values for attribute : 'Product.description' ==> " + firstNotNull_description + " and " + description2);
@@ -356,9 +245,9 @@ public abstract class ProductService {
 					product_res.setDescription(firstNotNull_description);
 					
 					// attribute 'Product.category'
-					String firstNotNull_category = r.getAs("category");
+					String firstNotNull_category = Util.getStringValue(r.getAs("category"));
 					for (int i = 1; i < datasetsPOJO.size(); i++) {
-						String category2 = r.getAs("category_" + i);
+						String category2 = Util.getStringValue(r.getAs("category_" + i));
 						if (firstNotNull_category != null && category2 != null && !firstNotNull_category.equals(category2)) {
 							product_res.addLogEvent("Data consistency problem: duplicate values found for attribute 'Product.category': " + firstNotNull_category + " and " + category2 + "." );
 							logger.warn("data consistency problem: duplicate values for attribute : 'Product.category' ==> " + firstNotNull_category + " and " + category2);
@@ -368,6 +257,21 @@ public abstract class ProductService {
 						}
 					}
 					product_res.setCategory(firstNotNull_category);
+	
+					scala.collection.mutable.WrappedArray<String> logEvents = r.getAs("logEvents");
+					if(logEvents != null)
+						for (int i = 0; i < logEvents.size(); i++){
+							product_res.addLogEvent(logEvents.apply(i));
+						}
+		
+					for (int i = 1; i < datasetsPOJO.size(); i++) {
+						logEvents = r.getAs("logEvents_" + i);
+						if(logEvents != null)
+						for (int j = 0; j < logEvents.size(); j++){
+							product_res.addLogEvent(logEvents.apply(j));
+						}
+					}
+	
 					return product_res;
 				}, Encoders.bean(Product.class));
 			return d;
@@ -377,10 +281,10 @@ public abstract class ProductService {
 	
 	
 	
-	public abstract void insertProductAndLinkedItems(Product product);
-	public abstract void insertProduct(Product product);
+	public abstract boolean insertProduct(Product product);
 	
-	public abstract void insertProductInCategoryCollectionFromMymongo2(Product product); public abstract void insertProductInProductCatalogTableFromMyproductdb(Product product); public abstract void insertProductInKVProdPriceFromMyredis(Product product); public abstract void insertProductInKVProdPhotosFromMyredis(Product product); 
+	public abstract boolean insertProductInCategoryCollectionFromMymongo2(Product product); public abstract boolean insertProductInKVProdPriceFromMyredis(Product product); public abstract boolean insertProductInKVProdPhotosFromMyredis(Product product); public abstract boolean insertProductInProductCatalogTableFromMyproductdb(Product product); 
+	
 	public abstract void updateProductList(conditions.Condition<conditions.ProductAttribute> condition, conditions.SetClause<conditions.ProductAttribute> set);
 	
 	public void updateProduct(pojo.Product product) {

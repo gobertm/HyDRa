@@ -7,11 +7,13 @@ import pojo.MovieActor;
 import tdo.ActorTDO;
 import tdo.MovieActorTDO;
 import pojo.Actor;
+import pojo.MovieActor;
 import conditions.ActorAttribute;
 import org.apache.commons.lang.mutable.MutableBoolean;
 import tdo.MovieTDO;
 import tdo.MovieActorTDO;
 import pojo.Movie;
+import pojo.MovieActor;
 import conditions.MovieAttribute;
 import org.apache.commons.lang.mutable.MutableBoolean;
 
@@ -56,12 +58,7 @@ public abstract class MovieActorService {
 		return null;
 	}
 	
-	public abstract void insertMovieActorAndLinkedItems(pojo.MovieActor movieActor);
-	
-	public abstract void attachPersistentItemsByMovieActor(
-		pojo.Actor character,
-		pojo.Movie movie);
-	
+	public abstract void insertMovieActor(MovieActor movieActor);
 	
 	public abstract void deleteMovieActorList(
 		conditions.Condition<conditions.ActorAttribute> character_condition,

@@ -12,6 +12,7 @@ import org.apache.spark.api.java.function.FilterFunction;
 import org.apache.commons.lang.mutable.MutableBoolean;
 import conditions.Condition;
 import conditions.Operator;
+import util.Util;
 import conditions.DirectorAttribute;
 import conditions.MovieAttribute;
 import pojo.Movie;
@@ -84,112 +85,14 @@ public abstract class DirectorService {
 	
 		d = datasets.get(0);
 		if(datasets.size() > 1) {
-	
-		
-			List<String> idFields = new ArrayList<String>();
-			idFields.add("id");
-			scala.collection.Seq<String> seq = scala.collection.JavaConverters.asScalaIteratorConverter(idFields.iterator()).asScala().toSeq();
-			Dataset<Row> res = d.join(datasets.get(1)
-								.withColumnRenamed("firstName", "firstName_1")
-								.withColumnRenamed("lastName", "lastName_1")
-								.withColumnRenamed("yearOfBirth", "yearOfBirth_1")
-								.withColumnRenamed("yearOfDeath", "yearOfDeath_1")
-								.withColumnRenamed("logEvents", "logEvents_1")
-							, seq, "fullouter");
-			for(int i = 2; i < datasets.size(); i++) {
-				res = res.join(datasets.get(i)
-								.withColumnRenamed("firstName", "firstName_" + i)
-								.withColumnRenamed("lastName", "lastName_" + i)
-								.withColumnRenamed("yearOfBirth", "yearOfBirth_" + i)
-								.withColumnRenamed("yearOfDeath", "yearOfDeath_" + i)
-								.withColumnRenamed("logEvents", "logEvents_" + i)
-							, seq, "fullouter");
-			} 
-			d = res.map((MapFunction<Row, Director>) r -> {
-					Director director_res = new Director();
-					
-					// attribute 'Director.id'
-					String firstNotNull_id = r.getAs("id");
-					director_res.setId(firstNotNull_id);
-					
-					// attribute 'Director.firstName'
-					String firstNotNull_firstName = r.getAs("firstName");
-					for (int i = 1; i < datasets.size(); i++) {
-						String firstName2 = r.getAs("firstName_" + i);
-						if (firstNotNull_firstName != null && firstName2 != null && !firstNotNull_firstName.equals(firstName2)) {
-							director_res.addLogEvent("Data consistency problem: duplicate values found for attribute 'Director.firstName': " + firstNotNull_firstName + " and " + firstName2 + "." );
-							logger.warn("data consistency problem: duplicate values for attribute : 'Director.firstName' ==> " + firstNotNull_firstName + " and " + firstName2);
-						}
-						if (firstNotNull_firstName == null && firstName2 != null) {
-							firstNotNull_firstName = firstName2;
-						}
-					}
-					director_res.setFirstName(firstNotNull_firstName);
-					
-					// attribute 'Director.lastName'
-					String firstNotNull_lastName = r.getAs("lastName");
-					for (int i = 1; i < datasets.size(); i++) {
-						String lastName2 = r.getAs("lastName_" + i);
-						if (firstNotNull_lastName != null && lastName2 != null && !firstNotNull_lastName.equals(lastName2)) {
-							director_res.addLogEvent("Data consistency problem: duplicate values found for attribute 'Director.lastName': " + firstNotNull_lastName + " and " + lastName2 + "." );
-							logger.warn("data consistency problem: duplicate values for attribute : 'Director.lastName' ==> " + firstNotNull_lastName + " and " + lastName2);
-						}
-						if (firstNotNull_lastName == null && lastName2 != null) {
-							firstNotNull_lastName = lastName2;
-						}
-					}
-					director_res.setLastName(firstNotNull_lastName);
-					
-					// attribute 'Director.yearOfBirth'
-					Integer firstNotNull_yearOfBirth = r.getAs("yearOfBirth");
-					for (int i = 1; i < datasets.size(); i++) {
-						Integer yearOfBirth2 = r.getAs("yearOfBirth_" + i);
-						if (firstNotNull_yearOfBirth != null && yearOfBirth2 != null && !firstNotNull_yearOfBirth.equals(yearOfBirth2)) {
-							director_res.addLogEvent("Data consistency problem: duplicate values found for attribute 'Director.yearOfBirth': " + firstNotNull_yearOfBirth + " and " + yearOfBirth2 + "." );
-							logger.warn("data consistency problem: duplicate values for attribute : 'Director.yearOfBirth' ==> " + firstNotNull_yearOfBirth + " and " + yearOfBirth2);
-						}
-						if (firstNotNull_yearOfBirth == null && yearOfBirth2 != null) {
-							firstNotNull_yearOfBirth = yearOfBirth2;
-						}
-					}
-					director_res.setYearOfBirth(firstNotNull_yearOfBirth);
-					
-					// attribute 'Director.yearOfDeath'
-					Integer firstNotNull_yearOfDeath = r.getAs("yearOfDeath");
-					for (int i = 1; i < datasets.size(); i++) {
-						Integer yearOfDeath2 = r.getAs("yearOfDeath_" + i);
-						if (firstNotNull_yearOfDeath != null && yearOfDeath2 != null && !firstNotNull_yearOfDeath.equals(yearOfDeath2)) {
-							director_res.addLogEvent("Data consistency problem: duplicate values found for attribute 'Director.yearOfDeath': " + firstNotNull_yearOfDeath + " and " + yearOfDeath2 + "." );
-							logger.warn("data consistency problem: duplicate values for attribute : 'Director.yearOfDeath' ==> " + firstNotNull_yearOfDeath + " and " + yearOfDeath2);
-						}
-						if (firstNotNull_yearOfDeath == null && yearOfDeath2 != null) {
-							firstNotNull_yearOfDeath = yearOfDeath2;
-						}
-					}
-					director_res.setYearOfDeath(firstNotNull_yearOfDeath);
-					
-					scala.collection.mutable.WrappedArray<String> logEvents = r.getAs("logEvents");
-					if(logEvents != null)
-						for (int i = 0; i < logEvents.size(); i++){
-							director_res.addLogEvent(logEvents.apply(i));
-						}
-		
-					for (int i = 1; i < datasets.size(); i++) {
-						logEvents = r.getAs("logEvents_" + i);
-						if(logEvents != null)
-						for (int j = 0; j < logEvents.size(); j++){
-							director_res.addLogEvent(logEvents.apply(j));
-						}
-					}
-					
-					return director_res;
-				}, Encoders.bean(Director.class));
+			d=fullOuterJoinsDirector(datasets);
 		}
 		if(refilterFlag.booleanValue())
 			d = d.filter((FilterFunction<Director>) r -> condition == null || condition.evaluate(r));
 		d=d.dropDuplicates();
 		return d;
 	}
+	
 	
 	
 	
@@ -242,6 +145,7 @@ public abstract class DirectorService {
 								.withColumnRenamed("lastName", "lastName_1")
 								.withColumnRenamed("yearOfBirth", "yearOfBirth_1")
 								.withColumnRenamed("yearOfDeath", "yearOfDeath_1")
+								.withColumnRenamed("logEvents", "logEvents_1")
 							, seq, joinMode);
 			for(int i = 2; i < datasetsPOJO.size(); i++) {
 				res = res.join(datasetsPOJO.get(i)
@@ -249,19 +153,20 @@ public abstract class DirectorService {
 								.withColumnRenamed("lastName", "lastName_" + i)
 								.withColumnRenamed("yearOfBirth", "yearOfBirth_" + i)
 								.withColumnRenamed("yearOfDeath", "yearOfDeath_" + i)
-							, seq, joinMode);
+								.withColumnRenamed("logEvents", "logEvents_" + i)
+						, seq, joinMode);
 			} 
 			d = res.map((MapFunction<Row, Director>) r -> {
 					Director director_res = new Director();
 					
 					// attribute 'Director.id'
-					String firstNotNull_id = r.getAs("id");
+					String firstNotNull_id = Util.getStringValue(r.getAs("id"));
 					director_res.setId(firstNotNull_id);
 					
 					// attribute 'Director.firstName'
-					String firstNotNull_firstName = r.getAs("firstName");
+					String firstNotNull_firstName = Util.getStringValue(r.getAs("firstName"));
 					for (int i = 1; i < datasetsPOJO.size(); i++) {
-						String firstName2 = r.getAs("firstName_" + i);
+						String firstName2 = Util.getStringValue(r.getAs("firstName_" + i));
 						if (firstNotNull_firstName != null && firstName2 != null && !firstNotNull_firstName.equals(firstName2)) {
 							director_res.addLogEvent("Data consistency problem: duplicate values found for attribute 'Director.firstName': " + firstNotNull_firstName + " and " + firstName2 + "." );
 							logger.warn("data consistency problem: duplicate values for attribute : 'Director.firstName' ==> " + firstNotNull_firstName + " and " + firstName2);
@@ -273,9 +178,9 @@ public abstract class DirectorService {
 					director_res.setFirstName(firstNotNull_firstName);
 					
 					// attribute 'Director.lastName'
-					String firstNotNull_lastName = r.getAs("lastName");
+					String firstNotNull_lastName = Util.getStringValue(r.getAs("lastName"));
 					for (int i = 1; i < datasetsPOJO.size(); i++) {
-						String lastName2 = r.getAs("lastName_" + i);
+						String lastName2 = Util.getStringValue(r.getAs("lastName_" + i));
 						if (firstNotNull_lastName != null && lastName2 != null && !firstNotNull_lastName.equals(lastName2)) {
 							director_res.addLogEvent("Data consistency problem: duplicate values found for attribute 'Director.lastName': " + firstNotNull_lastName + " and " + lastName2 + "." );
 							logger.warn("data consistency problem: duplicate values for attribute : 'Director.lastName' ==> " + firstNotNull_lastName + " and " + lastName2);
@@ -287,9 +192,9 @@ public abstract class DirectorService {
 					director_res.setLastName(firstNotNull_lastName);
 					
 					// attribute 'Director.yearOfBirth'
-					Integer firstNotNull_yearOfBirth = r.getAs("yearOfBirth");
+					Integer firstNotNull_yearOfBirth = Util.getIntegerValue(r.getAs("yearOfBirth"));
 					for (int i = 1; i < datasetsPOJO.size(); i++) {
-						Integer yearOfBirth2 = r.getAs("yearOfBirth_" + i);
+						Integer yearOfBirth2 = Util.getIntegerValue(r.getAs("yearOfBirth_" + i));
 						if (firstNotNull_yearOfBirth != null && yearOfBirth2 != null && !firstNotNull_yearOfBirth.equals(yearOfBirth2)) {
 							director_res.addLogEvent("Data consistency problem: duplicate values found for attribute 'Director.yearOfBirth': " + firstNotNull_yearOfBirth + " and " + yearOfBirth2 + "." );
 							logger.warn("data consistency problem: duplicate values for attribute : 'Director.yearOfBirth' ==> " + firstNotNull_yearOfBirth + " and " + yearOfBirth2);
@@ -301,9 +206,9 @@ public abstract class DirectorService {
 					director_res.setYearOfBirth(firstNotNull_yearOfBirth);
 					
 					// attribute 'Director.yearOfDeath'
-					Integer firstNotNull_yearOfDeath = r.getAs("yearOfDeath");
+					Integer firstNotNull_yearOfDeath = Util.getIntegerValue(r.getAs("yearOfDeath"));
 					for (int i = 1; i < datasetsPOJO.size(); i++) {
-						Integer yearOfDeath2 = r.getAs("yearOfDeath_" + i);
+						Integer yearOfDeath2 = Util.getIntegerValue(r.getAs("yearOfDeath_" + i));
 						if (firstNotNull_yearOfDeath != null && yearOfDeath2 != null && !firstNotNull_yearOfDeath.equals(yearOfDeath2)) {
 							director_res.addLogEvent("Data consistency problem: duplicate values found for attribute 'Director.yearOfDeath': " + firstNotNull_yearOfDeath + " and " + yearOfDeath2 + "." );
 							logger.warn("data consistency problem: duplicate values for attribute : 'Director.yearOfDeath' ==> " + firstNotNull_yearOfDeath + " and " + yearOfDeath2);
@@ -313,6 +218,21 @@ public abstract class DirectorService {
 						}
 					}
 					director_res.setYearOfDeath(firstNotNull_yearOfDeath);
+	
+					scala.collection.mutable.WrappedArray<String> logEvents = r.getAs("logEvents");
+					if(logEvents != null)
+						for (int i = 0; i < logEvents.size(); i++){
+							director_res.addLogEvent(logEvents.apply(i));
+						}
+		
+					for (int i = 1; i < datasetsPOJO.size(); i++) {
+						logEvents = r.getAs("logEvents_" + i);
+						if(logEvents != null)
+						for (int j = 0; j < logEvents.size(); j++){
+							director_res.addLogEvent(logEvents.apply(j));
+						}
+					}
+	
 					return director_res;
 				}, Encoders.bean(Director.class));
 			return d;
@@ -368,10 +288,10 @@ public abstract class DirectorService {
 		return getDirectorListInMovieDirector(null, director_condition);
 	}
 	
-	public abstract void insertDirectorAndLinkedItems(Director director);
-	public abstract void insertDirector(Director director);
+	public abstract boolean insertDirector(Director director);
 	
-	public abstract void insertDirectorInDirectorTableFromMydb(Director director); 
+	public abstract boolean insertDirectorInDirectorTableFromMydb(Director director); 
+	
 	public abstract void updateDirectorList(conditions.Condition<conditions.DirectorAttribute> condition, conditions.SetClause<conditions.DirectorAttribute> set);
 	
 	public void updateDirector(pojo.Director director) {

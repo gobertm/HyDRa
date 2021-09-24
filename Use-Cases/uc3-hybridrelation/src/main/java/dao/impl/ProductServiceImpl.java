@@ -1,7 +1,10 @@
 package dao.impl;
-
+import exceptions.PhysicalStructureException;
 import java.util.Arrays;
 import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
+import org.apache.commons.lang3.StringUtils;
 import pojo.Product;
 import conditions.*;
 import dao.services.ProductService;
@@ -11,6 +14,7 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Encoders;
 import org.apache.spark.sql.Row;
+import org.apache.spark.sql.RowFactory;
 import org.apache.spark.api.java.function.MapFunction;
 import java.util.regex.Pattern;
 import java.util.regex.Matcher;
@@ -28,9 +32,20 @@ import java.util.ArrayList;
 import org.apache.commons.lang.mutable.MutableBoolean;
 import tdo.*;
 import pojo.*;
+import org.apache.spark.sql.types.DataTypes;
+import org.apache.spark.sql.types.StructField;
+import org.apache.spark.sql.types.StructType;
+import org.apache.spark.sql.types.ArrayType;
+import scala.Tuple2;
+import org.bson.Document;
+import org.bson.conversions.Bson;
+import static com.mongodb.client.model.Filters.eq;
+import static com.mongodb.client.model.Updates.*;
+
 
 public class ProductServiceImpl extends ProductService {
 	static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ProductServiceImpl.class);
+	
 	
 	
 	public static Pair<String, List<String>> getSQLWhereClauseInPRODUCTFromINVENTORY(Condition<ProductAttribute> condition, MutableBoolean refilterFlag) {
@@ -161,15 +176,15 @@ public class ProductServiceImpl extends ProductService {
 					boolean matches = false;
 					
 					// attribute [Product.Id]
-					Integer id = r.getAs("ID");
+					Integer id = Util.getIntegerValue(r.getAs("ID"));
 					product_res.setId(id);
 					
 					// attribute [Product.Label]
-					String label = r.getAs("NAME");
+					String label = Util.getStringValue(r.getAs("NAME"));
 					product_res.setLabel(label);
 					
 					// attribute [Product.Price]
-					Double price = r.getAs("PRICE");
+					Double price = Util.getDoubleValue(r.getAs("PRICE"));
 					product_res.setPrice(price);
 	
 	
@@ -212,6 +227,7 @@ public class ProductServiceImpl extends ProductService {
 		// For role 'order' in reference 'buys' 
 		order_refilter = new MutableBoolean(false);
 		Dataset<OrderTDO> orderTDObuysorder = ofService.getOrderTDOListOrderInBuysInClientCollectionFromMongoSchema(order_condition, order_refilter);
+		Dataset<ProductTDO> productTDObuysbought_item = ofService.getProductTDOListBought_itemInBuysInClientCollectionFromMongoSchema(bought_item_condition, bought_item_refilter);
 		if(order_refilter.booleanValue()) {
 			joinCondition = null;
 			joinCondition = orderTDObuysorder.col("id").equalTo(all.col("id"));
@@ -220,7 +236,6 @@ public class ProductServiceImpl extends ProductService {
 			else
 				orderTDObuysorder = orderTDObuysorder.as("A").join(all, joinCondition).select("A.*").as(Encoders.bean(OrderTDO.class));
 		}
-		Dataset<ProductTDO> productTDObuysbought_item = ofService.getProductTDOListBought_itemInBuysInClientCollectionFromMongoSchema(bought_item_condition, bought_item_refilter);
 		Dataset<Row> res_buys = productTDObuysbought_item.join(orderTDObuysorder
 				.withColumnRenamed("id", "Order_id")
 				.withColumnRenamed("quantity", "Order_quantity")
@@ -230,6 +245,8 @@ public class ProductServiceImpl extends ProductService {
 		res_Product_buys = res_Product_buys.dropDuplicates(new String[] {"id"});
 		datasetsPOJO.add(res_Product_buys);
 		
+		Dataset<Of> res_of_bought_item;
+		Dataset<Product> res_Product;
 		
 		
 		//Join datasets or return 
@@ -257,30 +274,49 @@ public class ProductServiceImpl extends ProductService {
 		Condition c;
 		c=Condition.simple(OrderAttribute.id,Operator.EQUALS, order.getId());
 		Dataset<Product> res = getBought_itemListInOfByOrderCondition(c);
-		return res.first();
+		return !res.isEmpty()?res.first():null;
 	}
 	
 	
-	public void insertProductAndLinkedItems(Product product){
-		//TODO
-	}
-	public void insertProduct(Product product){
-		// Insert into all mapped AbstractPhysicalStructure 
-			insertProductInPRODUCTFromINVENTORY(product);
+	public boolean insertProduct(Product product){
+		// Insert into all mapped standalone AbstractPhysicalStructure 
+		boolean inserted = false;
+			inserted = insertProductInPRODUCTFromINVENTORY(product) || inserted ;
+		return inserted;
 	}
 	
-	public void insertProductInPRODUCTFromINVENTORY(Product product){
-		//Read mapping rules and find attributes of the POJO that are mapped to the corresponding AbstractPhysicalStructure
-		// Insert in SQL DB 
-	String query = "INSERT INTO PRODUCT(NAME,ID,PRICE) VALUES (?,?,?)";
+	public boolean insertProductInPRODUCTFromINVENTORY(Product product)	{
+		Condition<ProductAttribute> conditionID;
+		String idvalue="";
+		conditionID = Condition.simple(ProductAttribute.id, Operator.EQUALS, product.getId());
+		idvalue+=product.getId();
+		boolean entityExists=false;
+		entityExists = !getProductListInPRODUCTFromINVENTORY(conditionID,new MutableBoolean(false)).isEmpty();
+				
+		if(!entityExists){
+		List<Row> listRows=new ArrayList<Row>();
+		List<Object> valuesPRODUCT_1 = new ArrayList<>();
+		List<StructField> listOfStructFieldPRODUCT_1 = new ArrayList<StructField>();
+		if(!listOfStructFieldPRODUCT_1.contains(DataTypes.createStructField("ID",DataTypes.IntegerType, true)))
+			listOfStructFieldPRODUCT_1.add(DataTypes.createStructField("ID",DataTypes.IntegerType, true));
+		valuesPRODUCT_1.add(product.getId());
+		if(!listOfStructFieldPRODUCT_1.contains(DataTypes.createStructField("NAME",DataTypes.StringType, true)))
+			listOfStructFieldPRODUCT_1.add(DataTypes.createStructField("NAME",DataTypes.StringType, true));
+		valuesPRODUCT_1.add(product.getLabel());
+		if(!listOfStructFieldPRODUCT_1.contains(DataTypes.createStructField("PRICE",DataTypes.FloatType, true)))
+			listOfStructFieldPRODUCT_1.add(DataTypes.createStructField("PRICE",DataTypes.FloatType, true));
+		valuesPRODUCT_1.add(product.getPrice());
+		
+		StructType structType = DataTypes.createStructType(listOfStructFieldPRODUCT_1);
+		listRows.add(RowFactory.create(valuesPRODUCT_1.toArray()));
+		SparkConnectionMgr.writeDataset(listRows, structType, "jdbc", "PRODUCT", "INVENTORY");
+			logger.info("Inserted [Product] entity ID [{}] in [PRODUCT] in database [INVENTORY]", idvalue);
+		}
+		else
+			logger.warn("[Product] entity ID [{}] already present in [PRODUCT] in database [INVENTORY]", idvalue);
+		return !entityExists;
+	} 
 	
-	List<Object> inputs = new ArrayList<>();
-	inputs.add(product.getLabel());
-	inputs.add(product.getId());
-	inputs.add(product.getPrice());
-	// Get the reference attribute. Either via a TDO Object or using the Pojo reference TODO
-	DBConnectionMgr.getMapDB().get("INVENTORY").insertOrUpdateOrDelete(query,inputs);
-	}
 	
 	public void updateProductList(conditions.Condition<conditions.ProductAttribute> condition, conditions.SetClause<conditions.ProductAttribute> set){
 		//TODO

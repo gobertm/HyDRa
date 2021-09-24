@@ -1,8 +1,12 @@
 package dao.impl;
 
+import exceptions.PhysicalStructureException;
 import java.util.Arrays;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.spark.sql.Dataset;
 import conditions.Condition;
+import java.util.HashSet;
+import java.util.Set;
 import conditions.AndCondition;
 import conditions.OrCondition;
 import conditions.SimpleCondition;
@@ -32,6 +36,11 @@ import java.util.regex.Matcher;
 import scala.collection.mutable.WrappedArray;
 import org.apache.spark.api.java.function.FlatMapFunction;
 import dbconnection.SparkConnectionMgr;
+import org.apache.spark.sql.types.DataTypes;
+import org.apache.spark.sql.types.StructField;
+import org.apache.spark.sql.types.StructType;
+import org.apache.spark.sql.types.ArrayType;
+import static com.mongodb.client.model.Updates.addToSet;
 
 
 public class MovieActorServiceImpl extends dao.services.MovieActorService {
@@ -232,16 +241,9 @@ public class MovieActorServiceImpl extends dao.services.MovieActorService {
 		return null;
 	}
 	
-	public void insertMovieActorAndLinkedItems(pojo.MovieActor movieActor){
+	public void insertMovieActor(MovieActor movieActor){
 		//TODO
 	}
-	
-	public void attachPersistentItemsByMovieActor(
-		pojo.Actor character,
-		pojo.Movie movie){
-			//TODO
-		}
-	
 	
 	public void deleteMovieActorList(
 		conditions.Condition<conditions.ActorAttribute> character_condition,

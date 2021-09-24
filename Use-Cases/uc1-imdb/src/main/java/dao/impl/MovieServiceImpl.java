@@ -1,7 +1,10 @@
 package dao.impl;
-
+import exceptions.PhysicalStructureException;
 import java.util.Arrays;
 import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
+import org.apache.commons.lang3.StringUtils;
 import pojo.Movie;
 import conditions.*;
 import dao.services.MovieService;
@@ -11,6 +14,7 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Encoders;
 import org.apache.spark.sql.Row;
+import org.apache.spark.sql.RowFactory;
 import org.apache.spark.api.java.function.MapFunction;
 import java.util.regex.Pattern;
 import java.util.regex.Matcher;
@@ -28,92 +32,21 @@ import java.util.ArrayList;
 import org.apache.commons.lang.mutable.MutableBoolean;
 import tdo.*;
 import pojo.*;
+import org.apache.spark.sql.types.DataTypes;
+import org.apache.spark.sql.types.StructField;
+import org.apache.spark.sql.types.StructType;
+import org.apache.spark.sql.types.ArrayType;
+import scala.Tuple2;
+import org.bson.Document;
+import org.bson.conversions.Bson;
+import static com.mongodb.client.model.Filters.eq;
+import static com.mongodb.client.model.Updates.*;
+
 
 public class MovieServiceImpl extends MovieService {
 	static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(MovieServiceImpl.class);
 	
 	
-	
-	
-	//TODO redis
-	public Dataset<Movie> getMovieListInMovieKVFromMyredis(conditions.Condition<conditions.MovieAttribute> condition, MutableBoolean refilterFlag){
-		// As we cannot filter on the values in a Redis DB, we always put the refilterflag to true.
-		refilterFlag.setValue(true);
-		// Build the key pattern
-		//  - If the condition attribute is in the key pattern, replace by the value. Only if operator is EQUALS.
-		//  - Replace all other fields of key pattern by a '*' 
-		String keypattern= "";
-		String finalKeypattern;
-		List<String> fieldsListInKey = new ArrayList<>();
-		keypattern=keypattern.concat("movie:");
-		keypattern=keypattern.concat("*");
-		fieldsListInKey.add("id");
-			
-		// Find the type of query to perform in order to retrieve a Dataset<Row>
-		// Based on the type of the value. Is a it a simple string or a hash or a list... 
-		Dataset<Row> rows;
-			// TODO only handles 'hash' for now
-		rows = SparkConnectionMgr.getRowsFromKeyValueHashes("myredis",keypattern);
-		finalKeypattern = keypattern;
-		Dataset<Movie> res = rows.map((MapFunction<Row, Movie>) r -> {
-					Movie movie_res = new Movie();
-					Integer groupindex = null;
-					String regex = null;
-					String value = null;
-					Pattern p, pattern = null;
-					Matcher m, match = null;
-					boolean matches = false;
-					// attribute [Movie.Id]
-					// Attribute mapped in a key.
-					String key = r.getAs("id");
-					// Spark Redis automatically strips leading character if the pattern provided contains a single '*' at the end.				
-					pattern = Pattern.compile("\\*");
-			        match = pattern.matcher(finalKeypattern);
-			        if(match.results().count()==1){
-						movie_res.setId(key == null ? null : key);
-					}else{
-						regex = finalKeypattern.replaceAll("\\*","(.*)");
-						groupindex = fieldsListInKey.indexOf("id")+1;
-						if(groupindex==null) {
-							logger.warn("Attribute 'Movie' mapped physical field 'id' found in key but can't get index in build keypattern '{}'.", finalKeypattern);
-						}
-						p = Pattern.compile(regex);
-						m = p.matcher(key);
-						matches = m.find();
-						String id = null;
-						if(matches) {
-							id = m.group(groupindex.intValue());
-						} else {
-							logger.warn("Cannot retrieve value for Movieid attribute stored in db myredis. Probably due to an ambiguous regex.");
-							movie_res.addLogEvent("Cannot retrieve value for Movie.id attribute stored in db myredis. Probably due to an ambiguous regex.");
-						}
-						movie_res.setId(id == null ? null : id);
-					}
-					// attribute [Movie.PrimaryTitle]
-					String primaryTitle = r.getAs("title") == null ? null : r.getAs("title");
-					movie_res.setPrimaryTitle(primaryTitle);
-					// attribute [Movie.OriginalTitle]
-					String originalTitle = r.getAs("originalTitle") == null ? null : r.getAs("originalTitle");
-					movie_res.setOriginalTitle(originalTitle);
-					// attribute [Movie.IsAdult]
-					Boolean isAdult = r.getAs("isAdult") == null ? null : Boolean.parseBoolean(r.getAs("isAdult"));
-					movie_res.setIsAdult(isAdult);
-					// attribute [Movie.StartYear]
-					Integer startYear = r.getAs("startYear") == null ? null : Integer.parseInt(r.getAs("startYear"));
-					movie_res.setStartYear(startYear);
-					// attribute [Movie.RuntimeMinutes]
-					Integer runtimeMinutes = r.getAs("runtimeMinutes") == null ? null : Integer.parseInt(r.getAs("runtimeMinutes"));
-					movie_res.setRuntimeMinutes(runtimeMinutes);
-	
-						return movie_res;
-				}, Encoders.bean(Movie.class));
-		if(refilterFlag.booleanValue())
-			res = res.filter((FilterFunction<Movie>) r -> condition == null || condition.evaluate(r));
-		res=res.dropDuplicates();
-		return res;
-	
-		
-	}
 	
 	
 	public static String getBSONMatchQueryInActorCollectionFromMymongo(Condition<MovieAttribute> condition, MutableBoolean refilterFlag) {	
@@ -364,6 +297,116 @@ public class MovieServiceImpl extends MovieService {
 	}
 	
 	
+	
+	//TODO redis
+	public Dataset<Movie> getMovieListInMovieKVFromMyredis(conditions.Condition<conditions.MovieAttribute> condition, MutableBoolean refilterFlag){
+		// Build the key pattern
+		//  - If the condition attribute is in the key pattern, replace by the value. Only if operator is EQUALS.
+		//  - Replace all other fields of key pattern by a '*' 
+		String keypattern= "", keypatternAllVariables="";
+		String valueCond=null;
+		String finalKeypattern;
+		List<String> fieldsListInKey = new ArrayList<>();
+		Set<MovieAttribute> keyAttributes = new HashSet<>();
+		keypattern=keypattern.concat("movie:");
+		keypatternAllVariables=keypatternAllVariables.concat("movie:");
+		if(!Util.containsOrCondition(condition)){
+			valueCond=Util.getStringValue(Util.getValueOfAttributeInEqualCondition(condition,MovieAttribute.id));
+			keyAttributes.add(MovieAttribute.id);
+		}
+		else{
+			valueCond=null;
+			refilterFlag.setValue(true);
+		}
+		if(valueCond==null)
+			keypattern=keypattern.concat("*");
+		else
+			keypattern=keypattern.concat(valueCond);
+		fieldsListInKey.add("id");
+		keypatternAllVariables=keypatternAllVariables.concat("*");
+		if(!refilterFlag.booleanValue()){
+			Set<MovieAttribute> conditionAttributes = Util.getConditionAttributes(condition);
+			for (MovieAttribute a : conditionAttributes) {
+				if (!keyAttributes.contains(a)) {
+					refilterFlag.setValue(true);
+					break;
+				}
+			}
+		}
+			
+		// Find the type of query to perform in order to retrieve a Dataset<Row>
+		// Based on the type of the value. Is a it a simple string or a hash or a list... 
+		Dataset<Row> rows;
+			// TODO only handles 'hash' for now
+		StructType structTypeHash = new StructType(new StructField[] {
+			DataTypes.createStructField("id", DataTypes.StringType, true)
+		,
+			DataTypes.createStructField("title", DataTypes.StringType, true)
+	,		DataTypes.createStructField("originalTitle", DataTypes.StringType, true)
+	,		DataTypes.createStructField("isAdult", DataTypes.StringType, true)
+	,		DataTypes.createStructField("startYear", DataTypes.StringType, true)
+	,		DataTypes.createStructField("runtimeMinutes", DataTypes.StringType, true)
+		});
+		rows = SparkConnectionMgr.getRowsFromKeyValueHashes("myredis",keypattern, structTypeHash);
+		boolean isStriped = (StringUtils.countMatches(keypattern, "*") == 1 && keypattern.endsWith("*"));
+		String prefix=isStriped?keypattern.substring(0, keypattern.length() - 1):"";
+		finalKeypattern = keypatternAllVariables;
+		Dataset<Movie> res = rows.map((MapFunction<Row, Movie>) r -> {
+					Movie movie_res = new Movie();
+					Integer groupindex = null;
+					String regex = null;
+					String value = null;
+					Pattern p, pattern = null;
+					Matcher m, match = null;
+					boolean matches = false;
+					String key = isStriped ? prefix + r.getAs("id") : r.getAs("id");
+					// Spark Redis automatically strips leading character if the pattern provided contains a single '*' at the end.				
+					pattern = Pattern.compile("\\*");
+			        match = pattern.matcher(finalKeypattern);
+					regex = finalKeypattern.replaceAll("\\*","(.*)");
+					p = Pattern.compile(regex);
+					m = p.matcher(key);
+					matches = m.find();
+					// attribute [Movie.Id]
+					// Attribute mapped in a key.
+					groupindex = fieldsListInKey.indexOf("id")+1;
+					if(groupindex==null) {
+						logger.warn("Attribute 'Movie' mapped physical field 'id' found in key but can't get index in build keypattern '{}'.", finalKeypattern);
+					}
+					String id = null;
+					if(matches) {
+						id = m.group(groupindex.intValue());
+					} else {
+						logger.warn("Cannot retrieve value for Movieid attribute stored in db myredis. Probably due to an ambiguous regex.");
+						movie_res.addLogEvent("Cannot retrieve value for Movie.id attribute stored in db myredis. Probably due to an ambiguous regex.");
+					}
+					movie_res.setId(id == null ? null : id);
+					// attribute [Movie.PrimaryTitle]
+					String primaryTitle = r.getAs("title") == null ? null : r.getAs("title");
+					movie_res.setPrimaryTitle(primaryTitle);
+					// attribute [Movie.OriginalTitle]
+					String originalTitle = r.getAs("originalTitle") == null ? null : r.getAs("originalTitle");
+					movie_res.setOriginalTitle(originalTitle);
+					// attribute [Movie.IsAdult]
+					Boolean isAdult = r.getAs("isAdult") == null ? null : Boolean.parseBoolean(r.getAs("isAdult"));
+					movie_res.setIsAdult(isAdult);
+					// attribute [Movie.StartYear]
+					Integer startYear = r.getAs("startYear") == null ? null : Integer.parseInt(r.getAs("startYear"));
+					movie_res.setStartYear(startYear);
+					// attribute [Movie.RuntimeMinutes]
+					Integer runtimeMinutes = r.getAs("runtimeMinutes") == null ? null : Integer.parseInt(r.getAs("runtimeMinutes"));
+					movie_res.setRuntimeMinutes(runtimeMinutes);
+	
+						return movie_res;
+				}, Encoders.bean(Movie.class));
+		if(refilterFlag.booleanValue())
+			res = res.filter((FilterFunction<Movie>) r -> condition == null || condition.evaluate(r));
+		res=res.dropDuplicates();
+		return res;
+		
+	}
+	
+	
 	// TODO get based on id(s). Ex:public Client getClientById(Long id)
 	
 	public Dataset<Movie> getMovieListById(String id) {
@@ -409,32 +452,32 @@ public class MovieServiceImpl extends MovieService {
 		MutableBoolean director_refilter;
 		org.apache.spark.sql.Column joinCondition = null;
 		// join physical structure
-	
 		//join between 2 SQL tables and a non-relational structure
+		// (A) (AB - B)
 		director_refilter = new MutableBoolean(false);
 		Dataset<MovieDirectorTDO> res_movieDirector_directed_by_has_directed = movieDirectorService.getMovieDirectorTDOListIndirectorTableAnddirectedFrommydb(director_condition, director_refilter);
+		Dataset<MovieTDO> res_has_directed_directed_by = movieDirectorService.getMovieTDOListDirected_movieInHas_directedInMovieKVFromMovieRedis(directed_movie_condition, directed_movie_refilter);
 		if(director_refilter.booleanValue()) {
 				joinCondition = null;
 				joinCondition = res_movieDirector_directed_by_has_directed.col("director.id").equalTo(all.col("id"));
 				res_movieDirector_directed_by_has_directed = res_movieDirector_directed_by_has_directed.as("A").join(all, joinCondition).select("A.*").as(Encoders.bean(MovieDirectorTDO.class));
 		} 
-		Dataset<MovieTDO> res_has_directed_directed_by = movieDirectorService.getMovieTDOListDirected_movieInHas_directedInMovieKVFromMovieRedis(directed_movie_condition, directed_movie_refilter);
 		Dataset<Row> res_row_directed_by_has_directed = res_movieDirector_directed_by_has_directed.join(res_has_directed_directed_by.withColumnRenamed("logEvents", "movieDirector_logEvents"),
 			res_has_directed_directed_by.col("myRelSchema_directed_has_directed_id").equalTo(res_movieDirector_directed_by_has_directed.col("myRelSchema_directed_has_directed_movie_id")));
 		Dataset<Movie> res_Movie_has_directed = res_row_directed_by_has_directed.as(Encoders.bean(Movie.class));
 		datasetsPOJO.add(res_Movie_has_directed.dropDuplicates(new String[] {"id"}));	
 		
 		// join physical structure
-	
 		//join between 2 SQL tables and a non-relational structure
+		// (A) (AB - B)
 		director_refilter = new MutableBoolean(false);
 		Dataset<MovieDirectorTDO> res_movieDirector_directed_by_movie_info = movieDirectorService.getMovieDirectorTDOListIndirectorTableAnddirectedFrommydb(director_condition, director_refilter);
+		Dataset<MovieTDO> res_movie_info_directed_by = movieDirectorService.getMovieTDOListDirected_movieInMovie_infoInActorCollectionFromIMDB_Mongo(directed_movie_condition, directed_movie_refilter);
 		if(director_refilter.booleanValue()) {
 				joinCondition = null;
 				joinCondition = res_movieDirector_directed_by_movie_info.col("director.id").equalTo(all.col("id"));
 				res_movieDirector_directed_by_movie_info = res_movieDirector_directed_by_movie_info.as("A").join(all, joinCondition).select("A.*").as(Encoders.bean(MovieDirectorTDO.class));
 		} 
-		Dataset<MovieTDO> res_movie_info_directed_by = movieDirectorService.getMovieTDOListDirected_movieInMovie_infoInActorCollectionFromIMDB_Mongo(directed_movie_condition, directed_movie_refilter);
 		Dataset<Row> res_row_directed_by_movie_info = res_movieDirector_directed_by_movie_info.join(res_movie_info_directed_by.withColumnRenamed("logEvents", "movieDirector_logEvents"),
 			res_movie_info_directed_by.col("myRelSchema_directed_movie_info_id").equalTo(res_movieDirector_directed_by_movie_info.col("myRelSchema_directed_movie_info_movie_id")));
 		Dataset<Movie> res_Movie_movie_info = res_row_directed_by_movie_info.as(Encoders.bean(Movie.class));
@@ -442,6 +485,8 @@ public class MovieServiceImpl extends MovieService {
 		
 		
 		
+		Dataset<MovieDirector> res_movieDirector_directed_movie;
+		Dataset<Movie> res_Movie;
 		
 		
 		//Join datasets or return 
@@ -481,10 +526,10 @@ public class MovieServiceImpl extends MovieService {
 		org.apache.spark.sql.Column joinCondition = null;
 		
 		
+		Dataset<MovieActor> res_movieActor_movie;
+		Dataset<Movie> res_Movie;
 		// Role 'character' mapped to EmbeddedObject 'movies' 'Movie' containing 'Actor' 
 		character_refilter = new MutableBoolean(false);
-		Dataset<Movie> res_Movie;
-		Dataset<MovieActor> res_movieActor_movie;
 		res_movieActor_movie = movieActorService.getMovieActorListInIMDB_MongoactorCollectionmovies(character_condition, movie_condition, character_refilter, movie_refilter);
 		if(character_refilter.booleanValue()) {
 			joinCondition = null;
@@ -535,22 +580,86 @@ public class MovieServiceImpl extends MovieService {
 		return getMovieListInMovieActor(null, movie_condition);
 	}
 	
-	public void insertMovieAndLinkedItems(Movie movie){
-		//TODO
-	}
-	public void insertMovie(Movie movie){
-		// Insert into all mapped AbstractPhysicalStructure 
-			insertMovieInMovieKVFromMyredis(movie);
-			insertMovieInActorCollectionFromMymongo(movie);
+	public boolean insertMovie(Movie movie){
+		// Insert into all mapped standalone AbstractPhysicalStructure 
+		boolean inserted = false;
+			inserted = insertMovieInMovieKVFromMyredis(movie) || inserted ;
+		return inserted;
 	}
 	
-	public void insertMovieInMovieKVFromMyredis(Movie movie)	{
-			//other databases to implement
+	public boolean insertMovieInMovieKVFromMyredis(Movie movie)	{
+		Condition<MovieAttribute> conditionID;
+		String idvalue="";
+		conditionID = Condition.simple(MovieAttribute.id, Operator.EQUALS, movie.getId());
+		idvalue+=movie.getId();
+		boolean entityExists=false;
+		entityExists = !getMovieListInMovieKVFromMyredis(conditionID,new MutableBoolean(false)).isEmpty();
+				
+		if(!entityExists){
+			String key="";
+			boolean toAdd = false;
+			key += "movie:";
+			key += movie.getId();
+			List<Tuple2<String,String>> hash = new ArrayList<>();
+			toAdd = false;
+			String fieldname_title="title";
+			String value_title="";
+			if(movie.getPrimaryTitle()!=null){
+				toAdd = true;
+				value_title += movie.getPrimaryTitle();
+			}
+			// When value is null for a field in the hash we dont add it to the hash.
+			if(toAdd)
+				hash.add(new Tuple2<String,String>(fieldname_title,value_title));
+			toAdd = false;
+			String fieldname_originalTitle="originalTitle";
+			String value_originalTitle="";
+			if(movie.getOriginalTitle()!=null){
+				toAdd = true;
+				value_originalTitle += movie.getOriginalTitle();
+			}
+			// When value is null for a field in the hash we dont add it to the hash.
+			if(toAdd)
+				hash.add(new Tuple2<String,String>(fieldname_originalTitle,value_originalTitle));
+			toAdd = false;
+			String fieldname_isAdult="isAdult";
+			String value_isAdult="";
+			if(movie.getIsAdult()!=null){
+				toAdd = true;
+				value_isAdult += movie.getIsAdult();
+			}
+			// When value is null for a field in the hash we dont add it to the hash.
+			if(toAdd)
+				hash.add(new Tuple2<String,String>(fieldname_isAdult,value_isAdult));
+			toAdd = false;
+			String fieldname_startYear="startYear";
+			String value_startYear="";
+			if(movie.getStartYear()!=null){
+				toAdd = true;
+				value_startYear += movie.getStartYear();
+			}
+			// When value is null for a field in the hash we dont add it to the hash.
+			if(toAdd)
+				hash.add(new Tuple2<String,String>(fieldname_startYear,value_startYear));
+			toAdd = false;
+			String fieldname_runtimeMinutes="runtimeMinutes";
+			String value_runtimeMinutes="";
+			if(movie.getRuntimeMinutes()!=null){
+				toAdd = true;
+				value_runtimeMinutes += movie.getRuntimeMinutes();
+			}
+			// When value is null for a field in the hash we dont add it to the hash.
+			if(toAdd)
+				hash.add(new Tuple2<String,String>(fieldname_runtimeMinutes,value_runtimeMinutes));
+			SparkConnectionMgr.writeKeyValueHash(key,hash, "myredis");
+	
+			logger.info("Inserted [Movie] entity ID [{}] in [MovieKV] in database [Myredis]", idvalue);
 		}
-	public void insertMovieInActorCollectionFromMymongo(Movie movie){
-		//Read mapping rules and find attributes of the POJO that are mapped to the corresponding AbstractPhysicalStructure
-		// Insert in MongoDB
-	}
+		else
+			logger.warn("[Movie] entity ID [{}] already present in [MovieKV] in database [Myredis]", idvalue);
+		return !entityExists;
+	} 
+	
 	
 	public void updateMovieList(conditions.Condition<conditions.MovieAttribute> condition, conditions.SetClause<conditions.MovieAttribute> set){
 		//TODO

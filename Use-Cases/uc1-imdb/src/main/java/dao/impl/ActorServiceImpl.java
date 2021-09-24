@@ -1,7 +1,10 @@
 package dao.impl;
-
+import exceptions.PhysicalStructureException;
 import java.util.Arrays;
 import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
+import org.apache.commons.lang3.StringUtils;
 import pojo.Actor;
 import conditions.*;
 import dao.services.ActorService;
@@ -11,6 +14,7 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Encoders;
 import org.apache.spark.sql.Row;
+import org.apache.spark.sql.RowFactory;
 import org.apache.spark.api.java.function.MapFunction;
 import java.util.regex.Pattern;
 import java.util.regex.Matcher;
@@ -28,9 +32,20 @@ import java.util.ArrayList;
 import org.apache.commons.lang.mutable.MutableBoolean;
 import tdo.*;
 import pojo.*;
+import org.apache.spark.sql.types.DataTypes;
+import org.apache.spark.sql.types.StructField;
+import org.apache.spark.sql.types.StructType;
+import org.apache.spark.sql.types.ArrayType;
+import scala.Tuple2;
+import org.bson.Document;
+import org.bson.conversions.Bson;
+import static com.mongodb.client.model.Filters.eq;
+import static com.mongodb.client.model.Updates.*;
+
 
 public class ActorServiceImpl extends ActorService {
 	static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ActorServiceImpl.class);
+	
 	
 	
 	
@@ -250,11 +265,11 @@ public class ActorServiceImpl extends ActorService {
 		org.apache.spark.sql.Column joinCondition = null;
 		
 		
+		Dataset<MovieActor> res_movieActor_character;
+		Dataset<Actor> res_Actor;
 		// Role 'character' mapped to EmbeddedObject 'movies' - 'Movie' containing 'Actor'
 		movie_refilter = new MutableBoolean(false);
-		Dataset<MovieActor> res_movieActor_character;
 		res_movieActor_character = movieActorService.getMovieActorListInIMDB_MongoactorCollectionmovies(character_condition, movie_condition, character_refilter, movie_refilter);
-		Dataset<Actor> res_Actor;
 		if(movie_refilter.booleanValue()) {
 			joinCondition = null;
 			joinCondition = res_movieActor_character.col("movie.id").equalTo(all.col("id"));
@@ -298,18 +313,48 @@ public class ActorServiceImpl extends ActorService {
 	}
 	
 	
-	public void insertActorAndLinkedItems(Actor actor){
-		//TODO
-	}
-	public void insertActor(Actor actor){
-		// Insert into all mapped AbstractPhysicalStructure 
-			insertActorInActorCollectionFromMymongo(actor);
+	public boolean insertActor(Actor actor){
+		// Insert into all mapped standalone AbstractPhysicalStructure 
+		boolean inserted = false;
+			inserted = insertActorInActorCollectionFromMymongo(actor) || inserted ;
+		return inserted;
 	}
 	
-	public void insertActorInActorCollectionFromMymongo(Actor actor){
-		//Read mapping rules and find attributes of the POJO that are mapped to the corresponding AbstractPhysicalStructure
-		// Insert in MongoDB
-	}
+	public boolean insertActorInActorCollectionFromMymongo(Actor actor)	{
+		Condition<ActorAttribute> conditionID;
+		String idvalue="";
+		conditionID = Condition.simple(ActorAttribute.id, Operator.EQUALS, actor.getId());
+		idvalue+=actor.getId();
+		boolean entityExists=false;
+		entityExists = !getActorListInActorCollectionFromMymongo(conditionID,new MutableBoolean(false)).isEmpty();
+				
+		if(!entityExists){
+		List<Row> listRows=new ArrayList<Row>();
+		List<Object> valuesactorCollection_1 = new ArrayList<>();
+		List<StructField> listOfStructFieldactorCollection_1 = new ArrayList<StructField>();
+		if(!listOfStructFieldactorCollection_1.contains(DataTypes.createStructField("id",DataTypes.StringType, true)))
+			listOfStructFieldactorCollection_1.add(DataTypes.createStructField("id",DataTypes.StringType, true));
+		valuesactorCollection_1.add(actor.getId());
+		if(!listOfStructFieldactorCollection_1.contains(DataTypes.createStructField("fullname",DataTypes.StringType, true)))
+			listOfStructFieldactorCollection_1.add(DataTypes.createStructField("fullname",DataTypes.StringType, true));
+		valuesactorCollection_1.add(actor.getFullName());
+		if(!listOfStructFieldactorCollection_1.contains(DataTypes.createStructField("birthyear",DataTypes.StringType, true)))
+			listOfStructFieldactorCollection_1.add(DataTypes.createStructField("birthyear",DataTypes.StringType, true));
+		valuesactorCollection_1.add(actor.getYearOfBirth());
+		if(!listOfStructFieldactorCollection_1.contains(DataTypes.createStructField("deathyear",DataTypes.StringType, true)))
+			listOfStructFieldactorCollection_1.add(DataTypes.createStructField("deathyear",DataTypes.StringType, true));
+		valuesactorCollection_1.add(actor.getYearOfDeath());
+		
+		StructType struct = DataTypes.createStructType(listOfStructFieldactorCollection_1);
+		listRows.add(RowFactory.create(valuesactorCollection_1.toArray()));
+		SparkConnectionMgr.writeDataset(listRows, struct, "mongo", "actorCollection", "mymongo");
+			logger.info("Inserted [Actor] entity ID [{}] in [ActorCollection] in database [Mymongo]", idvalue);
+		}
+		else
+			logger.warn("[Actor] entity ID [{}] already present in [ActorCollection] in database [Mymongo]", idvalue);
+		return !entityExists;
+	} 
+	
 	
 	public void updateActorList(conditions.Condition<conditions.ActorAttribute> condition, conditions.SetClause<conditions.ActorAttribute> set){
 		//TODO

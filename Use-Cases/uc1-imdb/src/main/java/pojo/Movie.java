@@ -28,7 +28,17 @@ public class Movie extends LoggingPojo {
         return super.clone();
     }
 	
-
+	@Override
+	public String toString(){
+		return "Movie { " + "id="+id +", "+
+"primaryTitle="+primaryTitle +", "+
+"originalTitle="+originalTitle +", "+
+"isAdult="+isAdult +", "+
+"startYear="+startYear +", "+
+"runtimeMinutes="+runtimeMinutes +", "+
+"averageRating="+averageRating +", "+
+"numVotes="+numVotes +"}"; 
+	}
 	
 	public String getId() {
 		return id;

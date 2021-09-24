@@ -7,11 +7,13 @@ import pojo.Places;
 import tdo.CustomerTDO;
 import tdo.PlacesTDO;
 import pojo.Customer;
+import pojo.Places;
 import conditions.CustomerAttribute;
 import org.apache.commons.lang.mutable.MutableBoolean;
 import tdo.OrderTDO;
 import tdo.PlacesTDO;
 import pojo.Order;
+import pojo.Places;
 import conditions.OrderAttribute;
 import org.apache.commons.lang.mutable.MutableBoolean;
 
@@ -56,9 +58,7 @@ public abstract class PlacesService {
 		return null;
 	}
 	
-	public abstract void insertPlacesAndLinkedItems(pojo.Places places);
-	
-	
+	public abstract void insertPlaces(Places places);
 	
 	public abstract void deletePlacesList(
 		conditions.Condition<conditions.CustomerAttribute> buyer_condition,

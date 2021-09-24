@@ -12,6 +12,7 @@ import org.apache.spark.api.java.function.FilterFunction;
 import org.apache.commons.lang.mutable.MutableBoolean;
 import conditions.Condition;
 import conditions.Operator;
+import util.Util;
 import conditions.StoreAttribute;
 import conditions.OrderAttribute;
 import pojo.Order;
@@ -84,80 +85,14 @@ public abstract class StoreService {
 	
 		d = datasets.get(0);
 		if(datasets.size() > 1) {
-	
-		
-			List<String> idFields = new ArrayList<String>();
-			idFields.add("id");
-			scala.collection.Seq<String> seq = scala.collection.JavaConverters.asScalaIteratorConverter(idFields.iterator()).asScala().toSeq();
-			Dataset<Row> res = d.join(datasets.get(1)
-								.withColumnRenamed("vAT", "vAT_1")
-								.withColumnRenamed("address", "address_1")
-								.withColumnRenamed("logEvents", "logEvents_1")
-							, seq, "fullouter");
-			for(int i = 2; i < datasets.size(); i++) {
-				res = res.join(datasets.get(i)
-								.withColumnRenamed("vAT", "vAT_" + i)
-								.withColumnRenamed("address", "address_" + i)
-								.withColumnRenamed("logEvents", "logEvents_" + i)
-							, seq, "fullouter");
-			} 
-			d = res.map((MapFunction<Row, Store>) r -> {
-					Store store_res = new Store();
-					
-					// attribute 'Store.id'
-					Integer firstNotNull_id = r.getAs("id");
-					store_res.setId(firstNotNull_id);
-					
-					// attribute 'Store.vAT'
-					String firstNotNull_VAT = r.getAs("vAT");
-					for (int i = 1; i < datasets.size(); i++) {
-						String vAT2 = r.getAs("vAT_" + i);
-						if (firstNotNull_VAT != null && vAT2 != null && !firstNotNull_VAT.equals(vAT2)) {
-							store_res.addLogEvent("Data consistency problem: duplicate values found for attribute 'Store.vAT': " + firstNotNull_VAT + " and " + vAT2 + "." );
-							logger.warn("data consistency problem: duplicate values for attribute : 'Store.vAT' ==> " + firstNotNull_VAT + " and " + vAT2);
-						}
-						if (firstNotNull_VAT == null && vAT2 != null) {
-							firstNotNull_VAT = vAT2;
-						}
-					}
-					store_res.setVAT(firstNotNull_VAT);
-					
-					// attribute 'Store.address'
-					String firstNotNull_address = r.getAs("address");
-					for (int i = 1; i < datasets.size(); i++) {
-						String address2 = r.getAs("address_" + i);
-						if (firstNotNull_address != null && address2 != null && !firstNotNull_address.equals(address2)) {
-							store_res.addLogEvent("Data consistency problem: duplicate values found for attribute 'Store.address': " + firstNotNull_address + " and " + address2 + "." );
-							logger.warn("data consistency problem: duplicate values for attribute : 'Store.address' ==> " + firstNotNull_address + " and " + address2);
-						}
-						if (firstNotNull_address == null && address2 != null) {
-							firstNotNull_address = address2;
-						}
-					}
-					store_res.setAddress(firstNotNull_address);
-					
-					scala.collection.mutable.WrappedArray<String> logEvents = r.getAs("logEvents");
-					if(logEvents != null)
-						for (int i = 0; i < logEvents.size(); i++){
-							store_res.addLogEvent(logEvents.apply(i));
-						}
-		
-					for (int i = 1; i < datasets.size(); i++) {
-						logEvents = r.getAs("logEvents_" + i);
-						if(logEvents != null)
-						for (int j = 0; j < logEvents.size(); j++){
-							store_res.addLogEvent(logEvents.apply(j));
-						}
-					}
-					
-					return store_res;
-				}, Encoders.bean(Store.class));
+			d=fullOuterJoinsStore(datasets);
 		}
 		if(refilterFlag.booleanValue())
 			d = d.filter((FilterFunction<Store>) r -> condition == null || condition.evaluate(r));
 		d=d.dropDuplicates();
 		return d;
 	}
+	
 	
 	
 	
@@ -200,24 +135,26 @@ public abstract class StoreService {
 			Dataset<Row> res = d.join(datasetsPOJO.get(1)
 								.withColumnRenamed("vAT", "vAT_1")
 								.withColumnRenamed("address", "address_1")
+								.withColumnRenamed("logEvents", "logEvents_1")
 							, seq, joinMode);
 			for(int i = 2; i < datasetsPOJO.size(); i++) {
 				res = res.join(datasetsPOJO.get(i)
 								.withColumnRenamed("vAT", "vAT_" + i)
 								.withColumnRenamed("address", "address_" + i)
-							, seq, joinMode);
+								.withColumnRenamed("logEvents", "logEvents_" + i)
+						, seq, joinMode);
 			} 
 			d = res.map((MapFunction<Row, Store>) r -> {
 					Store store_res = new Store();
 					
 					// attribute 'Store.id'
-					Integer firstNotNull_id = r.getAs("id");
+					Integer firstNotNull_id = Util.getIntegerValue(r.getAs("id"));
 					store_res.setId(firstNotNull_id);
 					
 					// attribute 'Store.vAT'
-					String firstNotNull_VAT = r.getAs("vAT");
+					String firstNotNull_VAT = Util.getStringValue(r.getAs("vAT"));
 					for (int i = 1; i < datasetsPOJO.size(); i++) {
-						String vAT2 = r.getAs("vAT_" + i);
+						String vAT2 = Util.getStringValue(r.getAs("vAT_" + i));
 						if (firstNotNull_VAT != null && vAT2 != null && !firstNotNull_VAT.equals(vAT2)) {
 							store_res.addLogEvent("Data consistency problem: duplicate values found for attribute 'Store.vAT': " + firstNotNull_VAT + " and " + vAT2 + "." );
 							logger.warn("data consistency problem: duplicate values for attribute : 'Store.vAT' ==> " + firstNotNull_VAT + " and " + vAT2);
@@ -229,9 +166,9 @@ public abstract class StoreService {
 					store_res.setVAT(firstNotNull_VAT);
 					
 					// attribute 'Store.address'
-					String firstNotNull_address = r.getAs("address");
+					String firstNotNull_address = Util.getStringValue(r.getAs("address"));
 					for (int i = 1; i < datasetsPOJO.size(); i++) {
-						String address2 = r.getAs("address_" + i);
+						String address2 = Util.getStringValue(r.getAs("address_" + i));
 						if (firstNotNull_address != null && address2 != null && !firstNotNull_address.equals(address2)) {
 							store_res.addLogEvent("Data consistency problem: duplicate values found for attribute 'Store.address': " + firstNotNull_address + " and " + address2 + "." );
 							logger.warn("data consistency problem: duplicate values for attribute : 'Store.address' ==> " + firstNotNull_address + " and " + address2);
@@ -241,6 +178,21 @@ public abstract class StoreService {
 						}
 					}
 					store_res.setAddress(firstNotNull_address);
+	
+					scala.collection.mutable.WrappedArray<String> logEvents = r.getAs("logEvents");
+					if(logEvents != null)
+						for (int i = 0; i < logEvents.size(); i++){
+							store_res.addLogEvent(logEvents.apply(i));
+						}
+		
+					for (int i = 1; i < datasetsPOJO.size(); i++) {
+						logEvents = r.getAs("logEvents_" + i);
+						if(logEvents != null)
+						for (int j = 0; j < logEvents.size(); j++){
+							store_res.addLogEvent(logEvents.apply(j));
+						}
+					}
+	
 					return store_res;
 				}, Encoders.bean(Store.class));
 			return d;
@@ -293,14 +245,14 @@ public abstract class StoreService {
 		Condition c;
 		c=Condition.simple(OrderAttribute.id,Operator.EQUALS, order.getId());
 		Dataset<Store> res = getStoreListInFromByOrderCondition(c);
-		return res.first();
+		return !res.isEmpty()?res.first():null;
 	}
 	
 	
-	public abstract void insertStoreAndLinkedItems(Store store);
-	public abstract void insertStore(Store store);
+	public abstract boolean insertStore(Store store);
 	
-	public abstract void insertStoreInSTOREFromINVENTORY(Store store); 
+	public abstract boolean insertStoreInSTOREFromINVENTORY(Store store); 
+	
 	public abstract void updateStoreList(conditions.Condition<conditions.StoreAttribute> condition, conditions.SetClause<conditions.StoreAttribute> set);
 	
 	public void updateStore(pojo.Store store) {

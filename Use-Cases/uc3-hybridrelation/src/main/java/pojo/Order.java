@@ -26,7 +26,11 @@ public class Order extends LoggingPojo {
         return super.clone();
     }
 	
-
+	@Override
+	public String toString(){
+		return "Order { " + "id="+id +", "+
+"quantity="+quantity +"}"; 
+	}
 	
 	public Integer getId() {
 		return id;

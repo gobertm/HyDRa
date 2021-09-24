@@ -35,6 +35,12 @@ Here we list the operations manipulating modeled domain entities objects support
 
 ![Plugin](Use-Cases/resources/ApiPlugin.PNG)
 
+## Troubleshoot
+-   When clicking on 'Generate HyDRa Conceptual API generation' nothing happens.
+> Try restarting Eclipse.
+- My project is full of compilation errors. 
+> Make sure the source containing folders are correctly set in project build path. Build Path > Configure Build path > Source . 2 folders should be listed *project*/src/main/java & *project*/src/main/java
+
 ## Use-Cases 
 
 -   [uc1-imdb](Use-Cases/uc1-imdb) is a complete use case illustrating all functionalities and benefits of the HyDRa framework.

@@ -7,11 +7,13 @@ import pojo.From;
 import tdo.StoreTDO;
 import tdo.FromTDO;
 import pojo.Store;
+import pojo.From;
 import conditions.StoreAttribute;
 import org.apache.commons.lang.mutable.MutableBoolean;
 import tdo.OrderTDO;
 import tdo.FromTDO;
 import pojo.Order;
+import pojo.From;
 import conditions.OrderAttribute;
 import org.apache.commons.lang.mutable.MutableBoolean;
 
@@ -62,9 +64,7 @@ public abstract class FromService {
 		return null;
 	}
 	
-	public abstract void insertFromAndLinkedItems(pojo.From from);
-	
-	
+	public abstract void insertFrom(From from);
 	
 	public abstract void deleteFromList(
 		conditions.Condition<conditions.StoreAttribute> store_condition,

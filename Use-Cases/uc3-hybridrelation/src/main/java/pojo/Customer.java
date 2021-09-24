@@ -20,7 +20,13 @@ public class Customer extends LoggingPojo {
         return super.clone();
     }
 	
-
+	@Override
+	public String toString(){
+		return "Customer { " + "id="+id +", "+
+"firstName="+firstName +", "+
+"lastName="+lastName +", "+
+"address="+address +"}"; 
+	}
 	
 	public Integer getId() {
 		return id;

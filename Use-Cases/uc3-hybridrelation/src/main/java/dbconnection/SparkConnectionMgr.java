@@ -5,6 +5,7 @@ import static java.util.Collections.singletonList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.List;
 
 import com.redislabs.provider.redis.ReadWriteConfig;
 import com.redislabs.provider.redis.RedisConfig;
@@ -16,6 +17,7 @@ import org.apache.spark.api.java.function.Function;
 import org.apache.spark.rdd.RDD;
 import org.apache.spark.sql.*;
 import org.apache.spark.sql.types.DataTypes;
+import org.apache.spark.sql.types.StructField;
 import org.apache.spark.sql.types.StructType;
 import org.bson.Document;
 
@@ -30,6 +32,12 @@ public class SparkConnectionMgr {
 
 	private static class DBCredentials {
 
+		protected String dbName;
+		protected String url;
+		protected String port;
+		protected String userName;
+		protected String userPwd;
+
 		protected DBCredentials(String dbName, String url, String port, String userName, String userPwd) {
 			this.dbName = dbName;
 			this.url = url;
@@ -38,11 +46,6 @@ public class SparkConnectionMgr {
 			this.userPwd = userPwd;
 		}
 
-		protected String dbName;
-		protected String url;
-		protected String port;
-		protected String userName;
-		protected String userPwd;
 	}
 
 	static {
@@ -89,14 +92,73 @@ public class SparkConnectionMgr {
 
 	}
 
-	public static Dataset<Row> getDataset(String dbName, String physicalStrucName) {
+	public static Dataset<Row> getDataset(String dbName, String physicalStructName) {
 		DBCredentials credentials = dbPorts.get(dbName);
 		DataFrameReader dfr = getSession().sqlContext().read().format("jdbc")
 				.option("url", "jdbc:mysql://" + credentials.url + ":" + credentials.port + "/" + credentials.dbName)
 				.option("user", credentials.userName).option("password", credentials.userPwd);
 
-		Dataset<Row> d = dfr.option("dbtable", physicalStrucName).load();
+		Dataset<Row> d = dfr.option("dbtable", physicalStructName).load();
 		return d;
+	}
+
+	public static void writeDataset(List<Row> rows, StructType structType, String formattype, String physicalStructName, String dbName){
+		DBCredentials credentials = dbPorts.get(dbName);
+		Dataset<Row> data = getSession().createDataFrame(rows, structType);
+		String mongoURL = "mongodb://" + credentials.url + ":" + credentials.port + "/" + dbName + "." + physicalStructName;
+		
+		if(formattype.equals("mongo")){
+			data.write()
+                .format("mongo")
+                .option("spark.mongodb.output.uri", mongoURL)
+                .option("collection",physicalStructName)
+                .mode(SaveMode.Append)
+                .save();
+		}else if(formattype.equals("jdbc"))
+			{
+			data.write()
+				.format(formattype)
+				.option("url", "jdbc:mysql://" + credentials.url + ":" + credentials.port + "/" + credentials.dbName)
+				.option("dbtable",physicalStructName)
+				.option("user", credentials.userName).option("password", credentials.userPwd)
+				.mode(SaveMode.Append)
+				.save();
+			}
+	}
+
+	public static void writeKeyValue(String key, String value, String dbName){
+		DBCredentials credentials = dbPorts.get(dbName);
+		SparkConf sparkConf = new SparkConf()
+                .setAppName("MyApp")
+                .setMaster("local[*]")
+                .set("spark.redis.host", credentials.url)
+                .set("spark.redis.port", credentials.port);
+        RedisConfig redisConfig = RedisConfig.fromSparkConf(sparkConf);
+        ReadWriteConfig readWriteConfig = ReadWriteConfig.fromSparkConf(sparkConf);
+		//        JavaSparkContext jsc = new JavaSparkContext(sparkConf);
+        JavaSparkContext jsc = JavaSparkContext.fromSparkContext(getSession().sparkContext());
+        RedisContext redisContext = new RedisContext(jsc.sc());
+
+		List<Tuple2<String, String>> data = Arrays.asList(new Tuple2<String, String>(key,value));
+		RDD<Tuple2<String, String>> items = jsc.parallelize(data,1).rdd();
+        redisContext.toRedisKV(items, 0, redisConfig, readWriteConfig);
+	}
+
+	public static void writeKeyValueHash(String key, List<Tuple2<String, String>> hash, String dbName){
+		DBCredentials credentials = dbPorts.get(dbName);
+		SparkConf sparkConf = new SparkConf()
+                .setAppName("MyApp")
+                .setMaster("local[*]")
+                .set("spark.redis.host", credentials.url)
+                .set("spark.redis.port", credentials.port);
+        RedisConfig redisConfig = RedisConfig.fromSparkConf(sparkConf);
+        ReadWriteConfig readWriteConfig = ReadWriteConfig.fromSparkConf(sparkConf);
+		//        JavaSparkContext jsc = new JavaSparkContext(sparkConf);
+        JavaSparkContext jsc = JavaSparkContext.fromSparkContext(getSession().sparkContext());
+        RedisContext redisContext = new RedisContext(jsc.sc());
+
+		RDD<Tuple2<String, String>> items = jsc.parallelize(hash,1).rdd();
+		redisContext.toRedisHASH(items, key,0, redisConfig, readWriteConfig);
 	}
 
 	public static Dataset<Row> getRowsFromKeyValue(String dbName, String keypattern) {
@@ -127,7 +189,7 @@ public class SparkConnectionMgr {
 		return res;
 	}
 
-	public static Dataset<Row> getRowsFromKeyValueHashes(String dbName, String keypattern){
+	public static Dataset<Row> getRowsFromKeyValueHashes(String dbName, String keypattern, StructType structTypeHash){
 		DBCredentials credentials = dbPorts.get(dbName);
 		SparkConf sparkConf = new SparkConf()
                 .setAppName("MyApp")
@@ -138,7 +200,7 @@ public class SparkConnectionMgr {
 		Dataset<Row> res = spark.read().format("org.apache.spark.sql.redis")
                 .option("keys.pattern",keypattern)
 				.option("key.column", "id")
-                .option("infer.schema", true).load();
+                .schema(structTypeHash).load();
 		return res;
 	} 
 

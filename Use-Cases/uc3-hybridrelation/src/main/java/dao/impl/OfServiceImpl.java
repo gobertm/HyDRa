@@ -1,8 +1,12 @@
 package dao.impl;
 
+import exceptions.PhysicalStructureException;
 import java.util.Arrays;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.spark.sql.Dataset;
 import conditions.Condition;
+import java.util.HashSet;
+import java.util.Set;
 import conditions.AndCondition;
 import conditions.OrCondition;
 import conditions.SimpleCondition;
@@ -32,6 +36,11 @@ import java.util.regex.Matcher;
 import scala.collection.mutable.WrappedArray;
 import org.apache.spark.api.java.function.FlatMapFunction;
 import dbconnection.SparkConnectionMgr;
+import org.apache.spark.sql.types.DataTypes;
+import org.apache.spark.sql.types.StructField;
+import org.apache.spark.sql.types.StructType;
+import org.apache.spark.sql.types.ArrayType;
+import static com.mongodb.client.model.Updates.addToSet;
 
 
 public class OfServiceImpl extends dao.services.OfService {
@@ -159,15 +168,15 @@ public class OfServiceImpl extends dao.services.OfService {
 					boolean matches = false;
 					
 					// attribute [Product.Id]
-					Integer id = r.getAs("ID");
+					Integer id = Util.getIntegerValue(r.getAs("ID"));
 					product_res.setId(id);
 					
 					// attribute [Product.Label]
-					String label = r.getAs("NAME");
+					String label = Util.getStringValue(r.getAs("NAME"));
 					product_res.setLabel(label);
 					
 					// attribute [Product.Price]
-					Double price = r.getAs("PRICE");
+					Double price = Util.getDoubleValue(r.getAs("PRICE"));
 					product_res.setPrice(price);
 	
 					// Get reference column [ID ] for reference [buys]
@@ -214,11 +223,9 @@ public class OfServiceImpl extends dao.services.OfService {
 		return null;
 	}
 	
-	public void insertOfAndLinkedItems(pojo.Of of){
+	public void insertOf(Of of){
 		//TODO
 	}
-	
-	
 	
 	public void deleteOfList(
 		conditions.Condition<conditions.ProductAttribute> bought_item_condition,

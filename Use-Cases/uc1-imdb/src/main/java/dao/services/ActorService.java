@@ -12,6 +12,7 @@ import org.apache.spark.api.java.function.FilterFunction;
 import org.apache.commons.lang.mutable.MutableBoolean;
 import conditions.Condition;
 import conditions.Operator;
+import util.Util;
 import conditions.ActorAttribute;
 import conditions.MovieAttribute;
 import pojo.Movie;
@@ -84,96 +85,14 @@ public abstract class ActorService {
 	
 		d = datasets.get(0);
 		if(datasets.size() > 1) {
-	
-		
-			List<String> idFields = new ArrayList<String>();
-			idFields.add("id");
-			scala.collection.Seq<String> seq = scala.collection.JavaConverters.asScalaIteratorConverter(idFields.iterator()).asScala().toSeq();
-			Dataset<Row> res = d.join(datasets.get(1)
-								.withColumnRenamed("fullName", "fullName_1")
-								.withColumnRenamed("yearOfBirth", "yearOfBirth_1")
-								.withColumnRenamed("yearOfDeath", "yearOfDeath_1")
-								.withColumnRenamed("logEvents", "logEvents_1")
-							, seq, "fullouter");
-			for(int i = 2; i < datasets.size(); i++) {
-				res = res.join(datasets.get(i)
-								.withColumnRenamed("fullName", "fullName_" + i)
-								.withColumnRenamed("yearOfBirth", "yearOfBirth_" + i)
-								.withColumnRenamed("yearOfDeath", "yearOfDeath_" + i)
-								.withColumnRenamed("logEvents", "logEvents_" + i)
-							, seq, "fullouter");
-			} 
-			d = res.map((MapFunction<Row, Actor>) r -> {
-					Actor actor_res = new Actor();
-					
-					// attribute 'Actor.id'
-					String firstNotNull_id = r.getAs("id");
-					actor_res.setId(firstNotNull_id);
-					
-					// attribute 'Actor.fullName'
-					String firstNotNull_fullName = r.getAs("fullName");
-					for (int i = 1; i < datasets.size(); i++) {
-						String fullName2 = r.getAs("fullName_" + i);
-						if (firstNotNull_fullName != null && fullName2 != null && !firstNotNull_fullName.equals(fullName2)) {
-							actor_res.addLogEvent("Data consistency problem: duplicate values found for attribute 'Actor.fullName': " + firstNotNull_fullName + " and " + fullName2 + "." );
-							logger.warn("data consistency problem: duplicate values for attribute : 'Actor.fullName' ==> " + firstNotNull_fullName + " and " + fullName2);
-						}
-						if (firstNotNull_fullName == null && fullName2 != null) {
-							firstNotNull_fullName = fullName2;
-						}
-					}
-					actor_res.setFullName(firstNotNull_fullName);
-					
-					// attribute 'Actor.yearOfBirth'
-					String firstNotNull_yearOfBirth = r.getAs("yearOfBirth");
-					for (int i = 1; i < datasets.size(); i++) {
-						String yearOfBirth2 = r.getAs("yearOfBirth_" + i);
-						if (firstNotNull_yearOfBirth != null && yearOfBirth2 != null && !firstNotNull_yearOfBirth.equals(yearOfBirth2)) {
-							actor_res.addLogEvent("Data consistency problem: duplicate values found for attribute 'Actor.yearOfBirth': " + firstNotNull_yearOfBirth + " and " + yearOfBirth2 + "." );
-							logger.warn("data consistency problem: duplicate values for attribute : 'Actor.yearOfBirth' ==> " + firstNotNull_yearOfBirth + " and " + yearOfBirth2);
-						}
-						if (firstNotNull_yearOfBirth == null && yearOfBirth2 != null) {
-							firstNotNull_yearOfBirth = yearOfBirth2;
-						}
-					}
-					actor_res.setYearOfBirth(firstNotNull_yearOfBirth);
-					
-					// attribute 'Actor.yearOfDeath'
-					String firstNotNull_yearOfDeath = r.getAs("yearOfDeath");
-					for (int i = 1; i < datasets.size(); i++) {
-						String yearOfDeath2 = r.getAs("yearOfDeath_" + i);
-						if (firstNotNull_yearOfDeath != null && yearOfDeath2 != null && !firstNotNull_yearOfDeath.equals(yearOfDeath2)) {
-							actor_res.addLogEvent("Data consistency problem: duplicate values found for attribute 'Actor.yearOfDeath': " + firstNotNull_yearOfDeath + " and " + yearOfDeath2 + "." );
-							logger.warn("data consistency problem: duplicate values for attribute : 'Actor.yearOfDeath' ==> " + firstNotNull_yearOfDeath + " and " + yearOfDeath2);
-						}
-						if (firstNotNull_yearOfDeath == null && yearOfDeath2 != null) {
-							firstNotNull_yearOfDeath = yearOfDeath2;
-						}
-					}
-					actor_res.setYearOfDeath(firstNotNull_yearOfDeath);
-					
-					scala.collection.mutable.WrappedArray<String> logEvents = r.getAs("logEvents");
-					if(logEvents != null)
-						for (int i = 0; i < logEvents.size(); i++){
-							actor_res.addLogEvent(logEvents.apply(i));
-						}
-		
-					for (int i = 1; i < datasets.size(); i++) {
-						logEvents = r.getAs("logEvents_" + i);
-						if(logEvents != null)
-						for (int j = 0; j < logEvents.size(); j++){
-							actor_res.addLogEvent(logEvents.apply(j));
-						}
-					}
-					
-					return actor_res;
-				}, Encoders.bean(Actor.class));
+			d=fullOuterJoinsActor(datasets);
 		}
 		if(refilterFlag.booleanValue())
 			d = d.filter((FilterFunction<Actor>) r -> condition == null || condition.evaluate(r));
 		d=d.dropDuplicates();
 		return d;
 	}
+	
 	
 	
 	
@@ -221,25 +140,27 @@ public abstract class ActorService {
 								.withColumnRenamed("fullName", "fullName_1")
 								.withColumnRenamed("yearOfBirth", "yearOfBirth_1")
 								.withColumnRenamed("yearOfDeath", "yearOfDeath_1")
+								.withColumnRenamed("logEvents", "logEvents_1")
 							, seq, joinMode);
 			for(int i = 2; i < datasetsPOJO.size(); i++) {
 				res = res.join(datasetsPOJO.get(i)
 								.withColumnRenamed("fullName", "fullName_" + i)
 								.withColumnRenamed("yearOfBirth", "yearOfBirth_" + i)
 								.withColumnRenamed("yearOfDeath", "yearOfDeath_" + i)
-							, seq, joinMode);
+								.withColumnRenamed("logEvents", "logEvents_" + i)
+						, seq, joinMode);
 			} 
 			d = res.map((MapFunction<Row, Actor>) r -> {
 					Actor actor_res = new Actor();
 					
 					// attribute 'Actor.id'
-					String firstNotNull_id = r.getAs("id");
+					String firstNotNull_id = Util.getStringValue(r.getAs("id"));
 					actor_res.setId(firstNotNull_id);
 					
 					// attribute 'Actor.fullName'
-					String firstNotNull_fullName = r.getAs("fullName");
+					String firstNotNull_fullName = Util.getStringValue(r.getAs("fullName"));
 					for (int i = 1; i < datasetsPOJO.size(); i++) {
-						String fullName2 = r.getAs("fullName_" + i);
+						String fullName2 = Util.getStringValue(r.getAs("fullName_" + i));
 						if (firstNotNull_fullName != null && fullName2 != null && !firstNotNull_fullName.equals(fullName2)) {
 							actor_res.addLogEvent("Data consistency problem: duplicate values found for attribute 'Actor.fullName': " + firstNotNull_fullName + " and " + fullName2 + "." );
 							logger.warn("data consistency problem: duplicate values for attribute : 'Actor.fullName' ==> " + firstNotNull_fullName + " and " + fullName2);
@@ -251,9 +172,9 @@ public abstract class ActorService {
 					actor_res.setFullName(firstNotNull_fullName);
 					
 					// attribute 'Actor.yearOfBirth'
-					String firstNotNull_yearOfBirth = r.getAs("yearOfBirth");
+					String firstNotNull_yearOfBirth = Util.getStringValue(r.getAs("yearOfBirth"));
 					for (int i = 1; i < datasetsPOJO.size(); i++) {
-						String yearOfBirth2 = r.getAs("yearOfBirth_" + i);
+						String yearOfBirth2 = Util.getStringValue(r.getAs("yearOfBirth_" + i));
 						if (firstNotNull_yearOfBirth != null && yearOfBirth2 != null && !firstNotNull_yearOfBirth.equals(yearOfBirth2)) {
 							actor_res.addLogEvent("Data consistency problem: duplicate values found for attribute 'Actor.yearOfBirth': " + firstNotNull_yearOfBirth + " and " + yearOfBirth2 + "." );
 							logger.warn("data consistency problem: duplicate values for attribute : 'Actor.yearOfBirth' ==> " + firstNotNull_yearOfBirth + " and " + yearOfBirth2);
@@ -265,9 +186,9 @@ public abstract class ActorService {
 					actor_res.setYearOfBirth(firstNotNull_yearOfBirth);
 					
 					// attribute 'Actor.yearOfDeath'
-					String firstNotNull_yearOfDeath = r.getAs("yearOfDeath");
+					String firstNotNull_yearOfDeath = Util.getStringValue(r.getAs("yearOfDeath"));
 					for (int i = 1; i < datasetsPOJO.size(); i++) {
-						String yearOfDeath2 = r.getAs("yearOfDeath_" + i);
+						String yearOfDeath2 = Util.getStringValue(r.getAs("yearOfDeath_" + i));
 						if (firstNotNull_yearOfDeath != null && yearOfDeath2 != null && !firstNotNull_yearOfDeath.equals(yearOfDeath2)) {
 							actor_res.addLogEvent("Data consistency problem: duplicate values found for attribute 'Actor.yearOfDeath': " + firstNotNull_yearOfDeath + " and " + yearOfDeath2 + "." );
 							logger.warn("data consistency problem: duplicate values for attribute : 'Actor.yearOfDeath' ==> " + firstNotNull_yearOfDeath + " and " + yearOfDeath2);
@@ -277,6 +198,21 @@ public abstract class ActorService {
 						}
 					}
 					actor_res.setYearOfDeath(firstNotNull_yearOfDeath);
+	
+					scala.collection.mutable.WrappedArray<String> logEvents = r.getAs("logEvents");
+					if(logEvents != null)
+						for (int i = 0; i < logEvents.size(); i++){
+							actor_res.addLogEvent(logEvents.apply(i));
+						}
+		
+					for (int i = 1; i < datasetsPOJO.size(); i++) {
+						logEvents = r.getAs("logEvents_" + i);
+						if(logEvents != null)
+						for (int j = 0; j < logEvents.size(); j++){
+							actor_res.addLogEvent(logEvents.apply(j));
+						}
+					}
+	
 					return actor_res;
 				}, Encoders.bean(Actor.class));
 			return d;
@@ -332,10 +268,10 @@ public abstract class ActorService {
 	}
 	
 	
-	public abstract void insertActorAndLinkedItems(Actor actor);
-	public abstract void insertActor(Actor actor);
+	public abstract boolean insertActor(Actor actor);
 	
-	public abstract void insertActorInActorCollectionFromMymongo(Actor actor); 
+	public abstract boolean insertActorInActorCollectionFromMymongo(Actor actor); 
+	
 	public abstract void updateActorList(conditions.Condition<conditions.ActorAttribute> condition, conditions.SetClause<conditions.ActorAttribute> set);
 	
 	public void updateActor(pojo.Actor actor) {
