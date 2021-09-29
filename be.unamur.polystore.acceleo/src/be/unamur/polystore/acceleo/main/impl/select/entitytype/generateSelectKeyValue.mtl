@@ -205,6 +205,7 @@
 		[comment Retrieve Dataset<Row> containing field of hashes. TODO other Redis dataTypes. /]
 		// TODO only handles 'hash' for now
 	StructType structTypeHash = new StructType(new StructField['['/][']'/] {
+		DataTypes.createStructField("_id", DataTypes.StringType, true), //technical field to store the key.
 	[for (field : PhysicalField | struct.key.pattern->filter(BracketsField)) separator(',')]
 		DataTypes.createStructField("[getPhysicalName(field)/]", DataTypes.StringType, true)
 	[/for]
@@ -225,7 +226,7 @@
 				Pattern p, pattern = null;
 				Matcher m, match = null;
 				boolean matches = false;
-				String key = isStriped ? prefix + r.getAs("id") : r.getAs("id");
+				String key = isStriped ? prefix + r.getAs("_id") : r.getAs("_id");
 				[comment Spark Redis automatically strips leading character if the pattern provided contains a single '*' at the end. /]
 				// Spark Redis automatically strips leading character if the pattern provided contains a single '*' at the end.				
 				pattern = Pattern.compile("\\*");

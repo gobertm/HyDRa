@@ -379,7 +379,7 @@ public class SparkConnectionMgr {
 		SparkSession spark = SparkSession.builder().config(sparkConf).getOrCreate();
 		Dataset<Row> res = spark.read().format("org.apache.spark.sql.redis")
                 .option("keys.pattern",keypattern)
-				.option("key.column", "id")
+				.option("key.column", "_id")
                 .schema(structTypeHash).load();
 		return res;
 	} 

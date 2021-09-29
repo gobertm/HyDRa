@@ -68,7 +68,7 @@ physical schemas {
 	
 	key value schema movieRedis : myredis {
 		kvpairs movieKV {
-			key : "movie:"[id],
+			key : "movie:"[movieid],
 			value : hash{
 				title,
 				originalTitle,
@@ -95,7 +95,7 @@ physical schemas {
 				movieID
 			}
 		references {
-			movie: movieID -> movieKV.id
+			movie: movieID -> movieKV.movieid
 			actor : actorID -> IMDB_Mongo.actorCollection.id
 			}
 		}
@@ -119,7 +119,7 @@ physical schemas {
 			}
 			references {
 				directed_by : director_id -> directorTable.id
-				has_directed : movie_id -> movieRedis.movieKV.id
+				has_directed : movie_id -> movieRedis.movieKV.movieid
 				movie_info : movie_id -> IMDB_Mongo.actorCollection.movies.id
 			}
 		}
@@ -134,7 +134,7 @@ mapping rules{
 	conceptualSchema.movieDirector.directed_movie -> myRelSchema.directed.has_directed,
 	conceptualSchema.movieDirector.directed_movie -> myRelSchema.directed.movie_info,
 	conceptualSchema.Movie(dummy) -> movieRedis.movieKVempty(nullattribute),
-	conceptualSchema.Movie(id) -> movieRedis.movieKV(id),
+	conceptualSchema.Movie(id) -> movieRedis.movieKV(movieid),
 	conceptualSchema.Movie(id, primaryTitle) -> movieRedis.movieKV2(movieID,movieTitle),
 	conceptualSchema.Movie(primaryTitle,originalTitle,isAdult,startYear,runtimeMinutes) ->movieRedis.movieKV(title,originalTitle,isAdult,startYear,runtimeMinutes), 
 	conceptualSchema.Movie(averageRating,numVotes) -> IMDB_Mongo.actorCollection.movies.rating(rate,numberofvotes),
