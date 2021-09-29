@@ -58,8 +58,8 @@
 		[/if]
 	[/for]
 	if(!refilterFlag.booleanValue()){
-		Set<MovieAttribute> conditionAttributes = Util.getConditionAttributes(condition);
-		for (MovieAttribute a : conditionAttributes) {
+		Set<[pojoName.toUpperFirst()/]Attribute> conditionAttributes = Util.getConditionAttributes(condition);
+		for ([pojoName.toUpperFirst()/]Attribute a : conditionAttributes) {
 			if (!keyAttributes.contains(a)) {
 				refilterFlag.setValue(true);
 				break;

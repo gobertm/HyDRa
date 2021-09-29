@@ -45,58 +45,48 @@ physical schemas {
 	key value schema KVSchema : myredis {
 		kvpairs kvProdReview {
 			key: "PRODUCT:"[prodid]":REVIEW:"[reviewid],
-			value: reviews hash{
+			value: hash{
 				content,
 				stars : [rate]"*",
 				posted_by
 				}
 				
 			references {
-			post_review : kvProdReview.reviews.posted_by -> KVClient.clientID
+			post_review : kvProdReview.posted_by -> KVClient.clientID
 			}
 		}
 		
 		kvpairs KVClient {
 			key : "CLIENT:"[clientID],
-			value : attr hash { 
+			value : hash { 
 				name : [firstname]"_"[lastname],
 				streetnumber : [streetnbr], 
 				street
 			}
 		}
+		
+//		kvpairs kvReviews {
+//			key: "REVIEW:"[reviewid]":content",
+//			value : content
+//		}
 	}
 }
 
 mapping rules{
 	cs.Product(id) -> KVSchema.kvProdReview(prodid),
 	cs.Review(id) -> KVSchema.kvProdReview(reviewid),
-	cs.Review(content,rating) -> KVSchema.kvProdReview.reviews(content,rate),
+	cs.Review(content,rating) -> KVSchema.kvProdReview(content,rate),
+//	cs.Review(id,content) -> KVSchema.kvReviews(reviewid,content),
 	cs.reviewClient.review -> KVSchema.kvProdReview.post_review,
 	cs.Client(id) -> KVSchema.KVClient(clientID),
-	cs.Client(firstname,lastname,street,number) -> KVSchema.KVClient.attr(firstname,lastname,street,streetnbr)
+	cs.Client(firstname,lastname,street,number) -> KVSchema.KVClient(firstname,lastname,street,streetnbr)
 }
 
 databases {
 	
 	redis myredis{
 		host:"localhost"
-		port:6363
+		port:6379
 	}
 	
-	sqlite mydb {
-		host: "localhost"
-		port: 3307
-		login: "root"
-		password: "password"
-	}
-	
-	mongodb mymongo {
-		host : "localhost"
-		port:27000
-	}
-	
-	mongodb mymongo2 {
-		host:"localhost"
-		port: 27100
-			}
 }
