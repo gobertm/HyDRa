@@ -18,7 +18,7 @@
 		[for (ref: Reference | getMappedReferences(role, conceptualSchema.getMappingRules()))]
 			[if (hasMappedReferenceInSamePhysicalStructureForOppoisteRole(role2, ref.getAbstractPhysicalStructureNotEmbeddedObject()))]
 				[let ref2 : Reference = getMappedReferenceInSamePhysicalStructureForOppositeRole(role2, ref.getAbstractPhysicalStructureNotEmbeddedObject())]
-	// join physical structure
+	// join physical structure A<-AB->B
 	[comment  
 	// role et role2 sont dans la même structure => join table
 	// A <- AB -> B  /]
@@ -34,6 +34,7 @@
 				[let db2 : Database = struct2.getConcernedDatabases(struct2.ancestors(Domainmodel)->first())->any(true)]
 				[if (db1 = db2 and db1.dbType.isRelational())]
 	[comment A & B same db, so we are able to get both objects with one SQL. No need for TDO objects. Use of RelPOJO /]
+	// For role '[role.name/]' in reference '[ref.name/]'. A->B Scenario in SQL DB
 	[role2.name/]_refilter = new MutableBoolean(false);
 	Dataset<[role.getRelationShipType().name.toUpperFirst()/]> res_[ref.name/] = [role.getRelationShipType().name.toLowerFirst()/]Service.get[role.name.toUpperFirst()/]And[role.getOppositeRoles()->any(true).name.toUpperFirst()/]ListIn[ref.name.toUpperFirst()/]In[struct1.name.toUpperFirst()/]From[db1.name.toUpperFirst()/]([role.getRelationShipType().roles->first().name/]_condition, [role.getRelationShipType().roles->first().getOppositeRoles()->any(true).name/]_condition, [role.name/]_refilter, [role2.name/]_refilter);
 	Dataset<[entity.name.toUpperFirst()/]> res_[entity.name/]_[ref.name/] = null;
@@ -57,9 +58,9 @@
 		res_[entity.name/]_[ref.name/] = res_[ref.name/].map((MapFunction<[role.getRelationShipType().name.toUpperFirst()/],[entity.name.toUpperFirst()/]>) r -> r.get[role.name.toUpperFirst()/](), Encoders.bean([entity.name.toUpperFirst()/].class));
 				[else]
 	[comment A & B not in same DB or involve NoSQL struct. So need of TDO objects /]
-	// For role '[role.name/]' in reference '[ref.name/]' 
-	Dataset<[entity.name.toUpperFirst()/]TDO> [entity.name.toLowerFirst()/]TDO[ref.name/][role.name/] = [role.getRelationShipType().name.toLowerFirst()/]Service.get[entity.name.toUpperFirst()/]TDOList[role.name.toUpperFirst() /]In[ref.name.toUpperFirst()/]In[ref.getAbstractPhysicalStructureNotEmbeddedObject().name.toUpperFirst() /]From[ref.getPhysicalSchema().name.toUpperFirst()/]([role.name/]_condition, [role.name/]_refilter);
+	// For role '[role.name/]' in reference '[ref.name/]'. A->B Scenario
 	[role2.name/]_refilter = new MutableBoolean(false);
+	Dataset<[entity.name.toUpperFirst()/]TDO> [entity.name.toLowerFirst()/]TDO[ref.name/][role.name/] = [role.getRelationShipType().name.toLowerFirst()/]Service.get[entity.name.toUpperFirst()/]TDOList[role.name.toUpperFirst() /]In[ref.name.toUpperFirst()/]In[ref.getAbstractPhysicalStructureNotEmbeddedObject().name.toUpperFirst() /]From[ref.getPhysicalSchema().name.toUpperFirst()/]([role.name/]_condition, [role.name/]_refilter);
 	Dataset<[role2.entity.name.toUpperFirst()/]TDO> [role2.entity.name.toLowerFirst()/]TDO[ref.name/][role2.name/] = [role.getRelationShipType().name.toLowerFirst()/]Service.get[role2.entity.name.toUpperFirst()/]TDOList[role2.name.toUpperFirst() /]In[ref.name.toUpperFirst()/]In[ref.getAbstractPhysicalStructureNotEmbeddedObject().name.toUpperFirst() /]From[ref.getPhysicalSchema().name.toUpperFirst()/]([role2.name/]_condition, [role2.name/]_refilter);
 	if([role2.name/]_refilter.booleanValue()) {
 		joinCondition = null;
@@ -110,6 +111,7 @@
 				[let db2 : Database = struct2.getConcernedDatabases(struct2.ancestors(Domainmodel)->first())->any(true)]
 	[role2.name/]_refilter = new MutableBoolean(false);
 				[if (db1 = db2 and db1.dbType.isRelational())]
+	// For role '[role2.name/]' in reference '[ref.name/]'  B->A Scenario in SQL Db.
 	Dataset<[role.getRelationShipType().name.toUpperFirst()/]> res_[ref.name/] = [role.getRelationShipType().name.toLowerFirst()/]Service.get[role.getOppositeRoles()->any(true).name.toUpperFirst()/]And[role.name.toUpperFirst()/]ListIn[ref.name.toUpperFirst()/]In[struct1.name.toUpperFirst()/]From[db1.name.toUpperFirst()/]([role.getRelationShipType().roles->first().name/]_condition, [role.getRelationShipType().roles->first().getOppositeRoles()->any(true).name/]_condition, [role.getRelationShipType().roles->first().name/]_refilter, [role.getRelationShipType().roles->first().getOppositeRoles()->any(true).name/]_refilter);
 	Dataset<[entity.name.toUpperFirst()/]> res_[entity.name/]_[ref.name/] = null;
 	if([role2.name/]_refilter.booleanValue()) {
@@ -131,8 +133,7 @@
 		res_[entity.name/]_[ref.name/] = res_[ref.name/].map((MapFunction<[role.getRelationShipType().name.toUpperFirst()/],[entity.name.toUpperFirst()/]>) r -> r.get[role.name.toUpperFirst()/](), Encoders.bean([entity.name.toUpperFirst()/].class));
 				[else]
 	[comment A & B not in same DB or involve NoSQL struct. So need of TDO objects /]
-	// For role '[role2.name/]' in reference '[ref.name/]' 
-	[role2.name/]_refilter = new MutableBoolean(false);
+	// For role '[role2.name/]' in reference '[ref.name/]'  B->A Scenario
 	Dataset<[role2.entity.name.toUpperFirst()/]TDO> [role2.entity.name.toLowerFirst()/]TDO[ref.name/][role2.name/] = [role.getRelationShipType().name.toLowerFirst()/]Service.get[role2.entity.name.toUpperFirst()/]TDOList[role2.name.toUpperFirst() /]In[ref.name.toUpperFirst()/]In[ref.getAbstractPhysicalStructureNotEmbeddedObject().name.toUpperFirst() /]From[ref.getPhysicalSchema().name.toUpperFirst()/]([role2.name/]_condition, [role2.name/]_refilter);
 	Dataset<[entity.name.toUpperFirst()/]TDO> [entity.name.toLowerFirst()/]TDO[ref.name/][role.name /] = [role.getRelationShipType().name.toLowerFirst()/]Service.get[entity.name.toUpperFirst()/]TDOList[role.name.toUpperFirst() /]In[ref.name.toUpperFirst()/]In[ref.getAbstractPhysicalStructureNotEmbeddedObject().name.toUpperFirst() /]From[ref.getPhysicalSchema().name.toUpperFirst()/]([role.name/]_condition, [role.name/]_refilter);
 	if([role2.name/]_refilter.booleanValue()) {
