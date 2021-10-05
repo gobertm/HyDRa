@@ -81,10 +81,10 @@ public abstract class ReviewService {
 		MutableBoolean refilterFlag = new MutableBoolean(false);
 		List<Dataset<Review>> datasets = new ArrayList<Dataset<Review>>();
 		Dataset<Review> d = null;
-		d = getReviewListInReviewColFromMymongo(condition, refilterFlag);
+		d = getReviewListInReviewTableFromMydb(condition, refilterFlag);
 		if(d != null)
 			datasets.add(d);
-		d = getReviewListInReviewTableFromMydb(condition, refilterFlag);
+		d = getReviewListInReviewColFromMymongo(condition, refilterFlag);
 		if(d != null)
 			datasets.add(d);
 		
@@ -104,12 +104,12 @@ public abstract class ReviewService {
 	
 	
 	
-	public abstract Dataset<Review> getReviewListInReviewColFromMymongo(conditions.Condition<conditions.ReviewAttribute> condition, MutableBoolean refilterFlag);
-	
-	
-	
-	
 	public abstract Dataset<Review> getReviewListInReviewTableFromMydb(conditions.Condition<conditions.ReviewAttribute> condition, MutableBoolean refilterFlag);
+	
+	
+	
+	
+	public abstract Dataset<Review> getReviewListInReviewColFromMymongo(conditions.Condition<conditions.ReviewAttribute> condition, MutableBoolean refilterFlag);
 	
 	
 	// TODO get based on id(s). Ex:public Client getClientById(Long id)

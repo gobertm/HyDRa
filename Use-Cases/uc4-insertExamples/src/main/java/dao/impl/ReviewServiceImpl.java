@@ -48,6 +48,139 @@ public class ReviewServiceImpl extends ReviewService {
 	
 	
 	
+	public static Pair<String, List<String>> getSQLWhereClauseInReviewTableFromMydb(Condition<ReviewAttribute> condition, MutableBoolean refilterFlag) {
+		return getSQLWhereClauseInReviewTableFromMydbWithTableAlias(condition, refilterFlag, "");
+	}
+	
+	public static Pair<String, List<String>> getSQLWhereClauseInReviewTableFromMydbWithTableAlias(Condition<ReviewAttribute> condition, MutableBoolean refilterFlag, String tableAlias) {
+		String where = null;	
+		List<String> preparedValues = new java.util.ArrayList<String>();
+		if(condition != null) {
+			
+			if(condition instanceof SimpleCondition) {
+				ReviewAttribute attr = ((SimpleCondition<ReviewAttribute>) condition).getAttribute();
+				Operator op = ((SimpleCondition<ReviewAttribute>) condition).getOperator();
+				Object value = ((SimpleCondition<ReviewAttribute>) condition).getValue();
+				if(value != null) {
+					boolean isConditionAttrEncountered = false;
+					if(attr == ReviewAttribute.id ) {
+						isConditionAttrEncountered = true;
+						String valueString = Util.transformSQLValue(value);
+						String sqlOp = op.getSQLOperator();
+						String preparedValue = valueString;
+						if(op == Operator.CONTAINS && valueString != null) {
+							preparedValue = "%" + Util.escapeReservedCharSQL(valueString)  + "%";
+						}
+						
+						where = tableAlias + "id " + sqlOp + " ?";
+						preparedValues.add(preparedValue);
+					}
+					if(attr == ReviewAttribute.content ) {
+						isConditionAttrEncountered = true;
+						String valueString = Util.transformSQLValue(value);
+						String sqlOp = op.getSQLOperator();
+						String preparedValue = valueString;
+						if(op == Operator.CONTAINS && valueString != null) {
+							preparedValue = "%" + Util.escapeReservedCharSQL(valueString)  + "%";
+						}
+						
+						where = tableAlias + "content " + sqlOp + " ?";
+						preparedValues.add(preparedValue);
+					}
+					if(!isConditionAttrEncountered) {
+						refilterFlag.setValue(true);
+						where = "1 = 1";
+					}
+				}
+			}
+	
+			if(condition instanceof AndCondition) {
+				Pair<String, List<String>> pairLeft = getSQLWhereClauseInReviewTableFromMydb(((AndCondition) condition).getLeftCondition(), refilterFlag);
+				Pair<String, List<String>> pairRight = getSQLWhereClauseInReviewTableFromMydb(((AndCondition) condition).getRightCondition(), refilterFlag);
+				String whereLeft = pairLeft.getKey();
+				String whereRight = pairRight.getKey();
+				List<String> leftValues = pairLeft.getValue();
+				List<String> rightValues = pairRight.getValue();
+				if(whereLeft != null || whereRight != null) {
+					if(whereLeft == null)
+						where = whereRight;
+					else
+						if(whereRight == null)
+							where = whereLeft;
+						else
+							where = "(" + whereLeft + " AND " + whereRight + ")";
+					preparedValues.addAll(leftValues);
+					preparedValues.addAll(rightValues);
+				}
+			}
+	
+			if(condition instanceof OrCondition) {
+				Pair<String, List<String>> pairLeft = getSQLWhereClauseInReviewTableFromMydb(((OrCondition) condition).getLeftCondition(), refilterFlag);
+				Pair<String, List<String>> pairRight = getSQLWhereClauseInReviewTableFromMydb(((OrCondition) condition).getRightCondition(), refilterFlag);
+				String whereLeft = pairLeft.getKey();
+				String whereRight = pairRight.getKey();
+				List<String> leftValues = pairLeft.getValue();
+				List<String> rightValues = pairRight.getValue();
+				if(whereLeft != null || whereRight != null) {
+					if(whereLeft == null)
+						where = whereRight;
+					else
+						if(whereRight == null)
+							where = whereLeft;
+						else
+							where = "(" + whereLeft + " OR " + whereRight + ")";
+					preparedValues.addAll(leftValues);
+					preparedValues.addAll(rightValues);
+				}
+			}
+	
+		}
+	
+		return new ImmutablePair<String, List<String>>(where, preparedValues);
+	}
+	
+	
+	public Dataset<Review> getReviewListInReviewTableFromMydb(conditions.Condition<conditions.ReviewAttribute> condition, MutableBoolean refilterFlag){
+	
+		Pair<String, List<String>> whereClause = ReviewServiceImpl.getSQLWhereClauseInReviewTableFromMydb(condition, refilterFlag);
+		String where = whereClause.getKey();
+		List<String> preparedValues = whereClause.getValue();
+		for(String preparedValue : preparedValues) {
+			where = where.replaceFirst("\\?", "'" + Util.escapeQuote(preparedValue) + "'");
+		}
+		
+		Dataset<Row> d = dbconnection.SparkConnectionMgr.getDataset("mydb", "reviewTable");
+		if(where != null) {
+			d = d.where(where);
+		}
+	
+		Dataset<Review> res = d.map((MapFunction<Row, Review>) r -> {
+					Review review_res = new Review();
+					Integer groupIndex = null;
+					String regex = null;
+					String value = null;
+					Pattern p = null;
+					Matcher m = null;
+					boolean matches = false;
+					
+					// attribute [Review.Id]
+					String id = Util.getStringValue(r.getAs("id"));
+					review_res.setId(id);
+					
+					// attribute [Review.Content]
+					String content = Util.getStringValue(r.getAs("content"));
+					review_res.setContent(content);
+	
+	
+	
+					return review_res;
+				}, Encoders.bean(Review.class));
+	
+	
+		return res;
+		
+	}
+	
 	
 	public static String getBSONMatchQueryInReviewColFromMymongo(Condition<ReviewAttribute> condition, MutableBoolean refilterFlag) {	
 		String res = null;	
@@ -210,139 +343,6 @@ public class ReviewServiceImpl extends ReviewService {
 		
 	}
 	
-	public static Pair<String, List<String>> getSQLWhereClauseInReviewTableFromMydb(Condition<ReviewAttribute> condition, MutableBoolean refilterFlag) {
-		return getSQLWhereClauseInReviewTableFromMydbWithTableAlias(condition, refilterFlag, "");
-	}
-	
-	public static Pair<String, List<String>> getSQLWhereClauseInReviewTableFromMydbWithTableAlias(Condition<ReviewAttribute> condition, MutableBoolean refilterFlag, String tableAlias) {
-		String where = null;	
-		List<String> preparedValues = new java.util.ArrayList<String>();
-		if(condition != null) {
-			
-			if(condition instanceof SimpleCondition) {
-				ReviewAttribute attr = ((SimpleCondition<ReviewAttribute>) condition).getAttribute();
-				Operator op = ((SimpleCondition<ReviewAttribute>) condition).getOperator();
-				Object value = ((SimpleCondition<ReviewAttribute>) condition).getValue();
-				if(value != null) {
-					boolean isConditionAttrEncountered = false;
-					if(attr == ReviewAttribute.id ) {
-						isConditionAttrEncountered = true;
-						String valueString = Util.transformSQLValue(value);
-						String sqlOp = op.getSQLOperator();
-						String preparedValue = valueString;
-						if(op == Operator.CONTAINS && valueString != null) {
-							preparedValue = "%" + Util.escapeReservedCharSQL(valueString)  + "%";
-						}
-						
-						where = tableAlias + "id " + sqlOp + " ?";
-						preparedValues.add(preparedValue);
-					}
-					if(attr == ReviewAttribute.content ) {
-						isConditionAttrEncountered = true;
-						String valueString = Util.transformSQLValue(value);
-						String sqlOp = op.getSQLOperator();
-						String preparedValue = valueString;
-						if(op == Operator.CONTAINS && valueString != null) {
-							preparedValue = "%" + Util.escapeReservedCharSQL(valueString)  + "%";
-						}
-						
-						where = tableAlias + "content " + sqlOp + " ?";
-						preparedValues.add(preparedValue);
-					}
-					if(!isConditionAttrEncountered) {
-						refilterFlag.setValue(true);
-						where = "1 = 1";
-					}
-				}
-			}
-	
-			if(condition instanceof AndCondition) {
-				Pair<String, List<String>> pairLeft = getSQLWhereClauseInReviewTableFromMydb(((AndCondition) condition).getLeftCondition(), refilterFlag);
-				Pair<String, List<String>> pairRight = getSQLWhereClauseInReviewTableFromMydb(((AndCondition) condition).getRightCondition(), refilterFlag);
-				String whereLeft = pairLeft.getKey();
-				String whereRight = pairRight.getKey();
-				List<String> leftValues = pairLeft.getValue();
-				List<String> rightValues = pairRight.getValue();
-				if(whereLeft != null || whereRight != null) {
-					if(whereLeft == null)
-						where = whereRight;
-					else
-						if(whereRight == null)
-							where = whereLeft;
-						else
-							where = "(" + whereLeft + " AND " + whereRight + ")";
-					preparedValues.addAll(leftValues);
-					preparedValues.addAll(rightValues);
-				}
-			}
-	
-			if(condition instanceof OrCondition) {
-				Pair<String, List<String>> pairLeft = getSQLWhereClauseInReviewTableFromMydb(((OrCondition) condition).getLeftCondition(), refilterFlag);
-				Pair<String, List<String>> pairRight = getSQLWhereClauseInReviewTableFromMydb(((OrCondition) condition).getRightCondition(), refilterFlag);
-				String whereLeft = pairLeft.getKey();
-				String whereRight = pairRight.getKey();
-				List<String> leftValues = pairLeft.getValue();
-				List<String> rightValues = pairRight.getValue();
-				if(whereLeft != null || whereRight != null) {
-					if(whereLeft == null)
-						where = whereRight;
-					else
-						if(whereRight == null)
-							where = whereLeft;
-						else
-							where = "(" + whereLeft + " OR " + whereRight + ")";
-					preparedValues.addAll(leftValues);
-					preparedValues.addAll(rightValues);
-				}
-			}
-	
-		}
-	
-		return new ImmutablePair<String, List<String>>(where, preparedValues);
-	}
-	
-	
-	public Dataset<Review> getReviewListInReviewTableFromMydb(conditions.Condition<conditions.ReviewAttribute> condition, MutableBoolean refilterFlag){
-	
-		Pair<String, List<String>> whereClause = ReviewServiceImpl.getSQLWhereClauseInReviewTableFromMydb(condition, refilterFlag);
-		String where = whereClause.getKey();
-		List<String> preparedValues = whereClause.getValue();
-		for(String preparedValue : preparedValues) {
-			where = where.replaceFirst("\\?", "'" + Util.escapeQuote(preparedValue) + "'");
-		}
-		
-		Dataset<Row> d = dbconnection.SparkConnectionMgr.getDataset("mydb", "reviewTable");
-		if(where != null) {
-			d = d.where(where);
-		}
-	
-		Dataset<Review> res = d.map((MapFunction<Row, Review>) r -> {
-					Review review_res = new Review();
-					Integer groupIndex = null;
-					String regex = null;
-					String value = null;
-					Pattern p = null;
-					Matcher m = null;
-					boolean matches = false;
-					
-					// attribute [Review.Id]
-					String id = Util.getStringValue(r.getAs("id"));
-					review_res.setId(id);
-					
-					// attribute [Review.Content]
-					String content = Util.getStringValue(r.getAs("content"));
-					review_res.setContent(content);
-	
-	
-	
-					return review_res;
-				}, Encoders.bean(Review.class));
-	
-	
-		return res;
-		
-	}
-	
 	
 	// TODO get based on id(s). Ex:public Client getClientById(Long id)
 	
@@ -498,13 +498,13 @@ public class ReviewServiceImpl extends ReviewService {
 		Movie	r_reviewed_movieMovieReview,
 		User	r_authorReviewUser){
 			boolean inserted = false;
+			// Insert in standalone structures
+			inserted = insertReviewInReviewTableFromMydb(review)|| inserted ;
 			// Insert in structures containing double embedded role
 		    inserted = insertReviewInReviewColFromMymongo(review,r_reviewed_movieMovieReview,r_authorReviewUser) || inserted ;
 			// Insert in descending structures
 			// Insert in ascending structures 
 			// Insert in ref structures 
-			// Insert in standalone structures
-			inserted = insertReviewInReviewTableFromMydb(review)|| inserted ;
 			return inserted;
 		}
 	
@@ -560,9 +560,9 @@ public class ReviewServiceImpl extends ReviewService {
 					docmovie_2.append("avgrating",movie.getAverageRating());
 					// field 'actors' is mapped to mandatory role 'movie' with opposite role of type 'Actor'
 						List<Actor> characterMovieActor = movie._getCharacterList();
-						if(characterMovieActor==null){
-							logger.error("Physical Structure contains embedded attributes or reference to an inderectly linked object. Please set role attribute 'character' of type 'Actor' in entity object 'Movie");
-							throw new PhysicalStructureException("Physical Structure contains embedded attributes or reference to an inderectly linked object. Please set role attribute 'character' of type 'Actor' in entity object 'Movie");
+						if(characterMovieActor==null || characterMovieActor.size()==0){
+							logger.error("Physical Structure contains embedded attributes or reference to an indirectly linked object. Please set role attribute 'character' of type 'Actor' in entity object 'Movie");
+							throw new PhysicalStructureException("Physical Structure contains embedded attributes or reference to an indirectly linked object. Please set role attribute 'character' of type 'Actor' in entity object 'Movie");
 						}
 						List<Document> arrayactors_2 = new ArrayList();
 							for(Actor actor : characterMovieActor){

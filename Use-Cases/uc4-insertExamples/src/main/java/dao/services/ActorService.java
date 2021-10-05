@@ -76,10 +76,10 @@ public abstract class ActorService {
 		MutableBoolean refilterFlag = new MutableBoolean(false);
 		List<Dataset<Actor>> datasets = new ArrayList<Dataset<Actor>>();
 		Dataset<Actor> d = null;
-		d = getActorListInReviewColFromMymongo(condition, refilterFlag);
+		d = getActorListInMovieColFromMymongo(condition, refilterFlag);
 		if(d != null)
 			datasets.add(d);
-		d = getActorListInMovieColFromMymongo(condition, refilterFlag);
+		d = getActorListInReviewColFromMymongo(condition, refilterFlag);
 		if(d != null)
 			datasets.add(d);
 		d = getActorListInActorCollectionFromMymongo(condition, refilterFlag);
@@ -102,12 +102,12 @@ public abstract class ActorService {
 	
 	
 	
-	public abstract Dataset<Actor> getActorListInReviewColFromMymongo(conditions.Condition<conditions.ActorAttribute> condition, MutableBoolean refilterFlag);
-	
-	
-	
-	
 	public abstract Dataset<Actor> getActorListInMovieColFromMymongo(conditions.Condition<conditions.ActorAttribute> condition, MutableBoolean refilterFlag);
+	
+	
+	
+	
+	public abstract Dataset<Actor> getActorListInReviewColFromMymongo(conditions.Condition<conditions.ActorAttribute> condition, MutableBoolean refilterFlag);
 	
 	
 	

@@ -334,7 +334,7 @@ public class DirectorServiceImpl extends DirectorService {
 		boolean all_already_persisted = false;
 		MutableBoolean directed_movie_refilter;
 		org.apache.spark.sql.Column joinCondition = null;
-		// join physical structure
+		// join physical structure A<-AB->B
 		//join between 2 SQL tables and a non-relational structure
 		// (A - AB) (B)
 		directed_movie_refilter = new MutableBoolean(false);

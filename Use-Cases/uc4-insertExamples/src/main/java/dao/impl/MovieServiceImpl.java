@@ -49,6 +49,144 @@ public class MovieServiceImpl extends MovieService {
 	
 	
 	
+	public static String getBSONMatchQueryInMovieColFromMymongo(Condition<MovieAttribute> condition, MutableBoolean refilterFlag) {	
+		String res = null;	
+		if(condition != null) {
+			if(condition instanceof SimpleCondition) {
+				MovieAttribute attr = ((SimpleCondition<MovieAttribute>) condition).getAttribute();
+				Operator op = ((SimpleCondition<MovieAttribute>) condition).getOperator();
+				Object value = ((SimpleCondition<MovieAttribute>) condition).getValue();
+				if(value != null) {
+					String valueString = Util.transformBSONValue(value);
+					boolean isConditionAttrEncountered = false;
+	
+					if(attr == MovieAttribute.id ) {
+						isConditionAttrEncountered = true;
+					
+						String mongoOp = op.getMongoDBOperator();
+						String preparedValue = valueString;
+						if(op == Operator.CONTAINS && valueString != null) {
+							preparedValue = "'.*" + Util.escapeReservedRegexMongo(valueString)  + ".*'";
+						} else {
+							preparedValue = Util.getDelimitedMongoValue(value.getClass(), preparedValue);
+						}
+						res = "idmovie': {" + mongoOp + ": " + preparedValue + "}";
+	
+					res = "'" + res;
+					}
+					if(attr == MovieAttribute.primaryTitle ) {
+						isConditionAttrEncountered = true;
+					
+						String mongoOp = op.getMongoDBOperator();
+						String preparedValue = valueString;
+						if(op == Operator.CONTAINS && valueString != null) {
+							preparedValue = "'.*" + Util.escapeReservedRegexMongo(valueString)  + ".*'";
+						} else {
+							preparedValue = Util.getDelimitedMongoValue(value.getClass(), preparedValue);
+						}
+						res = "title': {" + mongoOp + ": " + preparedValue + "}";
+	
+					res = "'" + res;
+					}
+					if(!isConditionAttrEncountered) {
+						refilterFlag.setValue(true);
+						res = "$expr: {$eq:[1,1]}";
+					}
+					
+				}
+			}
+	
+			if(condition instanceof AndCondition) {
+				String bsonLeft = getBSONMatchQueryInMovieColFromMymongo(((AndCondition)condition).getLeftCondition(), refilterFlag);
+				String bsonRight = getBSONMatchQueryInMovieColFromMymongo(((AndCondition)condition).getRightCondition(), refilterFlag);			
+				if(bsonLeft == null && bsonRight == null)
+					return null;
+				if(bsonLeft == null)
+					return bsonRight;
+				if(bsonRight == null)
+					return bsonLeft;
+				res = " $and: [ {" + bsonLeft + "}, {" + bsonRight + "}] ";
+			}
+	
+			if(condition instanceof OrCondition) {
+				String bsonLeft = getBSONMatchQueryInMovieColFromMymongo(((OrCondition)condition).getLeftCondition(), refilterFlag);
+				String bsonRight = getBSONMatchQueryInMovieColFromMymongo(((OrCondition)condition).getRightCondition(), refilterFlag);			
+				if(bsonLeft == null && bsonRight == null)
+					return null;
+				if(bsonLeft == null)
+					return bsonRight;
+				if(bsonRight == null)
+					return bsonLeft;
+				res = " $or: [ {" + bsonLeft + "}, {" + bsonRight + "}] ";	
+			}
+	
+			
+	
+			
+		}
+	
+		return res;
+	}
+	
+	public Dataset<Movie> getMovieListInMovieColFromMymongo(conditions.Condition<conditions.MovieAttribute> condition, MutableBoolean refilterFlag){
+		String bsonQuery = MovieServiceImpl.getBSONMatchQueryInMovieColFromMymongo(condition, refilterFlag);
+		if(bsonQuery != null) {
+			bsonQuery = "{$match: {" + bsonQuery + "}}";	
+		} 
+		
+		Dataset<Row> dataset = dbconnection.SparkConnectionMgr.getSparkSessionForMongoDB("mymongo", "movieCol", bsonQuery);
+	
+		Dataset<Movie> res = dataset.flatMap((FlatMapFunction<Row, Movie>) r -> {
+				List<Movie> list_res = new ArrayList<Movie>();
+				Integer groupIndex = null;
+				String regex = null;
+				String value = null;
+				Pattern p = null;
+				Matcher m = null;
+				boolean matches = false;
+				Row nestedRow = null;
+	
+				boolean addedInList = false;
+				Row r1 = r;
+				Movie movie1 = new Movie();
+					boolean toAdd1  = false;
+					WrappedArray array1  = null;
+					// 	attribute Movie.id for field idmovie			
+					nestedRow =  r1;
+					if(nestedRow != null && Arrays.asList(nestedRow.schema().fieldNames()).contains("idmovie")) {
+						if(nestedRow.getAs("idmovie")==null)
+							movie1.setId(null);
+						else{
+							movie1.setId((String) nestedRow.getAs("idmovie"));
+							toAdd1 = true;					
+							}
+					}
+					// 	attribute Movie.primaryTitle for field title			
+					nestedRow =  r1;
+					if(nestedRow != null && Arrays.asList(nestedRow.schema().fieldNames()).contains("title")) {
+						if(nestedRow.getAs("title")==null)
+							movie1.setPrimaryTitle(null);
+						else{
+							movie1.setPrimaryTitle((String) nestedRow.getAs("title"));
+							toAdd1 = true;					
+							}
+					}
+					if(toAdd1) {
+						
+						list_res.add(movie1);
+						addedInList = true;
+					} 
+					
+				
+				return list_res.iterator();
+	
+		}, Encoders.bean(Movie.class));
+		res= res.dropDuplicates(new String[]{"id"});
+		return res;
+		
+	}
+	
+	
 	public static String getBSONMatchQueryInReviewColFromMymongo(Condition<MovieAttribute> condition, MutableBoolean refilterFlag) {	
 		String res = null;	
 		if(condition != null) {
@@ -198,144 +336,6 @@ public class MovieServiceImpl extends MovieService {
 							movie1.setAverageRating(null);
 						else{
 							movie1.setAverageRating((String) nestedRow.getAs("avgrating"));
-							toAdd1 = true;					
-							}
-					}
-					if(toAdd1) {
-						
-						list_res.add(movie1);
-						addedInList = true;
-					} 
-					
-				
-				return list_res.iterator();
-	
-		}, Encoders.bean(Movie.class));
-		res= res.dropDuplicates(new String[]{"id"});
-		return res;
-		
-	}
-	
-	
-	public static String getBSONMatchQueryInMovieColFromMymongo(Condition<MovieAttribute> condition, MutableBoolean refilterFlag) {	
-		String res = null;	
-		if(condition != null) {
-			if(condition instanceof SimpleCondition) {
-				MovieAttribute attr = ((SimpleCondition<MovieAttribute>) condition).getAttribute();
-				Operator op = ((SimpleCondition<MovieAttribute>) condition).getOperator();
-				Object value = ((SimpleCondition<MovieAttribute>) condition).getValue();
-				if(value != null) {
-					String valueString = Util.transformBSONValue(value);
-					boolean isConditionAttrEncountered = false;
-	
-					if(attr == MovieAttribute.id ) {
-						isConditionAttrEncountered = true;
-					
-						String mongoOp = op.getMongoDBOperator();
-						String preparedValue = valueString;
-						if(op == Operator.CONTAINS && valueString != null) {
-							preparedValue = "'.*" + Util.escapeReservedRegexMongo(valueString)  + ".*'";
-						} else {
-							preparedValue = Util.getDelimitedMongoValue(value.getClass(), preparedValue);
-						}
-						res = "idmovie': {" + mongoOp + ": " + preparedValue + "}";
-	
-					res = "'" + res;
-					}
-					if(attr == MovieAttribute.primaryTitle ) {
-						isConditionAttrEncountered = true;
-					
-						String mongoOp = op.getMongoDBOperator();
-						String preparedValue = valueString;
-						if(op == Operator.CONTAINS && valueString != null) {
-							preparedValue = "'.*" + Util.escapeReservedRegexMongo(valueString)  + ".*'";
-						} else {
-							preparedValue = Util.getDelimitedMongoValue(value.getClass(), preparedValue);
-						}
-						res = "title': {" + mongoOp + ": " + preparedValue + "}";
-	
-					res = "'" + res;
-					}
-					if(!isConditionAttrEncountered) {
-						refilterFlag.setValue(true);
-						res = "$expr: {$eq:[1,1]}";
-					}
-					
-				}
-			}
-	
-			if(condition instanceof AndCondition) {
-				String bsonLeft = getBSONMatchQueryInMovieColFromMymongo(((AndCondition)condition).getLeftCondition(), refilterFlag);
-				String bsonRight = getBSONMatchQueryInMovieColFromMymongo(((AndCondition)condition).getRightCondition(), refilterFlag);			
-				if(bsonLeft == null && bsonRight == null)
-					return null;
-				if(bsonLeft == null)
-					return bsonRight;
-				if(bsonRight == null)
-					return bsonLeft;
-				res = " $and: [ {" + bsonLeft + "}, {" + bsonRight + "}] ";
-			}
-	
-			if(condition instanceof OrCondition) {
-				String bsonLeft = getBSONMatchQueryInMovieColFromMymongo(((OrCondition)condition).getLeftCondition(), refilterFlag);
-				String bsonRight = getBSONMatchQueryInMovieColFromMymongo(((OrCondition)condition).getRightCondition(), refilterFlag);			
-				if(bsonLeft == null && bsonRight == null)
-					return null;
-				if(bsonLeft == null)
-					return bsonRight;
-				if(bsonRight == null)
-					return bsonLeft;
-				res = " $or: [ {" + bsonLeft + "}, {" + bsonRight + "}] ";	
-			}
-	
-			
-	
-			
-		}
-	
-		return res;
-	}
-	
-	public Dataset<Movie> getMovieListInMovieColFromMymongo(conditions.Condition<conditions.MovieAttribute> condition, MutableBoolean refilterFlag){
-		String bsonQuery = MovieServiceImpl.getBSONMatchQueryInMovieColFromMymongo(condition, refilterFlag);
-		if(bsonQuery != null) {
-			bsonQuery = "{$match: {" + bsonQuery + "}}";	
-		} 
-		
-		Dataset<Row> dataset = dbconnection.SparkConnectionMgr.getSparkSessionForMongoDB("mymongo", "movieCol", bsonQuery);
-	
-		Dataset<Movie> res = dataset.flatMap((FlatMapFunction<Row, Movie>) r -> {
-				List<Movie> list_res = new ArrayList<Movie>();
-				Integer groupIndex = null;
-				String regex = null;
-				String value = null;
-				Pattern p = null;
-				Matcher m = null;
-				boolean matches = false;
-				Row nestedRow = null;
-	
-				boolean addedInList = false;
-				Row r1 = r;
-				Movie movie1 = new Movie();
-					boolean toAdd1  = false;
-					WrappedArray array1  = null;
-					// 	attribute Movie.id for field idmovie			
-					nestedRow =  r1;
-					if(nestedRow != null && Arrays.asList(nestedRow.schema().fieldNames()).contains("idmovie")) {
-						if(nestedRow.getAs("idmovie")==null)
-							movie1.setId(null);
-						else{
-							movie1.setId((String) nestedRow.getAs("idmovie"));
-							toAdd1 = true;					
-							}
-					}
-					// 	attribute Movie.primaryTitle for field title			
-					nestedRow =  r1;
-					if(nestedRow != null && Arrays.asList(nestedRow.schema().fieldNames()).contains("title")) {
-						if(nestedRow.getAs("title")==null)
-							movie1.setPrimaryTitle(null);
-						else{
-							movie1.setPrimaryTitle((String) nestedRow.getAs("title"));
 							toAdd1 = true;					
 							}
 					}
@@ -651,7 +651,7 @@ public class MovieServiceImpl extends MovieService {
 		boolean all_already_persisted = false;
 		MutableBoolean director_refilter;
 		org.apache.spark.sql.Column joinCondition = null;
-		// join physical structure
+		// join physical structure A<-AB->B
 		//join between 2 SQL tables and a non-relational structure
 		// (A) (AB - B)
 		director_refilter = new MutableBoolean(false);
@@ -679,8 +679,8 @@ public class MovieServiceImpl extends MovieService {
 			return null;
 	
 		List<Dataset<Movie>> lonelyMovieList = new ArrayList<Dataset<Movie>>();
-		lonelyMovieList.add(getMovieListInReviewColFromMymongo(directed_movie_condition, new MutableBoolean(false)));
 		lonelyMovieList.add(getMovieListInMovieColFromMymongo(directed_movie_condition, new MutableBoolean(false)));
+		lonelyMovieList.add(getMovieListInReviewColFromMymongo(directed_movie_condition, new MutableBoolean(false)));
 		Dataset<Movie> lonelyMovie = fullOuterJoinsMovie(lonelyMovieList);
 		if(lonelyMovie != null) {
 			res = fullLeftOuterJoinsMovie(Arrays.asList(res, lonelyMovie));
@@ -860,24 +860,21 @@ public class MovieServiceImpl extends MovieService {
 	
 	public boolean insertMovie(
 		Movie movie,
-		 List<Director> directorMovieDirector,
 		 List<Actor> characterMovieActor){
 		 	boolean inserted = false;
+		 	// Insert in standalone structures
 		 	// Insert in structures containing double embedded role
 		 	// Insert in descending structures
-		 	inserted = insertMovieInMovieColFromMymongo(movie,directorMovieDirector,characterMovieActor)|| inserted ;
+		 	inserted = insertMovieInMovieColFromMymongo(movie,characterMovieActor)|| inserted ;
 		 	// Insert in ascending structures 
-		 	inserted = insertMovieInActorCollectionFromMymongo(movie,directorMovieDirector,characterMovieActor)|| inserted ;
+		 	inserted = insertMovieInActorCollectionFromMymongo(movie,characterMovieActor)|| inserted ;
 		 	// Insert in ref structures 
-		 	inserted = insertMovieInDirectedFromMydb(movie,directorMovieDirector,characterMovieActor)|| inserted ;
-		 	// Insert in standalone structures
 		 	return inserted;
 		 }
 	
 	
 	
 	public boolean insertMovieInMovieColFromMymongo(Movie movie,
-		 List<Director> directorMovieDirector,
 		 List<Actor> characterMovieActor)	{
 			 // Implement Insert in descending complex struct
 			Bson filter = new Document();
@@ -902,7 +899,6 @@ public class MovieServiceImpl extends MovieService {
 			return true;
 		}
 	public boolean insertMovieInActorCollectionFromMymongo(Movie movie,
-		 List<Director> directorMovieDirector,
 		 List<Actor> characterMovieActor)	{
 			 // Implement Insert in ascending complex struct
 		
@@ -931,26 +927,6 @@ public class MovieServiceImpl extends MovieService {
 				DBConnectionMgr.upsertMany(filter, updateOp, "actorCollection", "mymongo");					
 			}
 		
-			return true;
-		}
-	public boolean insertMovieInDirectedFromMydb(Movie movie,
-		 List<Director> directorMovieDirector,
-		 List<Actor> characterMovieActor)	{
-			 // Implement Insert in structures with mandatory references
-			List<String> columns = new ArrayList<>();
-			List<Object> values = new ArrayList<>();
-			List<List<Object>> rows = new ArrayList<>();
-			// Role in join structure 
-			columns.add("movie_id");
-			Object movieId = movie.getId();
-			columns.add("director_id");
-			for(Director director : directorMovieDirector){
-				values = new ArrayList<>();
-				values.add(movieId);
-				values.add(director.getId());
-				rows.add(values);
-			}	
-			DBConnectionMgr.insertInTable(columns, rows, "directed", "mydb");					
 			return true;
 		}
 	public void updateMovieList(conditions.Condition<conditions.MovieAttribute> condition, conditions.SetClause<conditions.MovieAttribute> set){

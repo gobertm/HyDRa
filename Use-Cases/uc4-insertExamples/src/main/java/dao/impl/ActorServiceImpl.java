@@ -49,128 +49,6 @@ public class ActorServiceImpl extends ActorService {
 	
 	
 	
-	public static String getBSONMatchQueryInReviewColFromMymongo(Condition<ActorAttribute> condition, MutableBoolean refilterFlag) {	
-		String res = null;	
-		if(condition != null) {
-			if(condition instanceof SimpleCondition) {
-				ActorAttribute attr = ((SimpleCondition<ActorAttribute>) condition).getAttribute();
-				Operator op = ((SimpleCondition<ActorAttribute>) condition).getOperator();
-				Object value = ((SimpleCondition<ActorAttribute>) condition).getValue();
-				if(value != null) {
-					String valueString = Util.transformBSONValue(value);
-					boolean isConditionAttrEncountered = false;
-	
-					if(attr == ActorAttribute.id ) {
-						isConditionAttrEncountered = true;
-					
-						String mongoOp = op.getMongoDBOperator();
-						String preparedValue = valueString;
-						if(op == Operator.CONTAINS && valueString != null) {
-							preparedValue = "'.*" + Util.escapeReservedRegexMongo(valueString)  + ".*'";
-						} else {
-							preparedValue = Util.getDelimitedMongoValue(value.getClass(), preparedValue);
-						}
-						res = "id': {" + mongoOp + ": " + preparedValue + "}";
-	
-						res = "actors." + res;
-						res = "movie." + res;
-					res = "'" + res;
-					}
-					if(attr == ActorAttribute.fullName ) {
-						isConditionAttrEncountered = true;
-					
-						String mongoOp = op.getMongoDBOperator();
-						String preparedValue = valueString;
-						if(op == Operator.CONTAINS && valueString != null) {
-							preparedValue = "'.*" + Util.escapeReservedRegexMongo(valueString)  + ".*'";
-						} else {
-							preparedValue = Util.getDelimitedMongoValue(value.getClass(), preparedValue);
-						}
-						res = "name': {" + mongoOp + ": " + preparedValue + "}";
-	
-						res = "actors." + res;
-						res = "movie." + res;
-					res = "'" + res;
-					}
-					if(!isConditionAttrEncountered) {
-						refilterFlag.setValue(true);
-						res = "$expr: {$eq:[1,1]}";
-					}
-					
-				}
-			}
-	
-			if(condition instanceof AndCondition) {
-				String bsonLeft = getBSONMatchQueryInReviewColFromMymongo(((AndCondition)condition).getLeftCondition(), refilterFlag);
-				String bsonRight = getBSONMatchQueryInReviewColFromMymongo(((AndCondition)condition).getRightCondition(), refilterFlag);			
-				if(bsonLeft == null && bsonRight == null)
-					return null;
-				if(bsonLeft == null)
-					return bsonRight;
-				if(bsonRight == null)
-					return bsonLeft;
-				res = " $and: [ {" + bsonLeft + "}, {" + bsonRight + "}] ";
-			}
-	
-			if(condition instanceof OrCondition) {
-				String bsonLeft = getBSONMatchQueryInReviewColFromMymongo(((OrCondition)condition).getLeftCondition(), refilterFlag);
-				String bsonRight = getBSONMatchQueryInReviewColFromMymongo(((OrCondition)condition).getRightCondition(), refilterFlag);			
-				if(bsonLeft == null && bsonRight == null)
-					return null;
-				if(bsonLeft == null)
-					return bsonRight;
-				if(bsonRight == null)
-					return bsonLeft;
-				res = " $or: [ {" + bsonLeft + "}, {" + bsonRight + "}] ";	
-			}
-	
-			
-	
-			
-		}
-	
-		return res;
-	}
-	
-	public Dataset<Actor> getActorListInReviewColFromMymongo(conditions.Condition<conditions.ActorAttribute> condition, MutableBoolean refilterFlag){
-		String bsonQuery = ActorServiceImpl.getBSONMatchQueryInReviewColFromMymongo(condition, refilterFlag);
-		if(bsonQuery != null) {
-			bsonQuery = "{$match: {" + bsonQuery + "}}";	
-		} 
-		
-		Dataset<Row> dataset = dbconnection.SparkConnectionMgr.getSparkSessionForMongoDB("mymongo", "reviewCol", bsonQuery);
-	
-		Dataset<Actor> res = dataset.flatMap((FlatMapFunction<Row, Actor>) r -> {
-				List<Actor> list_res = new ArrayList<Actor>();
-				Integer groupIndex = null;
-				String regex = null;
-				String value = null;
-				Pattern p = null;
-				Matcher m = null;
-				boolean matches = false;
-				Row nestedRow = null;
-	
-				boolean addedInList = false;
-				Row r1 = r;
-				Actor actor1 = new Actor();
-					boolean toAdd1  = false;
-					WrappedArray array1  = null;
-					if(toAdd1) {
-						
-						list_res.add(actor1);
-						addedInList = true;
-					} 
-					
-				
-				return list_res.iterator();
-	
-		}, Encoders.bean(Actor.class));
-		res= res.dropDuplicates(new String[]{"id"});
-		return res;
-		
-	}
-	
-	
 	public static String getBSONMatchQueryInMovieColFromMymongo(Condition<ActorAttribute> condition, MutableBoolean refilterFlag) {	
 		String res = null;	
 		if(condition != null) {
@@ -318,6 +196,128 @@ public class ActorServiceImpl extends ActorService {
 						addedInList = true;
 					} 
 					
+					
+				
+				return list_res.iterator();
+	
+		}, Encoders.bean(Actor.class));
+		res= res.dropDuplicates(new String[]{"id"});
+		return res;
+		
+	}
+	
+	
+	public static String getBSONMatchQueryInReviewColFromMymongo(Condition<ActorAttribute> condition, MutableBoolean refilterFlag) {	
+		String res = null;	
+		if(condition != null) {
+			if(condition instanceof SimpleCondition) {
+				ActorAttribute attr = ((SimpleCondition<ActorAttribute>) condition).getAttribute();
+				Operator op = ((SimpleCondition<ActorAttribute>) condition).getOperator();
+				Object value = ((SimpleCondition<ActorAttribute>) condition).getValue();
+				if(value != null) {
+					String valueString = Util.transformBSONValue(value);
+					boolean isConditionAttrEncountered = false;
+	
+					if(attr == ActorAttribute.id ) {
+						isConditionAttrEncountered = true;
+					
+						String mongoOp = op.getMongoDBOperator();
+						String preparedValue = valueString;
+						if(op == Operator.CONTAINS && valueString != null) {
+							preparedValue = "'.*" + Util.escapeReservedRegexMongo(valueString)  + ".*'";
+						} else {
+							preparedValue = Util.getDelimitedMongoValue(value.getClass(), preparedValue);
+						}
+						res = "id': {" + mongoOp + ": " + preparedValue + "}";
+	
+						res = "actors." + res;
+						res = "movie." + res;
+					res = "'" + res;
+					}
+					if(attr == ActorAttribute.fullName ) {
+						isConditionAttrEncountered = true;
+					
+						String mongoOp = op.getMongoDBOperator();
+						String preparedValue = valueString;
+						if(op == Operator.CONTAINS && valueString != null) {
+							preparedValue = "'.*" + Util.escapeReservedRegexMongo(valueString)  + ".*'";
+						} else {
+							preparedValue = Util.getDelimitedMongoValue(value.getClass(), preparedValue);
+						}
+						res = "name': {" + mongoOp + ": " + preparedValue + "}";
+	
+						res = "actors." + res;
+						res = "movie." + res;
+					res = "'" + res;
+					}
+					if(!isConditionAttrEncountered) {
+						refilterFlag.setValue(true);
+						res = "$expr: {$eq:[1,1]}";
+					}
+					
+				}
+			}
+	
+			if(condition instanceof AndCondition) {
+				String bsonLeft = getBSONMatchQueryInReviewColFromMymongo(((AndCondition)condition).getLeftCondition(), refilterFlag);
+				String bsonRight = getBSONMatchQueryInReviewColFromMymongo(((AndCondition)condition).getRightCondition(), refilterFlag);			
+				if(bsonLeft == null && bsonRight == null)
+					return null;
+				if(bsonLeft == null)
+					return bsonRight;
+				if(bsonRight == null)
+					return bsonLeft;
+				res = " $and: [ {" + bsonLeft + "}, {" + bsonRight + "}] ";
+			}
+	
+			if(condition instanceof OrCondition) {
+				String bsonLeft = getBSONMatchQueryInReviewColFromMymongo(((OrCondition)condition).getLeftCondition(), refilterFlag);
+				String bsonRight = getBSONMatchQueryInReviewColFromMymongo(((OrCondition)condition).getRightCondition(), refilterFlag);			
+				if(bsonLeft == null && bsonRight == null)
+					return null;
+				if(bsonLeft == null)
+					return bsonRight;
+				if(bsonRight == null)
+					return bsonLeft;
+				res = " $or: [ {" + bsonLeft + "}, {" + bsonRight + "}] ";	
+			}
+	
+			
+	
+			
+		}
+	
+		return res;
+	}
+	
+	public Dataset<Actor> getActorListInReviewColFromMymongo(conditions.Condition<conditions.ActorAttribute> condition, MutableBoolean refilterFlag){
+		String bsonQuery = ActorServiceImpl.getBSONMatchQueryInReviewColFromMymongo(condition, refilterFlag);
+		if(bsonQuery != null) {
+			bsonQuery = "{$match: {" + bsonQuery + "}}";	
+		} 
+		
+		Dataset<Row> dataset = dbconnection.SparkConnectionMgr.getSparkSessionForMongoDB("mymongo", "reviewCol", bsonQuery);
+	
+		Dataset<Actor> res = dataset.flatMap((FlatMapFunction<Row, Actor>) r -> {
+				List<Actor> list_res = new ArrayList<Actor>();
+				Integer groupIndex = null;
+				String regex = null;
+				String value = null;
+				Pattern p = null;
+				Matcher m = null;
+				boolean matches = false;
+				Row nestedRow = null;
+	
+				boolean addedInList = false;
+				Row r1 = r;
+				Actor actor1 = new Actor();
+					boolean toAdd1  = false;
+					WrappedArray array1  = null;
+					if(toAdd1) {
+						
+						list_res.add(actor1);
+						addedInList = true;
+					} 
 					
 				
 				return list_res.iterator();

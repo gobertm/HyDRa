@@ -86,10 +86,10 @@ public abstract class MovieService {
 		MutableBoolean refilterFlag = new MutableBoolean(false);
 		List<Dataset<Movie>> datasets = new ArrayList<Dataset<Movie>>();
 		Dataset<Movie> d = null;
-		d = getMovieListInReviewColFromMymongo(condition, refilterFlag);
+		d = getMovieListInMovieColFromMymongo(condition, refilterFlag);
 		if(d != null)
 			datasets.add(d);
-		d = getMovieListInMovieColFromMymongo(condition, refilterFlag);
+		d = getMovieListInReviewColFromMymongo(condition, refilterFlag);
 		if(d != null)
 			datasets.add(d);
 		d = getMovieListInActorCollectionFromMymongo(condition, refilterFlag);
@@ -112,12 +112,12 @@ public abstract class MovieService {
 	
 	
 	
-	public abstract Dataset<Movie> getMovieListInReviewColFromMymongo(conditions.Condition<conditions.MovieAttribute> condition, MutableBoolean refilterFlag);
-	
-	
-	
-	
 	public abstract Dataset<Movie> getMovieListInMovieColFromMymongo(conditions.Condition<conditions.MovieAttribute> condition, MutableBoolean refilterFlag);
+	
+	
+	
+	
+	public abstract Dataset<Movie> getMovieListInReviewColFromMymongo(conditions.Condition<conditions.MovieAttribute> condition, MutableBoolean refilterFlag);
 	
 	
 	
@@ -486,19 +486,13 @@ public abstract class MovieService {
 	
 	public abstract boolean insertMovie(
 		Movie movie,
-		 List<Director> directorMovieDirector,
 		 List<Actor> characterMovieActor);
 	
 	
 	
 	public abstract boolean insertMovieInMovieColFromMymongo(Movie movie,
-		 List<Director> directorMovieDirector,
 		 List<Actor> characterMovieActor);
 	public abstract boolean insertMovieInActorCollectionFromMymongo(Movie movie,
-		 List<Director> directorMovieDirector,
-		 List<Actor> characterMovieActor);
-	public abstract boolean insertMovieInDirectedFromMydb(Movie movie,
-		 List<Director> directorMovieDirector,
 		 List<Actor> characterMovieActor);
 	public abstract void updateMovieList(conditions.Condition<conditions.MovieAttribute> condition, conditions.SetClause<conditions.MovieAttribute> set);
 	
