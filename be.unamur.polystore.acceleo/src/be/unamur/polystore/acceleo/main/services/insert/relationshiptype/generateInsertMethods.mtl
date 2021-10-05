@@ -2,7 +2,36 @@
 [module generateInsertMethods('http://www.unamur.be/polystore/Pml')]
 [import be::unamur::polystore::acceleo::main::util /]
 [import be::unamur::polystore::acceleo::main::impl::insert::relationshiptype::generateInsertMethodsImpl /]
+[import be::unamur::polystore::acceleo::main::mappingrules::util /]
 
 [template public generateInsertMethods(rel: RelationshipType, override: Boolean)]
 public [if  (override = false)]abstract [/if]void insert[rel.name.toUpperFirst() /]([rel.name.toUpperFirst() /] [rel.name /])[if  (override = false)];[else][insertRImpl(rel) /][/if]
+
+[for (struct : AbstractPhysicalStructure | getJoinPhysicalStructureOfRelation(rel))]
+[for (db: Database | getConcernedDatabases(struct, struct.ancestors(Domainmodel)->first()))]
+public 	[if  (override = false)]abstract [/if]boolean insert[rel.name.toUpperFirst() /]InJoinStruct[struct.name.toUpperFirst()/]In[db.name.toUpperFirst()/]([rel.name.toUpperFirst() /] [rel.name.toLowerFirst()/])[if  (override = false)];[else][insertRInJoinStruct(rel,struct,db) /][/if]
+[/for]
+[/for]
+
+[for (struct : AbstractPhysicalStructure | getEmbeddedPhysicalStructureOfRelation(rel))]
+[for (db: Database | getConcernedDatabases(struct, struct.ancestors(Domainmodel)->first()))]
+public 	[if  (override = false)]abstract [/if]boolean insert[rel.name.toUpperFirst() /]InEmbeddedStruct[struct.name.toUpperFirst()/]In[db.name.toUpperFirst()/]([rel.name.toUpperFirst() /] [rel.name.toLowerFirst()/])[if  (override = false)];[else][insertRInEmbeddedStruct(rel,struct,db) /][/if]
+[/for]
+[/for]
+
+[for (struct : AbstractPhysicalStructure | getRefPhysicalStructureOfRelation(rel))]
+[for (db: Database | getConcernedDatabases(struct, struct.ancestors(Domainmodel)->first()))]
+public 	[if  (override = false)]abstract [/if]boolean insert[rel.name.toUpperFirst() /]InRefStruct[struct.name.toUpperFirst()/]In[db.name.toUpperFirst()/]([rel.name.toUpperFirst() /] [rel.name.toLowerFirst()/])[if  (override = false)];[else][insertRInRefStruct(rel,struct,db) /][/if]
+[/for]
+[/for]
+
+
+[if  (override = false)] public void insert[rel.name.toUpperFirst() /]([for (role : Role | rel.roles) separator(',')][role.entity.name.toUpperFirst()/] [role.name.toLowerFirst()/] [/for]){
+	[rel.name.toUpperFirst() /] [rel.name.toLowerFirst() /] = new [rel.name.toUpperFirst() /]();
+		[for (role : Role | rel.roles)]
+	[rel.name.toLowerFirst()/].set[role.name.toUpperFirst()/]([role.name.toLowerFirst()/]);
+		[/for]
+	insert[rel.name.toUpperFirst() /]([rel.name.toLowerFirst() /]);
+}
+[/if]
 [/template]

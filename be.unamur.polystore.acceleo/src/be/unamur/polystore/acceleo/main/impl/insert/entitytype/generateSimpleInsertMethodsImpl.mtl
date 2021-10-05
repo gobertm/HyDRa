@@ -467,16 +467,18 @@ doc[objectName/]_[level/].append("[getPhysicalName(field)/]",value_[objectName/]
 [comment]// A -> B[/comment]
 	[for (ref : Reference | getReferenceOfPhysicalField(field))]
 		[let role : Role = getMappedRoleOfReference(ref)]
-// Ref '[ref.name/]' mapped to role '[role.name/]'
-		[if (embeddedRoleLevel>0)]
+		[if (isMandatoryRole(role))]
+// Ref '[ref.name/]' mapped to mandatory role '[role.name/]'
+			[if (embeddedRoleLevel>0)]
 	if([entityType.name.toLowerFirst()/]._get[role.getOppositeRoleInBinaryRel().name.toUpperFirst()/]()!=null){
 doc[objectName/]_[level/].append("[ref.sourceField->any(true).oclAsType(PhysicalField).getPhysicalName()/]",[entityType.name.toLowerFirst()/]._get[role.getOppositeRoleInBinaryRel().name.toUpperFirst()/]().get[getMappedAttributeOfFieldInStructure(ref.targetField->any(true).oclAsType(PhysicalField), ref.targetField->any(true).oclAsType(PhysicalField).getAbstractPhysicalStructureNotEmbeddedObject()).name.toUpperFirst()/]());
 	}else{
 		logger.error("Physical Structure contains attribute or reference to an indirectly linked object. Please set role attribute '[role.getOppositeRoleInBinaryRel().name/]' of type '[role.getOppositeRoleInBinaryRel().entity.name.toUpperFirst()/]' in entity object '[entityType.name.toUpperFirst()/]");
 		throw new PhysicalStructureException("Physical Structure contains attribute or reference to an indirectly linked object. Please set role attribute '[role.getOppositeRoleInBinaryRel().name/]' of type '[role.getOppositeRoleInBinaryRel().entity.name.toUpperFirst()/]' in entity object '[entityType.name.toUpperFirst()/]");
 	}
-		[else]
+			[else]
 doc[objectName/]_[level/].append("[ref.sourceField->any(true).oclAsType(PhysicalField).getPhysicalName()/]",[role.getOppositeRoleInBinaryRel().name.toLowerFirst()/][role.getRelationShipType().name.toUpperFirst()/].get[getMappedAttributeOfFieldInStructure(ref.targetField->any(true).oclAsType(PhysicalField), ref.targetField->any(true).oclAsType(PhysicalField).getAbstractPhysicalStructureNotEmbeddedObject()).name.toUpperFirst()/]());
+			[/if]
 		[/if]
 	[/let]
 	[/for]
@@ -578,9 +580,11 @@ values[objectName/]_[level/].add(value_[objectName/]_[getPhysicalName(field)/]_[
 [comment]// A -> B[/comment]
 	[for (ref : Reference | getReferenceOfPhysicalField(field))]
 		[let role : Role = getMappedRoleOfReference(ref)]
-// Ref '[ref.name/]' mapped to role '[role.name/]'
+		[if (isMandatoryRole(role))]
+// Ref '[ref.name/]' mapped to mandatory role '[role.name/]'
 listOfStructField[objectName/]_[level/].add(DataTypes.createStructField("[ref.sourceField->any(true).oclAsType(PhysicalField).getPhysicalName()/]",DataTypes.StringType, true));
 values[objectName/]_[level/].add([role.getOppositeRoleInBinaryRel().name.toLowerFirst()/][role.getRelationShipType().name.toUpperFirst()/].get[getMappedAttributeOfFieldInStructure(ref.targetField->any(true).oclAsType(PhysicalField), ref.targetField->any(true).oclAsType(PhysicalField).getAbstractPhysicalStructureNotEmbeddedObject()).name.toUpperFirst()/]());
+		[/if]
 	[/let]
 	[/for]
 [comment][/comment]

@@ -1,8 +1,203 @@
 [comment encoding = UTF-8 /]
 [module generateInsertMethodsImpl('http://www.unamur.be/polystore/Pml')]
-
+[import be::unamur::polystore::acceleo::main::mappingrules::util /]
+[import be::unamur::polystore::acceleo::main::util /]
+[import be::unamur::polystore::acceleo::main::impl::insert::entitytype::generateSimpleInsertMethodsImpl/]
 
 [template public insertRImpl(rel: RelationshipType)]{
-	//TODO
+	//Link entities in join structures.
+	[for (struct : AbstractPhysicalStructure | getJoinPhysicalStructureOfRelation(rel))]
+	[for (db: Database | getConcernedDatabases(struct, struct.ancestors(Domainmodel)->first()))]
+	insert[rel.name.toUpperFirst()/]InJoinStruct[struct.name.toUpperFirst()/]In[db.name.toUpperFirst()/]([rel.name.toLowerFirst()/]);
+	[/for]
+	[/for]
+	// Update embedded structures mapped to non mandatory roles.
+	[for (struct : AbstractPhysicalStructure | getEmbeddedPhysicalStructureOfRelation(rel))]
+	[for (db: Database | getConcernedDatabases(struct, struct.ancestors(Domainmodel)->first()))]
+	insert[rel.name.toUpperFirst()/]InEmbeddedStruct[struct.name.toUpperFirst()/]In[db.name.toUpperFirst()/]([rel.name.toLowerFirst()/]);
+	[/for]
+	[/for]
+	// Update ref fields mapped to non mandatory roles. 
+	[for (struct : AbstractPhysicalStructure | getRefPhysicalStructureOfRelation(rel))]
+	[for (db: Database | getConcernedDatabases(struct, struct.ancestors(Domainmodel)->first()))]
+	insert[rel.name.toUpperFirst()/]InRefStruct[struct.name.toUpperFirst()/]In[db.name.toUpperFirst()/]([rel.name.toLowerFirst()/]);
+	[/for]
+	[/for]
+}[/template]
+
+[template public insertRInJoinStruct(rel: RelationshipType, struct : AbstractPhysicalStructure, db : Database)]{
+ 	// Rel '[rel.name/]' Insert in join structure '[struct.name/]'
+	List<String> columns = new ArrayList<>();
+	List<Object> values = new ArrayList<>();
+	List<List<Object>> rows = new ArrayList<>();
+[for (rolerel : Role | rel.roles)]
+	[let entityType : EntityType = rolerel.entity]
+	[entityType.name.toUpperFirst()/] [entityType.name.toLowerFirst()/] = [rel.name.toLowerFirst()/].get[rolerel.name.toUpperFirst()/]();
+[/let]
+[/for]
+[for (rolerel : Role | rel.roles)]
+	[let entityType : EntityType = rolerel.entity]
+[comment]//TODO Docdb ref support. Only for relational reference for now[/comment]
+[if (struct.oclIsTypeOf(Table))]
+[comment]Normal fields [/comment]
+[for (field : PhysicalField | struct.oclAsType(Table).columns)]
+	[if (field.oclIsTypeOf(ShortField))]
+		[let attr : Attribute = getMappedAttributes(field, entityType, entityType.getMappingRules())->any(true)]
+			[if (attr.oclIsUndefined()=false)]
+columns.add("[getPhysicalName(field)/]");
+values.add([entityType.name.toLowerFirst()/].get[attr.name.toUpperFirst()/]());
+			[/if]
+		[/let] 
+	[/if]
+	[if (field.oclIsTypeOf(LongField))]
+		[comment LongField with only one component and is BracketsField /]
+		[if (field.oclAsType(LongField).pattern->size()=1 and field.oclAsType(LongField).pattern->any(true).oclIsTypeOf(BracketsField))]
+			[let brackets : BracketsField = field.oclAsType(LongField).pattern->any(true).oclAsType(BracketsField)]
+				[let attr : Attribute = getMappedAttributes(field, entityType, entityType.getMappingRules())->any(true)]
+				[if (attr.oclIsUndefined()=false)]
+columns.add("[getPhysicalName(field)/]");
+values.add([entityType.name.toLowerFirst()/].get[attr.name.toUpperFirst()/]());
+				[/if]
+				[/let] 
+			[/let]
+		[else]
+			[if (field.oclAsType(LongField).pattern->filter(BracketsField)->exists(b |getMappedAttributes(b, entityType, entityType.getMappingRules())->size()=0)=false)]
+				[comment All BracketsField are mapped to the corresponding entity or composed of only one Terminal expression/]
+				[comment LongField is composed of component, therefore can only be StringType /]
+String value_[getPhysicalName(field)/] = "";
+				[for (component : TerminalExpression | field.oclAsType(LongField).pattern)]
+					[if (component.oclIsTypeOf(BracketsField))]
+						[let attr : Attribute = getMappedAttributes(component.oclAsType(BracketsField), entityType, entityType.getMappingRules())->any(true)]
+value_[getPhysicalName(field)/] += [entityType.name.toLowerFirst()/].get[attr.name.toUpperFirst()/]();
+						[/let]
+					[else]
+value_[getPhysicalName(field)/] += "[component.literal/]";
+					[/if]
+				[/for]
+columns.add("[getPhysicalName(field)/]");
+values.add(value_[getPhysicalName(field)/]);
+			[/if]
+		[/if]
+	[/if]
+[/for]
+[/if]
+	[/let]
+[/for]
+[comment]	Reference fields [/comment]
+	[for (ref : Reference | getRefOfPhysicalStructure(struct))]
+		[let role : Role = getMappedRoleOfReference(ref)]
+	// Role in join structure 
+	columns.add("[ref.sourceField->any(true).oclAsType(PhysicalField).getPhysicalName()/]");
+	Object [role.entity.name.toLowerFirst()/]Id = [role.entity.name.toLowerFirst()/].get[getMappedAttributeOfFieldInStructure(ref.targetField->any(true).oclAsType(PhysicalField), ref.targetField->any(true).oclAsType(PhysicalField).getAbstractPhysicalStructureNotEmbeddedObject()).name.toUpperFirst()/]();
+	values.add([role.entity.name.toLowerFirst()/]Id);
+	[/let]
+	[/for]
+	rows.add(values);
+	DBConnectionMgr.insertInTable(columns, rows, "[struct.name/]", "[db.name/]"); [comment]In join structure so no existing line should exist. We insert[/comment]					
+	return true;
+}[/template]
+
+[template public insertRInEmbeddedStruct(rel: RelationshipType, struct : AbstractPhysicalStructure, db : Database)]{
+ 	// Rel '[rel.name/]' Insert in embedded structure '[struct.name/]'
+
+	[if (struct.oclIsTypeOf(pml::Collection))]
+	[for (rolerel : Role | rel.roles)]
+	[let entityType : EntityType = rolerel.entity]
+	[entityType.name.toUpperFirst()/] [entityType.name.toLowerFirst()/] = [rel.name.toLowerFirst()/].get[rolerel.name.toUpperFirst()/]();
+	[/let]
+	[/for]
+	Bson filter= new Document();
+	Bson updateOp;
+	String addToSet;
+	List<String> fieldName= new ArrayList();
+	List<Bson> arrayFilterCond = new ArrayList();
+	[for (rolerel : Role | rel.roles)]
+	[let entityType : EntityType = rolerel.entity]
+		[for (field : PhysicalField | struct.oclAsType(pml::Collection).fields)]
+			[if (field.isMappedToGivenRole(rolerel))]
+	[generateDocument(getOppositeRoleInBinaryRel(rolerel).entity,field.oclAsType(EmbeddedObject).fields, getPhysicalName(field),1,0)/]
+				[if (field.eContainer(EmbeddedObject).oclIsUndefined()=false)]
+	[ascendInStruct(field.eContainer(EmbeddedObject), getMappedRoleOfPhysicalField(field),struct, db, 0, entityType)/]
+	fieldName.add("[getPhysicalName(field)/]");
+	addToSet = String.join(".",fieldName);
+	updateOp = addToSet(addToSet,doc[getPhysicalName(field)/]_1);
+	DBConnectionMgr.upsertMany(filter, updateOp, arrayFilterCond, "[struct.name/]", "[db.name/]");
+				[else] 
+	// level 1 ascending
+					[for (attr : Attribute | rolerel.entity.identifier.attributes)]
+						[if (i=1)]
+	filter = eq("[getPhysicalName(getMappedPhysicalField(attr, struct, db, entityType.getMappingRules()))/]",[rolerel.entity.name.toLowerFirst()/].get[attr.name.toUpperFirst()/]());
+						[else]
+	filter = and(filter,eq("[getPhysicalName(getMappedPhysicalField(attr, struct, db, entityType.getMappingRules()))/]",[rolerel.entity.name.toLowerFirst()/].get[attr.name.toUpperFirst()/]());
+						[/if]
+					[/for]
+	updateOp = addToSet("[field.getPhysicalName()/]", doc[getPhysicalName(field)/]_1);
+	DBConnectionMgr.upsertMany(filter, updateOp, "[struct.name/]", "[db.name/]");					
+				[/if]	
+			[/if]
+		[/for]
+	[/let]
+	[/for]
+	[/if]
+	return true;
+}[/template]
+
+[template public insertRInRefStruct(rel: RelationshipType, struct : AbstractPhysicalStructure, db : Database)]{
+ 	// Rel '[rel.name/]' Insert in reference structure '[struct.name/]'
+	[for (rolerel : Role | rel.roles)]
+	[let entityType : EntityType = rolerel.entity]
+	[entityType.name.toUpperFirst()/] [entityType.name.toLowerFirst()/] = [rel.name.toLowerFirst()/].get[rolerel.name.toUpperFirst()/]();
+	[/let]
+	[/for]
+
+	[if (struct.oclIsTypeOf(Table))]
+	List<String> columns = new ArrayList<>();
+	List<Object> values = new ArrayList<>();
+	String filtercolumn, filtervalue;
+		[for (ref : Reference | getRefOfPhysicalStructure(struct))]
+		[let role : Role = getMappedRoleOfReference(ref)]
+	columns.add("[ref.sourceField->any(true).oclAsType(PhysicalField).getPhysicalName()/]");
+	values.add([getOppositeRoleInBinaryRel(role).entity.name.toLowerFirst()/].get[getMappedAttributeOfFieldInStructure(ref.targetField->any(true).oclAsType(PhysicalField), ref.targetField->any(true).oclAsType(PhysicalField).getAbstractPhysicalStructureNotEmbeddedObject()).name.toUpperFirst()/]());
+			[for (attr : Attribute | role.entity.identifier.attributes)]
+						[if (i=1)]
+	filtercolumn = "[getPhysicalName(getMappedPhysicalField(attr, struct, db, role.entity.getMappingRules()))/]";
+	filtervalue = [role.entity.name.toLowerFirst()/].get[attr.name.toUpperFirst()/]();
+						[else]
+	logger.error("To implement. Support of multi valued identifiers");
+	throw new UnsupportedOperationException("Can't handle multi valued identifiers");
+						[/if]
+			[/for]
+		[/let]
+		[/for]
+	DBConnectionMgr.updateInTable(filtercolumn, filtervalue, columns, values, "[struct.name/]", "[db.name/]");					
+	return true;
+	[else]
+		[if (struct.oclIsTypeOf(pml::Collection))]
+	Bson filter = new Document();
+	Bson updateOp;
+		[for (rolerel : Role | rel.roles)]
+		[let entityType : EntityType = rolerel.entity]
+			[for (ref : Reference | getRefOfPhysicalStructure(struct))]
+				[let roleref : Role = getMappedRoleOfReference(ref)]
+				[if (rolerel=roleref)]
+	updateOp = set("[ref.sourceField->any(true).oclAsType(PhysicalField).getPhysicalName()/]",[getOppositeRoleInBinaryRel(rolerel).entity.name.toLowerFirst()/].get[getMappedAttributeOfFieldInStructure(ref.targetField->any(true).oclAsType(PhysicalField), ref.targetField->any(true).oclAsType(PhysicalField).getAbstractPhysicalStructureNotEmbeddedObject()).name.toUpperFirst()/]());
+					[for (attr : Attribute | entityType.identifier.attributes)]
+						[if (i=1)]
+	filter = eq("[getPhysicalName(getMappedPhysicalField(attr, struct, db, entityType.getMappingRules()))/]",[entityType.name.toLowerFirst()/].get[attr.name.toUpperFirst()/]());
+						[else]
+	filter = and(filter,eq("[getPhysicalName(getMappedPhysicalField(attr, struct, db, entityType.getMappingRules()))/]",[entityType.name.toLowerFirst()/].get[attr.name.toUpperFirst()/]());
+						[/if]
+					[/for]
+	DBConnectionMgr.upsertMany(filter, updateOp, "[struct.name/]", "[db.name/]");
+	return true;
+				[/if]
+				[/let]
+			[/for]
+		[/let]
+		[/for]
+		[else]
+	return false;
+		[/if]
+	[/if]
 }[/template]
 

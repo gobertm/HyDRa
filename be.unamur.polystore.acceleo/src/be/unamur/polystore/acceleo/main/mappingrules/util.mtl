@@ -12,7 +12,6 @@
 [query public getConcernedDatabases(attr : Attribute, model: Domainmodel) : Set(Database) 
 = invoke('be.unamur.polystore.acceleo.main.utils.MappingRuleService', 'getConcernedDatabases(be.unamur.polystore.pml.Attribute, be.unamur.polystore.pml.Domainmodel)', Sequence{attr, model}) /]
 
-
 [query public getConcernedPhysicalStructures(ent : EntityType, model: Domainmodel) : Set(AbstractPhysicalStructure) 
 = invoke('be.unamur.polystore.acceleo.main.utils.MappingRuleService', 'getConcernedPhysicalStructures(be.unamur.polystore.pml.EntityType, be.unamur.polystore.pml.Domainmodel)', Sequence{ent, model}) /]
 
@@ -21,6 +20,15 @@
 
 [query public isJoinStructureOfMappedMandatoryRoleOfEntity(ent : EntityType, struct : AbstractPhysicalStructure, model: Domainmodel) : Boolean 
 = invoke('be.unamur.polystore.acceleo.main.utils.MappingRuleService', 'isJoinStructureOfMappedMandatoryRoleOfEntity(be.unamur.polystore.pml.EntityType, be.unamur.polystore.pml.AbstractPhysicalStructure, be.unamur.polystore.pml.Domainmodel)', Sequence{ent,struct, model}) /]
+
+[query public getJoinPhysicalStructureOfRelation(rel : RelationshipType) : Set(AbstractPhysicalStructure) 
+= invoke('be.unamur.polystore.acceleo.main.utils.MappingRuleService', 'getJoinPhysicalStructureOfRelation(be.unamur.polystore.pml.RelationshipType)', Sequence{rel}) /]
+
+[query public getEmbeddedPhysicalStructureOfRelation(rel : RelationshipType) : Set(AbstractPhysicalStructure) 
+= invoke('be.unamur.polystore.acceleo.main.utils.MappingRuleService', 'getEmbeddedPhysicalStructureOfRelation(be.unamur.polystore.pml.RelationshipType)', Sequence{rel}) /]
+
+[query public getRefPhysicalStructureOfRelation(rel : RelationshipType) : Set(AbstractPhysicalStructure) 
+= invoke('be.unamur.polystore.acceleo.main.utils.MappingRuleService', 'getRefPhysicalStructureOfRelation(be.unamur.polystore.pml.RelationshipType)', Sequence{rel}) /]
 
 [query public getRefStructureOfMappedMandatoryRoleOfEntity(ent : EntityType, model: Domainmodel) : Set(AbstractPhysicalStructure) 
 = invoke('be.unamur.polystore.acceleo.main.utils.MappingRuleService', 'getRefStructureOfMappedMandatoryRoleOfEntity(be.unamur.polystore.pml.EntityType, be.unamur.polystore.pml.Domainmodel)', Sequence{ent, model}) /]
@@ -78,6 +86,10 @@
 
 [query public isMappedToRole(o: OclAny, rule : MappingRules) : Boolean
 = invoke('be.unamur.polystore.acceleo.main.utils.MappingRuleService','isMappedToRole(org.eclipse.emf.ecore.EObject,be.unamur.polystore.pml.MappingRules)',Sequence{o,rule})
+ /]
+
+[query public isMappedToGivenRole(o: OclAny, role: Role) : Boolean
+= invoke('be.unamur.polystore.acceleo.main.utils.MappingRuleService','isMappedToGivenRole(org.eclipse.emf.ecore.EObject, be.unamur.polystore.pml.Role)',Sequence{o,role})
  /]
 
 [query public isMappedToMandatoryRole(o: OclAny, rule : MappingRules) : Boolean

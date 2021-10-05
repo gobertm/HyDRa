@@ -75,6 +75,41 @@ public class MappingRuleService {
 		}
 		return res;
 	}
+	
+	public static Set<AbstractPhysicalStructure> getJoinPhysicalStructureOfRelation(RelationshipType relationship) {
+		MappingRules rules = ((Domainmodel) getFirstAncestor(Domainmodel.class, relationship)).getMappingRules();
+		Set<AbstractPhysicalStructure> res = new HashSet<>();
+		Set<AbstractPhysicalStructure> structRole1 = getMappedPhysicalStructureOfRoleToReference(relationship.getRoles().get(0),rules);
+		Set<AbstractPhysicalStructure> structRole2 = getMappedPhysicalStructureOfRoleToReference(getOppositeOfRole(relationship.getRoles().get(0)),rules);
+		
+		if(structRole1.equals(structRole2))
+			return structRole1;
+		return res;
+	}
+	
+	public static Set<AbstractPhysicalStructure> getEmbeddedPhysicalStructureOfRelation(RelationshipType rel){
+		MappingRules rules = ((Domainmodel) getFirstAncestor(Domainmodel.class, rel)).getMappingRules();
+		Set<AbstractPhysicalStructure> res = new HashSet<>();
+		for(Role role : rel.getRoles()) {
+			// look for embedded objects containing role Entity
+			for(EmbeddedObject o : getMappedEmbeddedObjects(role, rules)) {
+				res.add(getPhysicalStructureNotEmbeddedObject(o));
+			}
+		}
+		return res;
+	}
+	
+	public static Set<AbstractPhysicalStructure> getRefPhysicalStructureOfRelation(RelationshipType rel){
+		MappingRules rules = ((Domainmodel) getFirstAncestor(Domainmodel.class, rel)).getMappingRules();
+		Set<AbstractPhysicalStructure> res = new HashSet<>();
+		for(Role role : rel.getRoles()) {
+		for(Reference o : getMappedReferences(role, rules)) {
+				res.add(getPhysicalStructureNotEmbeddedObject(o));
+			}
+		}
+		res.removeAll(getJoinPhysicalStructureOfRelation(rel));
+		return res;
+	}
 
 	/**
 	 * Given a specific conceptual attribute and a structure
@@ -554,6 +589,25 @@ public class MappingRuleService {
 				if(keybracketsRule.getPhysicalStructure().equals(e) 
 						&& isMandatoryRole(getOppositeOfRole(keybracketsRule.getRoleConceptual()))
 						&& getOppositeOfRole((Role)keybracketsRule.getRoleConceptual()).getEntity().equals(entity))
+					return true;
+			}
+		}
+		return false;
+	}
+	
+	public static boolean isMappedToGivenRole(EObject e, Role role) {
+		MappingRules rules = ((Domainmodel) getFirstAncestor(Domainmodel.class, role)).getMappingRules();
+		for(AbstractMappingRule rule : rules.getMappingRules()) {
+			if(rule instanceof RoleToEmbbededObjectMappingRule) {
+				RoleToEmbbededObjectMappingRule embeddedRule = (RoleToEmbbededObjectMappingRule) rule;
+				if(embeddedRule.getPhysicalStructure().equals(e)
+						&& embeddedRule.getRoleConceptual().equals(role)) 
+					return true;
+			}
+			if(rule instanceof RoleToKeyBracketsFieldMappingRule) {
+				RoleToKeyBracketsFieldMappingRule keybracketsRule = (RoleToKeyBracketsFieldMappingRule) rule;
+				if(keybracketsRule.getPhysicalStructure().equals(e)
+						&& keybracketsRule.getRoleConceptual().equals(e)) 
 					return true;
 			}
 		}

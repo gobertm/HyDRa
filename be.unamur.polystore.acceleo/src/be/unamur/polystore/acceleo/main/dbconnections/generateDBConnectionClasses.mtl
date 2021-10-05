@@ -158,6 +158,34 @@ public class DBConnectionMgr {
 		}
 	}
 
+
+	public static void updateInTable(String filtercolumn, String filtervalue, List<String> columns, List<Object> values, String struct, String db) {
+		DBCredentials credentials = dbPorts.get(db);
+		if((credentials.dbType.equals("mariadb") || credentials.dbType.equals("sqlite"))){
+			try {
+				StringJoiner joiner = new StringJoiner(",", "", "= ?");
+				for (String s : columns) {
+					joiner.add(s);
+				}
+				String sql = "UPDATE " + struct + " SET " + joiner +" WHERE "+filtercolumn +"= ?";
+				PreparedStatement statement = getJDBCConnection(credentials).prepareStatement(sql);
+				for (int i = 1; i <= values.size(); i++) {
+					statement.setObject(i,values.get(i-1));
+				}
+				statement.setObject(values.size()+1,filtervalue);
+				statement.addBatch();
+				statement.executeBatch();
+			} catch (SQLException e) {
+				e.printStackTrace();
+				logger.error("SQL Error in preparedStatement");
+			}
+		}
+		else{
+			logger.error("Can't perform update, wrong database type, need relational (mariadb or sqlite) database. Database : '{}' , type : '{}' ",credentials.dbName, credentials.dbType);
+			throw new RuntimeException("Can't perform update, wrong database type, need document db");
+		}
+	}
+
 	private static Connection getJDBCConnection(DBCredentials credentials) {
 		try {
 			if (connection == null) {

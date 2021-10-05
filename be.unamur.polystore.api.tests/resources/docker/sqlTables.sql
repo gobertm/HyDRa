@@ -15,7 +15,8 @@ create table mydb.directed
 create table mydb.reviewTable
 (
 	id varchar(20) primary key,
-	content varchar(180) null
+	content varchar(180) null,
+	movieid varchar(20) null
 );
 
 create table mydb.movieTable

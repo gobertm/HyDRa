@@ -44,11 +44,16 @@ import java.util.regex.Matcher;
 import scala.collection.mutable.WrappedArray;
 import org.apache.spark.api.java.function.FlatMapFunction;
 import dbconnection.SparkConnectionMgr;
+import dbconnection.DBConnectionMgr;
 import org.apache.spark.sql.types.DataTypes;
 import org.apache.spark.sql.types.StructField;
 import org.apache.spark.sql.types.StructType;
 import org.apache.spark.sql.types.ArrayType;
 import static com.mongodb.client.model.Updates.addToSet;
+import org.bson.Document;
+import org.bson.conversions.Bson;
+import static com.mongodb.client.model.Filters.eq;
+import static com.mongodb.client.model.Updates.*;
 
 
 public class [rel.name.toUpperFirst() + 'ServiceImpl' /] extends dao.services.[rel.name.toUpperFirst() + 'Service' /] {
