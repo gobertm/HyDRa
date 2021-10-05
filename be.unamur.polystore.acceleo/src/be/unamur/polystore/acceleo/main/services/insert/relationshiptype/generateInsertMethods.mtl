@@ -34,4 +34,16 @@ public 	[if  (override = false)]abstract [/if]boolean insert[rel.name.toUpperFir
 	insert[rel.name.toUpperFirst() /]([rel.name.toLowerFirst() /]);
 }
 [/if]
+
+[for (roleRel : Role | rel.roles)]
+[if  (override = false and isCardinalityMaxN(roleRel))] public void insert[rel.name.toUpperFirst() /]([getOppositeRoleInBinaryRel(roleRel).entity.name.toUpperFirst()/] [getOppositeRoleInBinaryRel(roleRel).entity.name.toLowerFirst()/], List<[roleRel.entity.name.toUpperFirst()/]> [roleRel.name.toLowerFirst()/]List){
+	[rel.name.toUpperFirst() /] [rel.name.toLowerFirst() /] = new [rel.name.toUpperFirst() /]();
+	[rel.name.toLowerFirst()/].set[getOppositeRoleInBinaryRel(roleRel).name.toUpperFirst()/]([getOppositeRoleInBinaryRel(roleRel).entity.name.toLowerFirst()/]);
+	for([roleRel.entity.name.toUpperFirst()/] [roleRel.name.toLowerFirst()/] : [roleRel.name.toLowerFirst()/]List){
+		[rel.name.toLowerFirst()/].set[roleRel.name.toUpperFirst()/]([roleRel.name.toLowerFirst()/]);
+		insert[rel.name.toUpperFirst() /]([rel.name.toLowerFirst() /]);
+	}
+}
+[/if]
+[/for]
 [/template]

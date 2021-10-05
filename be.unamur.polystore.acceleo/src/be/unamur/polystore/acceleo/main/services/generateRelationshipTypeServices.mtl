@@ -23,6 +23,7 @@ import pojo.[role.entity.name.toUpperFirst() /];
 import pojo.[rel.name.toUpperFirst()/];
 import conditions.[role.entity.name.toUpperFirst() /]Attribute;
 import org.apache.commons.lang.mutable.MutableBoolean;
+import java.util.List;
 [/for]
 
 
