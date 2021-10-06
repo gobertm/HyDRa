@@ -5,6 +5,8 @@
 [import be::unamur::polystore::acceleo::main::mappingrules::util /]
 
 [template public generateInsertMethods(rel: RelationshipType, override: Boolean)]
+[comment]Restrict generation of insertR to needed case : insertR cant happen when at least one role is 1-1[/comment]
+[if (rel.roles->select(role : Role | role.cardinality=Cardinality::ONE) -> size() = 0)]
 public [if  (override = false)]abstract [/if]void insert[rel.name.toUpperFirst() /]([rel.name.toUpperFirst() /] [rel.name /])[if  (override = false)];[else][insertRImpl(rel) /][/if]
 
 [for (struct : AbstractPhysicalStructure | getJoinPhysicalStructureOfRelation(rel))]
@@ -46,4 +48,5 @@ public 	[if  (override = false)]abstract [/if]boolean insert[rel.name.toUpperFir
 }
 [/if]
 [/for]
+[/if]
 [/template]
