@@ -281,8 +281,22 @@ public class MappingRuleService {
 			for(Role role : rel.getRoles()) {
 				if(role.getEntity().equals(ent) 
 						&& isMandatoryRole(role)
-					) {
+						) {
 					res.addAll(getMappedPhysicalStructureOfRoleToReference(role,model.getMappingRules()));
+				}
+			}
+		}
+		return res;
+	}
+	
+	public static Set<AbstractPhysicalStructure> getRefStructureMappedToOppositeOfMandatoryRoleOfEntity(EntityType ent, Domainmodel model){
+		Set<AbstractPhysicalStructure> res = new HashSet<AbstractPhysicalStructure>();
+		for(RelationshipType rel : model.getConceptualSchema().getRelationships()) {
+			for(Role role : rel.getRoles()) {
+				if(role.getEntity().equals(ent) 
+						&& isMandatoryRole(role)
+					) {
+					res.addAll(getMappedPhysicalStructureOfRoleToReference(getOppositeOfRole(role),model.getMappingRules()));
 				}
 			}
 		}

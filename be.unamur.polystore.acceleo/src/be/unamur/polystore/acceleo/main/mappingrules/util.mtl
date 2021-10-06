@@ -33,6 +33,9 @@
 [query public getRefStructureOfMappedMandatoryRoleOfEntity(ent : EntityType, model: Domainmodel) : Set(AbstractPhysicalStructure) 
 = invoke('be.unamur.polystore.acceleo.main.utils.MappingRuleService', 'getRefStructureOfMappedMandatoryRoleOfEntity(be.unamur.polystore.pml.EntityType, be.unamur.polystore.pml.Domainmodel)', Sequence{ent, model}) /]
 
+[query public getRefStructureMappedToOppositeOfMandatoryRoleOfEntity(ent : EntityType, model: Domainmodel) : Set(AbstractPhysicalStructure) 
+= invoke('be.unamur.polystore.acceleo.main.utils.MappingRuleService', 'getRefStructureMappedToOppositeOfMandatoryRoleOfEntity(be.unamur.polystore.pml.EntityType, be.unamur.polystore.pml.Domainmodel)', Sequence{ent, model}) /]
+
 [query public getRemainingRefStructureOfMappedMandatoryRoleOfEntity(ent : EntityType, model: Domainmodel) : Set(AbstractPhysicalStructure) 
 = invoke('be.unamur.polystore.acceleo.main.utils.MappingRuleService', 'getRemainingRefStructureOfMappedMandatoryRoleOfEntity(be.unamur.polystore.pml.EntityType, be.unamur.polystore.pml.Domainmodel)', Sequence{ent, model}) /]
 

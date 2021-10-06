@@ -27,7 +27,6 @@ public 	[if  (override = false)]abstract [/if]boolean insert[rel.name.toUpperFir
 [/for]
 [/for]
 
-
 [if  (override = false)] public void insert[rel.name.toUpperFirst() /]([for (role : Role | rel.roles) separator(',')][role.entity.name.toUpperFirst()/] [role.name.toLowerFirst()/] [/for]){
 	[rel.name.toUpperFirst() /] [rel.name.toLowerFirst() /] = new [rel.name.toUpperFirst() /]();
 		[for (role : Role | rel.roles)]

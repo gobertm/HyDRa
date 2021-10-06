@@ -35,6 +35,12 @@
 	inserted = insert[entityType.name.toUpperFirst() /]In[struct.name.toUpperFirst()/]From[db.name.toUpperFirst() /]([entityType.name.toLowerFirst() /][for (role: Role | getMandatoryRoles(entityType, conceptualSchema))],[role.getOppositeRoleInBinaryRel().name.toLowerFirst()/][getRelationShipType(role).name.toUpperFirst()/][/for])|| inserted ;
 	[/for]
 	[/for]
+	// Insert in ref structures mapped to opposite role of mandatory role  
+	[for (struct: AbstractPhysicalStructure | getRefStructureMappedToOppositeOfMandatoryRoleOfEntity(entityType, entityType.ancestors(Domainmodel)->first()))]
+	[for (db: Database | getConcernedDatabases(struct, entityType.ancestors(Domainmodel)->first()))]
+	inserted = insert[entityType.name.toUpperFirst() /]In[struct.name.toUpperFirst()/]From[db.name.toUpperFirst() /]([entityType.name.toLowerFirst() /][for (role: Role | getMandatoryRoles(entityType, conceptualSchema))],[role.getOppositeRoleInBinaryRel().name.toLowerFirst()/][getRelationShipType(role).name.toUpperFirst()/][/for])|| inserted ;
+	[/for]
+	[/for]
 	return inserted;
 }[/template]
 
@@ -278,6 +284,57 @@ values.add(value_[getPhysicalName(field)/]);
 	return true;
 [/template]
 
+[template public insertInRefStructureOfOppositeRole(entityType: EntityType, struct : AbstractPhysicalStructure, db : Database)]
+ 	// Entity '[entityType.name/]' reference in structure '[struct.name/]'
+	[if (struct.oclIsTypeOf(Table))]
+	List<String> columns = new ArrayList<>();
+	List<Object> values = new ArrayList<>();
+	String filtercolumn, filtervalue;
+		[for (ref : Reference | getRefOfPhysicalStructure(struct))]
+		[let roleref : Role = getMappedRoleOfReference(ref)]
+			[if (entityType=getOppositeRoleInBinaryRel(roleref).entity)]
+	columns.add("[ref.sourceField->any(true).oclAsType(PhysicalField).getPhysicalName()/]");
+	values.add([getOppositeRoleInBinaryRel(roleref).entity.name.toLowerFirst()/].get[getMappedAttributeOfFieldInStructure(ref.targetField->any(true).oclAsType(PhysicalField), ref.targetField->any(true).oclAsType(PhysicalField).getAbstractPhysicalStructureNotEmbeddedObject()).name.toUpperFirst()/]());
+			[for (attr : Attribute | roleref.entity.identifier.attributes)]
+						[if (i=1)]
+	filtercolumn = "[getPhysicalName(getMappedPhysicalField(attr, struct, db, roleref.entity.getMappingRules()))/]";
+	filtervalue = [roleref.name.toLowerFirst()/][getRelationShipType(roleref).name.toUpperFirst()/].get[attr.name.toUpperFirst()/]();
+						[else]
+	logger.error("To implement. Support of multi valued identifiers");
+	throw new UnsupportedOperationException("Can't handle multi valued identifiers");
+						[/if]
+			[/for]
+			[/if]
+		[/let]
+		[/for]
+	DBConnectionMgr.updateInTable(filtercolumn, filtervalue, columns, values, "[struct.name/]", "[db.name/]");					
+	return true;
+	[else]
+		[if (struct.oclIsTypeOf(pml::Collection))]
+	Bson filter = new Document();
+	Bson updateOp;
+			[for (ref : Reference | getRefOfPhysicalStructure(struct))]
+				[let roleref : Role = getMappedRoleOfReference(ref)]
+				[if (entityType=getOppositeRoleInBinaryRel(roleref).entity)]
+	updateOp = set("[ref.sourceField->any(true).oclAsType(PhysicalField).getPhysicalName()/]",[getOppositeRoleInBinaryRel(roleref).entity.name.toLowerFirst()/].get[getMappedAttributeOfFieldInStructure(ref.targetField->any(true).oclAsType(PhysicalField), ref.targetField->any(true).oclAsType(PhysicalField).getAbstractPhysicalStructureNotEmbeddedObject()).name.toUpperFirst()/]());
+					[for (attr : Attribute | roleref.entity.identifier.attributes)]
+						[if (i=1)]
+	filter = eq("[getPhysicalName(getMappedPhysicalField(attr, struct, db, entityType.getMappingRules()))/]",[roleref.name.toLowerFirst()/][roleref.getRelationShipType().name.toUpperFirst()/].get[attr.name.toUpperFirst()/]());
+						[else]
+	filter = and(filter,eq("[getPhysicalName(getMappedPhysicalField(attr, struct, db, entityType.getMappingRules()))/]",[roleref.name.toLowerFirst()/][roleref.getRelationShipType().name.toUpperFirst()/].get[attr.name.toUpperFirst()/]());
+						[/if]
+					[/for]
+	DBConnectionMgr.update(filter, updateOp, "[struct.name/]", "[db.name/]");
+	return true;
+				[/if]
+				[/let]
+			[/for]
+		[else]
+	return false;
+		[/if]
+	[/if]
+	
+[/template]
 
 [template public insertInSQLDBImpl(entityType : EntityType, struct : AbstractPhysicalStructure, db : Database)]
 	List<Row> listRows=new ArrayList<Row>();
