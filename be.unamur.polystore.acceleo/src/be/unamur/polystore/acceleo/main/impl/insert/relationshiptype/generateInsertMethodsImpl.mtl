@@ -132,7 +132,7 @@ values.add(value_[getPhysicalName(field)/]);
 						[/if]
 					[/for]
 	updateOp = addToSet("[field.getPhysicalName()/]", doc[getPhysicalName(field)/]_1);
-	DBConnectionMgr.upsertMany(filter, updateOp, "[struct.name/]", "[db.name/]");					
+	DBConnectionMgr.update(filter, updateOp, "[struct.name/]", "[db.name/]");					
 				[/if]	
 			[/if]
 		[/for]
@@ -188,7 +188,7 @@ values.add(value_[getPhysicalName(field)/]);
 	filter = and(filter,eq("[getPhysicalName(getMappedPhysicalField(attr, struct, db, entityType.getMappingRules()))/]",[entityType.name.toLowerFirst()/].get[attr.name.toUpperFirst()/]());
 						[/if]
 					[/for]
-	DBConnectionMgr.upsertMany(filter, updateOp, "[struct.name/]", "[db.name/]");
+	DBConnectionMgr.update(filter, updateOp, "[struct.name/]", "[db.name/]");
 	return true;
 				[/if]
 				[/let]
