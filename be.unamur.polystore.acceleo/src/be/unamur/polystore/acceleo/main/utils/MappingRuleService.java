@@ -303,9 +303,21 @@ public class MappingRuleService {
 		return res;
 	}
 	
+	public static Set<AbstractPhysicalStructure> getRemainingRefStructureMappedToOppositeOfMandatoryRoleOfEntity(EntityType ent, Domainmodel model){
+		Set<AbstractPhysicalStructure> res = new HashSet<AbstractPhysicalStructure>();
+		res.addAll(getRefStructureMappedToOppositeOfMandatoryRoleOfEntity(ent, model));
+//		res.addAll(getNotEmbeddedRefStructureOfMappedMandatoryRoleOfEntity(ent, model));
+		res.removeAll(getDescendingOneLevelPhysicalStructuresOfEntity(ent, model));
+		res.removeAll(getAscendingPhysicalStructuresOfEntity(ent, model));
+		res.removeAll(getMappedPhysicalStructureToInsertSingleE(ent, model));
+		res.removeAll(getRefStructureOfMappedMandatoryRoleOfEntity(ent, model));
+		return res;
+	}
+	
 	public static Set<AbstractPhysicalStructure> getRemainingRefStructureOfMappedMandatoryRoleOfEntity(EntityType ent, Domainmodel model){
 		Set<AbstractPhysicalStructure> res = new HashSet<AbstractPhysicalStructure>();
 		res.addAll(getRefStructureOfMappedMandatoryRoleOfEntity(ent, model));
+//		res.addAll(getNotEmbeddedRefStructureOfMappedMandatoryRoleOfEntity(ent, model));
 		res.removeAll(getDescendingOneLevelPhysicalStructuresOfEntity(ent, model));
 		res.removeAll(getAscendingPhysicalStructuresOfEntity(ent, model));
 		res.removeAll(getMappedPhysicalStructureToInsertSingleE(ent, model));
