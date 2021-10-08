@@ -16,6 +16,9 @@ conceptual schema cs {
 		id: string,
 		rating : int,
 		content : string
+		identifier{
+			id
+		}
 	}
 	
 	entity type Client {

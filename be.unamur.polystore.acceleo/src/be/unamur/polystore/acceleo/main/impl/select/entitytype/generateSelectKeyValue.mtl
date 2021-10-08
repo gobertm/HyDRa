@@ -298,6 +298,7 @@
 					//Retrieving reference field '[refField.getPhysicalName()/]' in Key
 					Pattern pattern_[refField.getPhysicalName()/] = Pattern.compile("\\*");
 			        Matcher match_[refField.getPhysicalName()/] = pattern_[refField.getPhysicalName()/].matcher(finalKeypattern);
+					regex = finalKeypattern.replaceAll("\\*","(.*)");
 					groupindex = fieldsListInKey.indexOf("[refField.getPhysicalName()/]")+1;
 					if(groupindex==null) {
 						logger.warn("Attribute '[pojoName /]' mapped physical field '[refField.getPhysicalName()/]' found in key but can't get index in build keypattern '{}'.", finalKeypattern);
