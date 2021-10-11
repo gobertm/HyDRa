@@ -102,6 +102,7 @@ mapping rules{
 	cs.Client(id) -> KVSchema.KVClient(clientID),
 	cs.Client(firstname,lastname,street,number) -> KVSchema.KVClient(firstname,lastname,street,streetnbr),
 	cs.productReview.product -> KVSchema.kvProductList.reviews,
+	cs.Product(id) -> KVSchema.kvProductList(prodid),
 	cs.Product(id,name) -> KVSchema.kvProductName(idprod,name),
 	cs.Product(id,price) -> KVSchema.kvProdPrice(idprod,price)
 }
