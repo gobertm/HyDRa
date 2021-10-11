@@ -109,7 +109,7 @@ public [if (override = false)]abstract [/if]boolean insert[entityType.name.toUpp
 	}[/if]
 [/for]
 [/for]
-[comment Insert in struct containing ref mapped to opposite role of a mandatory role /]
+[comment Insert in struct containing ref mapped to opposite role of a mandatory role (not already included in preceding structures)/]
 [for (struct: AbstractPhysicalStructure | getRemainingRefStructureMappedToOppositeOfMandatoryRoleOfEntity(entityType, entityType.ancestors(Domainmodel)->first()))]
 [for (db: Database | getConcernedDatabases(struct, entityType.ancestors(Domainmodel)->first()))]
 

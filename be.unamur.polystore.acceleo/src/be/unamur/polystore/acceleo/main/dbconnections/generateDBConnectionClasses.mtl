@@ -222,10 +222,7 @@ package dbconnection;
 
 import static java.util.Collections.singletonList;
 
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.List;
+import java.util.*;
 
 import com.redislabs.provider.redis.ReadWriteConfig;
 import com.redislabs.provider.redis.RedisConfig;
@@ -240,6 +237,9 @@ import org.apache.spark.sql.types.DataTypes;
 import org.apache.spark.sql.types.StructField;
 import org.apache.spark.sql.types.StructType;
 import org.bson.Document;
+import redis.clients.jedis.Jedis;
+import redis.clients.jedis.ScanParams;
+import redis.clients.jedis.ScanResult;
 
 import com.mongodb.spark.MongoSpark;
 import com.mongodb.spark.config.ReadConfig;
@@ -423,8 +423,37 @@ public class SparkConnectionMgr {
 				.option("key.column", "_id")
                 .schema(structTypeHash).load();
 		return res;
-	} 
+	}
 
+	public static Dataset<Row> getRowsFromKeyValueList(String dbName, String keypattern, StructType structType){
+		DBCredentials credentials = dbPorts.get(dbName);
+		List<Row> rows = new ArrayList<>();
+		Jedis jedis;
+		jedis = new Jedis(credentials.url, Integer.parseInt(credentials.port));
+		ScanParams scanParams = new ScanParams().match(keypattern).count(100);
+		String cur = ScanParams.SCAN_POINTER_START;
+		boolean cycleIsFinished = false;
+		Map<String, List<String>> listKV = new HashMap<>();
+		while(!cycleIsFinished) {
+			ScanResult<String> scanResult =
+					jedis.scan(cur, scanParams);
+			List<String> keysList = scanResult.getResult();
+
+			//do whatever with the key-value pairs in result
+			for (String key : keysList) {
+				List<String> listvalues = jedis.lrange(key, 0, -1);
+				listKV.put(key, listvalues);
+			}
+			cur = scanResult.getCursor();
+			if (cur.equals("0")) {
+				cycleIsFinished = true;
+			}
+		}
+		listKV.forEach((k,v) -> v.forEach(vv -> rows.add(RowFactory.create(k,k,vv))));
+		Dataset<Row> data = getSession().createDataFrame(rows, structType);
+		jedis.close();
+		return data;
+	} 
 }
 [/file]
 [/template]

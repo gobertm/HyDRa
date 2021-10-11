@@ -274,8 +274,8 @@ Database :
 	'}'
 ;
 
-KVDataType :
-	'list' | 'set' | 'ordered' 'set'| 'hash' // and more to add
+enum KVDataType returns KVDataType:
+	LIST = 'list' | SET = 'set' | ORDERED_SET = 'ordered set'| HASH='hash' // and more to add
 ;
 
 DataType returns DataType:

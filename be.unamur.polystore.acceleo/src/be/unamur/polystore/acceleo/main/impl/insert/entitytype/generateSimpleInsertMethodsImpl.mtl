@@ -36,7 +36,7 @@
 	[/for]
 	[/for]
 	// Insert in ref structures mapped to opposite role of mandatory role  
-	[for (struct: AbstractPhysicalStructure | getRefStructureMappedToOppositeOfMandatoryRoleOfEntity(entityType, entityType.ancestors(Domainmodel)->first()))]
+	[for (struct: AbstractPhysicalStructure | getRemainingRefStructureMappedToOppositeOfMandatoryRoleOfEntity(entityType, entityType.ancestors(Domainmodel)->first()))]
 	[for (db: Database | getConcernedDatabases(struct, entityType.ancestors(Domainmodel)->first()))]
 	inserted = insert[entityType.name.toUpperFirst() /]In[struct.name.toUpperFirst()/]From[db.name.toUpperFirst() /]([entityType.name.toLowerFirst() /][for (role: Role | getMandatoryRoles(entityType, conceptualSchema))],[role.getOppositeRoleInBinaryRel().name.toLowerFirst()/][getRelationShipType(role).name.toUpperFirst()/][/for])|| inserted ;
 	[/for]

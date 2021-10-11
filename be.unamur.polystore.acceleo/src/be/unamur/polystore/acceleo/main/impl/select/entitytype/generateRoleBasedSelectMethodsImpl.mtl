@@ -91,7 +91,12 @@
 	
 				[/if]
 	[comment A->B . The join will return as many lines as B. But we return A, so duplicates may exist. /]
+	[if (entity.identifier.oclIsUndefined() = true)]
+	logger.warn("Conceptual entity '[entity.name/]' does not have a declared identifier. Returned results may be inconsistent.");
+	res_[entity.name/]_[ref.name/] = res_[entity.name/]_[ref.name/].dropDuplicates();
+	[else]
 	res_[entity.name/]_[ref.name/] = res_[entity.name/]_[ref.name/].dropDuplicates(new String[ '[' /][ ']' /] {[if (entity.identifier.oclIsUndefined() = false)][for (attr : Attribute | entity.identifier.attributes) separator(',')]"[attr.name/]"[/for][/if]});
+	[/if]
 	datasetsPOJO.add(res_[entity.name/]_[ref.name/]);
 				[/let]
 				[/let]
@@ -161,7 +166,12 @@
 			[entity.name.toLowerFirst()/]TDO[ref.name/][role.name/].col("[getJavaAbsolutePath(ref) /]_[ref.targetField->first().getPhysicalName()/]").equalTo([role2.entity.name.toLowerFirst()/]TDO[ref.name/][role2.name/].col("[getJavaAbsolutePath(ref) /]_[ref.sourceField->first().getPhysicalName()/]")));
 	Dataset<[entity.name.toUpperFirst()/]> res_[entity.name/]_[ref.name/] = res_[ref.name/].select([for (attr : Attribute | entity.attributes)] "[attr.name/]",[/for] "logEvents").as(Encoders.bean([entity.name.toUpperFirst()/].class));
 				[/if]
+				[if (entity.identifier.oclIsUndefined() = true)]
+	logger.warn("Conceptual entity '[entity.name/]' does not have a declared identifier. Returned results may be inconsistent.");
+	res_[entity.name/]_[ref.name/] = res_[entity.name/]_[ref.name/].dropDuplicates();
+				[else]
 	res_[entity.name/]_[ref.name/] = res_[entity.name/]_[ref.name/].dropDuplicates(new String[ '[' /][ ']' /] {[if (entity.identifier.oclIsUndefined() = false)][for (attr : Attribute | entity.identifier.attributes) separator(',')]"[attr.name/]"[/for][/if]});
+				[/if]
 	datasetsPOJO.add(res_[entity.name/]_[ref.name/]);
 				[/let]
 				[/let]
@@ -196,7 +206,12 @@
 	
 	} else
 		res_[entity.name/] = res_[rel.name/]_[role.name/].map((MapFunction<[rel.name.toUpperFirst()/],[entity.name.toUpperFirst()/]>) r -> r.get[role.name.toUpperFirst()/](), Encoders.bean([entity.name.toUpperFirst()/].class));
+			[if (entity.identifier.oclIsUndefined() = true)]
+	logger.warn("Conceptual entity '[entity.name/]' does not have a declared identifier. Returned results may be inconsistent.");
+	res_[entity.name/] = res_[entity.name/].dropDuplicates();
+			[else]
 	res_[entity.name/] = res_[entity.name/].dropDuplicates(new String[ '[' /][ ']' /] {[if (entity.identifier.oclIsUndefined() = false)][for (attr : Attribute | entity.identifier.attributes) separator(',')]"[attr.name/]"[/for][/if]});
+			[/if]
 	datasetsPOJO.add(res_[entity.name/]);
 		[/for]
 	[comment for method getContainedObject by role/]
@@ -223,7 +238,12 @@
 	
 	} else
 		res_[entity.name/] = res_[rel.name/]_[role.name/].map((MapFunction<[rel.name.toUpperFirst()/],[entity.name.toUpperFirst()/]>) r -> r.get[role.name.toUpperFirst()/](), Encoders.bean([entity.name.toUpperFirst()/].class));
+			[if (entity.identifier.oclIsUndefined() = true)]
+	logger.warn("Conceptual entity '[entity.name/]' does not have a declared identifier. Returned results may be inconsistent.");
+			res_[entity.name/] = res_[entity.name/].dropDuplicates();
+			[else]
 	res_[entity.name/] = res_[entity.name/].dropDuplicates(new String[ '[' /][ ']' /] {[if (entity.identifier.oclIsUndefined() = false)][for (attr : Attribute | entity.identifier.attributes) separator(',')]"[attr.name/]"[/for][/if]});
+			[/if]
 	datasetsPOJO.add(res_[entity.name/]);
 		[/for]
 		[/let]
@@ -474,7 +494,12 @@ res_[ref.name/] = res_[ref.name/].join([role2.entity.name.toLowerFirst()/]TDO[re
 	[role2.entity.name.toLowerFirst()/]TDO[ref.name/][role2.name/].col("[getJavaAbsolutePath(ref2) /]_[ref2.targetField->first().getPhysicalName()/]").equalTo(res_[ref.name/].col("[getJavaAbsolutePath(ref2) /]_[ref2.sourceField->first().getPhysicalName()/]")));
 Dataset<[entity.name.toUpperFirst()/]> res_[entity.name/]_[ref.name/] = res_[ref.name/].select([for (attr : Attribute | entity.attributes)] "[attr.name/]",[/for] "logEvents").as(Encoders.bean([entity.name.toUpperFirst()/].class));
 [/if]
+[if (entity.identifier.oclIsUndefined() = true)]
+	logger.warn("Conceptual entity '[entity.name/]' does not have a declared identifier. Returned results may be inconsistent.");
+	res_[entity.name/]_[ref.name/] = res_[entity.name/]_[ref.name/].dropDuplicates();
+[else]
 datasetsPOJO.add(res_[entity.name/]_[ref.name/].dropDuplicates(new String[ '[' /][ ']' /] {[if (entity.identifier.oclIsUndefined() = false)][for (attr : Attribute | entity.identifier.attributes) separator(',')]"[attr.name/]"[/for][/if]}));	
+[/if]
 [/let]
 [/let]	
 [/let]	
