@@ -204,7 +204,7 @@
 	[else]
 		[comment Retrieve Dataset<Row> containing field of hashes. TODO other Redis dataTypes. /]
 		// TODO only handles 'hash' for now
-	StructType structTypeHash = new StructType(new StructField['['/][']'/] {
+	StructType structType = new StructType(new StructField['['/][']'/] {
 		DataTypes.createStructField("_id", DataTypes.StringType, true), //technical field to store the key.
 	[for (field : PhysicalField | struct.key.pattern->filter(BracketsField)) separator(',')]
 		DataTypes.createStructField("[getPhysicalName(field)/]", DataTypes.StringType, true)
@@ -214,7 +214,11 @@
 		DataTypes.createStructField("[getPhysicalName(field)/]", DataTypes.StringType, true)
 	[/for]
 	});
-	rows = SparkConnectionMgr.getRowsFromKeyValueHashes("[db.name/]",keypattern, structTypeHash);
+	[if (struct.value.oclAsType(pml::KVComplexField).type=KVDataType::HASH)]
+	rows = SparkConnectionMgr.getRowsFromKeyValueHashes("[db.name/]",keypattern, structType);
+	[else]
+	rows = SparkConnectionMgr.getRowsFromKeyValueList("[db.name/]",keypattern, structType);
+	[/if]
 	boolean isStriped = (StringUtils.countMatches(keypattern, "*") == 1 && keypattern.endsWith("*"));
 	String prefix=isStriped?keypattern.substring(0, keypattern.length() - 1):"";
 	finalKeypattern = keypatternAllVariables;
