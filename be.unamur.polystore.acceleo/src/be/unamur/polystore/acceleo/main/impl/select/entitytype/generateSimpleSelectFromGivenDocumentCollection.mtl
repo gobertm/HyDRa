@@ -399,7 +399,7 @@ if(toAdd[level /]) {
 [else]
 if(toAdd[level /]) {
 	[if (level > 1)]if(condition ==null || refilterFlag.booleanValue() || condition.evaluate([pojoName.toLowerFirst() /][level /]))[/if]
-	list_res.add([pojoName.toLowerFirst() /][level /]);
+		list_res.add([pojoName.toLowerFirst() /][level /]);
 	addedInList = true;
 } 
 [if (level > 1)]if(addedInList)
@@ -550,7 +550,7 @@ if(toAdd[level /]) {
 [else]
 if(toAdd[level /]) {
 	[if (level > 1)]if(condition ==null || refilterFlag.booleanValue() || condition.evaluate([pojoName.toLowerFirst() /][level /]))[/if]
-	list_res.add([pojoName.toLowerFirst() /][level /]);
+		list_res.add([pojoName.toLowerFirst() /][level /]);
 	addedInList = true;
 } 
 [if (level > 1)]if(addedInList)
