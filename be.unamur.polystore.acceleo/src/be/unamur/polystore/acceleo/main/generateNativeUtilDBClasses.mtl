@@ -612,7 +612,10 @@ public class Row {
 			if (o instanceof List)
 				res = new WrappedArray((List) o);
 			else
-				res = o;
+				if(o instanceof Document)
+					res = new Row((Document) o);
+				else
+					res = o;
 		}
 
 		if (fieldValues != null) {
