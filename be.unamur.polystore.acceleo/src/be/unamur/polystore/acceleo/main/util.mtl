@@ -77,7 +77,7 @@
 /]
 
 [query public isSparkConfiguration(o: OclAny) : Boolean = 
-	false
+	o.ancestors(Domainmodel)->any(true).sparkFlag
 /]
 
 

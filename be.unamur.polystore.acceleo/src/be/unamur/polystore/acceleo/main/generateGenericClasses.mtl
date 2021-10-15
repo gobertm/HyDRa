@@ -4,7 +4,7 @@
 [import be::unamur::polystore::acceleo::main::generatePomFile /]
 
 [template public generateGenericClasses(conceptualSchema: ConceptualSchema)]
-[generateUtilClass() /]
+[generateUtilClass(conceptualSchema) /]
 [generateLoadingClass() /]
 [generateConditions(conceptualSchema) /]
 [generateLog4JConfFile() /]
@@ -13,7 +13,7 @@
 [/template]
 
 
-[template public generateUtilClass()]
+[template public generateUtilClass(o : OclAny)]
 [file ('src/main/java/util/Util.java', false, 'UTF-8')]
 package util;
 
@@ -261,18 +261,19 @@ package util;
 import java.util.ArrayList;
 import java.util.List;
 
-import scala.collection.JavaConversions;
+import scala.collection.JavaConverters;
 
 public class ScalaUtil {
 	
 	public static List<String> javaList(Object o) {
 		if(o instanceof scala.collection.mutable.WrappedArray) {
-			return new ArrayList<String>(JavaConversions.asJavaCollection(((scala.collection.mutable.WrappedArray) o).toList()));
+			return new ArrayList<String>(JavaConverters.asJavaCollection(((scala.collection.mutable.WrappedArray) o).toList()));
 		}
-		
+		[if (isSparkConfiguration(o) = false)]
 		if(o instanceof WrappedArray) {
 			return ((WrappedArray) o).list();
 		}
+		[/if]
 		
 		return null;
 	}
