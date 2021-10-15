@@ -376,7 +376,7 @@ public class Dataset<E> extends ArrayList<E> {
 				Pattern p = Pattern.compile(regex);
 				java.util.regex.Matcher m = p.matcher(condition);
 				if (m.find()) {
-					SString col1 = m.group(1);
+					String col1 = m.group(1);
 					String col2 = m.group(2);
 
 					Object o1, o2 = null;
@@ -723,6 +723,10 @@ public class WrappedArray {
 		if(o instanceof Document)
 			return new Row((Document) o);
 		return o;
+	}
+
+	public List list() {
+		return list;
 	}
 	
 

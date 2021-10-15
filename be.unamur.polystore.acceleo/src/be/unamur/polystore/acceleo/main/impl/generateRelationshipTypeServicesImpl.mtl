@@ -31,6 +31,7 @@ import conditions.[role.entity.name.toUpperFirst() /]Attribute;
 [/for]
 import java.util.List;
 import java.util.ArrayList;
+import util.ScalaUtil;
 import org.apache.spark.api.java.function.MapFunction;
 import org.apache.spark.sql.Encoders;
 import org.apache.spark.api.java.function.FilterFunction;
@@ -39,6 +40,7 @@ import util.Util;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 [generateImportRow(rel)/]
+import org.apache.spark.sql.*;
 import java.util.regex.Pattern;
 import java.util.regex.Matcher;
 [generateImportWrappedArray(rel)/]

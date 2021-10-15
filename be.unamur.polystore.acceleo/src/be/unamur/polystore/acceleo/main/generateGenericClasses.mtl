@@ -255,8 +255,32 @@ public class Util {
 
 }
 [/file]
-[/template]
+[file ('src/main/java/util/ScalaUtil.java', false, 'UTF-8')]
+package util;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import scala.collection.JavaConversions;
+
+public class ScalaUtil {
+	
+	public static List<String> javaList(Object o) {
+		if(o instanceof scala.collection.mutable.WrappedArray) {
+			return new ArrayList<String>(JavaConversions.asJavaCollection(((scala.collection.mutable.WrappedArray) o).toList()));
+		}
+		
+		if(o instanceof WrappedArray) {
+			return ((WrappedArray) o).list();
+		}
+		
+		return null;
+	}
+	
+}
+
+[/file]
+[/template]
 
 [template public generateIPojo()]
 [file ('src/main/java/pojo/IPojo.java', false, 'UTF-8')]

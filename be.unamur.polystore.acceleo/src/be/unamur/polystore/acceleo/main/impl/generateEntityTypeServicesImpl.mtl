@@ -17,13 +17,13 @@ import org.apache.commons.lang3.StringUtils;
 import pojo.[entityType.name.toUpperFirst() /];
 import conditions.*;
 import dao.services.[entityType.name.toUpperFirst() + 'Service' /];
-import util.Util;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 [generateImportDataset(entityType)/]
 import org.apache.spark.sql.Encoders;
 [generateImportRow(entityType)/]
 import org.apache.spark.sql.RowFactory;
+import org.apache.spark.sql.*;
 import org.apache.spark.api.java.function.MapFunction;
 import java.util.regex.Pattern;
 import java.util.regex.Matcher;
@@ -41,6 +41,7 @@ import java.util.ArrayList;
 import org.apache.commons.lang.mutable.MutableBoolean;
 import tdo.*;
 import pojo.*;
+import util.*;
 import org.apache.spark.sql.types.DataTypes;
 import org.apache.spark.sql.types.StructField;
 import org.apache.spark.sql.types.StructType;

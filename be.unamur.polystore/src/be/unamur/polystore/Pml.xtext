@@ -87,7 +87,11 @@ LimitedPhysicalField returns PhysicalField:
 ;
 
 LimitedPhysicalFieldDoc returns PhysicalField:
-	ShortField | LongField | EmbeddedObject 
+	ShortField | LongField | EmbeddedObject | ArrayField
+;
+
+ArrayField:
+	physicalName=ID '[]' ':' name=ID	
 ;
 
 KVPhysicalField returns PhysicalField:
