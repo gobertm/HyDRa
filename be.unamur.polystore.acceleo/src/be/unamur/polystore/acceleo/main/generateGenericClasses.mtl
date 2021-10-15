@@ -285,13 +285,13 @@ import java.util.ArrayList;
 import java.util.List;
 
 public abstract class LoggingPojo implements Serializable, Cloneable, IPojo {
-	protected List<String> logEvents = new ArrayList<String>();
+	protected ArrayList<String> logEvents = new ArrayList<String>();
 
-	public List<String> getLogEvents() {
+	public ArrayList<String> getLogEvents() {
 		return this.logEvents;
 	}
 
-	public void setLogEvents(List<String> logEvents) {
+	public void setLogEvents(ArrayList<String> logEvents) {
 		this.logEvents = logEvents;
 	}
 

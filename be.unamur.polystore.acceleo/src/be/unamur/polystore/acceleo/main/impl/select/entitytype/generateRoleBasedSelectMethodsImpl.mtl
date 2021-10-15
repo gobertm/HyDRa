@@ -348,7 +348,7 @@ private static Dataset<[entityType.name.toUpperFirst()/]> fullOuterJoins[entityT
 				[entityType.name.toLowerFirst() /]_res.set[attr.name.toUpperFirst() /](firstNotNull_[attr.name /]);
 				[/for]
 
-				scala.collection.mutable.WrappedArray<String> logEvents = r.getAs("logEvents");
+				WrappedArray<String> logEvents = r.getAs("logEvents");
 				if(logEvents != null)
 					for (int i = 0; i < logEvents.size(); i++){
 						[entityType.name.toLowerFirst() /]_res.addLogEvent(logEvents.apply(i));
