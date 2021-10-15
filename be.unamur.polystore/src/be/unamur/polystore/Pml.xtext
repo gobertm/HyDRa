@@ -3,7 +3,7 @@ grammar be.unamur.polystore.Pml with org.eclipse.xtext.common.Terminals
 generate pml "http://www.unamur.be/polystore/Pml"
 
 Domainmodel:
-    conceptualSchema=ConceptualSchema & physicalSchema=PhysicalSchemas & mappingRules= MappingRules & databases = Databases
+    conceptualSchema=ConceptualSchema & physicalSchema=PhysicalSchemas & mappingRules= MappingRules & databases = Databases & sparkFlag?='spark'?
     
 ;
 
