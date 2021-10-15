@@ -8,7 +8,6 @@ import com.mongodb.client.MongoDatabase;
 import dao.impl.*;
 import dao.services.*;
 import org.apache.commons.lang.mutable.MutableBoolean;
-import org.apache.spark.sql.Dataset;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -23,6 +22,8 @@ import java.util.List;
 import static org.junit.Assert.assertEquals;
 
 
+//import org.apache.spark.sql.Dataset;
+import util.Dataset;
 
 public class InsertWithRole4Tests {
     static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(InsertWithRole4Tests.class);
@@ -34,6 +35,9 @@ public class InsertWithRole4Tests {
     Dataset<Actor> actorsDataset;
     ReviewService reviewService = new ReviewServiceImpl();
     Dataset<Review> reviewDataset;
+    MovieDirectorService movieDirectorService = new MovieDirectorServiceImpl();
+    MovieReviewService movieReviewService = new MovieReviewServiceImpl();
+    MovieActorService movieActorService = new MovieActorServiceImpl();
     static List<Actor> actors = new ArrayList<>();
     static List<Movie> movies = new ArrayList<>();
     static List<Director> directors = new ArrayList<>();
@@ -101,7 +105,9 @@ public class InsertWithRole4Tests {
         MongoDatabase mongoDatabase = mongoClient.getDatabase("mymongo");
         mongoDatabase.getCollection("userCol").drop();
         mongoDatabase.getCollection("actorCol").drop();
+        mongoDatabase.getCollection("actorCollection").drop();
         mongoDatabase.getCollection("movieCol").drop();
+        mongoDatabase.getCollection("accountCol").drop();
 
         Statement statement = connection.createStatement();
         statement.execute("truncate directorTable");
@@ -125,7 +131,6 @@ public class InsertWithRole4Tests {
         assertEquals(3,directorDataset.count());
 
         //JoinTable insertMovieDirector
-        MovieDirectorService movieDirectorService = new MovieDirectorServiceImpl();
         movieDirectorService.insertMovieDirector(movies.get(0), directors.get(0));
         assertEquals(1,directorService.getDirectorList(Director.movieDirector.director,movies.get(0)).count());
 
@@ -147,7 +152,6 @@ public class InsertWithRole4Tests {
         actorService.insertActor(actors.get(1));
 
         // Embedded Obj - insertmovieActor
-        MovieActorService movieActorService = new MovieActorServiceImpl();
         movieActorService.insertMovieActor(actors.get(1), movies.get(0));
         actorsDataset = actorService.getActorListInActorCollectionFromMymongo(null, new MutableBoolean(false));
         assertEquals(1, actorsDataset.count());
@@ -162,12 +166,8 @@ public class InsertWithRole4Tests {
         // Insert review
         reviewService.insertReview(reviews.get(0), movies.get(0));
 
-        // Ref Structures - insert movieReview
-        MovieReviewService movieReviewService = new MovieReviewServiceImpl();
-        movieReviewService.insertMovieReview(movies.get(0),reviews.get(0));
+//        // Ref Structures - insert movieReview
         assertEquals(movies.get(0).getId(),movieService.getMovie(Movie.movieReview.r_reviewed_movie,reviews.get(0)).getId());
         assertEquals(reviews.get(0).getContent(),reviewService.getReview(Review.movieReview.r_review,movies.get(0)).getContent());
     }
-
-
 }
