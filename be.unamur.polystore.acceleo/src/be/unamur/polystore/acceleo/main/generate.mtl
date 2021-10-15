@@ -7,10 +7,12 @@
 [import be::unamur::polystore::acceleo::main::services::generateEntityTypeServices /]
 [import be::unamur::polystore::acceleo::main::services::generateRelationshipTypeServices /]
 [import be::unamur::polystore::acceleo::main::dbconnections::generateDBConnectionClasses /]
+[import be::unamur::polystore::acceleo::main::generateNativeUtilDBClasses /]
 
 [import be::unamur::polystore::acceleo::main::generatePomFile /]
 
 [import be::unamur::polystore::acceleo::main::mappingrules::util]
+[import be::unamur::polystore::acceleo::main::util]
 
 [template public generateElement(conceptualSchema : ConceptualSchema)]
 [comment @main/]
@@ -29,4 +31,9 @@
 	[generateRelationshipTypeTechnicalDataObjectsClass(rel, conceptualSchema) /]
 	[ generateAllLevelsRelationshipTypeClass(rel, conceptualSchema) /]
 [/for]
+
+[if (isSparkConfiguration(conceptualSchema) = false)]
+[generateNativeUtilDBClasses() /]
+[/if]
+
 [/template]

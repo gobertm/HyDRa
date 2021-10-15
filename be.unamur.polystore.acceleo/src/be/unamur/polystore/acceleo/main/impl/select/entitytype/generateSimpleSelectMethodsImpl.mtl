@@ -33,7 +33,12 @@
 		d = d.filter((FilterFunction<[entityType.name.toUpperFirst() /]>) r -> condition == null || condition.evaluate(r));
 	[comment 
 	 This drop duplicates is necessary when readin data from a key value db, with key structures such as PRODUCT:id:REVIEW:reviewid . /]
-	d=d.dropDuplicates();
+	
+	[if (entityType.identifier.oclIsUndefined() = true)]
+	d = d.dropDuplicates();
+	[else]
+	d = d.dropDuplicates(new String[ '[' /][ ']' /] {[if (entityType.identifier.oclIsUndefined() = false)][for (attr : Attribute | entityType.identifier.attributes) separator(',')]"[attr.name/]"[/for][/if]});
+	[/if]
 	return d;
 }[/template]
 

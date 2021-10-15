@@ -245,6 +245,22 @@ import com.mongodb.spark.MongoSpark;
 import com.mongodb.spark.config.ReadConfig;
 import scala.Tuple2;
 
+import com.mongodb.client.MongoClient;
+import com.mongodb.client.MongoClients;
+import com.mongodb.client.MongoCollection;
+import com.mongodb.client.MongoCursor;
+import com.mongodb.client.MongoDatabase;
+
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.ResultSet;
+import java.sql.ResultSetMetaData;
+import java.sql.SQLException;
+import java.sql.Statement;
+
+[generateImportDataset(conceptualSchema)/]
+[generateImportRow(conceptualSchema)/]
+
 public class SparkConnectionMgr {
 	[instantiateLogger('SparkConnectionMgr') /]
 	private static Map<String, DBCredentials> dbPorts = new HashMap<String, DBCredentials>();
@@ -288,10 +304,11 @@ public class SparkConnectionMgr {
 	}
 
 	public static Dataset<Row> getSparkSessionForMongoDB(String dbName, String collectionName, String bsonQuery) {
-		
-		// https://docs.mongodb.com/manual/core/read-preference/#replica-set-read-preference-modes
 		Map<String, String> readOverrides = new HashMap<String, String>();
 		DBCredentials credentials = dbPorts.get(dbName);
+		[if (isSparkConfiguration())]	
+		// https://docs.mongodb.com/manual/core/read-preference/#replica-set-read-preference-modes
+		
 		
 		String mongoURL = "mongodb://" + credentials.url + ":" + credentials.port + "/" + dbName + "." + collectionName;
 		getSession().sparkContext().conf().set("spark.mongodb.input.uri", mongoURL);
@@ -310,20 +327,103 @@ public class SparkConnectionMgr {
 				? MongoSpark.load(jsc, readConfig).withPipeline(singletonList(Document.parse(bsonQuery))).toDF()
 				: MongoSpark.load(jsc, readConfig).toDF();
 		return res;
+		[else]
+		String mongoURL = "mongodb://" + credentials.url + ":" + credentials.port + "/" + dbName;
+		MongoClient mongoClient = MongoClients.create(mongoURL);
+		MongoDatabase database = mongoClient.getDatabase(dbName);
+
+		MongoCollection<Document> collection = database.getCollection(collectionName);
+
+		MongoCursor<Document> cursor = null;
+		if (bsonQuery != null) {
+			Document query = Document.parse(bsonQuery);
+			cursor = collection.aggregate(Arrays.asList(query)).cursor();
+		} else
+			cursor = collection.find().cursor();
+
+		Dataset<Row> res = new Dataset<Row>();
+		while (cursor.hasNext()) {
+			Document doc = cursor.next();
+			res.add(new Row(doc));
+		}
+		cursor.close();
+		return res;
+		[/if]
 
 	}
 
-	public static Dataset<Row> getDataset(String dbName, String physicalStructName) {
+	public static Dataset<Row> getDataset(String dbName, String physicalStructName, String where) {
+		[if (isSparkConfiguration(conceptualSchema))]
 		DBCredentials credentials = dbPorts.get(dbName);
 		DataFrameReader dfr = getSession().sqlContext().read().format("jdbc")
 				.option("url", "jdbc:mysql://" + credentials.url + ":" + credentials.port + "/" + credentials.dbName)
 				.option("user", credentials.userName).option("password", credentials.userPwd);
 
 		Dataset<Row> d = dfr.option("dbtable", physicalStructName).load();
+		if(where != null) {
+			d = d.where(where);
+		}
 		return d;
+		[else]
+		Dataset<Row> res = new Dataset<Row>();
+
+		DBCredentials credentials = dbPorts.get(dbName);
+		DataFrameReader dfr = getSession().sqlContext().read().format("jdbc")
+				.option("url", "jdbc:mysql://" + credentials.url + ":" + credentials.port + "/" + credentials.dbName)
+				.option("user", credentials.userName).option("password", credentials.userPwd);
+
+		String query = "SELECT * FROM " + physicalStructName;
+		if (where != null) {
+			query += " WHERE " + where;
+		}
+		Connection conn = null;
+		Statement stmt = null;
+		ResultSet rs = null;
+		try {
+			conn = DriverManager.getConnection(
+					"jdbc:mysql://" + credentials.url + ":" + credentials.port + "/" + credentials.dbName,
+					credentials.userName, credentials.userPwd);
+			stmt = conn.createStatement();
+			rs = stmt.executeQuery(query);
+			ResultSetMetaData rsmd = rs.getMetaData();
+			while (rs.next()) {
+				Map<String, Object> fieldValues = new HashMap<String, Object>();
+				for (int i = 0; i < rsmd.getColumnCount(); i++) {
+					String colName = rsmd.getColumnName(i + 1);
+					Object value = rs.getObject(colName);
+					fieldValues.put(colName, value);
+				}
+
+				res.add(new Row(fieldValues));
+			}
+		} catch (SQLException e) {
+			e.printStackTrace();
+		} finally {
+			if (rs != null)
+				try {
+					rs.close();
+				} catch (SQLException e) {
+					e.printStackTrace();
+				}
+			if (stmt != null)
+				try {
+					stmt.close();
+				} catch (SQLException e) {
+					e.printStackTrace();
+				}
+			if (conn != null)
+				try {
+					conn.close();
+				} catch (SQLException e) {
+					e.printStackTrace();
+				}
+		}
+
+		return res;
+		[/if]
 	}
 
-	public static void writeDataset(List<Row> rows, StructType structType, String formattype, String physicalStructName, String dbName){
+/**	public static void writeDataset(List<Row> rows, StructType structType, String formattype, String physicalStructName, String dbName){
 		DBCredentials credentials = dbPorts.get(dbName);
 		Dataset<Row> data = getSession().createDataFrame(rows, structType);
 		String mongoURL = "mongodb://" + credentials.url + ":" + credentials.port + "/" + dbName + "." + physicalStructName;
@@ -346,6 +446,7 @@ public class SparkConnectionMgr {
 				.save();
 			}
 	}
+**/
 
 	public static void writeKeyValue(String key, String value, String dbName){
 		DBCredentials credentials = dbPorts.get(dbName);
@@ -384,6 +485,7 @@ public class SparkConnectionMgr {
 
 	public static Dataset<Row> getRowsFromKeyValue(String dbName, String keypattern) {
 		DBCredentials credentials = dbPorts.get(dbName);
+		[if (isSparkConfiguration())]
 		SparkConf sparkConf = new SparkConf()
                 .setAppName("MyApp")
                 .setMaster("local['['/]*[']'/]")
@@ -408,10 +510,39 @@ public class SparkConnectionMgr {
         StructType schema = DataTypes.createStructType(Arrays.asList(DataTypes.createStructField("key",DataTypes.StringType,true), DataTypes.createStructField("value",DataTypes.StringType,true)));
         Dataset<Row> res = spark.createDataFrame(rowRDD, schema);
 		return res;
+		[else]
+		Jedis jedis;
+		jedis = new Jedis(credentials.url, Integer.parseInt(credentials.port));
+		ScanParams scanParams = new ScanParams().match(keypattern).count(100);
+		String cur = ScanParams.SCAN_POINTER_START;
+		boolean cycleIsFinished = false;
+		Dataset<Row> res = new Dataset<Row>();
+		while(!cycleIsFinished) {
+			ScanResult<String> scanResult =
+					jedis.scan(cur, scanParams);
+			List<String> keysList = scanResult.getResult();
+
+			//do whatever with the key-value pairs in result
+			for (String key : keysList) {
+				Map<String, Object> map = new HashMap<String, Object>();
+				String value = jedis.get(key);
+				map.put("key", key);
+				map.put("value", value);
+				res.add(new Row(map));
+			}
+			cur = scanResult.getCursor();
+			if (cur.equals("0")) {
+				cycleIsFinished = true;
+			}
+		}
+		jedis.close();
+		return res;
+		[/if]
 	}
 
 	public static Dataset<Row> getRowsFromKeyValueHashes(String dbName, String keypattern, StructType structTypeHash){
 		DBCredentials credentials = dbPorts.get(dbName);
+		[if (isSparkConfiguration())]
 		SparkConf sparkConf = new SparkConf()
                 .setAppName("MyApp")
                 .setMaster("local['['/]*[']'/]")
@@ -423,10 +554,46 @@ public class SparkConnectionMgr {
 				.option("key.column", "_id")
                 .schema(structTypeHash).load();
 		return res;
+		[else]
+		Jedis jedis;
+		jedis = new Jedis(credentials.url, Integer.parseInt(credentials.port));
+		ScanParams scanParams = new ScanParams().match(keypattern).count(100);
+		String cur = ScanParams.SCAN_POINTER_START;
+		boolean cycleIsFinished = false;
+		Dataset<Row> res = new Dataset<Row>();
+		while(!cycleIsFinished) {
+			ScanResult<String> scanResult =
+					jedis.scan(cur, scanParams);
+			List<String> keysList = scanResult.getResult();
+
+			boolean isStriped = (org.apache.commons.lang3.StringUtils.countMatches(keypattern, "*") == 1 && keypattern.endsWith("*"));
+			String regex = keypattern.replaceAll("\\*","(.*)");
+			java.util.regex.Pattern p = java.util.regex.Pattern.compile(regex);
+			
+			for (String key : keysList) {
+				Map map = jedis.hgetAll(key);
+				if(isStriped) {
+					java.util.regex.Matcher matcher = p.matcher(key);
+					matcher.find();
+					key = matcher.group(1);
+				}
+				
+				map.put("_id", key);
+				res.add(new Row(map));
+			}
+			cur = scanResult.getCursor();
+			if (cur.equals("0")) {
+				cycleIsFinished = true;
+			}
+		}
+		jedis.close();
+		return res;
+		[/if]
 	}
 
 	public static Dataset<Row> getRowsFromKeyValueList(String dbName, String keypattern, StructType structType){
 		DBCredentials credentials = dbPorts.get(dbName);
+		[if (isSparkConfiguration())]
 		List<Row> rows = new ArrayList<>();
 		Jedis jedis;
 		jedis = new Jedis(credentials.url, Integer.parseInt(credentials.port));
@@ -453,6 +620,39 @@ public class SparkConnectionMgr {
 		Dataset<Row> data = getSession().createDataFrame(rows, structType);
 		jedis.close();
 		return data;
+		[else]
+		Dataset<Row> rows = new Dataset<>();
+		Jedis jedis;
+		jedis = new Jedis(credentials.url, Integer.parseInt(credentials.port));
+		ScanParams scanParams = new ScanParams().match(keypattern).count(100);
+		String cur = ScanParams.SCAN_POINTER_START;
+		boolean cycleIsFinished = false;
+		Map<String, List<String>> listKV = new HashMap<>();
+		while(!cycleIsFinished) {
+			ScanResult<String> scanResult =
+					jedis.scan(cur, scanParams);
+			List<String> keysList = scanResult.getResult();
+
+			//do whatever with the key-value pairs in result
+			for (String key : keysList) {
+				List<String> listvalues = jedis.lrange(key, 0, -1);
+				listKV.put(key, listvalues);
+			}
+			cur = scanResult.getCursor();
+			if (cur.equals("0")) {
+				cycleIsFinished = true;
+			}
+		}
+		String listFieldName = structType.fieldNames()['['/]1[']'/];
+		listKV.forEach((k,v) -> v.forEach(vv -> {
+			Map<String, Object> map = new HashMap<String, Object>();
+			map.put("_id", k);
+			map.put(listFieldName, vv);
+			rows.add(new Row(map));
+		}));
+		jedis.close();
+		return rows;
+		[/if]
 	} 
 }
 [/file]

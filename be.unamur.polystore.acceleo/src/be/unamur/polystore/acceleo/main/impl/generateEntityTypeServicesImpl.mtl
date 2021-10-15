@@ -20,9 +20,9 @@ import dao.services.[entityType.name.toUpperFirst() + 'Service' /];
 import util.Util;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
-import org.apache.spark.sql.Dataset;
+[generateImportDataset(entityType)/]
 import org.apache.spark.sql.Encoders;
-import org.apache.spark.sql.Row;
+[generateImportRow(entityType)/]
 import org.apache.spark.sql.RowFactory;
 import org.apache.spark.api.java.function.MapFunction;
 import java.util.regex.Pattern;
@@ -34,7 +34,7 @@ import org.bson.Document;
 import static java.util.Collections.singletonList;
 import dbconnection.SparkConnectionMgr;
 import dbconnection.DBConnectionMgr;
-import scala.collection.mutable.WrappedArray;
+[generateImportWrappedArray(entityType)/]
 import org.apache.spark.api.java.function.FlatMapFunction;
 import org.apache.spark.api.java.function.FilterFunction;
 import java.util.ArrayList;

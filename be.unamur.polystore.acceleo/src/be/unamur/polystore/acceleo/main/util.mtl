@@ -3,6 +3,10 @@
 
 [import be::unamur::polystore::acceleo::main::mappingrules::util /]
 
+[template public generateImportDataset(o: OclAny)][if (isSparkConfiguration())]import org.apache.spark.sql.Dataset;[else]import util.Dataset;[/if][/template]
+[template public generateImportRow(o: OclAny)][if (isSparkConfiguration())]import org.apache.spark.sql.Row;[else]import util.Row;[/if][/template]
+[template public generateImportWrappedArray(o: OclAny)][if (isSparkConfiguration())]import scala.collection.mutable.WrappedArray;[else]import util.WrappedArray;[/if][/template]
+
 [template public generateJavaType(type : DataType) post (replaceAll('\n', '').trim())]
 [if (type.oclIsTypeOf(pml::IntType))]Integer[/if]
 [if (type.oclIsTypeOf(pml::BigintType))]Long[/if]
@@ -71,6 +75,11 @@
 [query public getBinaryRelationshipTypesWithAttributes(conceptualSchema: ConceptualSchema) : Collection(pml::RelationshipType) = 
 	conceptualSchema.relationships->select(rel: pml::RelationshipType | rel.roles->size() = 2 and rel.attributes->size() > 0)
 /]
+
+[query public isSparkConfiguration(o: OclAny) : Boolean = 
+	false
+/]
+
 
 [query public isBinaryWithAttributes(rel: RelationshipType) : Boolean = 
 	rel.roles->size() = 2 and rel.attributes->size() > 0

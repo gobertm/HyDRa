@@ -13,7 +13,7 @@ package dao.impl;
 import exceptions.PhysicalStructureException;
 import java.util.Arrays;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.spark.sql.Dataset;
+[generateImportDataset(rel)/]
 import conditions.Condition;
 import java.util.HashSet;
 import java.util.Set;
@@ -38,10 +38,10 @@ import org.apache.commons.lang.mutable.MutableBoolean;
 import util.Util;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
-import org.apache.spark.sql.Row;
+[generateImportRow(rel)/]
 import java.util.regex.Pattern;
 import java.util.regex.Matcher;
-import scala.collection.mutable.WrappedArray;
+[generateImportWrappedArray(rel)/]
 import org.apache.spark.api.java.function.FlatMapFunction;
 import dbconnection.SparkConnectionMgr;
 import dbconnection.DBConnectionMgr;
@@ -54,7 +54,6 @@ import org.bson.Document;
 import org.bson.conversions.Bson;
 import static com.mongodb.client.model.Filters.eq;
 import static com.mongodb.client.model.Updates.*;
-
 
 public class [rel.name.toUpperFirst() + 'ServiceImpl' /] extends dao.services.[rel.name.toUpperFirst() + 'Service' /] {
 	[instantiateLogger(rel.name.toUpperFirst() + 'ServiceImpl') /]

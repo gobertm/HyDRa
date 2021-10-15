@@ -12,8 +12,8 @@
 [file ('src/main/java/dao/services/' + rel.name.toUpperFirst() + 'Service'.concat('.java'), false, 'UTF-8')]
 package dao.services;
 
-import org.apache.spark.sql.Dataset;
-import org.apache.spark.sql.Row;
+[generateImportDataset(rel)/]
+[generateImportRow(rel)/]
 import conditions.Condition;
 import pojo.[rel.name.toUpperFirst()/];
 [for (role : Role | rel.roles)]

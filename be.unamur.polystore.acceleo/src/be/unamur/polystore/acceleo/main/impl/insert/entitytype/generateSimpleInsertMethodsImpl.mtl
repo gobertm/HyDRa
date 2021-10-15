@@ -88,18 +88,7 @@
 	StructType struct = DataTypes.createStructType(listOfStructField[struct.oclAsType(pml::Collection).name/]_1);
 	listRows.add(RowFactory.create(values[struct.oclAsType(pml::Collection).name/]_1.toArray()));
 	SparkConnectionMgr.writeDataset(listRows, struct, "mongo", "[struct.name/]", "[db.name/]");[/comment]
-	Bson filter = new Document();
-	Bson updateOp;
-	[generateDocument(entityType, struct.oclAsType(pml::Collection).fields, struct.oclAsType(pml::Collection).name,1,0)/]
-	[for (attr : Attribute | entityType.identifier.attributes)]
-				[if (i=1)]
-	filter = eq("[getPhysicalName(getMappedPhysicalField(attr, struct, db, entityType.getMappingRules()))/]",[entityType.name.toLowerFirst()/].get[attr.name.toUpperFirst()/]());
-				[else]
-	filter = and(filter,eq("[getPhysicalName(getMappedPhysicalField(attr, struct, db, entityType.getMappingRules()))/]",[entityType.name.toLowerFirst()/].get[attr.name.toUpperFirst()/]());
-				[/if]
-	[/for]
-	updateOp = setOnInsert(doc[struct.name/]_1);
-	DBConnectionMgr.upsertMany(filter, updateOp, "[struct.name/]", "[db.name/]");
+[insertInMongoDBImpl(entityType, struct, db) /]
 	return true;
 [/template]
 
@@ -337,19 +326,74 @@ values.add(value_[getPhysicalName(field)/]);
 [/template]
 
 [template public insertInSQLDBImpl(entityType : EntityType, struct : AbstractPhysicalStructure, db : Database)]
-	List<Row> listRows=new ArrayList<Row>();
+[comment]	List<Row> listRows=new ArrayList<Row>();
 	[generateStructField(entityType,struct.oclAsType(Table).columns, struct.oclAsType(Table).name,1,false)/]
 	StructType structType = DataTypes.createStructType(listOfStructField[struct.oclAsType(Table).name/]_1);
 	listRows.add(RowFactory.create(values[struct.oclAsType(Table).name/]_1.toArray()));
-	SparkConnectionMgr.writeDataset(listRows, structType, "jdbc", "[struct.name/]", "[db.name/]");
+	SparkConnectionMgr.writeDataset(listRows, structType, "jdbc", "[struct.name/]", "[db.name/]");[/comment]
+	List<String> columns = new ArrayList<>();
+	List<Object> values = new ArrayList<>();	
+[for (field : PhysicalField | struct.oclAsType(Table).columns)]
+	[if (field.oclIsTypeOf(ShortField))]
+		[let attr : Attribute = getMappedAttributes(field, entityType, entityType.getMappingRules())->any(true)]
+			[if (attr.oclIsUndefined()=false)]
+	columns.add("[getPhysicalName(field)/]");
+	values.add([entityType.name.toLowerFirst()/].get[attr.name.toUpperFirst()/]());
+			[/if]
+		[/let] 
+	[/if]
+	[if (field.oclIsTypeOf(LongField))]
+		[comment LongField with only one component and is BracketsField /]
+		[if (field.oclAsType(LongField).pattern->size()=1 and field.oclAsType(LongField).pattern->any(true).oclIsTypeOf(BracketsField))]
+			[let brackets : BracketsField = field.oclAsType(LongField).pattern->any(true).oclAsType(BracketsField)]
+				[let attr : Attribute = getMappedAttributes(field, entityType, entityType.getMappingRules())->any(true)]
+				[if (attr.oclIsUndefined()=false)]
+	columns.add("[getPhysicalName(field)/]");
+	values.add([entityType.name.toLowerFirst()/].get[attr.name.toUpperFirst()/]());
+				[/if]
+				[/let] 
+			[/let]
+		[else]
+			[if (field.oclAsType(LongField).pattern->filter(BracketsField)->exists(b |getMappedAttributes(b, entityType, entityType.getMappingRules())->size()=0)=false)]
+				[comment All BracketsField are mapped to the corresponding entity or composed of only one Terminal expression/]
+				[comment LongField is composed of component, therefore can only be StringType /]
+	String value_[getPhysicalName(field)/] = "";
+				[for (component : TerminalExpression | field.oclAsType(LongField).pattern)]
+					[if (component.oclIsTypeOf(BracketsField))]
+						[let attr : Attribute = getMappedAttributes(component.oclAsType(BracketsField), entityType, entityType.getMappingRules())->any(true)]
+	value_[getPhysicalName(field)/] += [entityType.name.toLowerFirst()/].get[attr.name.toUpperFirst()/]();
+						[/let]
+					[else]
+	value_[getPhysicalName(field)/] += "[component.literal/]";
+					[/if]
+				[/for]
+	columns.add("[getPhysicalName(field)/]");
+	values.add(value_[getPhysicalName(field)/]);
+			[/if]
+		[/if]
+	[/if]
+[/for]
+	DBConnectionMgr.insertInTable(columns, Arrays.asList(values), "[struct.name/]", "[db.name/]");
 [/template]
 
 [template public insertInMongoDBImpl(entityType : EntityType, struct : AbstractPhysicalStructure, db : Database)]
-	List<Row> listRows=new ArrayList<Row>();
+[comment]	List<Row> listRows=new ArrayList<Row>();
 	[generateStructField(entityType, struct.oclAsType(pml::Collection).fields,struct.oclAsType(pml::Collection).name,1,false)/]
 	StructType struct = DataTypes.createStructType(listOfStructField[struct.oclAsType(pml::Collection).name/]_1);
 	listRows.add(RowFactory.create(values[struct.oclAsType(pml::Collection).name/]_1.toArray()));
-	SparkConnectionMgr.writeDataset(listRows, struct, "mongo", "[struct.name/]", "[db.name/]");
+	SparkConnectionMgr.writeDataset(listRows, struct, "mongo", "[struct.name/]", "[db.name/]");[/comment]
+	Bson filter = new Document();
+	Bson updateOp;
+	[generateDocument(entityType, struct.oclAsType(pml::Collection).fields, struct.oclAsType(pml::Collection).name,1,0)/]
+	[for (attr : Attribute | entityType.identifier.attributes)]
+				[if (i=1)]
+	filter = eq("[getPhysicalName(getMappedPhysicalField(attr, struct, db, entityType.getMappingRules()))/]",[entityType.name.toLowerFirst()/].get[attr.name.toUpperFirst()/]());
+				[else]
+	filter = and(filter,eq("[getPhysicalName(getMappedPhysicalField(attr, struct, db, entityType.getMappingRules()))/]",[entityType.name.toLowerFirst()/].get[attr.name.toUpperFirst()/]());
+				[/if]
+	[/for]
+	updateOp = setOnInsert(doc[struct.name/]_1);
+	DBConnectionMgr.upsertMany(filter, updateOp, "[struct.name/]", "[db.name/]");
 [/template]
 
 
