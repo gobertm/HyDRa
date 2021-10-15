@@ -255,8 +255,19 @@ public class Util {
 
 }
 [/file]
-[/template]
+[file ('src/main/java/util/ScalaUtil.scala', false, 'UTF-8')]
+package util
 
+import scala.collection.JavaConverters.mutableSeqAsJavaListConverter
+
+
+object ScalaUtil {
+
+  def javaList(scalaCol: scala.collection.mutable.WrappedArray['['/]String[']'/]): java.util.List['['/]String[']'/] = scalaCol.asJava
+
+}
+[/file]
+[/template]
 
 [template public generateIPojo()]
 [file ('src/main/java/pojo/IPojo.java', false, 'UTF-8')]

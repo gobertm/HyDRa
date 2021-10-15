@@ -139,6 +139,7 @@ public class [entityType.name.toUpperFirst() /] extends LoggingPojo {
 package tdo;
 
 import pojo.[ent.name.toUpperFirst() /];
+import java.util.List;
 
 public class [ent.name.toUpperFirst() /]TDO extends [ent.name.toUpperFirst() /] {
 	[for (rel : RelationshipType | conceptualSchema.relationships)]
@@ -149,12 +150,12 @@ public class [ent.name.toUpperFirst() /]TDO extends [ent.name.toUpperFirst() /] 
 	[if (role.entity = ent)]
 	[let fieldsList : Sequence(PhysicalField) = getFields(ref, role, role2)]
 	[for (field : PhysicalField | fieldsList)]
-	private String [getJavaAbsolutePath(ref) /]_[field.getPhysicalName() /];
-	public String get[getJavaAbsolutePath(ref).toUpperFirst() /]_[field.getPhysicalName() /]() {
+	private [if (field.oclIsTypeOf(ArrayField)=true)]List<String> [else] String[/if] [getJavaAbsolutePath(ref) /]_[field.getPhysicalName() /];
+	public [if (field.oclIsTypeOf(ArrayField)=true)]List<String> [else] String[/if] get[getJavaAbsolutePath(ref).toUpperFirst() /]_[field.getPhysicalName() /]() {
 		return this.[getJavaAbsolutePath(ref) /]_[field.getPhysicalName() /];
 	}
 
-	public void set[getJavaAbsolutePath(ref).toUpperFirst() /]_[field.getPhysicalName() /]( String [getJavaAbsolutePath(ref) /]_[field.getPhysicalName() /]) {
+	public void set[getJavaAbsolutePath(ref).toUpperFirst() /]_[field.getPhysicalName() /]( [if (field.oclIsTypeOf(ArrayField)=true)]List<String> [else] String[/if] [getJavaAbsolutePath(ref) /]_[field.getPhysicalName() /]) {
 		this.[getJavaAbsolutePath(ref) /]_[field.getPhysicalName() /] = [getJavaAbsolutePath(ref) /]_[field.getPhysicalName() /];
 	}
 
@@ -163,12 +164,12 @@ public class [ent.name.toUpperFirst() /]TDO extends [ent.name.toUpperFirst() /] 
 	[/if]
 	[if (role2.entity = ent and hasMappedReferenceInSamePhysicalStructureForOppoisteRole(role2, ref.getAbstractPhysicalStructureNotEmbeddedObject()) = false)]
 	[for (field : PhysicalField | ref.targetField)]
-	private String [getJavaAbsolutePath(ref) /]_[field.getPhysicalName() /];
-	public String get[getJavaAbsolutePath(ref).toUpperFirst() /]_[field.getPhysicalName() /]() {
+	private [if (field.oclIsTypeOf(ArrayField)=true)]List<String> [else] String[/if] [getJavaAbsolutePath(ref) /]_[field.getPhysicalName() /];
+	public [if (field.oclIsTypeOf(ArrayField)=true)]List<String> [else] String[/if] get[getJavaAbsolutePath(ref).toUpperFirst() /]_[field.getPhysicalName() /]() {
 		return this.[getJavaAbsolutePath(ref) /]_[field.getPhysicalName() /];
 	}
 
-	public void set[getJavaAbsolutePath(ref).toUpperFirst() /]_[field.getPhysicalName() /]( String [getJavaAbsolutePath(ref) /]_[field.getPhysicalName() /]) {
+	public void set[getJavaAbsolutePath(ref).toUpperFirst() /]_[field.getPhysicalName() /]( [if (field.oclIsTypeOf(ArrayField)=true)]List<String> [else] String[/if] [getJavaAbsolutePath(ref) /]_[field.getPhysicalName() /]) {
 		this.[getJavaAbsolutePath(ref) /]_[field.getPhysicalName() /] = [getJavaAbsolutePath(ref) /]_[field.getPhysicalName() /];
 	}
 

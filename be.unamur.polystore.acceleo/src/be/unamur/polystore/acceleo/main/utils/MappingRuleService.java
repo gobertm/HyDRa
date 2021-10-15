@@ -796,27 +796,28 @@ public class MappingRuleService {
 			ShortField shortField = (ShortField) field;
 			return shortField.getName();
 		}
-
 		if (field instanceof BracketsField) {
 			EObject anc = getFirstAncestor(LongField.class, field);
 			if (anc != null) {
 				LongField lf = (LongField) anc;
 				return lf.getPhysicalName();
 			}
-
 			BracketsField bracketsField = (BracketsField) field;
 			return bracketsField.getName();
 		}
-
 		if (field instanceof EmbeddedObject) {
 			EmbeddedObject embeddedField = (EmbeddedObject) field;
 			return embeddedField.getName();
 		}
-
 		if (field instanceof LongField) {
 			LongField longField = (LongField) field;
 			return longField.getPhysicalName();
 		}
+		if(field instanceof ArrayField) {
+			ArrayField arrayfield = (ArrayField) field;
+			return arrayfield.getPhysicalName();
+		}
+		
 		return null;
 	}
 

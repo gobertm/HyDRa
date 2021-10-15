@@ -12,6 +12,7 @@ import org.eclipse.ocl.ecore.OCL;
 import be.unamur.polystore.pml.AbstractMappingRule;
 import be.unamur.polystore.pml.AbstractPhysicalSchema;
 import be.unamur.polystore.pml.AbstractPhysicalStructure;
+import be.unamur.polystore.pml.ArrayField;
 import be.unamur.polystore.pml.Attribute;
 import be.unamur.polystore.pml.BracketsField;
 import be.unamur.polystore.pml.Cardinality;
@@ -246,6 +247,9 @@ public class Util {
 						if (mappedAttributes.size() > 0 || isContainedInPhysicalFields(refFields, field))
 							res.add((EmbeddedObject) field);
 					}
+				}
+				if(field instanceof ArrayField) {
+					java.util.Collection<Attribute> mappedAttributes = getMappedAttributes(field, entOrRel, rules);
 				}
 			}
 

@@ -473,7 +473,7 @@ if(nestedRow != null && Arrays.asList(nestedRow.schema().fieldNames()).contains(
 [comment Ici r�it�rer sur 'child' et v�fifier ce n'est aps le refField Si oui appliquer comme au dessus /]
 [for (child : PhysicalField | getChildrenNonArrayPhysicalFields(arg))]
 [if (child.getPhysicalName() = refField.getPhysicalName())]
-	// field  [getPhysicalName(child) /] for reference [ref.name/]
+	// field  [getPhysicalName(child) /] for reference [ref.name/] . Reference field : [getPhysicalName(refField)/]
 [let ancestorsList : Sequence(EmbeddedObject) = getSequenceOfNonArrayEmbeddedObjects(child)]
 nestedRow =  r[level /];
 [for (anc : EmbeddedObject | ancestorsList->reverse())]
@@ -483,8 +483,13 @@ nestedRow = (nestedRow == null) ? null : (Row) nestedRow.getAs("[getPhysicalName
 [/let]
 if(nestedRow != null) {
 	[if (child.ancestors(LongField) -> size() = 0)]
-	[comment shortField or bracketfield/]
+		[if (child.oclIsTypeOf(ArrayField))]
+	// Reference is in an Array Field
+	[pojoName.toLowerFirst() /][level/].set[getJavaAbsolutePath(ref).toUpperFirst() /]_[refField.getPhysicalName() /](nestedRow.getAs("[refField.getPhysicalName() /]") == null ? null : ScalaUtil.javaList(nestedRow.getAs("[refField.getPhysicalName() /]")));
+		[else]
 	[pojoName.toLowerFirst() /][level/].set[getJavaAbsolutePath(ref).toUpperFirst() /]_[refField.getPhysicalName() /](nestedRow.getAs("[refField.getPhysicalName() /]") == null ? null : nestedRow.getAs("[refField.getPhysicalName() /]").toString());
+		[/if]
+	[comment shortField or bracketfield/]
 	toAdd[level/] = true;					
 	[else]
 		[if (child.ancestors(LongField) -> first().oclAsType(LongField).pattern->size() = 1)][comment if you encounter a "short" long field. E.g., rate: rating  /]
@@ -526,9 +531,9 @@ if(nestedRow != null) {
 [for (pair : Sequence(OclAny) | references)]
 [let ref : Reference = pair->at(1)]
 [let refFields : Sequence(PhysicalField) = pair->at(2)]
-[let children : Collection(EmbeddedObject) = getChildrenArrayPhysicalFieldsHavingDescendantMappedToGivenEntityTypeOrToRefField(arg, entOrRel, entOrRel.ancestors(Domainmodel)->first().mappingRules, refFields)]
+[let children : Collection(PhysicalField) = getChildrenArrayPhysicalFieldsHavingDescendantMappedToGivenEntityTypeOrToRefField(arg, entOrRel, entOrRel.ancestors(Domainmodel)->first().mappingRules, refFields)]
 [if (children->size() > 0)]
-[for (child : EmbeddedObject | children)]
+[for (child : PhysicalField | children)]
 array[level /] = r[level /].getAs("[getPhysicalName(child)/]");
 if(array[level /]!= null) {
 	for (int i[level + 1/] = 0; i[level + 1/] < array[level /].size(); i[level + 1/]++){

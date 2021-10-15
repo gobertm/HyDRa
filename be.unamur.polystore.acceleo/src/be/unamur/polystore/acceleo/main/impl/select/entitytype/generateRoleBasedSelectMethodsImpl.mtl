@@ -86,7 +86,11 @@
 					[/for]
 			.withColumnRenamed("logEvents", "[role2.entity.name/]_logEvents"),
 				[comment TODO Multi valued refernece not handled /]
+			[if (ref.sourceField->any(true).oclIsTypeOf(ArrayField))]
+			functions.array_contains([entity.name.toLowerFirst()/]TDO[ref.name/][role.name/].col("[getJavaAbsolutePath(ref) /]_[ref.sourceField->first().getPhysicalName()/]"),[role2.entity.name.toLowerFirst()/]TDO[ref.name/][role2.name/].col("[getJavaAbsolutePath(ref) /]_[ref.targetField->first().getPhysicalName()/]")));
+			[else]
 			[entity.name.toLowerFirst()/]TDO[ref.name/][role.name/].col("[getJavaAbsolutePath(ref) /]_[ref.sourceField->first().getPhysicalName()/]").equalTo([role2.entity.name.toLowerFirst()/]TDO[ref.name/][role2.name/].col("[getJavaAbsolutePath(ref) /]_[ref.targetField->first().getPhysicalName()/]")));
+			[/if]
 	Dataset<[entity.name.toUpperFirst()/]> res_[entity.name/]_[ref.name/] = res_[ref.name/].select([for (attr : Attribute | entity.attributes)] "[attr.name/]",[/for] "logEvents").as(Encoders.bean([entity.name.toUpperFirst()/].class));
 	
 				[/if]
@@ -163,7 +167,11 @@
 			.withColumnRenamed("[attr.name.toLowerFirst() /]", "[role2.entity.name/]_[attr.name.toLowerFirst() /]")
 				[/for]
 			.withColumnRenamed("logEvents", "[role2.entity.name/]_logEvents"),
+			[if (ref.sourceField->any(true).oclIsTypeOf(ArrayField))]
+			functions.array_contains([role2.entity.name.toLowerFirst()/]TDO[ref.name/][role2.name/].col("[getJavaAbsolutePath(ref) /]_[ref.sourceField->first().getPhysicalName()/]"),[entity.name.toLowerFirst()/]TDO[ref.name/][role.name/].col("[getJavaAbsolutePath(ref) /]_[ref.targetField->first().getPhysicalName()/]")));
+			[else]
 			[entity.name.toLowerFirst()/]TDO[ref.name/][role.name/].col("[getJavaAbsolutePath(ref) /]_[ref.targetField->first().getPhysicalName()/]").equalTo([role2.entity.name.toLowerFirst()/]TDO[ref.name/][role2.name/].col("[getJavaAbsolutePath(ref) /]_[ref.sourceField->first().getPhysicalName()/]")));
+			[/if]
 	Dataset<[entity.name.toUpperFirst()/]> res_[entity.name/]_[ref.name/] = res_[ref.name/].select([for (attr : Attribute | entity.attributes)] "[attr.name/]",[/for] "logEvents").as(Encoders.bean([entity.name.toUpperFirst()/].class));
 				[/if]
 				[if (entity.identifier.oclIsUndefined() = true)]

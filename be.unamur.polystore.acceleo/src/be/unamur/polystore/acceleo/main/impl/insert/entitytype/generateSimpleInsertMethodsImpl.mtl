@@ -311,12 +311,16 @@ values.add(value_[getPhysicalName(field)/]);
 	return true;
 	[else]
 		[if (struct.oclIsTypeOf(pml::Collection))]
-	Bson filter = new Document();
+	Bson filter;
 	Bson updateOp;
 			[for (ref : Reference | getRefOfPhysicalStructure(struct))]
 				[let roleref : Role = getMappedRoleOfReference(ref)]
 				[if (entityType=getOppositeRoleInBinaryRel(roleref).entity)]
+					[if (ref.sourceField->any(true).oclIsTypeOf(ArrayField))]
+	updateOp = addToSet("[ref.sourceField->any(true).oclAsType(PhysicalField).getPhysicalName()/]",[getOppositeRoleInBinaryRel(roleref).entity.name.toLowerFirst()/].get[getMappedAttributeOfFieldInStructure(ref.targetField->any(true).oclAsType(PhysicalField), ref.targetField->any(true).oclAsType(PhysicalField).getAbstractPhysicalStructureNotEmbeddedObject()).name.toUpperFirst()/]());
+					[else]
 	updateOp = set("[ref.sourceField->any(true).oclAsType(PhysicalField).getPhysicalName()/]",[getOppositeRoleInBinaryRel(roleref).entity.name.toLowerFirst()/].get[getMappedAttributeOfFieldInStructure(ref.targetField->any(true).oclAsType(PhysicalField), ref.targetField->any(true).oclAsType(PhysicalField).getAbstractPhysicalStructureNotEmbeddedObject()).name.toUpperFirst()/]());
+					[/if]
 					[for (attr : Attribute | roleref.entity.identifier.attributes)]
 						[if (i=1)]
 	filter = eq("[getPhysicalName(getMappedPhysicalField(attr, struct, db, entityType.getMappingRules()))/]",[roleref.name.toLowerFirst()/][roleref.getRelationShipType().name.toUpperFirst()/].get[attr.name.toUpperFirst()/]());
