@@ -33,13 +33,4 @@ test-bin
 be.unamur.polystore.dbinitialization/*
 be.unamur.polystore.feature/.project
 Other resources/*
-be.unamur.polystore.updatesite/artifacts.jar
-be.unamur.polystore.updatesite/content.jar
-be.unamur.polystore.updatesite/site.xml
-be.unamur.polystore.updatesite/features/be.unamur.polystore.acceleo.feature_1.0.0.202110111405.jar
-be.unamur.polystore.updatesite/features/be.unamur.polystore.feature_1.0.0.202110111405.jar
-be.unamur.polystore.updatesite/plugins/be.unamur.polystore_1.0.0.202110111405.jar
-be.unamur.polystore.updatesite/plugins/be.unamur.polystore.acceleo_1.0.0.202110111405.jar
-be.unamur.polystore.updatesite/plugins/be.unamur.polystore.acceleo.ui_1.0.0.202110111405.jar
-be.unamur.polystore.updatesite/plugins/be.unamur.polystore.ide_1.0.0.202110111405.jar
-be.unamur.polystore.updatesite/plugins/be.unamur.polystore.ui_1.0.0.202110111405.jar
+be.unamur.polystore.updatesite/*
