@@ -433,7 +433,7 @@ if([role2.name/]_refilter.booleanValue()) {
 }
 
 Dataset<Row> res_row_[ref.name/]_[ref2.name/] = res_[role.getRelationShipType().name/]_[ref.name/]_[ref2.name/].join(res_[ref2.name/]_[ref.name/].withColumnRenamed("logEvents", "[role.getRelationShipType().name/]_logEvents"),
-													res_[ref2.name/]_[ref.name/].col("[getJavaAbsolutePath(ref2).toLowerFirst() /]_[ref2.targetField->first().getPhysicalName()/]").equalTo(res_[role.getRelationShipType().name/]_[ref.name/]_[ref2.name/].col("[getJavaAbsolutePath(ref2).toLowerFirst() /]_[ref2.sourceField->first().getPhysicalName()/]")));
+													res_[role.getRelationShipType().name/]_[ref.name/]_[ref2.name/].col("[getJavaAbsolutePath(ref2).toLowerFirst() /]_[ref2.sourceField->first().getPhysicalName()/]").equalTo(res_[ref2.name/]_[ref.name/].col("[getJavaAbsolutePath(ref2).toLowerFirst() /]_[ref2.targetField->first().getPhysicalName()/]")));
 Dataset<[entity.name.toUpperFirst()/]> res_[entity.name/]_[ref.name/] = res_row_[ref.name/]_[ref2.name/].select("[entity.name.toLowerFirst()/].*").as(Encoders.bean([entity.name.toUpperFirst()/].class));
 [elseif (db2 = joindb and db2.dbType.isRelational())]
 //join between 2 SQL tables and a non-relational structure
@@ -463,7 +463,7 @@ if([role2.name/]_refilter.booleanValue()) {
 		res_[role2.getRelationShipType().name/]_[ref2.name/]_[ref.name/] = res_[role2.getRelationShipType().name/]_[ref2.name/]_[ref.name/].as("A").join(all, joinCondition).select("A.*").as(Encoders.bean([role2.getRelationShipType().name.toUpperFirst()/]TDO.class));
 } 
 Dataset<Row> res_row_[ref2.name/]_[ref.name/] = res_[role2.getRelationShipType().name/]_[ref2.name/]_[ref.name/].join(res_[ref.name/]_[ref2.name/].withColumnRenamed("logEvents", "[role2.getRelationShipType().name/]_logEvents"),
-	res_[ref.name/]_[ref2.name/].col("[getJavaAbsolutePath(ref).toLowerFirst() /]_[ref.targetField->first().getPhysicalName()/]").equalTo(res_[role2.getRelationShipType().name/]_[ref2.name/]_[ref.name/].col("[getJavaAbsolutePath(ref).toLowerFirst() /]_[ref.sourceField->first().getPhysicalName()/]")));
+	res_[role2.getRelationShipType().name/]_[ref2.name/]_[ref.name/].col("[getJavaAbsolutePath(ref).toLowerFirst() /]_[ref.sourceField->first().getPhysicalName()/]").equalTo(res_[ref.name/]_[ref2.name/].col("[getJavaAbsolutePath(ref).toLowerFirst() /]_[ref.targetField->first().getPhysicalName()/]")));
 Dataset<[entity.name.toUpperFirst()/]> res_[entity.name/]_[ref.name/] = res_row_[ref2.name/]_[ref.name/].as(Encoders.bean([entity.name.toUpperFirst()/].class));
 [else]
 // (A) (AB) (B)  OR (A B) (AB) Join table is 'alone'

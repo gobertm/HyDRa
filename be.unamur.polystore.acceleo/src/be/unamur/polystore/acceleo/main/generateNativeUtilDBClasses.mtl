@@ -431,7 +431,9 @@ public class Dataset<E> extends ArrayList<E> {
 
 				}
 
-				if (o1 != o2)
+				if (o1 == null || o2 == null)
+					return false;
+				if (!o1.equals(o2))
 					return false;
 			} else
 				System.err.println("Unknown condition: " + condition);
