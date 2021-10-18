@@ -57,28 +57,6 @@ public class Dataset<E> extends ArrayList<E> {
 		return this;
 	}
 
-	public static Dataset<Row> findInMongoDB(String dbName, String collName, String bson) {
-		MongoClient mongoClient = MongoClients.create("mongodb://localhost:27100");
-		MongoDatabase database = mongoClient.getDatabase(dbName);
-
-		MongoCollection<Document> collection = database.getCollection(collName);
-
-		MongoCursor<Document> cursor = null;
-		if (bson != null) {
-			Document query = Document.parse(bson);
-			cursor = collection.aggregate(Arrays.asList(query)).cursor();
-		} else
-			cursor = collection.find().cursor();
-
-		Dataset<Row> res = new Dataset<Row>();
-		while (cursor.hasNext()) {
-			Document doc = cursor.next();
-			res.add(new Row(doc));
-		}
-		cursor.close();
-		return res;
-	}
-
 	public E first() {
 		return get(0);
 	}
