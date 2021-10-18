@@ -7,16 +7,24 @@ import dao.impl.ReviewServiceImpl;
 import dao.services.ClientService;
 import dao.services.ProductService;
 import dao.services.ReviewService;
+import dbconnection.SparkConnectionMgr;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.lang3.RandomUtils;
-import org.apache.spark.sql.Dataset;
+import org.apache.spark.SparkConf;
+import org.apache.spark.sql.*;
+import org.apache.spark.sql.types.DataTypes;
+import org.apache.spark.sql.types.StructField;
+import org.apache.spark.sql.types.StructType;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import pojo.Client;
 import pojo.Product;
 import pojo.Review;
 import redis.clients.jedis.Jedis;
+import redis.clients.jedis.ScanParams;
+import redis.clients.jedis.ScanResult;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -87,8 +95,8 @@ public class KvDesignsTests {
         logger.info("Added {} REVIEW:[reviewid] hashes in Redis DB",added);
 
         // kvProductList
-        for (int i = 1; i < 10; i++) {
-            jedis.lpush("PRODUCT:"+i+":REVIEWS", "review"+i+"-1","review"+i+"-2");
+        for (int i = 0; i < 10; i++) {
+            jedis.lpush("PRODUCT:product"+i+":REVIEWS", "review"+i+"-1","review"+i+"-2");
         }
     }
 
@@ -120,7 +128,7 @@ public class KvDesignsTests {
     }
 
     @Test
-    public void testRefKVHashToKVHash(){
+    public void testGetRefKVHashToKVHash(){
         // KVReview has a ref to KVClient
         // Get client by review
         reviewCondition = new SimpleCondition<>(ReviewAttribute.id, Operator.EQUALS, "review14-1");
@@ -134,7 +142,7 @@ public class KvDesignsTests {
     }
 
     @Test
-    public void testRefKVListToHash(){
+    public void testGetRefKVListToHash(){
         // kvProduct contains a list with ReviewID
         // Get review by product
         productCondition = Condition.simple(ProductAttribute.id, Operator.EQUALS, "product0");
@@ -151,13 +159,46 @@ public class KvDesignsTests {
 
     @Test
     public void getListWithJedis(){
-        List<String> reviewidlists = jedis.lrange("PRODUCT:5:REVIEWS", 0, -1);
-        reviewidlists.forEach(System.out::println);
-    }
+        ScanParams scanParams = new ScanParams().match("PRODUCT:*:REVIEWS").count(100);
+        String cur = ScanParams.SCAN_POINTER_START;
+        boolean cycleIsFinished = false;
+        Map<String, List<String>> listKV = new HashMap<>();
+        while(!cycleIsFinished) {
+            ScanResult<String> scanResult =
+                    jedis.scan(cur, scanParams);
+            List<String> keysList = scanResult.getResult();
 
-    @Test
-    public void testManyToMany(){
-        fail();
+            //do whatever with the key-value pairs in result
+            for (String key : keysList) {
+                List<String> listvalues = jedis.lrange(key, 0, -1);
+                listKV.put(key, listvalues);
+            }
+            cur = scanResult.getCursor();
+            if (cur.equals("0")) {
+                cycleIsFinished = true;
+            }
+        }
+        listKV.forEach((k,v) -> System.out.println(k+" - ["+String.join(",",v)+"]"));
+
+//        // Try to convert this Map to a Dataset
+        SparkConf sparkConf = new SparkConf()
+                .setAppName("MyApp")
+                .setMaster("local[*]")
+                .set("spark.redis.host", "localhost")
+                .set("spark.redis.port", "6379");
+        SparkSession spark = SparkSession.builder().config(sparkConf).getOrCreate();
+        // Create a dataset row which flattens the list of values. So instead of having <productid, [reviewid1, reviewid2]>
+        // we have (productid, reviewid1) (productid, reviewid2) and this can be converted easily into ProductTDO.
+        List<Row> rows = new ArrayList();
+        StructType structType = new StructType(new StructField[] {
+                DataTypes.createStructField("_id", DataTypes.StringType, true), //technical field to store the key.
+                DataTypes.createStructField("prodid", DataTypes.StringType, true)
+                ,
+                DataTypes.createStructField("idreview", DataTypes.StringType, true)
+        });
+        listKV.forEach((k,v) -> v.forEach(vv -> rows.add(RowFactory.create(k,k,vv))));
+        Dataset<Row> data = spark.createDataFrame(rows, structType);
+        data.show();
     }
 
 }
