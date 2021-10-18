@@ -400,10 +400,13 @@ public class Dataset<E> extends ArrayList<E> {
 					if (o1 == null || o2 == null)
 						return false;
 
-					if (!(o1 instanceof List))
+					if (!(o1 instanceof List) && !(o1 instanceof WrappedArray))
 						return false;
 
-					if (!((List) o1).contains(o2))
+					if (o1 instanceof List && !((List) o1).contains(o2))
+						return false;
+					
+					if (o1 instanceof WrappedArray && !((WrappedArray) o1).list().contains(o2))
 						return false;
 
 				} else
