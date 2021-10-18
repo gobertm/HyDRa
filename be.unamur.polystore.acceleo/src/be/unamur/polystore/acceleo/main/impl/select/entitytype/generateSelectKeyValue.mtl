@@ -202,17 +202,18 @@
 				return [pojoName.toLowerFirst() /]_res;
 			}, Encoders.bean([pojoName /][if (references->size() > 0)][getTDOLiteral('') /][/if].class));
 	[else]
-		[comment Retrieve Dataset<Row> containing field of hashes. TODO other Redis dataTypes. /]
-		// TODO only handles 'hash' for now
 	StructType structType = new StructType(new StructField['['/][']'/] {
 		DataTypes.createStructField("_id", DataTypes.StringType, true), //technical field to store the key.
-	[for (field : PhysicalField | struct.key.pattern->filter(BracketsField)) separator(',')]
-		DataTypes.createStructField("[getPhysicalName(field)/]", DataTypes.StringType, true)
-	[/for]
-	[if (struct.key.pattern->filter(BracketsField)->size()>0)],[/if]
+	[if (struct.value.oclAsType(KVComplexField).type=KVDataType::HASH)]
 	[for (field : PhysicalField | struct.value.oclAsType(KVComplexField).fields) separator(',')]
 		DataTypes.createStructField("[getPhysicalName(field)/]", DataTypes.StringType, true)
 	[/for]
+	[/if]
+	[if (struct.value.oclAsType(KVComplexField).type=KVDataType::LIST)]
+	[for (field : PhysicalField | struct.value.oclAsType(KVComplexField).fields) separator(',')]
+		DataTypes.createStructField("[getPhysicalName(field)/]", DataTypes.createArrayType(DataTypes.StringType), true)
+	[/for]
+	[/if]
 	});
 	[if (struct.value.oclAsType(pml::KVComplexField).type=KVDataType::HASH)]
 	rows = SparkConnectionMgr.getRowsFromKeyValueHashes("[db.name/]",keypattern, structType);
@@ -297,6 +298,7 @@
 				[let refFields : Sequence(PhysicalField) = pair->at(2)]
 				[for (refField : PhysicalField | refFields)]
 				[if (refField.oclIsUndefined() = false)]
+					[if (refField.ancestors(KVComplexField) -> size() = 0)]
 				//Checking that reference field '[refField.getPhysicalName()/]' is mapped in Key
 				if(fieldsListInKey.contains("[refField.getPhysicalName()/]")){
 					//Retrieving reference field '[refField.getPhysicalName()/]' in Key
@@ -318,12 +320,12 @@
 					[pojoName.toLowerFirst() /]_res.addLogEvent("Cannot retrieve value for '[refField.getPhysicalName()/]' attribute stored in db [db.name/]. Probably due to an ambiguous regex.");
 					}
 					[pojoName.toLowerFirst() /]_res.set[getJavaAbsolutePath(ref).toUpperFirst() /]_[refField.getPhysicalName() /]([ref.name/]_[refField.getPhysicalName()/]);
-				}else{
+				}
+					[else]
 				// Get reference column in value [ '[' /][refField.getPhysicalName()/] [ ']' /] for reference [ '[' /][ref.name/][ ']' /]
 				[if (refField.ancestors(LongField) -> size() = 0)]
 				[comment shortField or bracketfield/]
-				String [getJavaAbsolutePath(ref) /]_[refField.getPhysicalName() /] = r.getAs("[getPhysicalName(refField) /]");
-				[pojoName.toLowerFirst() /]_res.set[getJavaAbsolutePath(ref).toUpperFirst() /]_[refField.getPhysicalName() /]([getJavaAbsolutePath(ref) /]_[refField.getPhysicalName() /]);
+				[pojoName.toLowerFirst() /]_res.set[getJavaAbsolutePath(ref).toUpperFirst() /]_[refField.getPhysicalName() /](r.getAs("[getPhysicalName(refField) /]"));
 				[else]
 				[comment LongField /]
 				regex = "[getJavaRegexFromLongField(refField.ancestors(LongField) -> first().oclAsType(LongField)) /]";
@@ -345,7 +347,7 @@
 				}
 				[pojoName.toLowerFirst() /]_res.set[getJavaAbsolutePath(ref).toUpperFirst() /]_[refField.getPhysicalName() /]([getJavaAbsolutePath(ref) /]_[refField.getPhysicalName() /]);
 				[/if]
-				}
+					[/if]
 				[/if]
 				[/for]
 				[/let]

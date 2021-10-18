@@ -616,7 +616,7 @@ public class SparkConnectionMgr {
 				cycleIsFinished = true;
 			}
 		}
-		listKV.forEach((k,v) -> v.forEach(vv -> rows.add(RowFactory.create(k,k,vv))));
+		listKV.forEach((k,v) -> rows.add(RowFactory.create(k,v)));
 		Dataset<Row> data = getSession().createDataFrame(rows, structType);
 		jedis.close();
 		return data;
