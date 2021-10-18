@@ -11,7 +11,7 @@
 	MutableBoolean [role.name/]_refilter = new MutableBoolean(false);
 	List<Dataset<[entity.name.toUpperFirst() /]>> datasetsPOJO = new ArrayList<Dataset<[entity.name.toUpperFirst() /]>>();
 	[let role2 : Role = getOppositeRoles(role)->any(true)]
-	Dataset<[role2.entity.name.toUpperFirst()/]> all = new [role2.entity.name.toUpperFirst()/]ServiceImpl().get[role2.entity.name.toUpperFirst()/]List([role2.name/]_condition);
+	Dataset<[role2.entity.name.toUpperFirst()/]> all = null;
 	boolean all_already_persisted = false;
 	MutableBoolean [role2.name/]_refilter;
 	org.apache.spark.sql.Column joinCondition = null;
@@ -40,6 +40,8 @@
 	Dataset<[entity.name.toUpperFirst()/]> res_[entity.name/]_[ref.name/] = null;
 	[comment  Refilter function needed if the condition on B is based on an attribute of B present only in another structure containing B/]
 	if([role2.name/]_refilter.booleanValue()) {
+		if(all == null)
+			all = new [role2.entity.name.toUpperFirst()/]ServiceImpl().get[role2.entity.name.toUpperFirst()/]List([role2.name/]_condition);
 		joinCondition = null;
 					[if (role2.entity.identifier.oclIsUndefined() = false and role2.entity.identifier.attributes->size() > 0)]
 						[for (attr : Attribute | role2.entity.identifier.attributes)]
@@ -63,6 +65,8 @@
 	Dataset<[entity.name.toUpperFirst()/]TDO> [entity.name.toLowerFirst()/]TDO[ref.name/][role.name/] = [role.getRelationShipType().name.toLowerFirst()/]Service.get[entity.name.toUpperFirst()/]TDOList[role.name.toUpperFirst() /]In[ref.name.toUpperFirst()/]In[ref.getAbstractPhysicalStructureNotEmbeddedObject().name.toUpperFirst() /]From[ref.getPhysicalSchema().name.toUpperFirst()/]([role.name/]_condition, [role.name/]_refilter);
 	Dataset<[role2.entity.name.toUpperFirst()/]TDO> [role2.entity.name.toLowerFirst()/]TDO[ref.name/][role2.name/] = [role.getRelationShipType().name.toLowerFirst()/]Service.get[role2.entity.name.toUpperFirst()/]TDOList[role2.name.toUpperFirst() /]In[ref.name.toUpperFirst()/]In[ref.getAbstractPhysicalStructureNotEmbeddedObject().name.toUpperFirst() /]From[ref.getPhysicalSchema().name.toUpperFirst()/]([role2.name/]_condition, [role2.name/]_refilter);
 	if([role2.name/]_refilter.booleanValue()) {
+		if(all == null)
+			all = new [role2.entity.name.toUpperFirst()/]ServiceImpl().get[role2.entity.name.toUpperFirst()/]List([role2.name/]_condition);
 		joinCondition = null;
 					[if (role2.entity.identifier.oclIsUndefined() = false and role2.entity.identifier.attributes->size() > 0)]
 						[for (attr : Attribute | role2.entity.identifier.attributes)]
@@ -124,6 +128,8 @@
 	Dataset<[role.getRelationShipType().name.toUpperFirst()/]> res_[ref.name/] = [role.getRelationShipType().name.toLowerFirst()/]Service.get[role.getOppositeRoles()->any(true).name.toUpperFirst()/]And[role.name.toUpperFirst()/]ListIn[ref.name.toUpperFirst()/]In[struct1.name.toUpperFirst()/]From[db1.name.toUpperFirst()/]([role.getRelationShipType().roles->first().name/]_condition, [role.getRelationShipType().roles->first().getOppositeRoles()->any(true).name/]_condition, [role.getRelationShipType().roles->first().name/]_refilter, [role.getRelationShipType().roles->first().getOppositeRoles()->any(true).name/]_refilter);
 	Dataset<[entity.name.toUpperFirst()/]> res_[entity.name/]_[ref.name/] = null;
 	if([role2.name/]_refilter.booleanValue()) {
+		if(all == null)
+			all = new [role2.entity.name.toUpperFirst()/]ServiceImpl().get[role2.entity.name.toUpperFirst()/]List([role2.name/]_condition);
 		joinCondition = null;
 					[if (role2.entity.identifier.oclIsUndefined() = false and role2.entity.identifier.attributes->size() > 0)]
 						[for (attr : Attribute | role2.entity.identifier.attributes)]
@@ -146,6 +152,8 @@
 	Dataset<[role2.entity.name.toUpperFirst()/]TDO> [role2.entity.name.toLowerFirst()/]TDO[ref.name/][role2.name/] = [role.getRelationShipType().name.toLowerFirst()/]Service.get[role2.entity.name.toUpperFirst()/]TDOList[role2.name.toUpperFirst() /]In[ref.name.toUpperFirst()/]In[ref.getAbstractPhysicalStructureNotEmbeddedObject().name.toUpperFirst() /]From[ref.getPhysicalSchema().name.toUpperFirst()/]([role2.name/]_condition, [role2.name/]_refilter);
 	Dataset<[entity.name.toUpperFirst()/]TDO> [entity.name.toLowerFirst()/]TDO[ref.name/][role.name /] = [role.getRelationShipType().name.toLowerFirst()/]Service.get[entity.name.toUpperFirst()/]TDOList[role.name.toUpperFirst() /]In[ref.name.toUpperFirst()/]In[ref.getAbstractPhysicalStructureNotEmbeddedObject().name.toUpperFirst() /]From[ref.getPhysicalSchema().name.toUpperFirst()/]([role.name/]_condition, [role.name/]_refilter);
 	if([role2.name/]_refilter.booleanValue()) {
+		if(all == null)
+			all = new [role2.entity.name.toUpperFirst()/]ServiceImpl().get[role2.entity.name.toUpperFirst()/]List([role2.name/]_condition);
 		joinCondition = null;
 					[if (role2.entity.identifier.oclIsUndefined() = false and role2.entity.identifier.attributes->size() > 0)]
 						[for (attr : Attribute | role2.entity.identifier.attributes)]
@@ -205,6 +213,8 @@
 	[role2.name/]_refilter = new MutableBoolean(false);
 	res_[rel.name/]_[role.name/] = [rel.name.toLowerFirst()/]Service.get[rel.name.toUpperFirst()/]ListIn[ getPhysicalFieldAbsolutePath(embedded) /]([role.name/]_condition, [role2.name/]_condition, [role.name/]_refilter, [role2.name/]_refilter);
 	if([role2.name/]_refilter.booleanValue()) {
+		if(all == null)
+			all = new [role2.entity.name.toUpperFirst()/]ServiceImpl().get[role2.entity.name.toUpperFirst()/]List([role2.name/]_condition);
 		joinCondition = null;
 			[if (role2.entity.identifier.oclIsUndefined() = false and role2.entity.identifier.attributes->size() > 0)]
 				[for (attr : Attribute | role2.entity.identifier.attributes)]
@@ -237,6 +247,8 @@
 	[role2.name/]_refilter = new MutableBoolean(false);
 	res_[rel.name/]_[role.name/] = [rel.name.toLowerFirst()/]Service.get[rel.name.toUpperFirst()/]ListIn[ getPhysicalFieldAbsolutePath(embedded) /]([role2.name/]_condition, [role.name/]_condition, [role2.name/]_refilter, [role.name/]_refilter);
 	if([role2.name/]_refilter.booleanValue()) {
+		if(all == null)
+			all = new [role2.entity.name.toUpperFirst()/]ServiceImpl().get[role2.entity.name.toUpperFirst()/]List([role2.name/]_condition);
 		joinCondition = null;
 			[if (role2.entity.identifier.oclIsUndefined() = false and role2.entity.identifier.attributes->size() > 0)]
 				[for (attr : Attribute | role2.entity.identifier.attributes)]
@@ -395,7 +407,9 @@ private static Dataset<[entityType.name.toUpperFirst()/]> fullOuterJoins[entityT
 Dataset<[role.getRelationShipType().name.toUpperFirst()/]> res_[entity.name/]_[ref.name/]_[ref2.name/] = [role.getRelationShipType().name.toLowerFirst()/]Service.get[role.getRelationShipType().name.toUpperFirst()/]ListIn[table.name/]And[jointable.name/]And[table2.name/]From[db1.name/]([role.name/]_condition, [role2.name/]_condition, [role.name/]_refilter, [role2.name/]_refilter);
 Dataset<[entity.name.toUpperFirst()/]> res_[entity.name/]_[ref.name/] = null;
 if([role2.name/]_refilter.booleanValue()) {
-		joinCondition = null;
+	if(all == null)
+			all = new [role2.entity.name.toUpperFirst()/]ServiceImpl().get[role2.entity.name.toUpperFirst()/]List([role2.name/]_condition);
+	joinCondition = null;
 	[if (role2.entity.identifier.oclIsUndefined() = false and role2.entity.identifier.attributes->size() > 0)]
 	[for (attr : Attribute | role2.entity.identifier.attributes)]
 	[if (i = 1)]
@@ -419,7 +433,9 @@ if([role2.name/]_refilter.booleanValue()) {
 Dataset<[role.getRelationShipType().name.toUpperFirst()/]TDO> res_[role.getRelationShipType().name/]_[ref.name/]_[ref2.name/] = [role.getRelationShipType().name.toLowerFirst()/]Service.get[role.getRelationShipType().name.toUpperFirst()/]TDOListIn[table.name/]And[jointable.name/]From[db1.name/]([role.name/]_condition, [role.name/]_refilter);
 Dataset<[role2.entity.name.toUpperFirst()/]TDO> res_[ref2.name/]_[ref.name/] = [role.getRelationShipType().name.toLowerFirst()/]Service.get[role2.entity.name.toUpperFirst()/]TDOList[role2.name.toUpperFirst()/]In[ref2.name.toUpperFirst()/]In[table2.name.toUpperFirst()/]From[table2.getPhysicalSchema().name.toUpperFirst()/]([role2.name/]_condition, [role2.name/]_refilter);
 if([role2.name/]_refilter.booleanValue()) {
-		joinCondition = null;
+	if(all == null)
+			all = new [role2.entity.name.toUpperFirst()/]ServiceImpl().get[role2.entity.name.toUpperFirst()/]List([role2.name/]_condition);
+	joinCondition = null;
 	[if (role2.entity.identifier.oclIsUndefined() = false and role2.entity.identifier.attributes->size() > 0)]
 	[for (attr : Attribute | role2.entity.identifier.attributes)]
 	[if (i = 1)]
@@ -450,7 +466,9 @@ Dataset<[entity.name.toUpperFirst()/]> res_[entity.name/]_[ref.name/] = res_row_
 Dataset<[role2.getRelationShipType().name.toUpperFirst()/]TDO> res_[role2.getRelationShipType().name/]_[ref2.name/]_[ref.name/] = [role2.getRelationShipType().name.toLowerFirst()/]Service.get[role2.getRelationShipType().name.toUpperFirst()/]TDOListIn[table2.name/]And[jointable.name/]From[db2.name/]([role2.name/]_condition, [role2.name/]_refilter);
 Dataset<[role.entity.name.toUpperFirst()/]TDO> res_[ref.name/]_[ref2.name/] = [role.getRelationShipType().name.toLowerFirst()/]Service.get[role.entity.name.toUpperFirst()/]TDOList[role.name.toUpperFirst()/]In[ref.name.toUpperFirst()/]In[table.name.toUpperFirst()/]From[table.getPhysicalSchema().name.toUpperFirst()/]([role.name/]_condition, [role.name/]_refilter);
 if([role2.name/]_refilter.booleanValue()) {
-		joinCondition = null;
+	if(all == null)
+			all = new [role2.entity.name.toUpperFirst()/]ServiceImpl().get[role2.entity.name.toUpperFirst()/]List([role2.name/]_condition);
+	joinCondition = null;
 	[if (role2.entity.identifier.oclIsUndefined() = false and role2.entity.identifier.attributes->size() > 0)]
 	[for (attr : Attribute | role2.entity.identifier.attributes)]
 	[if (i = 1)]
@@ -480,7 +498,9 @@ Dataset<[entity.name.toUpperFirst()/]TDO> [entity.name.toLowerFirst()/]TDO[ref.n
 Dataset<[role.getRelationShipType().name.toUpperFirst()/]TDO> [role.getRelationShipType().name.toLowerFirst()/]TDO[ref.name/]_[ref2.name/] = [role.getRelationShipType().name.toLowerFirst()/]Service.get[role.getRelationShipType().name.toUpperFirst()/]TDOListIn[role.ancestors(RelationshipType)->any(true).name.toUpperFirst()/]_[ref.name.toUpperFirst()/]_[ref2.name.toUpperFirst()/]In[ref.getAbstractPhysicalStructureNotEmbeddedObject().name.toUpperFirst() /]From[ref.getPhysicalSchema().name.toUpperFirst()/]();
 Dataset<[role2.entity.name.toUpperFirst()/]TDO> [role2.entity.name.toLowerFirst()/]TDO[ref.name/][role2.name/] = [role.getRelationShipType().name.toLowerFirst()/]Service.get[role2.entity.name.toUpperFirst()/]TDOList[role2.name.toUpperFirst() /]In[ref2.name.toUpperFirst()/]In[ref2.targetField->first().getAbstractPhysicalStructureNotEmbeddedObject().name.toUpperFirst() /]From[ref2.targetField->first().getPhysicalSchema().name.toUpperFirst()/]([role2.name/]_condition, [role2.name/]_refilter);
 if([role2.name/]_refilter.booleanValue()) {
-		joinCondition = null;
+	if(all == null)
+			all = new [role2.entity.name.toUpperFirst()/]ServiceImpl().get[role2.entity.name.toUpperFirst()/]List([role2.name/]_condition);
+	joinCondition = null;
 	[if (role2.entity.identifier.oclIsUndefined() = false and role2.entity.identifier.attributes->size() > 0)]
 	[for (attr : Attribute | role2.entity.identifier.attributes)]
 	[if (i = 1)]
