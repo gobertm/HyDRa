@@ -1,0 +1,27 @@
+cff-version: 1.0.0
+message: "If you use this software, please cite it as below."
+authors:
+- family-names: "Gobert"
+  given-names: "Maxime"
+  orcid: "https://orcid.org/0000-0002-2239-9468"
+- family-names: "Meurice"
+  given-names: "Loup"
+title: "HyDRa : An Hybrid Data Representation And Access Framework"
+url: "https://github.com/gobertm/HyDRa"
+preferred-citation:
+	author:"Gobert, Maxime
+and Meurice, Loup
+and Cleve, Anthony",
+editor:"Ghose, Aditya
+and Horkoff, Jennifer
+and Silva Souza, V{\'i}tor E.
+and Parsons, Jeffrey
+and Evermann, Joerg",
+	title:"Conceptual Modeling of Hybrid Polystores",
+	booktitle:"Conceptual Modeling",
+	year:"2021",
+	publisher:"Springer International Publishing",
+	address:"Cham",
+	pages:"113--122",
+	abstract:"An increasing number of organisations rely on NoSQL technologies to manage their mission-critical data. However, those technologies were not intended to replace relational database management systems, but rather to complement them. Hence the recent emergence of heterogeneous database architectures, commonly called hybrid polystores, that rely on a combination of several, possibly overlapping relational and NoSQL databases. Unfortunately, there is still a lack of models, methods and tools for data modeling and manipulation in such architectures. With the aim to fill this gap, we introduce HyDRa, a conceptual framework to design and manipulate hybrid polystores. We present the HyDRa textual modeling language allowing one to specify (1) the conceptual schema of a polystore, (2) the physical schemas of each of its databases, and (3) a set of mapping rules to express possibly complex correspondences between the conceptual schema elements and the physical databases.",
+	isbn:"978-3-030-89022-3"
