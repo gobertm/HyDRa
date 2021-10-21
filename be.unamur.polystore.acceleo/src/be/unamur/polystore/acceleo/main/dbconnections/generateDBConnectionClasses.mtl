@@ -644,12 +644,12 @@ public class SparkConnectionMgr {
 			}
 		}
 		String listFieldName = structType.fieldNames()['['/]1[']'/];
-		listKV.forEach((k,v) -> v.forEach(vv -> {
+		listKV.forEach((k,v) -> {
 			Map<String, Object> map = new HashMap<String, Object>();
 			map.put("_id", k);
-			map.put(listFieldName, vv);
+			map.put(listFieldName, v);
 			rows.add(new Row(map));
-		}));
+		});
 		jedis.close();
 		return rows;
 		[/if]
