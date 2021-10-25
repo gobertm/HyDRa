@@ -16,6 +16,7 @@ package dao.services;
 [generateImportRow(rel)/]
 import conditions.Condition;
 import pojo.[rel.name.toUpperFirst()/];
+import java.time.LocalDate;
 [for (role : Role | rel.roles)]
 import tdo.[role.entity.name.toUpperFirst() /]TDO;
 import tdo.[rel.name.toUpperFirst()/]TDO;

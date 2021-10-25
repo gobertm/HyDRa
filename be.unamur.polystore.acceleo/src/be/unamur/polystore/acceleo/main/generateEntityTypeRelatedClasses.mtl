@@ -25,6 +25,7 @@
 [template public generateEntityTypePojoClass(entityType : EntityType, conceptualSchema: ConceptualSchema)]
 [file ('src/main/java/pojo/' + entityType.name.toUpperFirst().concat('.java'), false, 'UTF-8')]
 package pojo;
+import java.time.LocalDate;
 
 public class [entityType.name.toUpperFirst() /] extends LoggingPojo {
 

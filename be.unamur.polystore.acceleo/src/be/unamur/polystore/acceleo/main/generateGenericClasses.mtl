@@ -178,7 +178,7 @@ public class Util {
 		return (Byte) o;
 	}
 
-	public static LocalDate getDateValue(Object o){
+	public static LocalDate getLocalDateValue(Object o){
 		if(o==null)
 			return null;
 		if(o instanceof java.sql.Date)
