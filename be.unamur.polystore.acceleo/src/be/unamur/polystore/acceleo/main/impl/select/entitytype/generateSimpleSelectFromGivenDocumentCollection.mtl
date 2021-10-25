@@ -91,7 +91,7 @@
 			return list_res.iterator();
 
 	}, Encoders.bean([pojoName /][if (references->size() > 0)][getTDOLiteral('') /][/if].class));
-	res= res.dropDuplicates(new String['['/][']'/]{[if (attributes->size() > 0)][for (attr : Attribute | attributes->any(true).ancestors(EntityType)->first().identifier.attributes) separator(',')]"[attr.name/]"[/for][/if]});
+	res= res.dropDuplicates(new String['['/][']'/]{[if (attributes->size() > 0 and entOrRel.oclIsTypeOf(EntityType))][for (attr : Attribute | attributes->any(true).ancestors(EntityType)->first().identifier.attributes) separator(',')]"[attr.name/]"[/for][/if]});
 	return res;
 [/template]
 
