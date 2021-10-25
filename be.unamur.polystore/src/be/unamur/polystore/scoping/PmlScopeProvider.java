@@ -27,6 +27,7 @@ import be.unamur.polystore.pml.LongField;
 import be.unamur.polystore.pml.Node;
 import be.unamur.polystore.pml.PhysicalField;
 import be.unamur.polystore.pml.PmlPackage;
+import be.unamur.polystore.pml.RelationshipMappingRule;
 import be.unamur.polystore.pml.RoleToEmbbededObjectMappingRule;
 import be.unamur.polystore.pml.RoleToKeyBracketsFieldMappingRule;
 import be.unamur.polystore.pml.RoleToReferenceMappingRule;
@@ -49,13 +50,17 @@ public class PmlScopeProvider extends AbstractPmlScopeProvider {
 			EntityMappingRule rule = EcoreUtil2.getContainerOfType(context, EntityMappingRule.class);
 			return Scopes.scopeFor(rule.getEntityConceptual().getAttributes());
 		}
+		if (context instanceof RelationshipMappingRule && reference == PmlPackage.Literals.RELATIONSHIP_MAPPING_RULE__ATTRIBUTES_CONCEPTUAL) {
+			RelationshipMappingRule rule = EcoreUtil2.getContainerOfType(context, RelationshipMappingRule.class);
+			return Scopes.scopeFor(rule.getRelationshipConceptual().getAttributes());
+		}
 		if (context instanceof EntityMappingRule && reference == PmlPackage.Literals.ENTITY_MAPPING_RULE__CONDITION_ATTRIBUTE) {
 			EntityMappingRule rule = EcoreUtil2.getContainerOfType(context, EntityMappingRule.class);
 			return Scopes.scopeFor(rule.getEntityConceptual().getAttributes());
 		}
-		if((context instanceof RoleToEmbbededObjectMappingRule || context instanceof EntityMappingRule) 
+		if((context instanceof RoleToEmbbededObjectMappingRule || context instanceof EntityMappingRule || context instanceof RelationshipMappingRule) 
 				&& 
-				(reference == PmlPackage.Literals.ENTITY_MAPPING_RULE__PHYSICAL_FIELDS)) {
+				((reference == PmlPackage.Literals.ENTITY_MAPPING_RULE__PHYSICAL_FIELDS) || (reference==PmlPackage.Literals.RELATIONSHIP_MAPPING_RULE__PHYSICAL_FIELDS))) {
 			AbstractPhysicalStructure struct=null;
 			if(context instanceof RoleToEmbbededObjectMappingRule) {
 				RoleToEmbbededObjectMappingRule rule = EcoreUtil2.getContainerOfType(context, RoleToEmbbededObjectMappingRule.class);
@@ -63,6 +68,10 @@ public class PmlScopeProvider extends AbstractPmlScopeProvider {
 			}
 			if(context instanceof EntityMappingRule) {
 				EntityMappingRule rule = EcoreUtil2.getContainerOfType(context, EntityMappingRule.class);
+				struct = rule.getPhysicalStructure();
+			}
+			if(context instanceof RelationshipMappingRule) {
+				RelationshipMappingRule rule = EcoreUtil2.getContainerOfType(context, RelationshipMappingRule.class);
 				struct = rule.getPhysicalStructure();
 			}
 			EList<PhysicalField> fields = new BasicEList<PhysicalField>();

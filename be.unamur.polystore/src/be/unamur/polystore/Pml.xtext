@@ -227,11 +227,17 @@ MappingRules:
 ;
 
 AbstractMappingRule:
-	EntityMappingRule | RoleToEmbbededObjectMappingRule | RoleToReferenceMappingRule | RoleToKeyBracketsFieldMappingRule
+	EntityMappingRule | RelationshipMappingRule | RoleToEmbbededObjectMappingRule | RoleToReferenceMappingRule | RoleToKeyBracketsFieldMappingRule
 ;
 
 EntityMappingRule:
 	(entityConceptual=[EntityType|QualifiedName]'('(attributesConceptual+=[Attribute|QualifiedName] (','attributesConceptual+=[Attribute|QualifiedName])*)?')'
+	('->' | '-''('conditionAttribute+=[Attribute|QualifiedName] operator=Operator value=ValueCondition')->')
+	 physicalStructure=[AbstractPhysicalStructure|QualifiedName]'('(physicalFields+=[PhysicalField|QualifiedName] (','physicalFields+=[PhysicalField|QualifiedName])*)?')')
+;
+
+RelationshipMappingRule:
+	'rel' ':'(relationshipConceptual=[RelationshipType|QualifiedName]'('(attributesConceptual+=[Attribute|QualifiedName] (','attributesConceptual+=[Attribute|QualifiedName])*)?')'
 	('->' | '-''('conditionAttribute+=[Attribute|QualifiedName] operator=Operator value=ValueCondition')->')
 	 physicalStructure=[AbstractPhysicalStructure|QualifiedName]'('(physicalFields+=[PhysicalField|QualifiedName] (','physicalFields+=[PhysicalField|QualifiedName])*)?')')
 ;
