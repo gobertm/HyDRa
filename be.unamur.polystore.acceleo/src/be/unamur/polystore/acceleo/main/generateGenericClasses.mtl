@@ -24,6 +24,9 @@ import java.math.BigDecimal;
 import java.sql.Timestamp;
 import java.time.LocalDate;
 import java.util.Set;
+import java.text.SimpleDateFormat;
+import java.text.ParseException;
+import java.time.ZoneId;
 
 public class Util {
 	
@@ -187,6 +190,11 @@ public class Util {
 			return (LocalDate) o;
 		if(o instanceof Timestamp)
 			return ((Timestamp) o).toLocalDateTime().toLocalDate();
+		try {
+			return new SimpleDateFormat("yyyy-MM-dd").parse(String.valueOf(o)).toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
+		} catch (ParseException e) {
+			e.printStackTrace();
+		}
 		throw new IncompatibleAttributesTypeException("Conceptual attribute type in model file incompatible with found datatype in database");
 	}
 
