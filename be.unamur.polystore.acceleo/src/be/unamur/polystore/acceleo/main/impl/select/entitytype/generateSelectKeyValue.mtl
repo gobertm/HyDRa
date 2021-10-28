@@ -174,7 +174,7 @@
 					//Retrieving reference field '[refField.getPhysicalName()/]' in Value
 					value = r.getAs("value");
 					[if (refField.ancestors(LongField) -> size() = 0)]
-					[comment shortField or bracketfield/]
+					[comment shortField or bracketfield/] 
 					[pojoName.toLowerFirst() /]_res.set[getJavaAbsolutePath(ref).toUpperFirst() /]_[refField.getPhysicalName() /](value);
 					[else]
 					[comment LongField /]
