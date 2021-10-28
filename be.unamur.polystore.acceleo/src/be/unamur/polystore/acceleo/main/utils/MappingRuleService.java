@@ -59,6 +59,19 @@ public class MappingRuleService {
 					}
 				}
 			}
+			
+			if (rule instanceof RelationshipMappingRule) {
+				RelationshipMappingRule er = (RelationshipMappingRule) rule;
+				for (int i = 0; i < er.getAttributesConceptual().size(); i++) {
+					Attribute a = er.getAttributesConceptual().get(i);
+					if (a == attr) {
+						PhysicalField pf = er.getPhysicalFields().get(i);
+
+						// PhysicalField origin = getOriginalPhysicalField(pf);
+						res.add(pf);
+					}
+				}
+			}
 		}
 		return res;
 	}

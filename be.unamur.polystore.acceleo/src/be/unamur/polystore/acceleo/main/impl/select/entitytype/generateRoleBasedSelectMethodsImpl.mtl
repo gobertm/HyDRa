@@ -7,7 +7,7 @@
 
 [template public generateRoleBasedSelectMethodsImpl(entity: EntityType, role: Role, conceptualSchema: ConceptualSchema)]{
 	[comment getAListInREL /]
-	[if (role.getRelationShipType().roles -> size() = 2 and role.getRelationShipType().attributes -> size() = 0)]
+	[if (role.getRelationShipType().roles -> size() = 2)]
 	MutableBoolean [role.name/]_refilter = new MutableBoolean(false);
 	List<Dataset<[entity.name.toUpperFirst() /]>> datasetsPOJO = new ArrayList<Dataset<[entity.name.toUpperFirst() /]>>();
 	[let role2 : Role = getOppositeRoles(role)->any(true)]
@@ -527,7 +527,7 @@ res_[ref.name/] = res_[ref.name/].join([role2.entity.name.toLowerFirst()/]TDO[re
 	.withColumnRenamed("[attr.name.toLowerFirst() /]", "[role2.entity.name/]_[attr.name.toLowerFirst() /]")
 [/for]
 	.withColumnRenamed("logEvents", "[role2.entity.name/]_logEvents"),
-	[role2.entity.name.toLowerFirst()/]TDO[ref.name/][role2.name/].col("[getJavaAbsolutePath(ref2).toLowerFirst() /]_[ref2.targetField->first().getPhysicalName()/]").equalTo(res_[ref.name/].col("[getJavaAbsolutePath(ref2).toLowerFirst() /]_[ref2.sourceField->first().getPhysicalName()/]")));
+	res_[ref.name/].col("[getJavaAbsolutePath(ref2).toLowerFirst() /]_[ref2.sourceField->first().getPhysicalName()/]").equalTo([role2.entity.name.toLowerFirst()/]TDO[ref.name/][role2.name/].col("[getJavaAbsolutePath(ref2).toLowerFirst() /]_[ref2.targetField->first().getPhysicalName()/]")));
 Dataset<[entity.name.toUpperFirst()/]> res_[entity.name/]_[ref.name/] = res_[ref.name/].select([for (attr : Attribute | entity.attributes)] "[attr.name/]",[/for] "logEvents").as(Encoders.bean([entity.name.toUpperFirst()/].class));
 [/if]
 [if (entity.identifier.oclIsUndefined() = true)]

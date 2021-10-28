@@ -186,7 +186,7 @@ public class [ent.name.toUpperFirst() /]TDO extends [ent.name.toUpperFirst() /] 
 [/template]
 
 [query public hasEntityTypeInBinarySimpleRelationshipType(rel : RelationshipType, ent : EntityType) : Boolean =  
-	rel.roles->select(role: Role | role.entity = ent and rel.roles->size() = 2 and rel.attributes->size() = 0)->size() > 0
+	rel.roles->select(role: Role | role.entity = ent and rel.roles->size() = 2 )->size() > 0
 /]
 
 [query private getFields(ref: Reference, role1 : Role, role2 : Role) : Sequence(PhysicalField) = 

@@ -151,6 +151,9 @@
 				//Checking that reference field '[refField.getPhysicalName()/]' is mapped in Key
 				if(fieldsListInKey.contains("[refField.getPhysicalName()/]")){
 					//Retrieving reference field '[refField.getPhysicalName()/]' in Key
+					key = r.getAs("key");
+					
+					regex = finalKeypattern.replaceAll("\\*","(.*)");
 					groupindex = fieldsListInKey.indexOf("[refField.getPhysicalName()/]")+1;
 					if(groupindex==null) {
 						logger.warn("Attribute '[pojoName /]' mapped physical field '[refField.getPhysicalName()/]' found in key but can't get index in build keypattern '{}'.", finalKeypattern);
@@ -166,12 +169,13 @@
 					[pojoName.toLowerFirst() /]_res.addLogEvent("Cannot retrieve value for '[refField.getPhysicalName()/]' attribute stored in db [db.name/]. Probably due to an ambiguous regex.");
 					}
 					[pojoName.toLowerFirst() /]_res.set[getJavaAbsolutePath(ref).toUpperFirst() /]_[refField.getPhysicalName() /]([refField.getPhysicalName()/]);
+					
 				}else {
 					//Retrieving reference field '[refField.getPhysicalName()/]' in Value
 					value = r.getAs("value");
 					[if (refField.ancestors(LongField) -> size() = 0)]
 					[comment shortField or bracketfield/]
-					[pojoName.toLowerFirst() /]_res.set[getJavaAbsolutePath(ref).toUpperFirst() /]_[refField.getPhysicalName() /]([getJavaAbsolutePath(ref) /]_[refField.getPhysicalName() /]);
+					[pojoName.toLowerFirst() /]_res.set[getJavaAbsolutePath(ref).toUpperFirst() /]_[refField.getPhysicalName() /](value);
 					[else]
 					[comment LongField /]
 					regex = "[getJavaRegexFromLongField(refField.ancestors(LongField) -> first().oclAsType(LongField)) /]";
