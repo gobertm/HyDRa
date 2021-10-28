@@ -156,6 +156,17 @@ public class Dataset<E> extends ArrayList<E> {
 		return new Column(colName);
 	}
 
+	public Dataset<E> union(Dataset<E> d) {
+		if(d == null)
+			return this;
+
+		Dataset<E> res = new Dataset<E>();
+		res.addAll(this);
+		res.addAll(d);
+
+		return res;
+	}
+
 	public <E2> Dataset<Row> join(Dataset<E2> d) {
 		return join(d, null);
 	}
