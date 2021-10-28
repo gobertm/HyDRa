@@ -58,6 +58,8 @@
 [template public generateCheckExistBeforeInsert(entityType: EntityType, struct : AbstractPhysicalStructure, db : Database)]
 	Condition<[entityType.name.toUpperFirst()/]Attribute> conditionID;
 	String idvalue="";
+	boolean entityExists=false;
+	[if (entityType.identifier.oclIsUndefined()=false)]
 	[for (attr : Attribute | entityType.identifier.attributes)]
 		[if (i=1)]
 	conditionID = Condition.simple([entityType.name.toUpperFirst()/]Attribute.[attr.name/], Operator.EQUALS, [entityType.name.toLowerFirst()/].get[attr.name.toUpperFirst()/]());
@@ -67,8 +69,8 @@
 	idvalue+=","+[entityType.name.toLowerFirst()/].get[attr.name.toUpperFirst()/]();
 		[/if]
 	[/for]
-	boolean entityExists=false;
 	entityExists = !get[entityType.name.toUpperFirst() /]ListIn[struct.name.toUpperFirst()/]From[db.name.toUpperFirst() /](conditionID,new MutableBoolean(false)).isEmpty();
+	[/if]
 			
 [/template]
 
