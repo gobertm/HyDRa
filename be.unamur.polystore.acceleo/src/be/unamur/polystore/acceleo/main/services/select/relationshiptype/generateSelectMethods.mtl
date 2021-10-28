@@ -12,7 +12,7 @@
 
 [comment Role TDO pojo retrieval methods /]
 
-[if (rel.roles -> size() = 2 and rel.attributes->size() = 0)]
+[if (rel.roles -> size() = 2)]
 [let role1 : Role = rel.roles->any(true)]
 [let role2 : Role = role1.getOppositeRoles()->any(true)]
 

@@ -61,6 +61,10 @@ public class Dataset<E> extends ArrayList<E> {
 		return get(0);
 	}
 
+	public Dataset<E> dropDuplicates() {
+		return dropDuplicates(null);
+	}
+
 	public Dataset<E> dropDuplicates(String['['/][']'/] fieldNames) {
 		if (fieldNames == null || fieldNames.length == 0 || this.size() == 0)
 			return this;
