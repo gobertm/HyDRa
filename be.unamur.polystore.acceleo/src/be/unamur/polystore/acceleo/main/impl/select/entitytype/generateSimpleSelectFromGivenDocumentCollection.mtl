@@ -294,9 +294,8 @@ if(array[level /]!= null) {
 	}
 }
 
-if(toAdd[level /]) {
-	[if (level > 1)]if([for (role : Role | rel.roles) separator('&&')]([role.name/]_condition == null || [role.name/]_refilter.booleanValue() || [role.name/]_condition.evaluate([rel.name.toLowerFirst() /][level /].get[role.name.toUpperFirst()/]()))[/for])[/if]
-		list_res.add([rel.name.toLowerFirst() /][level /]);
+if(toAdd[level /] [if (level > 1)]&& ([for (role : Role | rel.roles) separator('&&')]([role.name/]_condition == null || [role.name/]_refilter.booleanValue() || [role.name/]_condition.evaluate([rel.name.toLowerFirst() /][level /].get[role.name.toUpperFirst()/]()))[/for])[/if]) {
+	list_res.add([rel.name.toLowerFirst() /][level /]);
 	addedInList = true;
 } 
 [if (level > 1)]if(addedInList)
@@ -304,8 +303,7 @@ if(toAdd[level /]) {
 
 [/for]
 [else]
-if(toAdd[level /]) {
-	[if (level > 1)]if([for (role : Role | rel.roles) separator('&&')]([role.name/]_condition == null || [role.name/]_refilter.booleanValue() || [role.name/]_condition.evaluate([rel.name.toLowerFirst() /][level /].get[role.name.toUpperFirst()/]()))[/for])[/if]
+if(toAdd[level /] [if (level > 1)]&& ([for (role : Role | rel.roles) separator('&&')]([role.name/]_condition == null || [role.name/]_refilter.booleanValue() || [role.name/]_condition.evaluate([rel.name.toLowerFirst() /][level /].get[role.name.toUpperFirst()/]()))[/for])[/if]) {
 	list_res.add([rel.name.toLowerFirst() /][level /]);
 	addedInList = true;
 } 
