@@ -528,7 +528,8 @@ public class SparkConnectionMgr {
 				cycleIsFinished = true;
 			}
 		}
-
+		if(keys.isEmpty())
+			return null;
 		List<String> values = jedis.mget(keys.toArray(new String['['/]keys.size()[']'/]));
 
 		for (int i = 0; i < keys.size(); i++) {
