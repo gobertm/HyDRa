@@ -385,9 +385,8 @@ if(array[level /]!= null) {
 	}
 }
 
-if(toAdd[level /]) {
-	[if (level > 1)]if(condition == null || refilterFlag.booleanValue() || condition.evaluate([pojoName.toLowerFirst() /][level /]))[/if]
-		list_res.add([pojoName.toLowerFirst() /][level /]);
+if(toAdd[level /][if (level > 1)]&& (condition == null || refilterFlag.booleanValue() || condition.evaluate([pojoName.toLowerFirst() /][level /]))[/if]) {
+	list_res.add([pojoName.toLowerFirst() /][level /]);
 	addedInList = true;
 } 
 [if (level > 1)]if(addedInList)
@@ -395,9 +394,8 @@ if(toAdd[level /]) {
 
 [/for]
 [else]
-if(toAdd[level /]) {
-	[if (level > 1)]if(condition ==null || refilterFlag.booleanValue() || condition.evaluate([pojoName.toLowerFirst() /][level /]))[/if]
-		list_res.add([pojoName.toLowerFirst() /][level /]);
+if(toAdd[level /][if (level > 1)]&& (condition ==null || refilterFlag.booleanValue() || condition.evaluate([pojoName.toLowerFirst() /][level /]))[/if]) {
+	list_res.add([pojoName.toLowerFirst() /][level /]);
 	addedInList = true;
 } 
 [if (level > 1)]if(addedInList)
@@ -550,9 +548,8 @@ if(toAdd[level /][if (level > 1)]&&((condition == null || refilterFlag.booleanVa
 
 [/for]
 [else]
-if(toAdd[level /]) {
-	[if (level > 1)]if(condition ==null || refilterFlag.booleanValue() || condition.evaluate([pojoName.toLowerFirst() /][level /]))[/if]
-		list_res.add([pojoName.toLowerFirst() /][level /]);
+if(toAdd[level /][if (level > 1)]&&((condition ==null || refilterFlag.booleanValue() || condition.evaluate([pojoName.toLowerFirst() /][level /])))[/if]) {
+	list_res.add([pojoName.toLowerFirst() /][level /]);
 	addedInList = true;
 } 
 [if (level > 1)]if(addedInList)
