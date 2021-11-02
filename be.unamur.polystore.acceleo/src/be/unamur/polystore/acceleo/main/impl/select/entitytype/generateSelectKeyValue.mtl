@@ -73,6 +73,8 @@
 	[if struct.value.oclIsTypeOf(pml::KVComplexField)=false]
 	[comment Retrieve data and build POJO based on Dataset<Row> containing only 'key' and 'value' attributes. /]
 	rows = SparkConnectionMgr.getRowsFromKeyValue("[db.name/]",keypattern);
+	if(rows == null || rows.isEmpty())
+			return null;
 	// Transform to POJO. Based on Row containing (String key, String value)
 	finalKeypattern = keypatternAllVariables;
 	Dataset<[pojoName /][if (references->size() > 0)][getTDOLiteral('') /][/if]> res = rows.map((MapFunction<Row, [pojoName /][if (references->size() > 0)][getTDOLiteral('') /][/if]>) r -> {
@@ -224,6 +226,8 @@
 	[else]
 	rows = SparkConnectionMgr.getRowsFromKeyValueList("[db.name/]",keypattern, structType);
 	[/if]
+	if(rows == null || rows.isEmpty())
+			return null;
 	boolean isStriped = (StringUtils.countMatches(keypattern, "*") == 1 && keypattern.endsWith("*"));
 	String prefix=isStriped?keypattern.substring(0, keypattern.length() - 1):"";
 	finalKeypattern = keypatternAllVariables;
