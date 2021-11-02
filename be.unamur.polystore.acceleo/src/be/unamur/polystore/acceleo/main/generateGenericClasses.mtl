@@ -191,6 +191,8 @@ public class Util {
 			return (LocalDate) o;
 		if(o instanceof Timestamp)
 			return ((Timestamp) o).toLocalDateTime().toLocalDate();
+		if(o instanceof java.util.Date)
+			return ((Date) o).toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
 		try {
 [comment]TODO Fix customizable dateformat[/comment]
 			// TODO Fix customizable dateformat
