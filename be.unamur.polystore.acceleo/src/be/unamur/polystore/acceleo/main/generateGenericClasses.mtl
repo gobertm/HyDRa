@@ -27,6 +27,7 @@ import java.util.Set;
 import java.text.SimpleDateFormat;
 import java.text.ParseException;
 import java.time.ZoneId;
+import java.util.Date;
 
 public class Util {
 	
@@ -191,7 +192,7 @@ public class Util {
 			return (LocalDate) o;
 		if(o instanceof Timestamp)
 			return ((Timestamp) o).toLocalDateTime().toLocalDate();
-		if(o instanceof java.util.Date)
+		if(o instanceof Date)
 			return ((Date) o).toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
 		try {
 [comment]TODO Fix customizable dateformat[/comment]
