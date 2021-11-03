@@ -72,7 +72,7 @@ public class DBConnectionMgr {
 	public static void upsertMany(Bson filter, Bson updateOp, String struct, String db){
 		DBCredentials credentials = DBCredentials.getDbPorts().get(db);
 		if(credentials.getDbType().equals("mongodb")){ 
-			MongoDatabase mongoDatabase = getMongoClient(credentials).getDatabase(db);
+			MongoDatabase mongoDatabase = DBConnectionMgr.getMongoClient(credentials).getDatabase(db);
 	        MongoCollection<Document> structCollection = mongoDatabase.getCollection(struct);
 			UpdateOptions options = new UpdateOptions().upsert(true);
 	        structCollection.updateMany(filter, updateOp, options);
@@ -86,7 +86,7 @@ public class DBConnectionMgr {
 	public static void upsertMany(Bson filter, Bson updateOp, List<Bson> arrayFiltersConditions, String struct, String db){
 		DBCredentials credentials = DBCredentials.getDbPorts().get(db);
 		if(credentials.getDbType().equals("mongodb")){ 
-			MongoDatabase mongoDatabase = getMongoClient(credentials).getDatabase(db);
+			MongoDatabase mongoDatabase = DBConnectionMgr.getMongoClient(credentials).getDatabase(db);
 	        MongoCollection<Document> structCollection = mongoDatabase.getCollection(struct);
 			UpdateOptions updateOptions = new UpdateOptions().arrayFilters(arrayFiltersConditions);
 	        structCollection.updateMany(filter, updateOp, updateOptions);
@@ -111,7 +111,7 @@ public class DBConnectionMgr {
 		}
 	}
 
-	private static MongoClient getMongoClient(DBCredentials credentials) {
+	public static MongoClient getMongoClient(DBCredentials credentials) {
 		if (mongoClient == null) {
 			mongoClient = MongoClients.create(
 					MongoClientSettings.builder()
@@ -278,12 +278,8 @@ public class SparkConnectionMgr {
 				: MongoSpark.load(jsc, readConfig).toDF();
 		return res;
 		[else]
-		String mongoURL = "mongodb://" + credentials.getUrl() + ":" + credentials.getPort() + "/" + dbName;
-		MongoClient mongoClient = MongoClients.create(mongoURL);
-		MongoDatabase database = mongoClient.getDatabase(dbName);
-
+		MongoDatabase database = DBConnectionMgr.getMongoClient(credentials).getDatabase(dbName);
 		MongoCollection<Document> collection = database.getCollection(collectionName);
-
 		MongoCursor<Document> cursor = null;
 		if (bsonQuery != null) {
 			Document query = Document.parse(bsonQuery);
