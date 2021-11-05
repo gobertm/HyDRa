@@ -48,9 +48,9 @@ public class DBConnectionMgr {
 
 	[instantiateLogger('DBConnectionMgr') /]
 	private static Map<String, DBConnection> mapDB = new HashMap<String, DBConnection>(); 
+	private static Map<String, MongoClient> mapMongoConnection = new HashMap<>();
 	private static MongoClient mongoClient;
 	private static Connection connection;
-
 	
 	public static Map<String, DBConnection> getMapDB(){
 		return mapDB;
@@ -62,6 +62,7 @@ public class DBConnectionMgr {
 			MongoDatabase mongoDatabase = getMongoClient(credentials).getDatabase(db);
 	        MongoCollection<Document> structCollection = mongoDatabase.getCollection(struct);
 	        structCollection.updateMany(filter, updateOp);
+			logger.info("Update many on collection ['['/]{}[']'/], filter ['['/]{}[']'/]",db+ " - "+struct, filter);
 		}
 		else{
 			logger.error("Can't perform update, wrong database type, need document db. Database : '{}' , type : '{}' ",credentials.getDbName(), credentials.getDbType());
@@ -76,6 +77,7 @@ public class DBConnectionMgr {
 	        MongoCollection<Document> structCollection = mongoDatabase.getCollection(struct);
 			UpdateOptions options = new UpdateOptions().upsert(true);
 	        structCollection.updateMany(filter, updateOp, options);
+			logger.info("Update many on collection ['['/]{}[']'/], filter ['['/]{}[']'/]",db+ " - "+struct, filter);
 		}
 		else{
 			logger.error("Can't perform update, wrong database type, need document db. Database : '{}' , type : '{}' ",credentials.getDbName(), credentials.getDbType());
@@ -90,6 +92,7 @@ public class DBConnectionMgr {
 	        MongoCollection<Document> structCollection = mongoDatabase.getCollection(struct);
 			UpdateOptions updateOptions = new UpdateOptions().arrayFilters(arrayFiltersConditions);
 	        structCollection.updateMany(filter, updateOp, updateOptions);
+			logger.info("Update many on collection ['['/]{}[']'/], filter ['['/]{}[']'/]",db+ " - "+struct, filter);
 		}
 		else{
 			logger.error("Can't perform update, wrong database type, need document db. Database : '{}' , type : '{}' ",credentials.getDbName(), credentials.getDbType());
@@ -108,16 +111,22 @@ public class DBConnectionMgr {
 			MongoDatabase mongoDatabase = getMongoClient(credentials).getDatabase(db);
 			MongoCollection<Document> structCollection = mongoDatabase.getCollection(struct);
 			structCollection.insertMany(documents);
+			logger.info("Insert many on collection ['['/]{}[']'/],  ['['/]{}[']'/] documents",db+ " - "+struct, documents.size());
 		}
 	}
 
 	public static MongoClient getMongoClient(DBCredentials credentials) {
+		mongoClient = null;
+		mongoClient = mapMongoConnection.get(credentials.getUrl()+credentials.getPort());
 		if (mongoClient == null) {
+			firstConnectionPort = credentials.getPort();
+			firstConnectionUrl = credentials.getUrl();
 			mongoClient = MongoClients.create(
 					MongoClientSettings.builder()
 							.applyToClusterSettings(builder ->
 									builder.hosts(Arrays.asList(new ServerAddress(credentials.getUrl(), credentials.getPort()))))
 							.build());
+			mapMongoConnection.put(credentials.getUrl()+credentials.getPort(), mongoClient);
 		}
 		return mongoClient;
 	}
@@ -133,8 +142,10 @@ public class DBConnectionMgr {
 						statement.setObject(i,row.get(i-1));
 					}
 					statement.addBatch();
+					statement.clearParameters();
 				}
-				statement.executeBatch();
+				int['['/][']'/] result = statement.executeBatch();
+				logger.info("BATCH INSERT INTO '{}' - '{}' lines ", struct, result.length);  
 			} catch (SQLException e) {
 				e.printStackTrace();
 				logger.error("SQL Error in preparedStatement");
@@ -162,7 +173,8 @@ public class DBConnectionMgr {
 				}
 				statement.setObject(values.size()+1,filtervalue);
 				statement.addBatch();
-				statement.executeBatch();
+				int['['/][']'/] result = statement.executeBatch();
+				logger.info("BATCH UPDATE INTO '{}' - '{}' lines ", struct, result.length);  
 			} catch (SQLException e) {
 				e.printStackTrace();
 				logger.error("SQL Error in preparedStatement");
@@ -436,7 +448,7 @@ public class SparkConnectionMgr {
                 .setAppName("MyApp")
                 .setMaster("local['['/]*[']'/]")
                 .set("spark.redis.host", credentials.getUrl())
-                .set("spark.redis.port", credentials.getPort());
+                .set("spark.redis.port", ""+credentials.getPort());
         RedisConfig redisConfig = RedisConfig.fromSparkConf(sparkConf);
         ReadWriteConfig readWriteConfig = ReadWriteConfig.fromSparkConf(sparkConf);
 		//        JavaSparkContext jsc = new JavaSparkContext(sparkConf);
@@ -499,7 +511,7 @@ public class SparkConnectionMgr {
                 .setAppName("MyApp")
                 .setMaster("local['['/]*[']'/]")
                 .set("spark.redis.host", credentials.getUrl())
-                .set("spark.redis.port", credentials.getPort());
+                .set("spark.redis.port", ""+credentials.getPort());
 		SparkSession spark = SparkSession.builder().config(sparkConf).getOrCreate();
 		Dataset<Row> res = spark.read().format("org.apache.spark.sql.redis")
                 .option("keys.pattern",keypattern)
