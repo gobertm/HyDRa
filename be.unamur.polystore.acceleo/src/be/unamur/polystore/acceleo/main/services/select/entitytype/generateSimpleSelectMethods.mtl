@@ -14,6 +14,11 @@ then the implementation needs to take into account the type of database in order
 /]
 [template public generateSimpleSelectMethods(entityType: EntityType, conceptualSchema: ConceptualSchema, override: Boolean)]
 
+[if (override = false)]public Dataset<[entityType.name.toUpperFirst() /]> get[entityType.name.toUpperFirst() /]List(){
+	return get[entityType.name.toUpperFirst() /]List(null);
+}
+[/if]
+
 [if (override = false)]public Dataset<[entityType.name.toUpperFirst() /]> get[entityType.name.toUpperFirst() /]List(conditions.Condition<conditions.[entityType.name.toUpperFirst() /]Attribute> condition)[generateSimpleSelectMethodsImpl(entityType, conceptualSchema) /][/if]
 
 [for (struct: AbstractPhysicalStructure | getConcernedPhysicalStructures(entityType, entityType.ancestors(Domainmodel)->first()))]
