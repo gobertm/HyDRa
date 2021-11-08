@@ -29,6 +29,26 @@ public [if (override = false)]abstract [/if]Dataset<[entityType.name.toUpperFirs
 [/for]
 
 // TODO get based on id(s). Ex:public Client getClientById(Long id)
+[comment]GetByID[/comment]
+[if (entityType.identifier.oclIsUndefined()=false)]
+public [entityType.name.toUpperFirst() /] get[entityType.name.toUpperFirst() /]ById([for (attr: Attribute | entityType.identifier.attributes) separator(',')][generateJavaType(attr.type)/] [attr.name /][/for]){
+	Condition cond;
+	[if (entityType.identifier.attributes->size() > 1)]
+		[for (attr: Attribute | entityType.identifier.attributes)]
+	//TODO
+	throw new UnsupportedOperationException("Handling of multi component identifier not implemented yet");
+		[/for]
+	[else]
+	[let attr : Attribute = entityType.identifier.attributes->any(true)]
+	cond = Condition.simple([entityType.name.toUpperFirst() /]Attribute.[attr.name /], conditions.Operator.EQUALS, [attr.name /]);
+	Dataset<[entityType.name.toUpperFirst() /]> res = get[entityType.name.toUpperFirst() /]List(cond);
+	if(res!=null)
+		return res.first();
+	[/let]
+	[/if]
+	return null;
+}
+[/if]
 
 [for (attr: Attribute | entityType.attributes)]
 public Dataset<[entityType.name.toUpperFirst() /]> get[entityType.name.toUpperFirst() /]ListBy[attr.name.toUpperFirst()/]([generateJavaType(attr.type)/] [attr.name /]) {
