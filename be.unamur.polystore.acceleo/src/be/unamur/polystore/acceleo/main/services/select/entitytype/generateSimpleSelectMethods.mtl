@@ -28,8 +28,8 @@ public [if (override = false)]abstract [/if]Dataset<[entityType.name.toUpperFirs
 [/if]
 [/for]
 
-// TODO get based on id(s). Ex:public Client getClientById(Long id)
 [comment]GetByID[/comment]
+[if (override = false)]
 [if (entityType.identifier.oclIsUndefined()=false)]
 public [entityType.name.toUpperFirst() /] get[entityType.name.toUpperFirst() /]ById([for (attr: Attribute | entityType.identifier.attributes) separator(',')][generateJavaType(attr.type)/] [attr.name /][/for]){
 	Condition cond;
@@ -49,11 +49,14 @@ public [entityType.name.toUpperFirst() /] get[entityType.name.toUpperFirst() /]B
 	return null;
 }
 [/if]
+[/if]
 
+[if (override = false)]
 [for (attr: Attribute | entityType.attributes)]
 public Dataset<[entityType.name.toUpperFirst() /]> get[entityType.name.toUpperFirst() /]ListBy[attr.name.toUpperFirst()/]([generateJavaType(attr.type)/] [attr.name /]) {
 	return get[entityType.name.toUpperFirst() /]List(conditions.Condition.simple(conditions.[entityType.name.toUpperFirst() /]Attribute.[attr.name /], conditions.Operator.EQUALS, [attr.name /]));
 }
 
 [/ for]
+[/if]
 [/template]
