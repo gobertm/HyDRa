@@ -305,6 +305,15 @@ public interface IPojo {}
 [/file]
 [/template]
 
+
+[template public generateIAttribute()]
+[file ('src/main/java/conditions/Attribute.java', false, 'UTF-8')]
+package conditions;
+
+public interface Attributes {}
+[/file]
+[/template]
+
 [template public generateLoggingPojo()]
 [file ('src/main/java/pojo/LoggingPojo.java', false, 'UTF-8')]
 package pojo;
@@ -346,6 +355,7 @@ package conditions;
 
 import pojo.IPojo;
 import java.io.Serializable;
+import org.apache.commons.lang3.ArrayUtils;
 
 public abstract class Condition<E> implements Serializable {
 
@@ -364,6 +374,14 @@ public abstract class Condition<E> implements Serializable {
 	public abstract Class<E> eval() throws Exception;
 
 	public abstract boolean evaluate(IPojo obj);
+
+	public static Condition createOrCondition(Attributes attribute, Operator operator, Object['['/][']'/] values) {
+		if (values.length==1) {
+			return Condition.simple(attribute, operator, values['['/]0[']'/]);
+		} else {
+			return OrCondition.or(Condition.simple(attribute, operator, values['['/]0[']'/]), createOrCondition(attribute, operator, ArrayUtils.remove(values,0)));
+		}
+	}
 }
 [/file]
 
@@ -717,7 +735,7 @@ public enum Operator {
 [file ('src/main/java/conditions/' + ent.name.toUpperFirst() + 'Attribute.java', false, 'UTF-8')]
 package conditions;
 
-public enum [ent.name.toUpperFirst() /]Attribute {
+public enum [ent.name.toUpperFirst() /]Attribute implements Attributes{
 	[for (attr : Attribute | ent.attributes)][if (i > 1)], [/if][attr.name /][/for]
 }
 [/file]
