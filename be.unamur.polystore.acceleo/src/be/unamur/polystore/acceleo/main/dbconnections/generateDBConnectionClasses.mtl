@@ -119,8 +119,6 @@ public class DBConnectionMgr {
 		mongoClient = null;
 		mongoClient = mapMongoConnection.get(credentials.getUrl()+credentials.getPort());
 		if (mongoClient == null) {
-			firstConnectionPort = credentials.getPort();
-			firstConnectionUrl = credentials.getUrl();
 			mongoClient = MongoClients.create(
 					MongoClientSettings.builder()
 							.applyToClusterSettings(builder ->
