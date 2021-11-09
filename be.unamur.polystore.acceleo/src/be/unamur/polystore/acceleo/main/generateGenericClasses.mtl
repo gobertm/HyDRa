@@ -94,7 +94,7 @@ public class Util {
 		if(o instanceof BigDecimal)
 			return ((BigDecimal) o).doubleValue();
 		if(o instanceof Float)
-			return ((Float) o).doubleValue();
+			return Double.valueOf(o.toString());
 		if(o instanceof Short)
 			return ((Short) o).doubleValue();
 		if(o instanceof Double)
