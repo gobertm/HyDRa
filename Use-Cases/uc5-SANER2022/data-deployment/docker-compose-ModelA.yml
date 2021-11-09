@@ -1,0 +1,47 @@
+version: "3"
+# Initalization of ModelA.pml structures.
+# Do not forget to run dbinit/Main.java , to ingest relational database data!
+services:
+  redisbench:
+    image: redis:latest
+    ports: 
+      - 6363:6379
+    volumes :
+      - "./ModelA:/data/"
+    command:
+    - /bin/sh
+    - -c
+    - |
+        nohup redis-server &
+        sleep 2
+        echo "adding Feedback data key values"
+        redis-cli < /ModelA/feedback.redis
+        echo "done"
+        # this will keep container running
+        tail -f /dev/null
+
+  mongobench:
+    image: mongo:latest
+    ports: 
+      - 27000:27017
+
+  mongo-seed:
+    image: mongo:latest
+    links:
+        - mongobench
+    volumes:
+        - "./ModelA:/mongo-seed"
+    command:
+      - /mongo-seed/import.sh
+
+  mysqlbench:
+    image: mysql:latest
+    ports: 
+      - 3310:3306
+    environment:
+      - MYSQL_ROOT_PASSWORD=password
+      - MYSQL_DATABASE=mysqlbench
+    volumes: 
+      - "./ModelA/sqlTables.sql:/docker-entrypoint-initdb.d/1-sqlTables.sql"
+      - "./ModelA/productTable.sql:/docker-entrypoint-initdb.d/2-productTable.sql"
+      - "./ModelA/customerTable.sql:/docker-entrypoint-initdb.d/3-customerTable.sql"

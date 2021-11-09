@@ -34,3 +34,13 @@ be.unamur.polystore.dbinitialization/*
 be.unamur.polystore.feature/.project
 Other resources/*
 be.unamur.polystore.updatesite/*
+Use-Cases/uc5-SANER2022/data-deployment/ModelB/detailOrderCol.json
+Use-Cases/uc5-SANER2022/data-deployment/ModelB/dump.rdb
+Use-Cases/uc5-SANER2022/data-deployment/ModelB/orderTable.sql
+Use-Cases/uc5-SANER2022/data-deployment/ModelB/sqlTables.sql
+Use-Cases/uc5-SANER2022/data-deployment/ModelB/userCol.json
+Use-Cases/uc5-SANER2022/data-deployment/ModelA/customerTable.sql
+Use-Cases/uc5-SANER2022/data-deployment/ModelA/dump.rdb
+Use-Cases/uc5-SANER2022/data-deployment/ModelA/Order.json
+Use-Cases/uc5-SANER2022/data-deployment/ModelA/productTable.sql
+Use-Cases/uc5-SANER2022/data-deployment/ModelA/sqlTables.sql
