@@ -5,6 +5,7 @@
 
 [template public generateGenericClasses(conceptualSchema: ConceptualSchema)]
 [generateUtilClass(conceptualSchema) /]
+[generateIAttribute()/]
 [generateLoadingClass() /]
 [generateConditions(conceptualSchema) /]
 [generateLog4JConfFile() /]
@@ -307,7 +308,7 @@ public interface IPojo {}
 
 
 [template public generateIAttribute()]
-[file ('src/main/java/conditions/Attribute.java', false, 'UTF-8')]
+[file ('src/main/java/conditions/Attributes.java', false, 'UTF-8')]
 package conditions;
 
 public interface Attributes {}

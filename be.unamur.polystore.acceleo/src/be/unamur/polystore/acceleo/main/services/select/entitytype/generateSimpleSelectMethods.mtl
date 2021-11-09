@@ -47,7 +47,7 @@ public [entityType.name.toUpperFirst() /] get[entityType.name.toUpperFirst() /]B
 	[let attr : Attribute = entityType.identifier.attributes->any(true)]
 	cond = Condition.simple([entityType.name.toUpperFirst() /]Attribute.[attr.name /], conditions.Operator.EQUALS, [attr.name /]);
 	Dataset<[entityType.name.toUpperFirst() /]> res = get[entityType.name.toUpperFirst() /]List(cond);
-	if(res!=null)
+	if(res!=null && !res.isEmpty())
 		return res.first();
 	[/let]
 	[/if]
