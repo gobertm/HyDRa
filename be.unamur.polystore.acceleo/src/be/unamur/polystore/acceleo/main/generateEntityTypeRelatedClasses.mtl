@@ -26,6 +26,7 @@
 [file ('src/main/java/pojo/' + entityType.name.toUpperFirst().concat('.java'), false, 'UTF-8')]
 package pojo;
 import java.time.LocalDate;
+import java.util.List;
 
 public class [entityType.name.toUpperFirst() /] extends LoggingPojo {
 
@@ -42,14 +43,14 @@ public class [entityType.name.toUpperFirst() /] extends LoggingPojo {
 		[for (r : Role | rel.roles) ]
 			[if (r.entity = entityType and isRelationshipTypeComplex(rel))]
 				[if (r.cardinality = pml::Cardinality::ZERO_MANY or r.cardinality = pml::Cardinality::ONE_MANY)]
-	private java.util.List<[rel.name.toUpperFirst() /]> [rel.name/]ListAs[r.name.toUpperFirst()/];
+	private List<[rel.name.toUpperFirst() /]> [rel.name/]ListAs[r.name.toUpperFirst()/];
 				[else]
 	private [rel.name.toUpperFirst() /] [rel.name/]As[r.name.toUpperFirst()/];
 				[/if]
 			[else]
 				[if (r.entity = entityType)]
 					[if (r.cardinality = pml::Cardinality::ZERO_MANY or r.cardinality = pml::Cardinality::ONE_MANY)]
-	private java.util.List<[rel.roles->at(i.mod(2) + 1).entity.name.toUpperFirst() /]> [rel.roles->at(i.mod(2) + 1).name /]List;
+	private List<[rel.roles->at(i.mod(2) + 1).entity.name.toUpperFirst() /]> [rel.roles->at(i.mod(2) + 1).name /]List;
 					[else]
 	private [rel.roles->at(i.mod(2) + 1).entity.name.toUpperFirst() /] [rel.roles->at(i.mod(2) + 1).name /];
 					[/if] 
@@ -59,9 +60,17 @@ public class [entityType.name.toUpperFirst() /] extends LoggingPojo {
 	[/for]
 
 	[comment Empty Constructor /]
-	
+	// Empty constructor
 	public [entityType.name.toUpperFirst() /]() {}
 
+	/*
+	* Constructor on simple attribute 
+	*/
+	public [entityType.name.toUpperFirst() /]([for (attr: Attribute | entityType.attributes) separator(',')][generateJavaType(attr.type) /] [attr.name /][/for]) {
+		[for (attr: Attribute | entityType.attributes)]
+		this.[attr.name /] = [attr.name /];
+		[/for]
+	}
 	[comment clone function /]
 	@Override
     public Object clone() throws CloneNotSupportedException {
@@ -70,7 +79,7 @@ public class [entityType.name.toUpperFirst() /] extends LoggingPojo {
 	
 	@Override
 	public String toString(){
-		return "[entityType.name/] { " + [for (attr: Attribute | entityType.attributes) separator ('+", "+\n')]"[attr.name/]="+[attr.name/] [/for]+"}"; 
+		return "[entityType.name/] { " + [for (attr: Attribute | entityType.attributes) separator ('+", "+\n\t\t\t\t\t')]"[attr.name/]="+[attr.name/] [/for]+"}"; 
 	}
 	[comment Getter & Setter for attributes /]
 	
@@ -110,11 +119,11 @@ public class [entityType.name.toUpperFirst() /] extends LoggingPojo {
 			[else]
 				[if (r.entity = entityType)]
 					[if (r.cardinality = pml::Cardinality::ZERO_MANY or r.cardinality = pml::Cardinality::ONE_MANY)]
-	public java.util.List<[rel.roles->at(i.mod(2) + 1).entity.name.toUpperFirst() /]> _get[rel.roles->at(i.mod(2) + 1).name.toUpperFirst() /]List() {
+	public List<[rel.roles->at(i.mod(2) + 1).entity.name.toUpperFirst() /]> _get[rel.roles->at(i.mod(2) + 1).name.toUpperFirst() /]List() {
 		return [rel.roles->at(i.mod(2) + 1).name /]List;
 	}
 
-	public void _set[rel.roles->at(i.mod(2) + 1).name.toUpperFirst() /]List(java.util.List<[rel.roles->at(i.mod(2) + 1).entity.name.toUpperFirst() /]> [rel.roles->at(i.mod(2) + 1).name /]List) {
+	public void _set[rel.roles->at(i.mod(2) + 1).name.toUpperFirst() /]List(List<[rel.roles->at(i.mod(2) + 1).entity.name.toUpperFirst() /]> [rel.roles->at(i.mod(2) + 1).name /]List) {
 		this.[rel.roles->at(i.mod(2) + 1).name /]List = [rel.roles->at(i.mod(2) + 1).name /]List;
 	}
 					[else]
