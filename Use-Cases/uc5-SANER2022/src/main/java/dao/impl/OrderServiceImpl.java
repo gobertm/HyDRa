@@ -51,6 +51,7 @@ public class OrderServiceImpl extends OrderService {
 	
 	
 	
+	
 	public static String getBSONMatchQueryInOrdersColFromMongobench(Condition<OrderAttribute> condition, MutableBoolean refilterFlag) {	
 		String res = null;	
 		if(condition != null) {
@@ -212,27 +213,6 @@ public class OrderServiceImpl extends OrderService {
 	}
 	
 	
-	// TODO get based on id(s). Ex:public Client getClientById(Long id)
-	public Order getOrderById(String id){
-		Condition cond;
-		cond = Condition.simple(OrderAttribute.id, conditions.Operator.EQUALS, id);
-		Dataset<Order> res = getOrderList(cond);
-		if(res!=null)
-			return res.first();
-		return null;
-	}
-	
-	public Dataset<Order> getOrderListById(String id) {
-		return getOrderList(conditions.Condition.simple(conditions.OrderAttribute.id, conditions.Operator.EQUALS, id));
-	}
-	
-	public Dataset<Order> getOrderListByOrderdate(LocalDate orderdate) {
-		return getOrderList(conditions.Condition.simple(conditions.OrderAttribute.orderdate, conditions.Operator.EQUALS, orderdate));
-	}
-	
-	public Dataset<Order> getOrderListByTotalprice(Double totalprice) {
-		return getOrderList(conditions.Condition.simple(conditions.OrderAttribute.totalprice, conditions.Operator.EQUALS, totalprice));
-	}
 	
 	
 	
@@ -292,23 +272,6 @@ public class OrderServiceImpl extends OrderService {
 	
 		return res;
 		}
-	public Dataset<Order> getOrderListInBuysByOrderCondition(conditions.Condition<conditions.OrderAttribute> order_condition){
-		return getOrderListInBuys(order_condition, null);
-	}
-	public Dataset<Order> getOrderListInBuysByClientCondition(conditions.Condition<conditions.CustomerAttribute> client_condition){
-		return getOrderListInBuys(null, client_condition);
-	}
-	
-	public Dataset<Order> getOrderListInBuysByClient(pojo.Customer client){
-		if(client == null)
-			return null;
-	
-		Condition c;
-		c=Condition.simple(CustomerAttribute.id,Operator.EQUALS, client.getId());
-		Dataset<Order> res = getOrderListInBuysByClientCondition(c);
-		return res;
-	}
-	
 	public Dataset<Order> getOrderPListInComposed_of(conditions.Condition<conditions.OrderAttribute> orderP_condition,conditions.Condition<conditions.ProductAttribute> orderedProducts_condition)		{
 		MutableBoolean orderP_refilter = new MutableBoolean(false);
 		List<Dataset<Order>> datasetsPOJO = new ArrayList<Dataset<Order>>();
@@ -350,23 +313,6 @@ public class OrderServiceImpl extends OrderService {
 	
 		return res;
 		}
-	public Dataset<Order> getOrderPListInComposed_ofByOrderPCondition(conditions.Condition<conditions.OrderAttribute> orderP_condition){
-		return getOrderPListInComposed_of(orderP_condition, null);
-	}
-	public Dataset<Order> getOrderPListInComposed_ofByOrderedProductsCondition(conditions.Condition<conditions.ProductAttribute> orderedProducts_condition){
-		return getOrderPListInComposed_of(null, orderedProducts_condition);
-	}
-	
-	public Dataset<Order> getOrderPListInComposed_ofByOrderedProducts(pojo.Product orderedProducts){
-		if(orderedProducts == null)
-			return null;
-	
-		Condition c;
-		c=Condition.simple(ProductAttribute.id,Operator.EQUALS, orderedProducts.getId());
-		Dataset<Order> res = getOrderPListInComposed_ofByOrderedProductsCondition(c);
-		return res;
-	}
-	
 	
 	public boolean insertOrder(
 		Order order,

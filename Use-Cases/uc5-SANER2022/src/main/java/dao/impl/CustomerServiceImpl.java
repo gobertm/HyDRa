@@ -50,6 +50,7 @@ public class CustomerServiceImpl extends CustomerService {
 	
 	
 	
+	
 	public static Pair<String, List<String>> getSQLWhereClauseInCustomerTableFromMysqlbench(Condition<CustomerAttribute> condition, MutableBoolean refilterFlag) {
 		return getSQLWhereClauseInCustomerTableFromMysqlbenchWithTableAlias(condition, refilterFlag, "");
 	}
@@ -278,47 +279,6 @@ public class CustomerServiceImpl extends CustomerService {
 	}
 	
 	
-	// TODO get based on id(s). Ex:public Client getClientById(Long id)
-	public Customer getCustomerById(String id){
-		Condition cond;
-		cond = Condition.simple(CustomerAttribute.id, conditions.Operator.EQUALS, id);
-		Dataset<Customer> res = getCustomerList(cond);
-		if(res!=null)
-			return res.first();
-		return null;
-	}
-	
-	public Dataset<Customer> getCustomerListById(String id) {
-		return getCustomerList(conditions.Condition.simple(conditions.CustomerAttribute.id, conditions.Operator.EQUALS, id));
-	}
-	
-	public Dataset<Customer> getCustomerListByFirstname(String firstname) {
-		return getCustomerList(conditions.Condition.simple(conditions.CustomerAttribute.firstname, conditions.Operator.EQUALS, firstname));
-	}
-	
-	public Dataset<Customer> getCustomerListByLastname(String lastname) {
-		return getCustomerList(conditions.Condition.simple(conditions.CustomerAttribute.lastname, conditions.Operator.EQUALS, lastname));
-	}
-	
-	public Dataset<Customer> getCustomerListByGender(String gender) {
-		return getCustomerList(conditions.Condition.simple(conditions.CustomerAttribute.gender, conditions.Operator.EQUALS, gender));
-	}
-	
-	public Dataset<Customer> getCustomerListByBirthday(LocalDate birthday) {
-		return getCustomerList(conditions.Condition.simple(conditions.CustomerAttribute.birthday, conditions.Operator.EQUALS, birthday));
-	}
-	
-	public Dataset<Customer> getCustomerListByCreationDate(LocalDate creationDate) {
-		return getCustomerList(conditions.Condition.simple(conditions.CustomerAttribute.creationDate, conditions.Operator.EQUALS, creationDate));
-	}
-	
-	public Dataset<Customer> getCustomerListByLocationip(String locationip) {
-		return getCustomerList(conditions.Condition.simple(conditions.CustomerAttribute.locationip, conditions.Operator.EQUALS, locationip));
-	}
-	
-	public Dataset<Customer> getCustomerListByBrowser(String browser) {
-		return getCustomerList(conditions.Condition.simple(conditions.CustomerAttribute.browser, conditions.Operator.EQUALS, browser));
-	}
 	
 	
 	
@@ -371,23 +331,6 @@ public class CustomerServiceImpl extends CustomerService {
 	
 		return res;
 		}
-	public Dataset<Customer> getClientListInBuysByOrderCondition(conditions.Condition<conditions.OrderAttribute> order_condition){
-		return getClientListInBuys(order_condition, null);
-	}
-	
-	public Customer getClientInBuysByOrder(pojo.Order order){
-		if(order == null)
-			return null;
-	
-		Condition c;
-		c=Condition.simple(OrderAttribute.id,Operator.EQUALS, order.getId());
-		Dataset<Customer> res = getClientListInBuysByOrderCondition(c);
-		return !res.isEmpty()?res.first():null;
-	}
-	
-	public Dataset<Customer> getClientListInBuysByClientCondition(conditions.Condition<conditions.CustomerAttribute> client_condition){
-		return getClientListInBuys(null, client_condition);
-	}
 	public Dataset<Customer> getReviewerListInWrite(conditions.Condition<conditions.FeedbackAttribute> review_condition,conditions.Condition<conditions.CustomerAttribute> reviewer_condition)		{
 		MutableBoolean reviewer_refilter = new MutableBoolean(false);
 		List<Dataset<Customer>> datasetsPOJO = new ArrayList<Dataset<Customer>>();
@@ -436,23 +379,6 @@ public class CustomerServiceImpl extends CustomerService {
 	
 		return res;
 		}
-	public Dataset<Customer> getReviewerListInWriteByReviewCondition(conditions.Condition<conditions.FeedbackAttribute> review_condition){
-		return getReviewerListInWrite(review_condition, null);
-	}
-	
-	public Dataset<Customer> getReviewerListInWriteByReview(pojo.Feedback review){
-		if(review == null)
-			return null;
-	
-		Condition c;
-		c=null;
-		Dataset<Customer> res = getReviewerListInWriteByReviewCondition(c);
-		return res;
-	}
-	
-	public Dataset<Customer> getReviewerListInWriteByReviewerCondition(conditions.Condition<conditions.CustomerAttribute> reviewer_condition){
-		return getReviewerListInWrite(null, reviewer_condition);
-	}
 	
 	
 	public boolean insertCustomer(Customer customer){

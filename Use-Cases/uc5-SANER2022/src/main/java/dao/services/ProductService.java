@@ -78,6 +78,10 @@ public abstract class ProductService {
 	}
 	
 	
+	public Dataset<Product> getProductList(){
+		return getProductList(null);
+	}
+	
 	public Dataset<Product> getProductList(conditions.Condition<conditions.ProductAttribute> condition){
 		MutableBoolean refilterFlag = new MutableBoolean(false);
 		List<Dataset<Product>> datasets = new ArrayList<Dataset<Product>>();
@@ -113,12 +117,11 @@ public abstract class ProductService {
 	public abstract Dataset<Product> getProductListInProductTableFromMysqlbench(conditions.Condition<conditions.ProductAttribute> condition, MutableBoolean refilterFlag);
 	
 	
-	// TODO get based on id(s). Ex:public Client getClientById(Long id)
 	public Product getProductById(String id){
 		Condition cond;
 		cond = Condition.simple(ProductAttribute.id, conditions.Operator.EQUALS, id);
 		Dataset<Product> res = getProductList(cond);
-		if(res!=null)
+		if(res!=null && !res.isEmpty())
 			return res.first();
 		return null;
 	}

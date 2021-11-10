@@ -52,6 +52,7 @@ public class FeedbackServiceImpl extends FeedbackService {
 	
 	
 	
+	
 	//TODO redis
 	public Dataset<Feedback> getFeedbackListInFeedbackFromRedisbench(conditions.Condition<conditions.FeedbackAttribute> condition, MutableBoolean refilterFlag){
 		// Build the key pattern
@@ -209,23 +210,6 @@ public class FeedbackServiceImpl extends FeedbackService {
 	}
 	
 	
-	// TODO get based on id(s). Ex:public Client getClientById(Long id)
-	
-	public Dataset<Feedback> getFeedbackListByRate(Double rate) {
-		return getFeedbackList(conditions.Condition.simple(conditions.FeedbackAttribute.rate, conditions.Operator.EQUALS, rate));
-	}
-	
-	public Dataset<Feedback> getFeedbackListByContent(String content) {
-		return getFeedbackList(conditions.Condition.simple(conditions.FeedbackAttribute.content, conditions.Operator.EQUALS, content));
-	}
-	
-	public Dataset<Feedback> getFeedbackListByProduct(String product) {
-		return getFeedbackList(conditions.Condition.simple(conditions.FeedbackAttribute.product, conditions.Operator.EQUALS, product));
-	}
-	
-	public Dataset<Feedback> getFeedbackListByCustomer(String customer) {
-		return getFeedbackList(conditions.Condition.simple(conditions.FeedbackAttribute.customer, conditions.Operator.EQUALS, customer));
-	}
 	
 	
 	
@@ -286,23 +270,6 @@ public class FeedbackServiceImpl extends FeedbackService {
 	
 		return res;
 		}
-	public Dataset<Feedback> getReviewListInWriteByReviewCondition(conditions.Condition<conditions.FeedbackAttribute> review_condition){
-		return getReviewListInWrite(review_condition, null);
-	}
-	public Dataset<Feedback> getReviewListInWriteByReviewerCondition(conditions.Condition<conditions.CustomerAttribute> reviewer_condition){
-		return getReviewListInWrite(null, reviewer_condition);
-	}
-	
-	public Dataset<Feedback> getReviewListInWriteByReviewer(pojo.Customer reviewer){
-		if(reviewer == null)
-			return null;
-	
-		Condition c;
-		c=Condition.simple(CustomerAttribute.id,Operator.EQUALS, reviewer.getId());
-		Dataset<Feedback> res = getReviewListInWriteByReviewerCondition(c);
-		return res;
-	}
-	
 	public Dataset<Feedback> getReviewsListInHas_reviews(conditions.Condition<conditions.FeedbackAttribute> reviews_condition,conditions.Condition<conditions.ProductAttribute> reviewedProduct_condition)		{
 		MutableBoolean reviews_refilter = new MutableBoolean(false);
 		List<Dataset<Feedback>> datasetsPOJO = new ArrayList<Dataset<Feedback>>();
@@ -355,23 +322,6 @@ public class FeedbackServiceImpl extends FeedbackService {
 	
 		return res;
 		}
-	public Dataset<Feedback> getReviewsListInHas_reviewsByReviewsCondition(conditions.Condition<conditions.FeedbackAttribute> reviews_condition){
-		return getReviewsListInHas_reviews(reviews_condition, null);
-	}
-	public Dataset<Feedback> getReviewsListInHas_reviewsByReviewedProductCondition(conditions.Condition<conditions.ProductAttribute> reviewedProduct_condition){
-		return getReviewsListInHas_reviews(null, reviewedProduct_condition);
-	}
-	
-	public Dataset<Feedback> getReviewsListInHas_reviewsByReviewedProduct(pojo.Product reviewedProduct){
-		if(reviewedProduct == null)
-			return null;
-	
-		Condition c;
-		c=Condition.simple(ProductAttribute.id,Operator.EQUALS, reviewedProduct.getId());
-		Dataset<Feedback> res = getReviewsListInHas_reviewsByReviewedProductCondition(c);
-		return res;
-	}
-	
 	
 	
 	public boolean insertFeedback(Feedback feedback){

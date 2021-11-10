@@ -51,6 +51,7 @@ public class ProductServiceImpl extends ProductService {
 	
 	
 	
+	
 	public static String getBSONMatchQueryInOrdersColFromMongobench(Condition<ProductAttribute> condition, MutableBoolean refilterFlag) {	
 		String res = null;	
 		if(condition != null) {
@@ -395,31 +396,6 @@ public class ProductServiceImpl extends ProductService {
 	}
 	
 	
-	// TODO get based on id(s). Ex:public Client getClientById(Long id)
-	public Product getProductById(String id){
-		Condition cond;
-		cond = Condition.simple(ProductAttribute.id, conditions.Operator.EQUALS, id);
-		Dataset<Product> res = getProductList(cond);
-		if(res!=null)
-			return res.first();
-		return null;
-	}
-	
-	public Dataset<Product> getProductListById(String id) {
-		return getProductList(conditions.Condition.simple(conditions.ProductAttribute.id, conditions.Operator.EQUALS, id));
-	}
-	
-	public Dataset<Product> getProductListByTitle(String title) {
-		return getProductList(conditions.Condition.simple(conditions.ProductAttribute.title, conditions.Operator.EQUALS, title));
-	}
-	
-	public Dataset<Product> getProductListByPrice(Double price) {
-		return getProductList(conditions.Condition.simple(conditions.ProductAttribute.price, conditions.Operator.EQUALS, price));
-	}
-	
-	public Dataset<Product> getProductListByPhoto(String photo) {
-		return getProductList(conditions.Condition.simple(conditions.ProductAttribute.photo, conditions.Operator.EQUALS, photo));
-	}
 	
 	
 	
@@ -471,23 +447,6 @@ public class ProductServiceImpl extends ProductService {
 	
 		return res;
 		}
-	public Dataset<Product> getOrderedProductsListInComposed_ofByOrderPCondition(conditions.Condition<conditions.OrderAttribute> orderP_condition){
-		return getOrderedProductsListInComposed_of(orderP_condition, null);
-	}
-	
-	public Dataset<Product> getOrderedProductsListInComposed_ofByOrderP(pojo.Order orderP){
-		if(orderP == null)
-			return null;
-	
-		Condition c;
-		c=Condition.simple(OrderAttribute.id,Operator.EQUALS, orderP.getId());
-		Dataset<Product> res = getOrderedProductsListInComposed_ofByOrderPCondition(c);
-		return res;
-	}
-	
-	public Dataset<Product> getOrderedProductsListInComposed_ofByOrderedProductsCondition(conditions.Condition<conditions.ProductAttribute> orderedProducts_condition){
-		return getOrderedProductsListInComposed_of(null, orderedProducts_condition);
-	}
 	public Dataset<Product> getReviewedProductListInHas_reviews(conditions.Condition<conditions.FeedbackAttribute> reviews_condition,conditions.Condition<conditions.ProductAttribute> reviewedProduct_condition)		{
 		MutableBoolean reviewedProduct_refilter = new MutableBoolean(false);
 		List<Dataset<Product>> datasetsPOJO = new ArrayList<Dataset<Product>>();
@@ -542,23 +501,6 @@ public class ProductServiceImpl extends ProductService {
 	
 		return res;
 		}
-	public Dataset<Product> getReviewedProductListInHas_reviewsByReviewsCondition(conditions.Condition<conditions.FeedbackAttribute> reviews_condition){
-		return getReviewedProductListInHas_reviews(reviews_condition, null);
-	}
-	
-	public Dataset<Product> getReviewedProductListInHas_reviewsByReviews(pojo.Feedback reviews){
-		if(reviews == null)
-			return null;
-	
-		Condition c;
-		c=null;
-		Dataset<Product> res = getReviewedProductListInHas_reviewsByReviewsCondition(c);
-		return res;
-	}
-	
-	public Dataset<Product> getReviewedProductListInHas_reviewsByReviewedProductCondition(conditions.Condition<conditions.ProductAttribute> reviewedProduct_condition){
-		return getReviewedProductListInHas_reviews(null, reviewedProduct_condition);
-	}
 	
 	
 	public boolean insertProduct(Product product){

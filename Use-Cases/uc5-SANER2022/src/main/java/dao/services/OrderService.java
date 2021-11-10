@@ -78,6 +78,10 @@ public abstract class OrderService {
 	}
 	
 	
+	public Dataset<Order> getOrderList(){
+		return getOrderList(null);
+	}
+	
 	public Dataset<Order> getOrderList(conditions.Condition<conditions.OrderAttribute> condition){
 		MutableBoolean refilterFlag = new MutableBoolean(false);
 		List<Dataset<Order>> datasets = new ArrayList<Dataset<Order>>();
@@ -105,12 +109,11 @@ public abstract class OrderService {
 	public abstract Dataset<Order> getOrderListInOrdersColFromMongobench(conditions.Condition<conditions.OrderAttribute> condition, MutableBoolean refilterFlag);
 	
 	
-	// TODO get based on id(s). Ex:public Client getClientById(Long id)
 	public Order getOrderById(String id){
 		Condition cond;
 		cond = Condition.simple(OrderAttribute.id, conditions.Operator.EQUALS, id);
 		Dataset<Order> res = getOrderList(cond);
-		if(res!=null)
+		if(res!=null && !res.isEmpty())
 			return res.first();
 		return null;
 	}

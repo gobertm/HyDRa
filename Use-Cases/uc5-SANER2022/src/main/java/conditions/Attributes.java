@@ -1,4 +1,3 @@
 package conditions;
 
-public interface Attributes {
-}
+public interface Attributes {}

@@ -78,6 +78,10 @@ public abstract class FeedbackService {
 	}
 	
 	
+	public Dataset<Feedback> getFeedbackList(){
+		return getFeedbackList(null);
+	}
+	
 	public Dataset<Feedback> getFeedbackList(conditions.Condition<conditions.FeedbackAttribute> condition){
 		MutableBoolean refilterFlag = new MutableBoolean(false);
 		List<Dataset<Feedback>> datasets = new ArrayList<Dataset<Feedback>>();
@@ -105,7 +109,6 @@ public abstract class FeedbackService {
 	public abstract Dataset<Feedback> getFeedbackListInFeedbackFromRedisbench(conditions.Condition<conditions.FeedbackAttribute> condition, MutableBoolean refilterFlag);
 	
 	
-	// TODO get based on id(s). Ex:public Client getClientById(Long id)
 	
 	public Dataset<Feedback> getFeedbackListByRate(Double rate) {
 		return getFeedbackList(conditions.Condition.simple(conditions.FeedbackAttribute.rate, conditions.Operator.EQUALS, rate));

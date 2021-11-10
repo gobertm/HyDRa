@@ -78,6 +78,10 @@ public abstract class CustomerService {
 	}
 	
 	
+	public Dataset<Customer> getCustomerList(){
+		return getCustomerList(null);
+	}
+	
 	public Dataset<Customer> getCustomerList(conditions.Condition<conditions.CustomerAttribute> condition){
 		MutableBoolean refilterFlag = new MutableBoolean(false);
 		List<Dataset<Customer>> datasets = new ArrayList<Dataset<Customer>>();
@@ -105,12 +109,11 @@ public abstract class CustomerService {
 	public abstract Dataset<Customer> getCustomerListInCustomerTableFromMysqlbench(conditions.Condition<conditions.CustomerAttribute> condition, MutableBoolean refilterFlag);
 	
 	
-	// TODO get based on id(s). Ex:public Client getClientById(Long id)
 	public Customer getCustomerById(String id){
 		Condition cond;
 		cond = Condition.simple(CustomerAttribute.id, conditions.Operator.EQUALS, id);
 		Dataset<Customer> res = getCustomerList(cond);
-		if(res!=null)
+		if(res!=null && !res.isEmpty())
 			return res.first();
 		return null;
 	}
