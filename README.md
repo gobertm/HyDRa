@@ -49,7 +49,7 @@ Here we list the operations manipulating modeled domain entities objects support
 
 ## Design of polystore
 
-The HyDRa polystore modeling language was written using Xtext, see [Concrete Syntax](be.unamur.polystore.parent/be.unamur.polystore/src/be/unamur/polystore/Pml.xtext)
+The HyDRa polystore modeling language was written using Xtext, see [Concrete Syntax](be.unamur.polystore/src/be/unamur/polystore/Pml.xtext)
 Below we provide an instantiation example of the three main sections of a HyDRa polystore schema:
 1.  The Conceptual Schema section represents the application domain model of the polystore;
 2.  The Physical Schema section allows the definition of the physical data structures;
@@ -62,6 +62,6 @@ Below we provide an instantiation example of the three main sections of a HyDRa 
 ## API Generation
 
 The HyDRa framework also includes a conceptual access API generation process.
-A HyDRa polystore schema is given as input of this process. The generation itself is implemented using an Acceleo-based tool (see [acceleo sources](be.unamur.polystore.parent/be.unamur.polystore.acceleo)) which generates object classes and data manipulation classes. The API generation tool can be launched by right-clicking on a .pml HyDRa polystore schema.
+A HyDRa polystore schema is given as input of this process. The generation itself is implemented using an Acceleo-based tool (see [acceleo sources](be.unamur.polystore.acceleo)) which generates object classes and data manipulation classes. The API generation tool can be launched by right-clicking on a .pml HyDRa polystore schema.
 
 ![API](Use-Cases/resources/ApiGeneration.PNG)
