@@ -17,6 +17,7 @@ EntityType returns EntityType:
 	'entity' 'type' name=ID '{'
 		(attributes+=Attribute (','attributes+=Attribute)*)?
 		(identifier=Identifier)?
+		(unique+=Unique)*
 		'}'
 ;
 
@@ -25,6 +26,18 @@ Identifier:
 		attributes+=[Attribute](',' attributes +=[Attribute])*
 	'}'
 ;
+
+Unique : 
+	'unique' '{'
+		attributes+=[Attribute](',' attributes +=[Attribute])*
+	'}'
+;
+
+Index : 
+	'index' '{' 
+		fields+=[PhysicalField](',' fields+=[PhysicalField])*
+	'}'
+;	
  
 RelationshipType:
 	'relationship' 'type' name=ID '{'
@@ -38,7 +51,7 @@ Role:
 ;
 
 Attribute:
-	name=ID ':' (type=DataType)
+	name=ID ('['cardinality=Cardinality']')? ':' (type=DataType) 
 ;
 
 enum Cardinality returns Cardinality:
@@ -193,7 +206,8 @@ Table:
 		'columns' '{'
 			(columns+=LimitedPhysicalField (',' columns+=LimitedPhysicalField)*)
 			'}'
-		('references' '{'references+=Reference*'}')? 
+		('references' '{'references+=Reference*'}')?
+		(index+=Index)* 
 		//Identifier and index section
 	'}'
 ;
