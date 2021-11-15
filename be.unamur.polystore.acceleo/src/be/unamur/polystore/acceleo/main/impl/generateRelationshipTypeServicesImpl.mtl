@@ -29,6 +29,7 @@ import tdo.[role.entity.name.toUpperFirst() /]TDO;
 import tdo.[rel.name.toUpperFirst()/]TDO;
 import pojo.[role.entity.name.toUpperFirst() /];
 import conditions.[role.entity.name.toUpperFirst() /]Attribute;
+import dao.services.[role.entity.name.toUpperFirst()/]Service;
 [/for]
 import java.util.List;
 import java.util.ArrayList;
@@ -60,7 +61,7 @@ import static com.mongodb.client.model.Updates.*;
 
 public class [rel.name.toUpperFirst() + 'ServiceImpl' /] extends dao.services.[rel.name.toUpperFirst() + 'Service' /] {
 	[instantiateLogger(rel.name.toUpperFirst() + 'ServiceImpl') /]
-	[generateSelectMethods(rel, true) /]
+	[generateSelectMethods(rel, conceptualSchema, true) /]
 	[generateInsertMethods(rel, true) /]
 	[generateUpdateMethods(rel, true) /]
 	[generateDeleteMethods(rel, true) /]

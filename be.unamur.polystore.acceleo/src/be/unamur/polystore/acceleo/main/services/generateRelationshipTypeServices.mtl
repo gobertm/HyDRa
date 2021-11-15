@@ -14,6 +14,7 @@ package dao.services;
 
 [generateImportDataset(rel)/]
 [generateImportRow(rel)/]
+[generateImportWrappedArray(rel)/]
 import conditions.Condition;
 import pojo.[rel.name.toUpperFirst()/];
 import java.time.LocalDate;
@@ -25,6 +26,11 @@ import pojo.[rel.name.toUpperFirst()/];
 import conditions.[role.entity.name.toUpperFirst() /]Attribute;
 import org.apache.commons.lang.mutable.MutableBoolean;
 import java.util.List;
+import java.util.ArrayList;
+import org.apache.spark.sql.Column;
+import org.apache.spark.sql.Encoders;
+import org.apache.spark.api.java.function.MapFunction;
+import util.Util;
 [/for]
 
 
@@ -36,7 +42,7 @@ public abstract class [rel.name.toUpperFirst() + 'Service' /] {
 	[if (isNAire(rel))]
 	[generateNAireSelectMethods(rel) /]
 	[/if][/comment]
-	[generateSelectMethods(rel, false) /]
+	[generateSelectMethods(rel, conceptualSchema, false) /]
 	[generateInsertMethods(rel, false) /]
 	[generateUpdateMethods(rel, false) /]
 	[generateDeleteMethods(rel, false) /]

@@ -313,7 +313,7 @@
 
 [template public generateOuterJoinsMethods(entityType : EntityType)]
 
-protected static Dataset<[entityType.name.toUpperFirst()/]> fullOuterJoins[entityType.name.toUpperFirst()/](List<Dataset<[entityType.name.toUpperFirst()/]>> datasetsPOJO) {
+public static Dataset<[entityType.name.toUpperFirst()/]> fullOuterJoins[entityType.name.toUpperFirst()/](List<Dataset<[entityType.name.toUpperFirst()/]>> datasetsPOJO) {
 	return fullOuterJoins[entityType.name.toUpperFirst()/](datasetsPOJO, "fullouter");
 }
 

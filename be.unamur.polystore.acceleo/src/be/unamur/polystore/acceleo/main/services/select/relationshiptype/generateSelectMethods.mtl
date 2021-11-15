@@ -8,7 +8,7 @@
 [import be::unamur::polystore::acceleo::main::impl::select::entitytype::generateSelectKeyValue/]
 
 
-[template public generateSelectMethods(rel : RelationshipType, override: Boolean)]
+[template public generateSelectMethods(rel : RelationshipType, conceptualSchema: ConceptualSchema, override: Boolean)]
 
 [comment Role TDO pojo retrieval methods /]
 
@@ -52,6 +52,10 @@
 [generateEmbeddedObjectMappedToRoleMethod(role2, embedded, role1, override) /]
 [/for]
 
+[if (override = false)]
+[generateOuterJoinsMethods(rel)/]
+[/if]
+
 [/let]
 [/let]
 [else]
@@ -60,27 +64,46 @@
 
 [comment Relationship type POJO retrieval methods /]
 
-public [if (override = false)]abstract [/if]java.util.List<pojo.[rel.name.toUpperFirst()/]> get[rel.name.toUpperFirst()/]List([for (role: Role | rel.roles)][if (i > 1)],[/if]
+public [if (override = false)]abstract [/if]Dataset<pojo.[rel.name.toUpperFirst()/]> get[rel.name.toUpperFirst()/]List([for (role: Role | rel.roles)][if (i > 1)],[/if]
 	conditions.Condition<conditions.[role.entity.name.toUpperFirst() /]Attribute> [role.name/]_condition[/for][if (rel.attributes->size() > 0)],
 	conditions.Condition<conditions.[rel.name.toUpperFirst() /]Attribute> [rel.name /]_condition
 	[/if]
-)[if (override = false)];[else][implMethod1(rel) /][/if]
+)[if (override = false)];[else][implMethod1(rel, conceptualSchema) /][/if]
 
 [for (role: Role | rel.roles)]
-public java.util.List<pojo.[rel.name.toUpperFirst()/]> get[rel.name.toUpperFirst()/]ListBy[role.name.toUpperFirst() /]Condition(
+public Dataset<pojo.[rel.name.toUpperFirst()/]> get[rel.name.toUpperFirst()/]ListBy[role.name.toUpperFirst() /]Condition(
 	conditions.Condition<conditions.[role.entity.name.toUpperFirst()/]Attribute> [role.name/]_condition
 ){
 	return get[rel.name.toUpperFirst() /]List([getListOfNullValues(i - 1) /][if(i - 1 > 0)], [/if][role.name/]_condition[getListOfNullValues(rel.roles->size() -  i, true) /][if (rel.attributes->size() > 0)], null[/if]);
 }
 
-public [if (isCardinalityMaxOne(role) = false)]java.util.List<pojo.[rel.name.toUpperFirst() /]>[else]pojo.[rel.name.toUpperFirst() /][/if] get[rel.name.toUpperFirst() /][if (isCardinalityMaxOne(role) = false)]List[/if]By[role.name.toUpperFirst() /](pojo.[role.entity.name.toUpperFirst()/] [role.name /]) {
-	// TODO using id for selecting
+public [if (isCardinalityMaxOne(role) = false)]Dataset<pojo.[rel.name.toUpperFirst() /]>[else]pojo.[rel.name.toUpperFirst() /][/if] get[rel.name.toUpperFirst() /][if (isCardinalityMaxOne(role) = false)]List[/if]By[role.name.toUpperFirst() /](pojo.[role.entity.name.toUpperFirst()/] [role.name /]) {
+	conditions.Condition<conditions.[role.entity.name.toUpperFirst()/]Attribute> cond = null;
+	[if (role.entity.identifier.oclIsUndefined() = false)]
+		[for (attr : Attribute | role.entity.identifier.attributes)]
+			[if (i = 1)]
+	cond = conditions.Condition.simple(conditions.[role.entity.name.toUpperFirst()/]Attribute.[attr.name.toLowerFirst()/], conditions.Operator.EQUALS, [role.name /].get[attr.name.toUpperFirst()/]());
+			[else]
+	cond = conditions.Condition.and(cond, conditions.Condition.simple(conditions.[role.entity.name.toUpperFirst()/]Attribute.[attr.name.toLowerFirst()/], conditions.Operator.EQUALS, [role.name /].get[attr.name.toUpperFirst()/]()));
+			[/if]
+		[/for]
+	Dataset<pojo.[rel.name.toUpperFirst() /]> res = get[rel.name.toUpperFirst() /]ListBy[role.name.toUpperFirst() /]Condition(cond);
+	[if (isCardinalityMaxOne(role) = false)]return res;
+	[else]
+	List<pojo.[rel.name.toUpperFirst() /]> list = res.collectAsList();
+	if(list.size() > 0)
+		return list.get(0);
+	else
+		return null;
+	[/if]
+	[else]
 	return null;
+	[/if]
 }
 [/for]
 [if (rel.attributes->size() > 0)]
 
-public java.util.List<pojo.[rel.name.toUpperFirst() /]> get[rel.name.toUpperFirst() /]ListBy[rel.name.toUpperFirst() /]Condition(
+public Dataset<pojo.[rel.name.toUpperFirst() /]> get[rel.name.toUpperFirst() /]ListBy[rel.name.toUpperFirst() /]Condition(
 	conditions.Condition<conditions.[rel.name.toUpperFirst()/]Attribute> [rel.name/]_condition
 ){
 	return get[rel.name.toUpperFirst() /]List([getListOfNullValues(rel.roles->size()) /], [rel.name/]_condition);
@@ -191,7 +214,7 @@ return null;
 [/let]		
 }[/if]
 
-[if (joindb <> db1 and joindb <> db2)]
+[if ( joindb.dbType <> pml::DatabaseType::MARIADB or (joindb <> db1 and joindb <> db2))]
 // return join values [ref.name /] [ref2.name/]
 [comment used in case of A--AB--B, with AB being a join structure hosted in db different from A and B /]
 public [if (override = false)]abstract [/if]Dataset<[roleSource.ancestors(RelationshipType)->any(true).name.toUpperFirst() /]TDO> get[roleSource.ancestors(RelationshipType)->any(true).name.toUpperFirst()/]TDOListIn[roleSource.ancestors(pml::RelationshipType)->any(true).name.toUpperFirst()/]_[ref.name.toUpperFirst()/]_[ref2.name.toUpperFirst()/]In[ref.sourceField->first().getAbstractPhysicalStructureNotEmbeddedObject().name.toUpperFirst() /]From[ref.sourceField->first().getPhysicalSchema().name.toUpperFirst()/]()[if (override = false)];[else]{	
@@ -488,6 +511,228 @@ public [if (override = false)]abstract[/if] Dataset<[roleSource.getRelationShipT
 	return res;
 }[/if]
 [/let]
+[/let]
+[/let]
+[/template]
+
+[template private generateFullLeftOuterJoinBetweenRelAndRole(rel : RelationshipType, role : Role)]
+public static Dataset<[rel.name.toUpperFirst()/]> fullLeftOuterJoinBetween[rel.name.toUpperFirst()/]And[role.name.toUpperFirst()/](Dataset<[rel.name.toUpperFirst()/]> d1, Dataset<[role.entity.name.toUpperFirst()/]> d2) {
+	[if (role.entity.identifier.oclIsUndefined())]
+	return d1;
+	[else]
+	Dataset<Row> d2_ = d2
+	[for (attr : Attribute | role.entity.attributes)]
+		.withColumnRenamed("[attr.name.toLowerFirst()/]", "A_[attr.name.toLowerFirst()/]")
+	[/for]
+		.withColumnRenamed("logEvents", "A_logEvents");
+	
+	Column joinCond = null;
+	[for (attr : Attribute | role.entity.identifier.attributes)]
+	[if (i = 1)]
+	joinCond = d1.col("[role.name.toLowerFirst()/].[attr.name.toLowerFirst()/]").equalTo(d2_.col("A_[attr.name.toLowerFirst()/]"));
+	[else]
+	joinCond = joinCond.and(d1.col("[role.name.toLowerFirst()/].[attr.name.toLowerFirst()/]").equalTo(d2_.col("A_[attr.name.toLowerFirst()/]")));
+	[/if]
+	[/for]
+
+	d2_ = d1.join(d2_, joinCond, "leftouter");
+	return d2_.map(new MapFunction<Row, [rel.name.toUpperFirst()/]>() {
+		public [rel.name.toUpperFirst()/] call(Row r) {
+			[rel.name.toUpperFirst()/] res = new [rel.name.toUpperFirst()/]();
+			[for (attr : Attribute | rel.attributes)]
+			res.set[attr.name.toUpperFirst()/](r.getAs("[attr.name.toLowerFirst() /]"));
+			[/for]
+
+			[role.entity.name.toUpperFirst() /] [role.name.toLowerFirst() /] = new [role.entity.name.toUpperFirst() /]();
+			Object o = r.getAs("[role.name.toLowerFirst() /]");
+			if(o != null) {
+				if(o instanceof Row) {
+					Row r2 = (Row) o;
+					[for (attr : Attribute | role.entity.attributes)]
+					[role.name.toLowerFirst() /].set[attr.name.toUpperFirst()/](Util.get[generateJavaType(attr.type) /]Value(r2.getAs("[attr.name.toLowerFirst() /]")));
+					[/for]
+				} 
+				if(o instanceof [role.entity.name.toUpperFirst()/]) {
+					[role.name.toLowerFirst() /] = ([role.entity.name.toUpperFirst()/]) o;
+				}
+			}
+
+			res.set[role.name.toUpperFirst()/]([role.name.toLowerFirst() /]);
+
+			[for (attr : Attribute | role.entity.attributes)]
+			[generateJavaType(attr.type) /] [attr.name.toLowerFirst()/] = Util.get[generateJavaType(attr.type) /]Value(r.getAs("A_[attr.name.toLowerFirst() /]"));
+			if ([role.name.toLowerFirst() /].get[attr.name.toUpperFirst() /]() != null && [attr.name.toLowerFirst() /] != null && ![role.name.toLowerFirst() /].get[attr.name.toUpperFirst() /]().equals([attr.name.toLowerFirst() /])) {
+				res.addLogEvent("Data consistency problem for ['['/][rel.name.toUpperFirst() /] - different values found for attribute '[rel.name.toUpperFirst() /].[attr.name.toLowerFirst() /]': " + [role.name.toLowerFirst() /].get[attr.name.toUpperFirst() /]() + " and " + [attr.name.toLowerFirst() /] + "." );
+				logger.warn("Data consistency problem for ['['/][rel.name.toUpperFirst() /] - different values found for attribute '[rel.name.toUpperFirst() /].[attr.name.toLowerFirst() /]': " + [role.name.toLowerFirst() /].get[attr.name.toUpperFirst() /]() + " and " + [attr.name.toLowerFirst() /] + "." );
+			}
+			if([attr.name.toLowerFirst()/] != null)
+				[role.name.toLowerFirst() /].set[attr.name.toUpperFirst() /]([attr.name.toLowerFirst()/]);
+			[/for]
+
+			[let role2 : Role = role.getOppositeRoleInBinaryRel()]
+			o = r.getAs("[role2.name.toLowerFirst() /]");
+			[role2.entity.name.toUpperFirst()/] [role2.name.toLowerFirst()/] = new [role2.entity.name.toUpperFirst()/]();
+			if(o != null) {
+				if(o instanceof Row) {
+					Row r2 = (Row) o;
+					[for (attr : Attribute | role2.entity.attributes)]
+					[role2.name.toLowerFirst() /].set[attr.name.toUpperFirst()/](Util.get[generateJavaType(attr.type) /]Value(r2.getAs("[attr.name.toLowerFirst() /]")));
+					[/for]
+				} 
+				if(o instanceof [role2.entity.name.toUpperFirst()/]) {
+					[role2.name.toLowerFirst()/] = ([role2.entity.name.toUpperFirst()/]) o;
+				}
+			}
+
+			res.set[role2.name.toUpperFirst()/]([role2.name.toLowerFirst() /]);
+			[/let]
+
+			return res;
+		}
+				
+	}, Encoders.bean([rel.name.toUpperFirst()/].class));
+
+	[/if]
+	
+	
+}
+[/template]
+
+[template public generateOuterJoinsMethods(rel : RelationshipType)]
+[let role1 : Role = rel.roles -> at(1)]
+[let role2 : Role = rel.roles -> at(2)]
+
+[generateFullLeftOuterJoinBetweenRelAndRole(rel, role1) /]
+[generateFullLeftOuterJoinBetweenRelAndRole(rel, role2) /]
+
+public static Dataset<[rel.name.toUpperFirst()/]> fullOuterJoins[rel.name.toUpperFirst()/](List<Dataset<[rel.name.toUpperFirst()/]>> datasetsPOJO) {
+	return fullOuterJoins[rel.name.toUpperFirst()/](datasetsPOJO, "fullouter");
+}
+
+protected static Dataset<[rel.name.toUpperFirst()/]> fullLeftOuterJoins[rel.name.toUpperFirst()/](List<Dataset<[rel.name.toUpperFirst()/]>> datasetsPOJO) {
+	return fullOuterJoins[rel.name.toUpperFirst()/](datasetsPOJO, "leftouter");
+}
+
+private static Dataset<[rel.name.toUpperFirst()/]> fullOuterJoins[rel.name.toUpperFirst()/](List<Dataset<[rel.name.toUpperFirst()/]>> datasetsPOJO, String joinMode) {
+	if(datasetsPOJO.size() == 0)
+			return null;
+	if(datasetsPOJO.size() == 1)
+		return datasetsPOJO.get(0);
+	List<String> idFields = new ArrayList<String>();
+	[if(role1.entity.identifier.oclIsUndefined() = false)]
+	[for (attr : Attribute | role1.entity.identifier.attributes)]
+	idFields.add("[role1.name.toLowerFirst()/].[attr.name /]");
+	[/for]
+	[/if]
+
+	[if(role2.entity.identifier.oclIsUndefined() = false)]
+	[for (attr : Attribute | role2.entity.identifier.attributes)]
+	idFields.add("[role2.name.toLowerFirst()/].[attr.name /]");
+	[/for]
+	[/if]
+	scala.collection.Seq<String> seq = scala.collection.JavaConverters.asScalaIteratorConverter(idFields.iterator()).asScala().toSeq();
+	
+	List<Dataset<Row>> rows = new ArrayList<Dataset<Row>>();
+	for(int i = 0; i < datasetsPOJO.size(); i++) {
+		Dataset<[rel.name.toUpperFirst()/]> d = datasetsPOJO.get(i);
+		rows.add(d
+		[if (role1.entity.identifier.oclIsUndefined() = false)]
+		[for (attr : Attribute | role1.entity.identifier.attributes)]
+			.withColumn("[role1.name.toLowerFirst()/]_[attr.name.toLowerFirst()/]_" + i, d.col("[role1.name.toLowerFirst()/].[attr.name.toLowerFirst()/]"))
+		[/for]
+		[/if]
+		[if (role2.entity.identifier.oclIsUndefined() = false)]
+		[for (attr : Attribute | role2.entity.identifier.attributes)]
+			.withColumn("[role2.name.toLowerFirst()/]_[attr.name.toLowerFirst()/]_" + i, d.col("[role2.name.toLowerFirst()/].[attr.name.toLowerFirst()/]"))
+		[/for]
+		[/if]
+		[for (attr : Attribute | rel.attributes)]
+			.withColumnRenamed("[attr.name.toLowerFirst()/]", "[attr.name.toLowerFirst()/]_" + i)
+		[/for]
+			.withColumnRenamed("[role1.name.toLowerFirst()/]", "[role1.name.toLowerFirst()/]_" + i)
+			.withColumnRenamed("[role2.name.toLowerFirst()/]", "[role2.name.toLowerFirst()/]_" + i)
+			.withColumnRenamed("logEvents", "logEvents_" + i));
+	}
+	
+	Column joinCond;
+	[for (attr : Attribute | role1.entity.identifier.attributes)]
+	[if (i = 1)]
+	joinCond = rows.get(0).col("[role1.name.toLowerFirst()/]_[attr.name.toLowerFirst()/]_0").equalTo(rows.get(1).col("[role1.name.toLowerFirst()/]_[attr.name.toLowerFirst()/]_1"));
+	[else]
+	joinCond = joinCond.and(rows.get(0).col("[role1.name.toLowerFirst()/]_[attr.name.toLowerFirst()/]_0").equalTo(rows.get(1).col("[role1.name.toLowerFirst()/]_[attr.name.toLowerFirst()/]_1")));
+	[/if]
+	[/for]
+	[for (attr : Attribute | role2.entity.identifier.attributes)]
+	joinCond = joinCond.and(rows.get(0).col("[role2.name.toLowerFirst()/]_[attr.name.toLowerFirst()/]_0").equalTo(rows.get(1).col("[role2.name.toLowerFirst()/]_[attr.name.toLowerFirst()/]_1")));
+	[/for]
+	
+	Dataset<Row> res = rows.get(0).join(rows.get(1), joinCond, joinMode);
+	for(int i = 2; i < rows.size(); i++) {
+		[for (attr : Attribute | role1.entity.identifier.attributes)]
+	[if (i = 1)]
+		joinCond = rows.get(i - 1).col("[role1.name.toLowerFirst()/]_[attr.name.toLowerFirst()/]_" + (i - 1)).equalTo(rows.get(i).col("[role1.name.toLowerFirst()/]_[attr.name.toLowerFirst()/]_" + i));
+	[else]
+		joinCond = joinCond.and(rows.get(i - 1).col("[role1.name.toLowerFirst()/]_[attr.name.toLowerFirst()/]_" + (i - 1)).equalTo(rows.get(i).col("[role1.name.toLowerFirst()/]_[attr.name.toLowerFirst()/]_" + i)));
+	[/if]
+	[/for]
+	[for (attr : Attribute | role2.entity.identifier.attributes)]
+		joinCond = joinCond.and(rows.get(i - 1).col("[role2.name.toLowerFirst()/]_[attr.name.toLowerFirst()/]_" + (i - 1)).equalTo(rows.get(i).col("[role2.name.toLowerFirst()/]_[attr.name.toLowerFirst()/]_" + i)));
+	[/for]
+		res = res.join(rows.get(i), joinCond, joinMode);
+	}
+
+	return res.map(new MapFunction<Row, [rel.name.toUpperFirst()/]>() {
+		public [rel.name.toUpperFirst()/] call(Row r) {
+			[rel.name.toUpperFirst() /] [rel.name.toLowerFirst() /]_res = new [rel.name.toUpperFirst() /]();
+				[for (attr : Attribute | rel.attributes)]
+				
+				// attribute '[rel.name.toUpperFirst() /].[attr.name.toLowerFirst() /]'
+				[generateJavaType(attr.type) /] firstNotNull_[attr.name /] = Util.get[generateJavaType(attr.type) /]Value(r.getAs("[attr.name.toLowerFirst() /]_0"));
+				for (int i = 1; i < datasetsPOJO.size(); i++) {
+					[generateJavaType(attr.type) /] [attr.name.toLowerFirst() /]2 = Util.get[generateJavaType(attr.type) /]Value(r.getAs("[attr.name.toLowerFirst() /]_" + i));
+					if (firstNotNull_[attr.name /] != null && [attr.name.toLowerFirst() /]2 != null && !firstNotNull_[attr.name/].equals([attr.name.toLowerFirst() /]2)) {
+						[rel.name.toLowerFirst() /]_res.addLogEvent("Data consistency problem for ['['/][rel.name.toUpperFirst() /] - different values found for attribute '[rel.name.toUpperFirst() /].[attr.name.toLowerFirst() /]': " + firstNotNull_[attr.name /] + " and " + [attr.name.toLowerFirst() /]2 + "." );
+						logger.warn("Data consistency problem for ['['/][rel.name.toUpperFirst() /] - different values found for attribute '[rel.name.toUpperFirst() /].[attr.name.toLowerFirst() /]': " + firstNotNull_[attr.name /] + " and " + [attr.name.toLowerFirst() /]2 + "." );
+					}
+					if (firstNotNull_[attr.name /] == null && [attr.name.toLowerFirst() /]2 != null) {
+						firstNotNull_[attr.name /] = [attr.name.toLowerFirst() /]2;
+					}
+				}
+				[rel.name.toLowerFirst() /]_res.set[attr.name.toUpperFirst() /](firstNotNull_[attr.name /]);
+				[/for]
+
+				WrappedArray logEvents = r.getAs("logEvents_0");
+				if(logEvents != null)
+					for (int i = 0; i < logEvents.size(); i++){
+						[rel.name.toLowerFirst() /]_res.addLogEvent((String) logEvents.apply(i));
+					}
+	
+				for (int i = 1; i < datasetsPOJO.size(); i++) {
+					logEvents = r.getAs("logEvents_" + i);
+					if(logEvents != null)
+					for (int j = 0; j < logEvents.size(); j++){
+						[rel.name.toLowerFirst() /]_res.addLogEvent((String) logEvents.apply(j));
+					}
+				}
+
+				[role1.entity.name.toUpperFirst()/] [role1.name.toLowerFirst()/] = new [role1.entity.name.toUpperFirst()/]();
+				[for (attr : Attribute | role1.entity.attributes)]
+				[role1.name.toLowerFirst()/].set[attr.name.toUpperFirst()/](Util.get[generateJavaType(attr.type) /]Value(r.getAs("[role1.name.toLowerFirst()/]_0.[attr.name.toLowerFirst()/]")));
+				[/for]
+
+				[role2.entity.name.toUpperFirst()/] [role2.name.toLowerFirst()/] = new [role2.entity.name.toUpperFirst()/]();
+				[for (attr : Attribute | role2.entity.attributes)]
+				[role2.name.toLowerFirst()/].set[attr.name.toUpperFirst()/](Util.get[generateJavaType(attr.type) /]Value(r.getAs("[role2.name.toLowerFirst()/]_0.[attr.name.toLowerFirst()/]")));
+				[/for]
+
+				[rel.name.toLowerFirst() /]_res.set[role1.name.toUpperFirst()/]([role1.name.toLowerFirst()/]);
+				[rel.name.toLowerFirst() /]_res.set[role2.name.toUpperFirst()/]([role2.name.toLowerFirst()/]);
+				return [rel.name.toLowerFirst() /]_res;
+		}
+	}
+	, Encoders.bean([rel.name.toUpperFirst()/].class));
+
+}
 [/let]
 [/let]
 [/template]
