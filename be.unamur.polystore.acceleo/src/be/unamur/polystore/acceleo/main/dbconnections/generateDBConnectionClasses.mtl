@@ -492,9 +492,11 @@ public class SparkConnectionMgr {
 				String key = keys.get(i);
 				Map<String, Object> map = new HashMap<String, Object>();
 				String value = values.get(i);
-				map.put("key", key);
-				map.put("value", value);
-				res.add(new Row(map));
+				if(value != null) {
+					map.put("key", key);
+					map.put("value", value);
+					res.add(new Row(map));
+				}
 		}
 
 		jedis.close();

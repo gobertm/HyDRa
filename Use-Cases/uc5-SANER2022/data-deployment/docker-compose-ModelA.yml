@@ -15,7 +15,7 @@ services:
         nohup redis-server &
         sleep 2
         echo "adding Feedback data key values"
-        redis-cli < /ModelA/feedback.redis
+        redis-cli < /data/feedback.redis
         echo "done"
         # this will keep container running
         tail -f /dev/null

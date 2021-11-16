@@ -55,6 +55,15 @@ public class Tests {
         logger.info("IP address [{}] has made [{}] orders", customerIPAddr, orderDataset.count());
         assertEquals(17, orderDataset.count());
     }
+    
+    @Test
+    public void testGetCustomerFeedbacks() {
+    	String prodId = "B003MA1SSI";
+    	Condition condProduct = Condition.simple(ProductAttribute.id, Operator.EQUALS, prodId);
+    	
+    	feedbackDataset = feedbackService.getFeedbackList(condProduct, null, null); 
+    	assertEquals(352, feedbackDataset.count());
+    }
 
     @Test
     public void testInsertOrder() {
