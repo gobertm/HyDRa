@@ -14,7 +14,6 @@ import pojo.Customer;
 import pojo.Feedback;
 import pojo.Order;
 import pojo.Product;
-import program.Main;
 import util.Dataset;
 
 import java.time.LocalDate;
@@ -35,24 +34,26 @@ public class Tests {
     Dataset<Feedback> feedbackDataset;
 
     @Test
-    public void tesGetProducts() {
-        productDataset = productService.getProductList();
+    public void testGetProductsAbovePrice() {
+        double price = 200.0;
+        Condition prodPrice = Condition.simple(ProductAttribute.price, Operator.GT, price);
+        productDataset = productService.getProductList(prodPrice);
         productDataset.show();
-        logger.info("Retrieved [{}] products and printed first 20", productDataset.count());
-        assertEquals(10116, productDataset.count());
+        logger.info("Retrieved [{}] products with price greater than [{}] printed first 20", productDataset.count(), price);
+        assertEquals(310, productDataset.count());
     }
 
     @Test
-    public void testGetOrdersOfCustomer() {
+    public void testGetOrdersOfCustomerByIp() {
         List<Order> clientOrders;
-        String customerId = "13194139544267";
+        String customerIPAddr = "41.138.53.138";
         // Get Orders of a particular customer
-        Condition condCustomer = Condition.simple(CustomerAttribute.id, Operator.EQUALS, customerId);
+        Condition condCustomer = Condition.simple(CustomerAttribute.locationip, Operator.EQUALS, customerIPAddr);
         orderDataset = orderService.getOrderList(Order.buys.order, condCustomer);
         clientOrders = orderDataset.collectAsList();
-        logger.info("Client [{}] has made [{}] orders", customerId, orderDataset.count());
         clientOrders.forEach(o -> System.out.println("["+o.getOrderdate()+" - "+o.getTotalprice()+"]"));
-        assertEquals(18, orderDataset.count());
+        logger.info("IP address [{}] has made [{}] orders", customerIPAddr, orderDataset.count());
+        assertEquals(17, orderDataset.count());
     }
 
     @Test
@@ -62,7 +63,6 @@ public class Tests {
         String customerId = "13194139544267";
 
 //        // Add a new Order
-        Condition condCustomer = Condition.simple(CustomerAttribute.id, Operator.EQUALS, customerId);
         Condition condProducts = Condition.createOrCondition(ProductAttribute.id, Operator.EQUALS, productIdList.toArray());
         productDataset = productService.getProductList(condProducts);
         orderService.insertOrder(newOrder, customerService.getCustomerById(customerId), productDataset.collectAsList());
