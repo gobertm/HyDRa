@@ -14,7 +14,7 @@
 	MutableBoolean [role.name/]_refilter = new MutableBoolean(false);
 	List<Dataset<[rel.name.toUpperFirst() /]>> datasetsPOJO = new ArrayList<Dataset<[rel.name.toUpperFirst() /]>>();
 	boolean all_already_persisted = false;
-	MutableBoolean [role2.name/]_refilter;
+	MutableBoolean [role2.name/]_refilter = new MutableBoolean(false);
 	org.apache.spark.sql.Column joinCondition = null;
 	[for (ref: Reference | getMappedReferences(role, conceptualSchema.getMappingRules()))]
 			[if (hasMappedReferenceInSamePhysicalStructureForOppoisteRole(role2, ref.getAbstractPhysicalStructureNotEmbeddedObject()))]
