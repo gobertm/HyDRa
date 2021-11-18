@@ -51,229 +51,283 @@ public class CustomerServiceImpl extends CustomerService {
 	
 	
 	
-	public static Pair<String, List<String>> getSQLWhereClauseInCustomerTableFromMysqlbench(Condition<CustomerAttribute> condition, MutableBoolean refilterFlag) {
-		return getSQLWhereClauseInCustomerTableFromMysqlbenchWithTableAlias(condition, refilterFlag, "");
-	}
 	
-	public static Pair<String, List<String>> getSQLWhereClauseInCustomerTableFromMysqlbenchWithTableAlias(Condition<CustomerAttribute> condition, MutableBoolean refilterFlag, String tableAlias) {
-		String where = null;	
-		List<String> preparedValues = new java.util.ArrayList<String>();
+	public static String getBSONMatchQueryInUserColFromMongoModelB(Condition<CustomerAttribute> condition, MutableBoolean refilterFlag) {	
+		String res = null;	
 		if(condition != null) {
-			
 			if(condition instanceof SimpleCondition) {
 				CustomerAttribute attr = ((SimpleCondition<CustomerAttribute>) condition).getAttribute();
 				Operator op = ((SimpleCondition<CustomerAttribute>) condition).getOperator();
 				Object value = ((SimpleCondition<CustomerAttribute>) condition).getValue();
 				if(value != null) {
+					String valueString = Util.transformBSONValue(value);
 					boolean isConditionAttrEncountered = false;
+	
 					if(attr == CustomerAttribute.id ) {
 						isConditionAttrEncountered = true;
-						String valueString = Util.transformSQLValue(value);
-						String sqlOp = op.getSQLOperator();
+					
+						String mongoOp = op.getMongoDBOperator();
 						String preparedValue = valueString;
 						if(op == Operator.CONTAINS && valueString != null) {
-							preparedValue = "%" + Util.escapeReservedCharSQL(valueString)  + "%";
+							preparedValue = "'.*" + Util.escapeReservedRegexMongo(valueString)  + ".*'";
+						} else {
+							preparedValue = Util.getDelimitedMongoValue(value.getClass(), preparedValue);
 						}
-						
-						where = tableAlias + "id " + sqlOp + " ?";
-						preparedValues.add(preparedValue);
+						res = "id': {" + mongoOp + ": " + preparedValue + "}";
+	
+					res = "'" + res;
 					}
 					if(attr == CustomerAttribute.firstname ) {
 						isConditionAttrEncountered = true;
-						String valueString = Util.transformSQLValue(value);
-						String sqlOp = op.getSQLOperator();
+					
+						String mongoOp = op.getMongoDBOperator();
 						String preparedValue = valueString;
 						if(op == Operator.CONTAINS && valueString != null) {
-							preparedValue = "%" + Util.escapeReservedCharSQL(valueString)  + "%";
+							preparedValue = "'.*" + Util.escapeReservedRegexMongo(valueString)  + ".*'";
+						} else {
+							preparedValue = Util.getDelimitedMongoValue(value.getClass(), preparedValue);
 						}
-						
-						where = tableAlias + "firstName " + sqlOp + " ?";
-						preparedValues.add(preparedValue);
+						res = "firstName': {" + mongoOp + ": " + preparedValue + "}";
+	
+					res = "'" + res;
 					}
 					if(attr == CustomerAttribute.lastname ) {
 						isConditionAttrEncountered = true;
-						String valueString = Util.transformSQLValue(value);
-						String sqlOp = op.getSQLOperator();
+					
+						String mongoOp = op.getMongoDBOperator();
 						String preparedValue = valueString;
 						if(op == Operator.CONTAINS && valueString != null) {
-							preparedValue = "%" + Util.escapeReservedCharSQL(valueString)  + "%";
+							preparedValue = "'.*" + Util.escapeReservedRegexMongo(valueString)  + ".*'";
+						} else {
+							preparedValue = Util.getDelimitedMongoValue(value.getClass(), preparedValue);
 						}
-						
-						where = tableAlias + "lastName " + sqlOp + " ?";
-						preparedValues.add(preparedValue);
+						res = "lastName': {" + mongoOp + ": " + preparedValue + "}";
+	
+					res = "'" + res;
 					}
 					if(attr == CustomerAttribute.gender ) {
 						isConditionAttrEncountered = true;
-						String valueString = Util.transformSQLValue(value);
-						String sqlOp = op.getSQLOperator();
+					
+						String mongoOp = op.getMongoDBOperator();
 						String preparedValue = valueString;
 						if(op == Operator.CONTAINS && valueString != null) {
-							preparedValue = "%" + Util.escapeReservedCharSQL(valueString)  + "%";
+							preparedValue = "'.*" + Util.escapeReservedRegexMongo(valueString)  + ".*'";
+						} else {
+							preparedValue = Util.getDelimitedMongoValue(value.getClass(), preparedValue);
 						}
-						
-						where = tableAlias + "gender " + sqlOp + " ?";
-						preparedValues.add(preparedValue);
+						res = "gender': {" + mongoOp + ": " + preparedValue + "}";
+	
+					res = "'" + res;
 					}
 					if(attr == CustomerAttribute.birthday ) {
 						isConditionAttrEncountered = true;
-						String valueString = Util.transformSQLValue(value);
-						String sqlOp = op.getSQLOperator();
+					
+						String mongoOp = op.getMongoDBOperator();
 						String preparedValue = valueString;
 						if(op == Operator.CONTAINS && valueString != null) {
-							preparedValue = "%" + Util.escapeReservedCharSQL(valueString)  + "%";
+							preparedValue = "'.*" + Util.escapeReservedRegexMongo(valueString)  + ".*'";
+						} else {
+							preparedValue = Util.getDelimitedMongoValue(value.getClass(), preparedValue);
 						}
-						
-						where = tableAlias + "birthday " + sqlOp + " ?";
-						preparedValues.add(preparedValue);
+						res = "birthday': {" + mongoOp + ": " + preparedValue + "}";
+	
+					res = "'" + res;
 					}
 					if(attr == CustomerAttribute.creationDate ) {
 						isConditionAttrEncountered = true;
-						String valueString = Util.transformSQLValue(value);
-						String sqlOp = op.getSQLOperator();
+					
+						String mongoOp = op.getMongoDBOperator();
 						String preparedValue = valueString;
 						if(op == Operator.CONTAINS && valueString != null) {
-							preparedValue = "%" + Util.escapeReservedCharSQL(valueString)  + "%";
+							preparedValue = "'.*" + Util.escapeReservedRegexMongo(valueString)  + ".*'";
+						} else {
+							preparedValue = Util.getDelimitedMongoValue(value.getClass(), preparedValue);
 						}
-						
-						where = tableAlias + "creationDate " + sqlOp + " ?";
-						preparedValues.add(preparedValue);
+						res = "creationDate': {" + mongoOp + ": " + preparedValue + "}";
+	
+					res = "'" + res;
 					}
 					if(attr == CustomerAttribute.locationip ) {
 						isConditionAttrEncountered = true;
-						String valueString = Util.transformSQLValue(value);
-						String sqlOp = op.getSQLOperator();
+					
+						String mongoOp = op.getMongoDBOperator();
 						String preparedValue = valueString;
 						if(op == Operator.CONTAINS && valueString != null) {
-							preparedValue = "%" + Util.escapeReservedCharSQL(valueString)  + "%";
+							preparedValue = "'.*" + Util.escapeReservedRegexMongo(valueString)  + ".*'";
+						} else {
+							preparedValue = Util.getDelimitedMongoValue(value.getClass(), preparedValue);
 						}
-						
-						where = tableAlias + "locationIP " + sqlOp + " ?";
-						preparedValues.add(preparedValue);
+						res = "locationIP': {" + mongoOp + ": " + preparedValue + "}";
+	
+					res = "'" + res;
 					}
 					if(attr == CustomerAttribute.browser ) {
 						isConditionAttrEncountered = true;
-						String valueString = Util.transformSQLValue(value);
-						String sqlOp = op.getSQLOperator();
+					
+						String mongoOp = op.getMongoDBOperator();
 						String preparedValue = valueString;
 						if(op == Operator.CONTAINS && valueString != null) {
-							preparedValue = "%" + Util.escapeReservedCharSQL(valueString)  + "%";
+							preparedValue = "'.*" + Util.escapeReservedRegexMongo(valueString)  + ".*'";
+						} else {
+							preparedValue = Util.getDelimitedMongoValue(value.getClass(), preparedValue);
 						}
-						
-						where = tableAlias + "browserUsed " + sqlOp + " ?";
-						preparedValues.add(preparedValue);
+						res = "browserUsed': {" + mongoOp + ": " + preparedValue + "}";
+	
+					res = "'" + res;
 					}
 					if(!isConditionAttrEncountered) {
 						refilterFlag.setValue(true);
-						where = "1 = 1";
+						res = "$expr: {$eq:[1,1]}";
 					}
+					
 				}
 			}
 	
 			if(condition instanceof AndCondition) {
-				Pair<String, List<String>> pairLeft = getSQLWhereClauseInCustomerTableFromMysqlbench(((AndCondition) condition).getLeftCondition(), refilterFlag);
-				Pair<String, List<String>> pairRight = getSQLWhereClauseInCustomerTableFromMysqlbench(((AndCondition) condition).getRightCondition(), refilterFlag);
-				String whereLeft = pairLeft.getKey();
-				String whereRight = pairRight.getKey();
-				List<String> leftValues = pairLeft.getValue();
-				List<String> rightValues = pairRight.getValue();
-				if(whereLeft != null || whereRight != null) {
-					if(whereLeft == null)
-						where = whereRight;
-					else
-						if(whereRight == null)
-							where = whereLeft;
-						else
-							where = "(" + whereLeft + " AND " + whereRight + ")";
-					preparedValues.addAll(leftValues);
-					preparedValues.addAll(rightValues);
-				}
+				String bsonLeft = getBSONMatchQueryInUserColFromMongoModelB(((AndCondition)condition).getLeftCondition(), refilterFlag);
+				String bsonRight = getBSONMatchQueryInUserColFromMongoModelB(((AndCondition)condition).getRightCondition(), refilterFlag);			
+				if(bsonLeft == null && bsonRight == null)
+					return null;
+				if(bsonLeft == null)
+					return bsonRight;
+				if(bsonRight == null)
+					return bsonLeft;
+				res = " $and: [ {" + bsonLeft + "}, {" + bsonRight + "}] ";
 			}
 	
 			if(condition instanceof OrCondition) {
-				Pair<String, List<String>> pairLeft = getSQLWhereClauseInCustomerTableFromMysqlbench(((OrCondition) condition).getLeftCondition(), refilterFlag);
-				Pair<String, List<String>> pairRight = getSQLWhereClauseInCustomerTableFromMysqlbench(((OrCondition) condition).getRightCondition(), refilterFlag);
-				String whereLeft = pairLeft.getKey();
-				String whereRight = pairRight.getKey();
-				List<String> leftValues = pairLeft.getValue();
-				List<String> rightValues = pairRight.getValue();
-				if(whereLeft != null || whereRight != null) {
-					if(whereLeft == null)
-						where = whereRight;
-					else
-						if(whereRight == null)
-							where = whereLeft;
-						else
-							where = "(" + whereLeft + " OR " + whereRight + ")";
-					preparedValues.addAll(leftValues);
-					preparedValues.addAll(rightValues);
-				}
+				String bsonLeft = getBSONMatchQueryInUserColFromMongoModelB(((OrCondition)condition).getLeftCondition(), refilterFlag);
+				String bsonRight = getBSONMatchQueryInUserColFromMongoModelB(((OrCondition)condition).getRightCondition(), refilterFlag);			
+				if(bsonLeft == null && bsonRight == null)
+					return null;
+				if(bsonLeft == null)
+					return bsonRight;
+				if(bsonRight == null)
+					return bsonLeft;
+				res = " $or: [ {" + bsonLeft + "}, {" + bsonRight + "}] ";	
 			}
 	
+			
+	
+			
 		}
 	
-		return new ImmutablePair<String, List<String>>(where, preparedValues);
+		return res;
 	}
 	
-	
-	public Dataset<Customer> getCustomerListInCustomerTableFromMysqlbench(conditions.Condition<conditions.CustomerAttribute> condition, MutableBoolean refilterFlag){
-	
-		Pair<String, List<String>> whereClause = CustomerServiceImpl.getSQLWhereClauseInCustomerTableFromMysqlbench(condition, refilterFlag);
-		String where = whereClause.getKey();
-		List<String> preparedValues = whereClause.getValue();
-		for(String preparedValue : preparedValues) {
-			where = where.replaceFirst("\\?", "'" + Util.escapeQuote(preparedValue) + "'");
-		}
+	public Dataset<Customer> getCustomerListInUserColFromMongoModelB(conditions.Condition<conditions.CustomerAttribute> condition, MutableBoolean refilterFlag){
+		String bsonQuery = CustomerServiceImpl.getBSONMatchQueryInUserColFromMongoModelB(condition, refilterFlag);
+		if(bsonQuery != null) {
+			bsonQuery = "{$match: {" + bsonQuery + "}}";	
+		} 
 		
-		Dataset<Row> d = dbconnection.SparkConnectionMgr.getDataset("mysqlbench", "customerTable", where);
-		
+		Dataset<Row> dataset = dbconnection.SparkConnectionMgr.getSparkSessionForMongoDB("mongoModelB", "userCol", bsonQuery);
 	
-		Dataset<Customer> res = d.map((MapFunction<Row, Customer>) r -> {
-					Customer customer_res = new Customer();
-					Integer groupIndex = null;
-					String regex = null;
-					String value = null;
-					Pattern p = null;
-					Matcher m = null;
-					boolean matches = false;
-					
-					// attribute [Customer.Id]
-					String id = Util.getStringValue(r.getAs("id"));
-					customer_res.setId(id);
-					
-					// attribute [Customer.Firstname]
-					String firstname = Util.getStringValue(r.getAs("firstName"));
-					customer_res.setFirstname(firstname);
-					
-					// attribute [Customer.Lastname]
-					String lastname = Util.getStringValue(r.getAs("lastName"));
-					customer_res.setLastname(lastname);
-					
-					// attribute [Customer.Gender]
-					String gender = Util.getStringValue(r.getAs("gender"));
-					customer_res.setGender(gender);
-					
-					// attribute [Customer.Birthday]
-					LocalDate birthday = Util.getLocalDateValue(r.getAs("birthday"));
-					customer_res.setBirthday(birthday);
-					
-					// attribute [Customer.CreationDate]
-					LocalDate creationDate = Util.getLocalDateValue(r.getAs("creationDate"));
-					customer_res.setCreationDate(creationDate);
-					
-					// attribute [Customer.Locationip]
-					String locationip = Util.getStringValue(r.getAs("locationIP"));
-					customer_res.setLocationip(locationip);
-					
-					// attribute [Customer.Browser]
-					String browser = Util.getStringValue(r.getAs("browserUsed"));
-					customer_res.setBrowser(browser);
+		Dataset<Customer> res = dataset.flatMap((FlatMapFunction<Row, Customer>) r -> {
+				List<Customer> list_res = new ArrayList<Customer>();
+				Integer groupIndex = null;
+				String regex = null;
+				String value = null;
+				Pattern p = null;
+				Matcher m = null;
+				boolean matches = false;
+				Row nestedRow = null;
 	
+				boolean addedInList = false;
+				Row r1 = r;
+				Customer customer1 = new Customer();
+					boolean toAdd1  = false;
+					WrappedArray array1  = null;
+					// 	attribute Customer.id for field id			
+					nestedRow =  r1;
+					if(nestedRow != null && Arrays.asList(nestedRow.schema().fieldNames()).contains("id")) {
+						if(nestedRow.getAs("id")==null)
+							customer1.setId(null);
+						else{
+							customer1.setId(Util.getStringValue(nestedRow.getAs("id")));
+							toAdd1 = true;					
+							}
+					}
+					// 	attribute Customer.firstname for field firstName			
+					nestedRow =  r1;
+					if(nestedRow != null && Arrays.asList(nestedRow.schema().fieldNames()).contains("firstName")) {
+						if(nestedRow.getAs("firstName")==null)
+							customer1.setFirstname(null);
+						else{
+							customer1.setFirstname(Util.getStringValue(nestedRow.getAs("firstName")));
+							toAdd1 = true;					
+							}
+					}
+					// 	attribute Customer.lastname for field lastName			
+					nestedRow =  r1;
+					if(nestedRow != null && Arrays.asList(nestedRow.schema().fieldNames()).contains("lastName")) {
+						if(nestedRow.getAs("lastName")==null)
+							customer1.setLastname(null);
+						else{
+							customer1.setLastname(Util.getStringValue(nestedRow.getAs("lastName")));
+							toAdd1 = true;					
+							}
+					}
+					// 	attribute Customer.gender for field gender			
+					nestedRow =  r1;
+					if(nestedRow != null && Arrays.asList(nestedRow.schema().fieldNames()).contains("gender")) {
+						if(nestedRow.getAs("gender")==null)
+							customer1.setGender(null);
+						else{
+							customer1.setGender(Util.getStringValue(nestedRow.getAs("gender")));
+							toAdd1 = true;					
+							}
+					}
+					// 	attribute Customer.birthday for field birthday			
+					nestedRow =  r1;
+					if(nestedRow != null && Arrays.asList(nestedRow.schema().fieldNames()).contains("birthday")) {
+						if(nestedRow.getAs("birthday")==null)
+							customer1.setBirthday(null);
+						else{
+							customer1.setBirthday(Util.getLocalDateValue(nestedRow.getAs("birthday")));
+							toAdd1 = true;					
+							}
+					}
+					// 	attribute Customer.creationDate for field creationDate			
+					nestedRow =  r1;
+					if(nestedRow != null && Arrays.asList(nestedRow.schema().fieldNames()).contains("creationDate")) {
+						if(nestedRow.getAs("creationDate")==null)
+							customer1.setCreationDate(null);
+						else{
+							customer1.setCreationDate(Util.getLocalDateValue(nestedRow.getAs("creationDate")));
+							toAdd1 = true;					
+							}
+					}
+					// 	attribute Customer.locationip for field locationIP			
+					nestedRow =  r1;
+					if(nestedRow != null && Arrays.asList(nestedRow.schema().fieldNames()).contains("locationIP")) {
+						if(nestedRow.getAs("locationIP")==null)
+							customer1.setLocationip(null);
+						else{
+							customer1.setLocationip(Util.getStringValue(nestedRow.getAs("locationIP")));
+							toAdd1 = true;					
+							}
+					}
+					// 	attribute Customer.browser for field browserUsed			
+					nestedRow =  r1;
+					if(nestedRow != null && Arrays.asList(nestedRow.schema().fieldNames()).contains("browserUsed")) {
+						if(nestedRow.getAs("browserUsed")==null)
+							customer1.setBrowser(null);
+						else{
+							customer1.setBrowser(Util.getStringValue(nestedRow.getAs("browserUsed")));
+							toAdd1 = true;					
+							}
+					}
+					if(toAdd1) {
+						list_res.add(customer1);
+						addedInList = true;
+					} 
+					
+				
+				return list_res.iterator();
 	
-	
-					return customer_res;
-				}, Encoders.bean(Customer.class));
-	
-	
+		}, Encoders.bean(Customer.class));
+		res= res.dropDuplicates(new String[]{"id"});
 		return res;
 		
 	}
@@ -283,6 +337,36 @@ public class CustomerServiceImpl extends CustomerService {
 	
 	
 	
+	public Dataset<Customer> getReviewerListInFeedback(conditions.Condition<conditions.ProductAttribute> reviewedProduct_condition,conditions.Condition<conditions.CustomerAttribute> reviewer_condition, conditions.Condition<conditions.FeedbackAttribute> feedback_condition)		{
+		MutableBoolean reviewer_refilter = new MutableBoolean(false);
+		List<Dataset<Customer>> datasetsPOJO = new ArrayList<Dataset<Customer>>();
+		Dataset<Product> all = null;
+		boolean all_already_persisted = false;
+		MutableBoolean reviewedProduct_refilter;
+		org.apache.spark.sql.Column joinCondition = null;
+		
+		
+		Dataset<Feedback> res_feedback_reviewer;
+		Dataset<Customer> res_Customer;
+		
+		
+		//Join datasets or return 
+		Dataset<Customer> res = fullOuterJoinsCustomer(datasetsPOJO);
+		if(res == null)
+			return null;
+	
+		List<Dataset<Customer>> lonelyCustomerList = new ArrayList<Dataset<Customer>>();
+		lonelyCustomerList.add(getCustomerListInUserColFromMongoModelB(reviewer_condition, new MutableBoolean(false)));
+		Dataset<Customer> lonelyCustomer = fullOuterJoinsCustomer(lonelyCustomerList);
+		if(lonelyCustomer != null) {
+			res = fullLeftOuterJoinsCustomer(Arrays.asList(res, lonelyCustomer));
+		}
+		if(reviewer_refilter.booleanValue())
+			res = res.filter((FilterFunction<Customer>) r -> reviewer_condition == null || reviewer_condition.evaluate(r));
+		
+	
+		return res;
+		}
 	public Dataset<Customer> getClientListInBuys(conditions.Condition<conditions.OrderAttribute> order_condition,conditions.Condition<conditions.CustomerAttribute> client_condition)		{
 		MutableBoolean client_refilter = new MutableBoolean(false);
 		List<Dataset<Customer>> datasetsPOJO = new ArrayList<Dataset<Customer>>();
@@ -292,32 +376,49 @@ public class CustomerServiceImpl extends CustomerService {
 		org.apache.spark.sql.Column joinCondition = null;
 		
 		order_refilter = new MutableBoolean(false);
-		// For role 'order' in reference 'customer'  B->A Scenario
-		Dataset<OrderTDO> orderTDOcustomerorder = buysService.getOrderTDOListOrderInCustomerInOrdersColFromDocSchema(order_condition, order_refilter);
-		Dataset<CustomerTDO> customerTDOcustomerclient = buysService.getCustomerTDOListClientInCustomerInOrdersColFromDocSchema(client_condition, client_refilter);
+		// For role 'order' in reference 'clientRef'  B->A Scenario
+		Dataset<OrderTDO> orderTDOclientReforder = buysService.getOrderTDOListOrderInClientRefInOrderTableFromRelSchemaB(order_condition, order_refilter);
+		Dataset<CustomerTDO> customerTDOclientRefclient = buysService.getCustomerTDOListClientInClientRefInOrderTableFromRelSchemaB(client_condition, client_refilter);
 		if(order_refilter.booleanValue()) {
 			if(all == null)
 				all = new OrderServiceImpl().getOrderList(order_condition);
 			joinCondition = null;
-			joinCondition = orderTDOcustomerorder.col("id").equalTo(all.col("id"));
+			joinCondition = orderTDOclientReforder.col("id").equalTo(all.col("id"));
 			if(joinCondition == null)
-				orderTDOcustomerorder = orderTDOcustomerorder.as("A").join(all).select("A.*").as(Encoders.bean(OrderTDO.class));
+				orderTDOclientReforder = orderTDOclientReforder.as("A").join(all).select("A.*").as(Encoders.bean(OrderTDO.class));
 			else
-				orderTDOcustomerorder = orderTDOcustomerorder.as("A").join(all, joinCondition).select("A.*").as(Encoders.bean(OrderTDO.class));
+				orderTDOclientReforder = orderTDOclientReforder.as("A").join(all, joinCondition).select("A.*").as(Encoders.bean(OrderTDO.class));
 		}
-		Dataset<Row> res_customer = 
-			customerTDOcustomerclient.join(orderTDOcustomerorder
+		Dataset<Row> res_clientRef = 
+			customerTDOclientRefclient.join(orderTDOclientReforder
 				.withColumnRenamed("id", "Order_id")
 				.withColumnRenamed("orderdate", "Order_orderdate")
 				.withColumnRenamed("totalprice", "Order_totalprice")
 				.withColumnRenamed("logEvents", "Order_logEvents"),
-				customerTDOcustomerclient.col("docSchema_ordersCol_customer_id").equalTo(orderTDOcustomerorder.col("docSchema_ordersCol_customer_PersonId")));
-		Dataset<Customer> res_Customer_customer = res_customer.select( "id", "firstname", "lastname", "gender", "birthday", "creationDate", "locationip", "browser", "logEvents").as(Encoders.bean(Customer.class));
-		res_Customer_customer = res_Customer_customer.dropDuplicates(new String[] {"id"});
-		datasetsPOJO.add(res_Customer_customer);
+				customerTDOclientRefclient.col("relSchemaB_orderTable_clientRef_id").equalTo(orderTDOclientReforder.col("relSchemaB_orderTable_clientRef_customerId")));
+		Dataset<Customer> res_Customer_clientRef = res_clientRef.select( "id", "firstname", "lastname", "gender", "birthday", "creationDate", "locationip", "browser", "logEvents").as(Encoders.bean(Customer.class));
+		res_Customer_clientRef = res_Customer_clientRef.dropDuplicates(new String[] {"id"});
+		datasetsPOJO.add(res_Customer_clientRef);
 		
 		Dataset<Buys> res_buys_client;
 		Dataset<Customer> res_Customer;
+		// Role 'client' mapped to EmbeddedObject 'orders' - 'Order' containing 'Customer'
+		order_refilter = new MutableBoolean(false);
+		res_buys_client = buysService.getBuysListInmongoSchemaBuserColorders(client_condition, order_condition, client_refilter, order_refilter);
+		if(order_refilter.booleanValue()) {
+			if(all == null)
+				all = new OrderServiceImpl().getOrderList(order_condition);
+			joinCondition = null;
+			joinCondition = res_buys_client.col("order.id").equalTo(all.col("id"));
+			if(joinCondition == null)
+				res_Customer = res_buys_client.join(all).select("client.*").as(Encoders.bean(Customer.class));
+			else
+				res_Customer = res_buys_client.join(all, joinCondition).select("client.*").as(Encoders.bean(Customer.class));
+		
+		} else
+			res_Customer = res_buys_client.map((MapFunction<Buys,Customer>) r -> r.getClient(), Encoders.bean(Customer.class));
+		res_Customer = res_Customer.dropDuplicates(new String[] {"id"});
+		datasetsPOJO.add(res_Customer);
 		
 		
 		//Join datasets or return 
@@ -331,96 +432,44 @@ public class CustomerServiceImpl extends CustomerService {
 	
 		return res;
 		}
-	public Dataset<Customer> getReviewerListInWrite(conditions.Condition<conditions.FeedbackAttribute> review_condition,conditions.Condition<conditions.CustomerAttribute> reviewer_condition)		{
-		MutableBoolean reviewer_refilter = new MutableBoolean(false);
-		List<Dataset<Customer>> datasetsPOJO = new ArrayList<Dataset<Customer>>();
-		Dataset<Feedback> all = null;
-		boolean all_already_persisted = false;
-		MutableBoolean review_refilter;
-		org.apache.spark.sql.Column joinCondition = null;
-		
-		review_refilter = new MutableBoolean(false);
-		// For role 'review' in reference 'customer1'  B->A Scenario
-		Dataset<FeedbackTDO> feedbackTDOcustomer1review = writeService.getFeedbackTDOListReviewInCustomer1InFeedbackFromKvSchema(review_condition, review_refilter);
-		Dataset<CustomerTDO> customerTDOcustomer1reviewer = writeService.getCustomerTDOListReviewerInCustomer1InFeedbackFromKvSchema(reviewer_condition, reviewer_refilter);
-		if(review_refilter.booleanValue()) {
-			if(all == null)
-				all = new FeedbackServiceImpl().getFeedbackList(review_condition);
-			joinCondition = null;
-			if(joinCondition == null)
-				feedbackTDOcustomer1review = feedbackTDOcustomer1review.as("A").join(all).select("A.*").as(Encoders.bean(FeedbackTDO.class));
-			else
-				feedbackTDOcustomer1review = feedbackTDOcustomer1review.as("A").join(all, joinCondition).select("A.*").as(Encoders.bean(FeedbackTDO.class));
-		}
-		Dataset<Row> res_customer1 = 
-			customerTDOcustomer1reviewer.join(feedbackTDOcustomer1review
-				.withColumnRenamed("rate", "Feedback_rate")
-				.withColumnRenamed("content", "Feedback_content")
-				.withColumnRenamed("product", "Feedback_product")
-				.withColumnRenamed("customer", "Feedback_customer")
-				.withColumnRenamed("logEvents", "Feedback_logEvents"),
-				customerTDOcustomer1reviewer.col("kvSchema_feedback_customer1_id").equalTo(feedbackTDOcustomer1review.col("kvSchema_feedback_customer1_customerid")));
-		Dataset<Customer> res_Customer_customer1 = res_customer1.select( "id", "firstname", "lastname", "gender", "birthday", "creationDate", "locationip", "browser", "logEvents").as(Encoders.bean(Customer.class));
-		res_Customer_customer1 = res_Customer_customer1.dropDuplicates(new String[] {"id"});
-		datasetsPOJO.add(res_Customer_customer1);
-		
-		Dataset<Write> res_write_reviewer;
-		Dataset<Customer> res_Customer;
-		
-		
-		//Join datasets or return 
-		Dataset<Customer> res = fullOuterJoinsCustomer(datasetsPOJO);
-		if(res == null)
-			return null;
-	
-		if(reviewer_refilter.booleanValue())
-			res = res.filter((FilterFunction<Customer>) r -> reviewer_condition == null || reviewer_condition.evaluate(r));
-		
-	
-		return res;
-		}
 	
 	
 	public boolean insertCustomer(Customer customer){
 		// Insert into all mapped standalone AbstractPhysicalStructure 
 		boolean inserted = false;
-			inserted = insertCustomerInCustomerTableFromMysqlbench(customer) || inserted ;
+			inserted = insertCustomerInUserColFromMongoModelB(customer) || inserted ;
 		return inserted;
 	}
 	
-	public boolean insertCustomerInCustomerTableFromMysqlbench(Customer customer)	{
+	public boolean insertCustomerInUserColFromMongoModelB(Customer customer)	{
 		Condition<CustomerAttribute> conditionID;
 		String idvalue="";
 		boolean entityExists=false;
 		conditionID = Condition.simple(CustomerAttribute.id, Operator.EQUALS, customer.getId());
 		idvalue+=customer.getId();
-		Dataset res = getCustomerListInCustomerTableFromMysqlbench(conditionID,new MutableBoolean(false));
+		Dataset res = getCustomerListInUserColFromMongoModelB(conditionID,new MutableBoolean(false));
 		entityExists = res != null && !res.isEmpty();
 				
 		if(!entityExists){
-		List<String> columns = new ArrayList<>();
-		List<Object> values = new ArrayList<>();	
-		columns.add("id");
-		values.add(customer.getId());
-		columns.add("firstName");
-		values.add(customer.getFirstname());
-		columns.add("lastName");
-		values.add(customer.getLastname());
-		columns.add("gender");
-		values.add(customer.getGender());
-		columns.add("birthday");
-		values.add(customer.getBirthday());
-		columns.add("creationDate");
-		values.add(customer.getCreationDate());
-		columns.add("locationIP");
-		values.add(customer.getLocationip());
-		columns.add("browserUsed");
-		values.add(customer.getBrowser());
-		DBConnectionMgr.insertInTable(columns, Arrays.asList(values), "customerTable", "mysqlbench");
-			logger.info("Inserted [Customer] entity ID [{}] in [CustomerTable] in database [Mysqlbench]", idvalue);
+		Bson filter = new Document();
+		Bson updateOp;
+		Document docuserCol_1 = new Document();
+		docuserCol_1.append("id",customer.getId());
+		docuserCol_1.append("firstName",customer.getFirstname());
+		docuserCol_1.append("lastName",customer.getLastname());
+		docuserCol_1.append("gender",customer.getGender());
+		docuserCol_1.append("birthday",customer.getBirthday());
+		docuserCol_1.append("creationDate",customer.getCreationDate());
+		docuserCol_1.append("locationIP",customer.getLocationip());
+		docuserCol_1.append("browserUsed",customer.getBrowser());
+		
+		filter = eq("id",customer.getId());
+		updateOp = setOnInsert(docuserCol_1);
+		DBConnectionMgr.upsertMany(filter, updateOp, "userCol", "mongoModelB");
+			logger.info("Inserted [Customer] entity ID [{}] in [UserCol] in database [MongoModelB]", idvalue);
 		}
 		else
-			logger.warn("[Customer] entity ID [{}] already present in [CustomerTable] in database [Mysqlbench]", idvalue);
+			logger.warn("[Customer] entity ID [{}] already present in [UserCol] in database [MongoModelB]", idvalue);
 		return !entityExists;
 	} 
 	
@@ -431,6 +480,42 @@ public class CustomerServiceImpl extends CustomerService {
 	public void updateCustomer(pojo.Customer customer) {
 		//TODO using the id
 		return;
+	}
+	public void updateReviewerListInFeedback(
+		conditions.Condition<conditions.ProductAttribute> reviewedProduct_condition,
+		conditions.Condition<conditions.CustomerAttribute> reviewer_condition,
+		conditions.Condition<conditions.FeedbackAttribute> feedback,
+		conditions.SetClause<conditions.CustomerAttribute> set
+	){
+		//TODO
+	}
+	
+	public void updateReviewerListInFeedbackByReviewedProductCondition(
+		conditions.Condition<conditions.ProductAttribute> reviewedProduct_condition,
+		conditions.SetClause<conditions.CustomerAttribute> set
+	){
+		updateReviewerListInFeedback(reviewedProduct_condition, null, null, set);
+	}
+	
+	public void updateReviewerListInFeedbackByReviewedProduct(
+		pojo.Product reviewedProduct,
+		conditions.SetClause<conditions.CustomerAttribute> set 
+	){
+		//TODO get id in condition
+		return;	
+	}
+	
+	public void updateReviewerListInFeedbackByReviewerCondition(
+		conditions.Condition<conditions.CustomerAttribute> reviewer_condition,
+		conditions.SetClause<conditions.CustomerAttribute> set
+	){
+		updateReviewerListInFeedback(null, reviewer_condition, null, set);
+	}
+	public void updateReviewerListInFeedbackByFeedbackCondition(
+		conditions.Condition<conditions.FeedbackAttribute> feedback_condition,
+		conditions.SetClause<conditions.CustomerAttribute> set
+	){
+		updateReviewerListInFeedback(null, null, feedback_condition, set);
 	}
 	public void updateClientListInBuys(
 		conditions.Condition<conditions.OrderAttribute> order_condition,
@@ -462,36 +547,6 @@ public class CustomerServiceImpl extends CustomerService {
 	){
 		updateClientListInBuys(null, client_condition, set);
 	}
-	public void updateReviewerListInWrite(
-		conditions.Condition<conditions.FeedbackAttribute> review_condition,
-		conditions.Condition<conditions.CustomerAttribute> reviewer_condition,
-		
-		conditions.SetClause<conditions.CustomerAttribute> set
-	){
-		//TODO
-	}
-	
-	public void updateReviewerListInWriteByReviewCondition(
-		conditions.Condition<conditions.FeedbackAttribute> review_condition,
-		conditions.SetClause<conditions.CustomerAttribute> set
-	){
-		updateReviewerListInWrite(review_condition, null, set);
-	}
-	
-	public void updateReviewerListInWriteByReview(
-		pojo.Feedback review,
-		conditions.SetClause<conditions.CustomerAttribute> set 
-	){
-		//TODO get id in condition
-		return;	
-	}
-	
-	public void updateReviewerListInWriteByReviewerCondition(
-		conditions.Condition<conditions.CustomerAttribute> reviewer_condition,
-		conditions.SetClause<conditions.CustomerAttribute> set
-	){
-		updateReviewerListInWrite(null, reviewer_condition, set);
-	}
 	
 	
 	public void deleteCustomerList(conditions.Condition<conditions.CustomerAttribute> condition){
@@ -501,6 +556,36 @@ public class CustomerServiceImpl extends CustomerService {
 	public void deleteCustomer(pojo.Customer customer) {
 		//TODO using the id
 		return;
+	}
+	public void deleteReviewerListInFeedback(	
+		conditions.Condition<conditions.ProductAttribute> reviewedProduct_condition,	
+		conditions.Condition<conditions.CustomerAttribute> reviewer_condition,
+		conditions.Condition<conditions.FeedbackAttribute> feedback){
+			//TODO
+		}
+	
+	public void deleteReviewerListInFeedbackByReviewedProductCondition(
+		conditions.Condition<conditions.ProductAttribute> reviewedProduct_condition
+	){
+		deleteReviewerListInFeedback(reviewedProduct_condition, null, null);
+	}
+	
+	public void deleteReviewerListInFeedbackByReviewedProduct(
+		pojo.Product reviewedProduct 
+	){
+		//TODO get id in condition
+		return;	
+	}
+	
+	public void deleteReviewerListInFeedbackByReviewerCondition(
+		conditions.Condition<conditions.CustomerAttribute> reviewer_condition
+	){
+		deleteReviewerListInFeedback(null, reviewer_condition, null);
+	}
+	public void deleteReviewerListInFeedbackByFeedbackCondition(
+		conditions.Condition<conditions.FeedbackAttribute> feedback_condition
+	){
+		deleteReviewerListInFeedback(null, null, feedback_condition);
 	}
 	public void deleteClientListInBuys(	
 		conditions.Condition<conditions.OrderAttribute> order_condition,	
@@ -525,30 +610,6 @@ public class CustomerServiceImpl extends CustomerService {
 		conditions.Condition<conditions.CustomerAttribute> client_condition
 	){
 		deleteClientListInBuys(null, client_condition);
-	}
-	public void deleteReviewerListInWrite(	
-		conditions.Condition<conditions.FeedbackAttribute> review_condition,	
-		conditions.Condition<conditions.CustomerAttribute> reviewer_condition){
-			//TODO
-		}
-	
-	public void deleteReviewerListInWriteByReviewCondition(
-		conditions.Condition<conditions.FeedbackAttribute> review_condition
-	){
-		deleteReviewerListInWrite(review_condition, null);
-	}
-	
-	public void deleteReviewerListInWriteByReview(
-		pojo.Feedback review 
-	){
-		//TODO get id in condition
-		return;	
-	}
-	
-	public void deleteReviewerListInWriteByReviewerCondition(
-		conditions.Condition<conditions.CustomerAttribute> reviewer_condition
-	){
-		deleteReviewerListInWrite(null, reviewer_condition);
 	}
 	
 }

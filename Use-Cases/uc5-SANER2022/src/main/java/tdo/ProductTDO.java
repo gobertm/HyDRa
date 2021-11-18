@@ -4,13 +4,13 @@ import pojo.Product;
 import java.util.List;
 
 public class ProductTDO extends Product {
-	private  String kvSchema_feedback_product_asin;
-	public  String getKvSchema_feedback_product_asin() {
-		return this.kvSchema_feedback_product_asin;
+	private  String mongoSchemaB_detailOrderCol_productRef_asin;
+	public  String getMongoSchemaB_detailOrderCol_productRef_asin() {
+		return this.mongoSchemaB_detailOrderCol_productRef_asin;
 	}
 
-	public void setKvSchema_feedback_product_asin(  String kvSchema_feedback_product_asin) {
-		this.kvSchema_feedback_product_asin = kvSchema_feedback_product_asin;
+	public void setMongoSchemaB_detailOrderCol_productRef_asin(  String mongoSchemaB_detailOrderCol_productRef_asin) {
+		this.mongoSchemaB_detailOrderCol_productRef_asin = mongoSchemaB_detailOrderCol_productRef_asin;
 	}
 
 }

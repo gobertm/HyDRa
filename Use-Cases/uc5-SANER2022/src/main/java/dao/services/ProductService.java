@@ -15,26 +15,26 @@ import conditions.Condition;
 import conditions.Operator;
 import util.Util;
 import conditions.ProductAttribute;
+import conditions.CustomerAttribute;
+import pojo.Customer;
+import conditions.ProductAttribute;
 import conditions.OrderAttribute;
 import pojo.Order;
-import conditions.ProductAttribute;
-import conditions.FeedbackAttribute;
-import pojo.Feedback;
 
 public abstract class ProductService {
 	static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ProductService.class);
+	protected FeedbackService feedbackService = new dao.impl.FeedbackServiceImpl();
 	protected Composed_ofService composed_ofService = new dao.impl.Composed_ofServiceImpl();
-	protected Has_reviewsService has_reviewsService = new dao.impl.Has_reviewsServiceImpl();
 	
 
 
 	public static enum ROLE_NAME {
-		COMPOSED_OF_ORDEREDPRODUCTS, HAS_REVIEWS_REVIEWEDPRODUCT
+		FEEDBACK_REVIEWEDPRODUCT, COMPOSED_OF_ORDEREDPRODUCTS
 	}
 	private static java.util.Map<ROLE_NAME, loading.Loading> defaultLoadingParameters = new java.util.HashMap<ROLE_NAME, loading.Loading>();
 	static {
+		defaultLoadingParameters.put(ROLE_NAME.FEEDBACK_REVIEWEDPRODUCT, loading.Loading.LAZY);
 		defaultLoadingParameters.put(ROLE_NAME.COMPOSED_OF_ORDEREDPRODUCTS, loading.Loading.LAZY);
-		defaultLoadingParameters.put(ROLE_NAME.HAS_REVIEWS_REVIEWEDPRODUCT, loading.Loading.LAZY);
 	}
 	
 	private java.util.Map<ROLE_NAME, loading.Loading> loadingParameters = new java.util.HashMap<ROLE_NAME, loading.Loading>();
@@ -86,10 +86,7 @@ public abstract class ProductService {
 		MutableBoolean refilterFlag = new MutableBoolean(false);
 		List<Dataset<Product>> datasets = new ArrayList<Dataset<Product>>();
 		Dataset<Product> d = null;
-		d = getProductListInOrdersColFromMongobench(condition, refilterFlag);
-		if(d != null)
-			datasets.add(d);
-		d = getProductListInProductTableFromMysqlbench(condition, refilterFlag);
+		d = getProductListInProductsFromRedisModelB(condition, refilterFlag);
 		if(d != null)
 			datasets.add(d);
 		
@@ -109,12 +106,7 @@ public abstract class ProductService {
 	
 	
 	
-	public abstract Dataset<Product> getProductListInOrdersColFromMongobench(conditions.Condition<conditions.ProductAttribute> condition, MutableBoolean refilterFlag);
-	
-	
-	
-	
-	public abstract Dataset<Product> getProductListInProductTableFromMysqlbench(conditions.Condition<conditions.ProductAttribute> condition, MutableBoolean refilterFlag);
+	public abstract Dataset<Product> getProductListInProductsFromRedisModelB(conditions.Condition<conditions.ProductAttribute> condition, MutableBoolean refilterFlag);
 	
 	
 	public Product getProductById(String id){
@@ -144,7 +136,7 @@ public abstract class ProductService {
 	
 	
 	
-	protected static Dataset<Product> fullOuterJoinsProduct(List<Dataset<Product>> datasetsPOJO) {
+	public static Dataset<Product> fullOuterJoinsProduct(List<Dataset<Product>> datasetsPOJO) {
 		return fullOuterJoinsProduct(datasetsPOJO, "fullouter");
 	}
 	
@@ -272,34 +264,31 @@ public abstract class ProductService {
 	
 	
 	
-	public Dataset<Product> getProductList(Product.has_reviews role, Feedback feedback) {
-		if(role != null) {
-			if(role.equals(Product.has_reviews.reviewedProduct))
-				return getReviewedProductListInHas_reviewsByReviews(feedback);
-		}
-		return null;
+	
+	public abstract Dataset<Product> getReviewedProductListInFeedback(conditions.Condition<conditions.ProductAttribute> reviewedProduct_condition,conditions.Condition<conditions.CustomerAttribute> reviewer_condition, conditions.Condition<conditions.FeedbackAttribute> feedback_condition);
+	
+	public Dataset<Product> getReviewedProductListInFeedbackByReviewedProductCondition(conditions.Condition<conditions.ProductAttribute> reviewedProduct_condition){
+		return getReviewedProductListInFeedback(reviewedProduct_condition, null, null);
+	}
+	public Dataset<Product> getReviewedProductListInFeedbackByReviewerCondition(conditions.Condition<conditions.CustomerAttribute> reviewer_condition){
+		return getReviewedProductListInFeedback(null, reviewer_condition, null);
 	}
 	
-	public Dataset<Product> getProductList(Product.has_reviews role, Condition<FeedbackAttribute> condition) {
-		if(role != null) {
-			if(role.equals(Product.has_reviews.reviewedProduct))
-				return getReviewedProductListInHas_reviewsByReviewsCondition(condition);
-		}
-		return null;
+	public Dataset<Product> getReviewedProductListInFeedbackByReviewer(pojo.Customer reviewer){
+		if(reviewer == null)
+			return null;
+	
+		Condition c;
+		c=Condition.simple(CustomerAttribute.id,Operator.EQUALS, reviewer.getId());
+		Dataset<Product> res = getReviewedProductListInFeedbackByReviewerCondition(c);
+		return res;
 	}
 	
-	public Dataset<Product> getProductList(Product.has_reviews role, Condition<FeedbackAttribute> condition1, Condition<ProductAttribute> condition2) {
-		if(role != null) {
-			if(role.equals(Product.has_reviews.reviewedProduct))
-				return getReviewedProductListInHas_reviews(condition1, condition2);
-		}
-		return null;
+	public Dataset<Product> getReviewedProductListInFeedbackByFeedbackCondition(
+		conditions.Condition<conditions.FeedbackAttribute> feedback_condition
+	){
+		return getReviewedProductListInFeedback(null, null, feedback_condition);
 	}
-	
-	
-	
-	
-	
 	public abstract Dataset<Product> getOrderedProductsListInComposed_of(conditions.Condition<conditions.OrderAttribute> orderP_condition,conditions.Condition<conditions.ProductAttribute> orderedProducts_condition);
 	
 	public Dataset<Product> getOrderedProductsListInComposed_ofByOrderPCondition(conditions.Condition<conditions.OrderAttribute> orderP_condition){
@@ -319,35 +308,50 @@ public abstract class ProductService {
 	public Dataset<Product> getOrderedProductsListInComposed_ofByOrderedProductsCondition(conditions.Condition<conditions.ProductAttribute> orderedProducts_condition){
 		return getOrderedProductsListInComposed_of(null, orderedProducts_condition);
 	}
-	public abstract Dataset<Product> getReviewedProductListInHas_reviews(conditions.Condition<conditions.FeedbackAttribute> reviews_condition,conditions.Condition<conditions.ProductAttribute> reviewedProduct_condition);
-	
-	public Dataset<Product> getReviewedProductListInHas_reviewsByReviewsCondition(conditions.Condition<conditions.FeedbackAttribute> reviews_condition){
-		return getReviewedProductListInHas_reviews(reviews_condition, null);
-	}
-	
-	public Dataset<Product> getReviewedProductListInHas_reviewsByReviews(pojo.Feedback reviews){
-		if(reviews == null)
-			return null;
-	
-		Condition c;
-		c=null;
-		Dataset<Product> res = getReviewedProductListInHas_reviewsByReviewsCondition(c);
-		return res;
-	}
-	
-	public Dataset<Product> getReviewedProductListInHas_reviewsByReviewedProductCondition(conditions.Condition<conditions.ProductAttribute> reviewedProduct_condition){
-		return getReviewedProductListInHas_reviews(null, reviewedProduct_condition);
-	}
 	
 	
 	public abstract boolean insertProduct(Product product);
 	
-	public abstract boolean insertProductInProductTableFromMysqlbench(Product product); 
+	public abstract boolean insertProductInProductsFromRedisModelB(Product product); 
 	public abstract void updateProductList(conditions.Condition<conditions.ProductAttribute> condition, conditions.SetClause<conditions.ProductAttribute> set);
 	
 	public void updateProduct(pojo.Product product) {
 		//TODO using the id
 		return;
+	}
+	public abstract void updateReviewedProductListInFeedback(
+		conditions.Condition<conditions.ProductAttribute> reviewedProduct_condition,
+		conditions.Condition<conditions.CustomerAttribute> reviewer_condition,
+		conditions.Condition<conditions.FeedbackAttribute> feedback,
+		conditions.SetClause<conditions.ProductAttribute> set
+	);
+	
+	public void updateReviewedProductListInFeedbackByReviewedProductCondition(
+		conditions.Condition<conditions.ProductAttribute> reviewedProduct_condition,
+		conditions.SetClause<conditions.ProductAttribute> set
+	){
+		updateReviewedProductListInFeedback(reviewedProduct_condition, null, null, set);
+	}
+	public void updateReviewedProductListInFeedbackByReviewerCondition(
+		conditions.Condition<conditions.CustomerAttribute> reviewer_condition,
+		conditions.SetClause<conditions.ProductAttribute> set
+	){
+		updateReviewedProductListInFeedback(null, reviewer_condition, null, set);
+	}
+	
+	public void updateReviewedProductListInFeedbackByReviewer(
+		pojo.Customer reviewer,
+		conditions.SetClause<conditions.ProductAttribute> set 
+	){
+		//TODO get id in condition
+		return;	
+	}
+	
+	public void updateReviewedProductListInFeedbackByFeedbackCondition(
+		conditions.Condition<conditions.FeedbackAttribute> feedback_condition,
+		conditions.SetClause<conditions.ProductAttribute> set
+	){
+		updateReviewedProductListInFeedback(null, null, feedback_condition, set);
 	}
 	public abstract void updateOrderedProductsListInComposed_of(
 		conditions.Condition<conditions.OrderAttribute> orderP_condition,
@@ -377,34 +381,6 @@ public abstract class ProductService {
 	){
 		updateOrderedProductsListInComposed_of(null, orderedProducts_condition, set);
 	}
-	public abstract void updateReviewedProductListInHas_reviews(
-		conditions.Condition<conditions.FeedbackAttribute> reviews_condition,
-		conditions.Condition<conditions.ProductAttribute> reviewedProduct_condition,
-		
-		conditions.SetClause<conditions.ProductAttribute> set
-	);
-	
-	public void updateReviewedProductListInHas_reviewsByReviewsCondition(
-		conditions.Condition<conditions.FeedbackAttribute> reviews_condition,
-		conditions.SetClause<conditions.ProductAttribute> set
-	){
-		updateReviewedProductListInHas_reviews(reviews_condition, null, set);
-	}
-	
-	public void updateReviewedProductListInHas_reviewsByReviews(
-		pojo.Feedback reviews,
-		conditions.SetClause<conditions.ProductAttribute> set 
-	){
-		//TODO get id in condition
-		return;	
-	}
-	
-	public void updateReviewedProductListInHas_reviewsByReviewedProductCondition(
-		conditions.Condition<conditions.ProductAttribute> reviewedProduct_condition,
-		conditions.SetClause<conditions.ProductAttribute> set
-	){
-		updateReviewedProductListInHas_reviews(null, reviewedProduct_condition, set);
-	}
 	
 	
 	public abstract void deleteProductList(conditions.Condition<conditions.ProductAttribute> condition);
@@ -412,6 +388,34 @@ public abstract class ProductService {
 	public void deleteProduct(pojo.Product product) {
 		//TODO using the id
 		return;
+	}
+	public abstract void deleteReviewedProductListInFeedback(	
+		conditions.Condition<conditions.ProductAttribute> reviewedProduct_condition,	
+		conditions.Condition<conditions.CustomerAttribute> reviewer_condition,
+		conditions.Condition<conditions.FeedbackAttribute> feedback);
+	
+	public void deleteReviewedProductListInFeedbackByReviewedProductCondition(
+		conditions.Condition<conditions.ProductAttribute> reviewedProduct_condition
+	){
+		deleteReviewedProductListInFeedback(reviewedProduct_condition, null, null);
+	}
+	public void deleteReviewedProductListInFeedbackByReviewerCondition(
+		conditions.Condition<conditions.CustomerAttribute> reviewer_condition
+	){
+		deleteReviewedProductListInFeedback(null, reviewer_condition, null);
+	}
+	
+	public void deleteReviewedProductListInFeedbackByReviewer(
+		pojo.Customer reviewer 
+	){
+		//TODO get id in condition
+		return;	
+	}
+	
+	public void deleteReviewedProductListInFeedbackByFeedbackCondition(
+		conditions.Condition<conditions.FeedbackAttribute> feedback_condition
+	){
+		deleteReviewedProductListInFeedback(null, null, feedback_condition);
 	}
 	public abstract void deleteOrderedProductsListInComposed_of(	
 		conditions.Condition<conditions.OrderAttribute> orderP_condition,	
@@ -434,28 +438,6 @@ public abstract class ProductService {
 		conditions.Condition<conditions.ProductAttribute> orderedProducts_condition
 	){
 		deleteOrderedProductsListInComposed_of(null, orderedProducts_condition);
-	}
-	public abstract void deleteReviewedProductListInHas_reviews(	
-		conditions.Condition<conditions.FeedbackAttribute> reviews_condition,	
-		conditions.Condition<conditions.ProductAttribute> reviewedProduct_condition);
-	
-	public void deleteReviewedProductListInHas_reviewsByReviewsCondition(
-		conditions.Condition<conditions.FeedbackAttribute> reviews_condition
-	){
-		deleteReviewedProductListInHas_reviews(reviews_condition, null);
-	}
-	
-	public void deleteReviewedProductListInHas_reviewsByReviews(
-		pojo.Feedback reviews 
-	){
-		//TODO get id in condition
-		return;	
-	}
-	
-	public void deleteReviewedProductListInHas_reviewsByReviewedProductCondition(
-		conditions.Condition<conditions.ProductAttribute> reviewedProduct_condition
-	){
-		deleteReviewedProductListInHas_reviews(null, reviewedProduct_condition);
 	}
 	
 }

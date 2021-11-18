@@ -18,10 +18,12 @@ import tdo.OrderTDO;
 import tdo.BuysTDO;
 import pojo.Order;
 import conditions.OrderAttribute;
+import dao.services.OrderService;
 import tdo.CustomerTDO;
 import tdo.BuysTDO;
 import pojo.Customer;
 import conditions.CustomerAttribute;
+import dao.services.CustomerService;
 import java.util.List;
 import java.util.ArrayList;
 import util.ScalaUtil;
@@ -60,17 +62,59 @@ public class BuysServiceImpl extends dao.services.BuysService {
 		Leading to apparent inconsistency in the method name. But it is actually the physical structure of the ref and not the EntityDTO.*/
 	
 	
-	// Left side 'PersonId' of reference [customer ]
-	public Dataset<OrderTDO> getOrderTDOListOrderInCustomerInOrdersColFromDocSchema(Condition<OrderAttribute> condition, MutableBoolean refilterFlag){	
-		String bsonQuery = OrderServiceImpl.getBSONMatchQueryInOrdersColFromMongobench(condition, refilterFlag);
+	// Left side 'customerId' of reference [clientRef ]
+	public Dataset<OrderTDO> getOrderTDOListOrderInClientRefInOrderTableFromRelSchemaB(Condition<OrderAttribute> condition, MutableBoolean refilterFlag){	
+	
+		Pair<String, List<String>> whereClause = OrderServiceImpl.getSQLWhereClauseInOrderTableFromMysqlModelB(condition, refilterFlag);
+		String where = whereClause.getKey();
+		List<String> preparedValues = whereClause.getValue();
+		for(String preparedValue : preparedValues) {
+			where = where.replaceFirst("\\?", "'" + Util.escapeQuote(preparedValue) + "'");
+		}
+		
+		Dataset<Row> d = dbconnection.SparkConnectionMgr.getDataset("mysqlModelB", "orderTable", where);
+		
+	
+		Dataset<OrderTDO> res = d.map((MapFunction<Row, OrderTDO>) r -> {
+					OrderTDO order_res = new OrderTDO();
+					Integer groupIndex = null;
+					String regex = null;
+					String value = null;
+					Pattern p = null;
+					Matcher m = null;
+					boolean matches = false;
+					
+					// attribute [Order.Id]
+					String id = Util.getStringValue(r.getAs("orderId"));
+					order_res.setId(id);
+					
+					// attribute [Order.Orderdate]
+					LocalDate orderdate = Util.getLocalDateValue(r.getAs("orderDate"));
+					order_res.setOrderdate(orderdate);
+	
+					// Get reference column [customerId ] for reference [clientRef]
+					String relSchemaB_orderTable_clientRef_customerId = r.getAs("customerId") == null ? null : r.getAs("customerId").toString();
+					order_res.setRelSchemaB_orderTable_clientRef_customerId(relSchemaB_orderTable_clientRef_customerId);
+	
+	
+					return order_res;
+				}, Encoders.bean(OrderTDO.class));
+	
+	
+		return res;
+	}
+	
+	// Right side 'id' of reference [clientRef ]
+	public Dataset<CustomerTDO> getCustomerTDOListClientInClientRefInOrderTableFromRelSchemaB(Condition<CustomerAttribute> condition, MutableBoolean refilterFlag){
+		String bsonQuery = CustomerServiceImpl.getBSONMatchQueryInUserColFromMongoModelB(condition, refilterFlag);
 		if(bsonQuery != null) {
 			bsonQuery = "{$match: {" + bsonQuery + "}}";	
 		} 
 		
-		Dataset<Row> dataset = dbconnection.SparkConnectionMgr.getSparkSessionForMongoDB("mongobench", "ordersCol", bsonQuery);
+		Dataset<Row> dataset = dbconnection.SparkConnectionMgr.getSparkSessionForMongoDB("mongoModelB", "userCol", bsonQuery);
 	
-		Dataset<OrderTDO> res = dataset.flatMap((FlatMapFunction<Row, OrderTDO>) r -> {
-				List<OrderTDO> list_res = new ArrayList<OrderTDO>();
+		Dataset<CustomerTDO> res = dataset.flatMap((FlatMapFunction<Row, CustomerTDO>) r -> {
+				List<CustomerTDO> list_res = new ArrayList<CustomerTDO>();
 				Integer groupIndex = null;
 				String regex = null;
 				String value = null;
@@ -81,50 +125,100 @@ public class BuysServiceImpl extends dao.services.BuysService {
 	
 				boolean addedInList = false;
 				Row r1 = r;
-				OrderTDO order1 = new OrderTDO();
+				CustomerTDO customer1 = new CustomerTDO();
 					boolean toAdd1  = false;
 					WrappedArray array1  = null;
-					// 	attribute Order.id for field OrderId			
+					// 	attribute Customer.id for field id			
 					nestedRow =  r1;
-					if(nestedRow != null && Arrays.asList(nestedRow.schema().fieldNames()).contains("OrderId")) {
-						if(nestedRow.getAs("OrderId") == null){
-							order1.setId(null);
+					if(nestedRow != null && Arrays.asList(nestedRow.schema().fieldNames()).contains("id")) {
+						if(nestedRow.getAs("id") == null){
+							customer1.setId(null);
 						}else{
-							order1.setId(Util.getStringValue(nestedRow.getAs("OrderId")));
+							customer1.setId(Util.getStringValue(nestedRow.getAs("id")));
 							toAdd1 = true;					
 							}
 					}
-					// 	attribute Order.orderdate for field OrderDate			
+					// 	attribute Customer.firstname for field firstName			
 					nestedRow =  r1;
-					if(nestedRow != null && Arrays.asList(nestedRow.schema().fieldNames()).contains("OrderDate")) {
-						if(nestedRow.getAs("OrderDate") == null){
-							order1.setOrderdate(null);
+					if(nestedRow != null && Arrays.asList(nestedRow.schema().fieldNames()).contains("firstName")) {
+						if(nestedRow.getAs("firstName") == null){
+							customer1.setFirstname(null);
 						}else{
-							order1.setOrderdate(Util.getLocalDateValue(nestedRow.getAs("OrderDate")));
+							customer1.setFirstname(Util.getStringValue(nestedRow.getAs("firstName")));
 							toAdd1 = true;					
 							}
 					}
-					// 	attribute Order.totalprice for field TotalPrice			
+					// 	attribute Customer.lastname for field lastName			
 					nestedRow =  r1;
-					if(nestedRow != null && Arrays.asList(nestedRow.schema().fieldNames()).contains("TotalPrice")) {
-						if(nestedRow.getAs("TotalPrice") == null){
-							order1.setTotalprice(null);
+					if(nestedRow != null && Arrays.asList(nestedRow.schema().fieldNames()).contains("lastName")) {
+						if(nestedRow.getAs("lastName") == null){
+							customer1.setLastname(null);
 						}else{
-							order1.setTotalprice(Util.getDoubleValue(nestedRow.getAs("TotalPrice")));
+							customer1.setLastname(Util.getStringValue(nestedRow.getAs("lastName")));
+							toAdd1 = true;					
+							}
+					}
+					// 	attribute Customer.gender for field gender			
+					nestedRow =  r1;
+					if(nestedRow != null && Arrays.asList(nestedRow.schema().fieldNames()).contains("gender")) {
+						if(nestedRow.getAs("gender") == null){
+							customer1.setGender(null);
+						}else{
+							customer1.setGender(Util.getStringValue(nestedRow.getAs("gender")));
+							toAdd1 = true;					
+							}
+					}
+					// 	attribute Customer.birthday for field birthday			
+					nestedRow =  r1;
+					if(nestedRow != null && Arrays.asList(nestedRow.schema().fieldNames()).contains("birthday")) {
+						if(nestedRow.getAs("birthday") == null){
+							customer1.setBirthday(null);
+						}else{
+							customer1.setBirthday(Util.getLocalDateValue(nestedRow.getAs("birthday")));
+							toAdd1 = true;					
+							}
+					}
+					// 	attribute Customer.creationDate for field creationDate			
+					nestedRow =  r1;
+					if(nestedRow != null && Arrays.asList(nestedRow.schema().fieldNames()).contains("creationDate")) {
+						if(nestedRow.getAs("creationDate") == null){
+							customer1.setCreationDate(null);
+						}else{
+							customer1.setCreationDate(Util.getLocalDateValue(nestedRow.getAs("creationDate")));
+							toAdd1 = true;					
+							}
+					}
+					// 	attribute Customer.locationip for field locationIP			
+					nestedRow =  r1;
+					if(nestedRow != null && Arrays.asList(nestedRow.schema().fieldNames()).contains("locationIP")) {
+						if(nestedRow.getAs("locationIP") == null){
+							customer1.setLocationip(null);
+						}else{
+							customer1.setLocationip(Util.getStringValue(nestedRow.getAs("locationIP")));
+							toAdd1 = true;					
+							}
+					}
+					// 	attribute Customer.browser for field browserUsed			
+					nestedRow =  r1;
+					if(nestedRow != null && Arrays.asList(nestedRow.schema().fieldNames()).contains("browserUsed")) {
+						if(nestedRow.getAs("browserUsed") == null){
+							customer1.setBrowser(null);
+						}else{
+							customer1.setBrowser(Util.getStringValue(nestedRow.getAs("browserUsed")));
 							toAdd1 = true;					
 							}
 					}
 					
-						// field  PersonId for reference customer . Reference field : PersonId
+						// field  id for reference clientRef . Reference field : id
 					nestedRow =  r1;
 					if(nestedRow != null) {
-						order1.setDocSchema_ordersCol_customer_PersonId(nestedRow.getAs("PersonId") == null ? null : nestedRow.getAs("PersonId").toString());
+						customer1.setRelSchemaB_orderTable_clientRef_id(nestedRow.getAs("id") == null ? null : nestedRow.getAs("id").toString());
 						toAdd1 = true;					
 					}
 					
 					
 					if(toAdd1) {
-						list_res.add(order1);
+						list_res.add(customer1);
 						addedInList = true;
 					} 
 					
@@ -132,107 +226,305 @@ public class BuysServiceImpl extends dao.services.BuysService {
 				
 				return list_res.iterator();
 	
-		}, Encoders.bean(OrderTDO.class));
+		}, Encoders.bean(CustomerTDO.class));
 		res= res.dropDuplicates(new String[]{"id"});
 		return res;
 	}
 	
-	// Right side 'id' of reference [customer ]
-	public Dataset<CustomerTDO> getCustomerTDOListClientInCustomerInOrdersColFromDocSchema(Condition<CustomerAttribute> condition, MutableBoolean refilterFlag){
 	
-		Pair<String, List<String>> whereClause = CustomerServiceImpl.getSQLWhereClauseInCustomerTableFromMysqlbench(condition, refilterFlag);
-		String where = whereClause.getKey();
-		List<String> preparedValues = whereClause.getValue();
-		for(String preparedValue : preparedValues) {
-			where = where.replaceFirst("\\?", "'" + Util.escapeQuote(preparedValue) + "'");
-		}
-		
-		Dataset<Row> d = dbconnection.SparkConnectionMgr.getDataset("mysqlbench", "customerTable", where);
-		
 	
-		Dataset<CustomerTDO> res = d.map((MapFunction<Row, CustomerTDO>) r -> {
-					CustomerTDO customer_res = new CustomerTDO();
+	// method accessing the embedded object orders mapped to role client
+	public Dataset<pojo.Buys> getBuysListInmongoSchemaBuserColorders(Condition<CustomerAttribute> client_condition, Condition<OrderAttribute> order_condition, MutableBoolean client_refilter, MutableBoolean order_refilter){	
+			List<String> bsons = new ArrayList<String>();
+			String bson = null;
+			bson = OrderServiceImpl.getBSONMatchQueryInUserColFromMongoModelB(order_condition ,order_refilter);
+			if(bson != null)
+				bsons.add("{" + bson + "}");
+			bson = CustomerServiceImpl.getBSONMatchQueryInUserColFromMongoModelB(client_condition ,client_refilter);
+			if(bson != null)
+				bsons.add("{" + bson + "}");
+		
+			String bsonQuery = bsons.size() == 0 ? null : "{$match: { $and: [" + String.join(",", bsons) + "] }}";
+		
+			Dataset<Row> dataset = dbconnection.SparkConnectionMgr.getSparkSessionForMongoDB("mongoModelB", "userCol", bsonQuery);
+		
+			Dataset<Buys> res = dataset.flatMap((FlatMapFunction<Row, Buys>) r -> {
+					List<Buys> list_res = new ArrayList<Buys>();
 					Integer groupIndex = null;
 					String regex = null;
 					String value = null;
 					Pattern p = null;
 					Matcher m = null;
 					boolean matches = false;
+					Row nestedRow = null;
+		
+					boolean addedInList = false;
+					Row r1 = r;
+					Buys buys1 = new Buys();
+					buys1.setOrder(new Order());
+					buys1.setClient(new Customer());
 					
-					// attribute [Customer.Id]
-					String id = Util.getStringValue(r.getAs("id"));
-					customer_res.setId(id);
+					boolean toAdd1  = false;
+					WrappedArray array1  = null;
+					// 	attribute Customer.id for field id			
+					nestedRow =  r1;
+					if(nestedRow != null && Arrays.asList(nestedRow.schema().fieldNames()).contains("id")) {
+						if(nestedRow.getAs("id")==null)
+							buys1.getClient().setId(null);
+						else{
+							buys1.getClient().setId(Util.getStringValue(nestedRow.getAs("id")));
+							toAdd1 = true;					
+							}
+					}
+					// 	attribute Customer.firstname for field firstName			
+					nestedRow =  r1;
+					if(nestedRow != null && Arrays.asList(nestedRow.schema().fieldNames()).contains("firstName")) {
+						if(nestedRow.getAs("firstName")==null)
+							buys1.getClient().setFirstname(null);
+						else{
+							buys1.getClient().setFirstname(Util.getStringValue(nestedRow.getAs("firstName")));
+							toAdd1 = true;					
+							}
+					}
+					// 	attribute Customer.lastname for field lastName			
+					nestedRow =  r1;
+					if(nestedRow != null && Arrays.asList(nestedRow.schema().fieldNames()).contains("lastName")) {
+						if(nestedRow.getAs("lastName")==null)
+							buys1.getClient().setLastname(null);
+						else{
+							buys1.getClient().setLastname(Util.getStringValue(nestedRow.getAs("lastName")));
+							toAdd1 = true;					
+							}
+					}
+					// 	attribute Customer.gender for field gender			
+					nestedRow =  r1;
+					if(nestedRow != null && Arrays.asList(nestedRow.schema().fieldNames()).contains("gender")) {
+						if(nestedRow.getAs("gender")==null)
+							buys1.getClient().setGender(null);
+						else{
+							buys1.getClient().setGender(Util.getStringValue(nestedRow.getAs("gender")));
+							toAdd1 = true;					
+							}
+					}
+					// 	attribute Customer.birthday for field birthday			
+					nestedRow =  r1;
+					if(nestedRow != null && Arrays.asList(nestedRow.schema().fieldNames()).contains("birthday")) {
+						if(nestedRow.getAs("birthday")==null)
+							buys1.getClient().setBirthday(null);
+						else{
+							buys1.getClient().setBirthday(Util.getLocalDateValue(nestedRow.getAs("birthday")));
+							toAdd1 = true;					
+							}
+					}
+					// 	attribute Customer.creationDate for field creationDate			
+					nestedRow =  r1;
+					if(nestedRow != null && Arrays.asList(nestedRow.schema().fieldNames()).contains("creationDate")) {
+						if(nestedRow.getAs("creationDate")==null)
+							buys1.getClient().setCreationDate(null);
+						else{
+							buys1.getClient().setCreationDate(Util.getLocalDateValue(nestedRow.getAs("creationDate")));
+							toAdd1 = true;					
+							}
+					}
+					// 	attribute Customer.locationip for field locationIP			
+					nestedRow =  r1;
+					if(nestedRow != null && Arrays.asList(nestedRow.schema().fieldNames()).contains("locationIP")) {
+						if(nestedRow.getAs("locationIP")==null)
+							buys1.getClient().setLocationip(null);
+						else{
+							buys1.getClient().setLocationip(Util.getStringValue(nestedRow.getAs("locationIP")));
+							toAdd1 = true;					
+							}
+					}
+					// 	attribute Customer.browser for field browserUsed			
+					nestedRow =  r1;
+					if(nestedRow != null && Arrays.asList(nestedRow.schema().fieldNames()).contains("browserUsed")) {
+						if(nestedRow.getAs("browserUsed")==null)
+							buys1.getClient().setBrowser(null);
+						else{
+							buys1.getClient().setBrowser(Util.getStringValue(nestedRow.getAs("browserUsed")));
+							toAdd1 = true;					
+							}
+					}
+					array1 = r1.getAs("orders");
+					if(array1!= null) {
+						for (int i2 = 0; i2 < array1.size(); i2++){
+							Row r2 = (Row) array1.apply(i2);
+							Buys buys2 = (Buys) buys1.clone();
+							boolean toAdd2  = false;
+							WrappedArray array2  = null;
+							// 	attribute Order.id for field id			
+							nestedRow =  r2;
+							if(nestedRow != null && Arrays.asList(nestedRow.schema().fieldNames()).contains("id")) {
+								if(nestedRow.getAs("id")==null)
+									buys2.getOrder().setId(null);
+								else{
+									buys2.getOrder().setId(Util.getStringValue(nestedRow.getAs("id")));
+									toAdd2 = true;					
+									}
+							}
+							// 	attribute Order.orderdate for field buydate			
+							nestedRow =  r2;
+							if(nestedRow != null && Arrays.asList(nestedRow.schema().fieldNames()).contains("buydate")) {
+								if(nestedRow.getAs("buydate")==null)
+									buys2.getOrder().setOrderdate(null);
+								else{
+									buys2.getOrder().setOrderdate(Util.getLocalDateValue(nestedRow.getAs("buydate")));
+									toAdd2 = true;					
+									}
+							}
+							// 	attribute Order.totalprice for field totalamount			
+							nestedRow =  r2;
+							if(nestedRow != null && Arrays.asList(nestedRow.schema().fieldNames()).contains("totalamount")) {
+								if(nestedRow.getAs("totalamount")==null)
+									buys2.getOrder().setTotalprice(null);
+								else{
+									buys2.getOrder().setTotalprice(Util.getDoubleValue(nestedRow.getAs("totalamount")));
+									toAdd2 = true;					
+									}
+							}
+							if(toAdd2 && ((order_condition == null || order_refilter.booleanValue() || order_condition.evaluate(buys2.getOrder()))&&(client_condition == null || client_refilter.booleanValue() || client_condition.evaluate(buys2.getClient())))) {
+								list_res.add(buys2);
+								addedInList = true;
+							} 
+							if(addedInList)
+								toAdd1 = false;
+						}
+					}
 					
-					// attribute [Customer.Firstname]
-					String firstname = Util.getStringValue(r.getAs("firstName"));
-					customer_res.setFirstname(firstname);
+					if(toAdd1 ) {
+						list_res.add(buys1);
+						addedInList = true;
+					} 
 					
-					// attribute [Customer.Lastname]
-					String lastname = Util.getStringValue(r.getAs("lastName"));
-					customer_res.setLastname(lastname);
 					
-					// attribute [Customer.Gender]
-					String gender = Util.getStringValue(r.getAs("gender"));
-					customer_res.setGender(gender);
 					
-					// attribute [Customer.Birthday]
-					LocalDate birthday = Util.getLocalDateValue(r.getAs("birthday"));
-					customer_res.setBirthday(birthday);
-					
-					// attribute [Customer.CreationDate]
-					LocalDate creationDate = Util.getLocalDateValue(r.getAs("creationDate"));
-					customer_res.setCreationDate(creationDate);
-					
-					// attribute [Customer.Locationip]
-					String locationip = Util.getStringValue(r.getAs("locationIP"));
-					customer_res.setLocationip(locationip);
-					
-					// attribute [Customer.Browser]
-					String browser = Util.getStringValue(r.getAs("browserUsed"));
-					customer_res.setBrowser(browser);
-	
-					// Get reference column [id ] for reference [customer]
-					String docSchema_ordersCol_customer_id = r.getAs("id") == null ? null : r.getAs("id").toString();
-					customer_res.setDocSchema_ordersCol_customer_id(docSchema_ordersCol_customer_id);
-	
-	
-					return customer_res;
-				}, Encoders.bean(CustomerTDO.class));
-	
-	
-		return res;}
+					return list_res.iterator();
+		
+			}, Encoders.bean(Buys.class));
+			// TODO drop duplicates based on roles ids
+			//res= res.dropDuplicates(new String {});
+			return res;
+	}
 	
 	
 	
 	
-	
-	
-	public java.util.List<pojo.Buys> getBuysList(
+	public Dataset<pojo.Buys> getBuysList(
 		conditions.Condition<conditions.OrderAttribute> order_condition,
 		conditions.Condition<conditions.CustomerAttribute> client_condition){
-			//TODO
-			return null;
+			BuysServiceImpl buysService = this;
+			OrderService orderService = new OrderServiceImpl();  
+			CustomerService customerService = new CustomerServiceImpl();
+			MutableBoolean order_refilter = new MutableBoolean(false);
+			List<Dataset<Buys>> datasetsPOJO = new ArrayList<Dataset<Buys>>();
+			boolean all_already_persisted = false;
+			MutableBoolean client_refilter = new MutableBoolean(false);
+			org.apache.spark.sql.Column joinCondition = null;
+			// For role 'order' in reference 'clientRef'. A->B Scenario
+			client_refilter = new MutableBoolean(false);
+			Dataset<OrderTDO> orderTDOclientReforder = buysService.getOrderTDOListOrderInClientRefInOrderTableFromRelSchemaB(order_condition, order_refilter);
+			Dataset<CustomerTDO> customerTDOclientRefclient = buysService.getCustomerTDOListClientInClientRefInOrderTableFromRelSchemaB(client_condition, client_refilter);
+			
+			Dataset<Row> res_clientRef = orderTDOclientReforder.join(customerTDOclientRefclient
+					.withColumnRenamed("id", "Customer_id")
+					.withColumnRenamed("firstname", "Customer_firstname")
+					.withColumnRenamed("lastname", "Customer_lastname")
+					.withColumnRenamed("gender", "Customer_gender")
+					.withColumnRenamed("birthday", "Customer_birthday")
+					.withColumnRenamed("creationDate", "Customer_creationDate")
+					.withColumnRenamed("locationip", "Customer_locationip")
+					.withColumnRenamed("browser", "Customer_browser")
+					.withColumnRenamed("logEvents", "Customer_logEvents"),
+					orderTDOclientReforder.col("relSchemaB_orderTable_clientRef_customerId").equalTo(customerTDOclientRefclient.col("relSchemaB_orderTable_clientRef_id")));
+		
+			Dataset<Buys> res_Order_clientRef = res_clientRef.map(
+				new MapFunction<Row, Buys>() {
+					public Buys call(Row r) {
+						Buys res = new Buys();
+						Order A = new Order();
+						Customer B = new Customer();
+						A.setId(r.getAs("id"));
+						A.setOrderdate(r.getAs("orderdate"));
+						A.setTotalprice(r.getAs("totalprice"));
+						A.setLogEvents((ArrayList<String>) ScalaUtil.javaList(r.getAs("logEvents")));
+		
+						B.setId(r.getAs("Customer_id"));
+						B.setFirstname(r.getAs("Customer_firstname"));
+						B.setLastname(r.getAs("Customer_lastname"));
+						B.setGender(r.getAs("Customer_gender"));
+						B.setBirthday(r.getAs("Customer_birthday"));
+						B.setCreationDate(r.getAs("Customer_creationDate"));
+						B.setLocationip(r.getAs("Customer_locationip"));
+						B.setBrowser(r.getAs("Customer_browser"));
+						B.setLogEvents((ArrayList<String>) ScalaUtil.javaList(r.getAs("Customer_logEvents")));
+						
+						res.setOrder(A);
+						res.setClient(B);
+						return res;
+					}
+		
+				},Encoders.bean(Buys.class)
+			);
+		
+			datasetsPOJO.add(res_Order_clientRef);
+		
+			
+			Dataset<Buys> res_buys_order;
+			Dataset<Order> res_Order;
+			// Role 'client' mapped to EmbeddedObject 'orders' 'Order' containing 'Customer' 
+			client_refilter = new MutableBoolean(false);
+			res_buys_order = buysService.getBuysListInmongoSchemaBuserColorders(client_condition, order_condition, client_refilter, order_refilter);
+			
+			datasetsPOJO.add(res_buys_order);
+			
+			
+			//Join datasets or return 
+			Dataset<Buys> res = fullOuterJoinsBuys(datasetsPOJO);
+			if(res == null)
+				return null;
+		
+			Dataset<Order> lonelyOrder = null;
+			Dataset<Customer> lonelyClient = null;
+			
+		
+		
+			
+			if(order_refilter.booleanValue() || client_refilter.booleanValue())
+				res = res.filter((FilterFunction<Buys>) r -> (order_condition == null || order_condition.evaluate(r.getOrder())) && (client_condition == null || client_condition.evaluate(r.getClient())));
+			
+		
+			return res;
+		
 		}
 	
-	public java.util.List<pojo.Buys> getBuysListByOrderCondition(
+	public Dataset<pojo.Buys> getBuysListByOrderCondition(
 		conditions.Condition<conditions.OrderAttribute> order_condition
 	){
 		return getBuysList(order_condition, null);
 	}
 	
 	public pojo.Buys getBuysByOrder(pojo.Order order) {
-		// TODO using id for selecting
-		return null;
+		conditions.Condition<conditions.OrderAttribute> cond = null;
+		cond = conditions.Condition.simple(conditions.OrderAttribute.id, conditions.Operator.EQUALS, order.getId());
+		Dataset<pojo.Buys> res = getBuysListByOrderCondition(cond);
+		List<pojo.Buys> list = res.collectAsList();
+		if(list.size() > 0)
+			return list.get(0);
+		else
+			return null;
 	}
-	public java.util.List<pojo.Buys> getBuysListByClientCondition(
+	public Dataset<pojo.Buys> getBuysListByClientCondition(
 		conditions.Condition<conditions.CustomerAttribute> client_condition
 	){
 		return getBuysList(null, client_condition);
 	}
 	
-	public java.util.List<pojo.Buys> getBuysListByClient(pojo.Customer client) {
-		// TODO using id for selecting
-		return null;
+	public Dataset<pojo.Buys> getBuysListByClient(pojo.Customer client) {
+		conditions.Condition<conditions.CustomerAttribute> cond = null;
+		cond = conditions.Condition.simple(conditions.CustomerAttribute.id, conditions.Operator.EQUALS, client.getId());
+		Dataset<pojo.Buys> res = getBuysListByClientCondition(cond);
+	return res;
 	}
 	
 	

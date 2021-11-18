@@ -9,14 +9,11 @@ public class Product extends LoggingPojo {
 	private Double price;
 	private String photo;
 
+	private List<Feedback> feedbackListAsReviewedProduct;
 	public enum composed_of {
 		orderedProducts
 	}
 	private List<Order> orderPList;
-	public enum has_reviews {
-		reviewedProduct
-	}
-	private List<Feedback> reviewsList;
 
 	// Empty constructor
 	public Product() {}
@@ -74,18 +71,18 @@ public class Product extends LoggingPojo {
 
 	
 
+	public java.util.List<Feedback> _getFeedbackListAsReviewedProduct() {
+		return feedbackListAsReviewedProduct;
+	}
+
+	public void _setFeedbackListAsReviewedProduct(java.util.List<Feedback> feedbackListAsReviewedProduct) {
+		this.feedbackListAsReviewedProduct = feedbackListAsReviewedProduct;
+	}
 	public List<Order> _getOrderPList() {
 		return orderPList;
 	}
 
 	public void _setOrderPList(List<Order> orderPList) {
 		this.orderPList = orderPList;
-	}
-	public List<Feedback> _getReviewsList() {
-		return reviewsList;
-	}
-
-	public void _setReviewsList(List<Feedback> reviewsList) {
-		this.reviewsList = reviewsList;
 	}
 }

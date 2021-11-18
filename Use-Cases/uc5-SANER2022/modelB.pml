@@ -32,12 +32,12 @@ conceptual schema cs {
 			id
 		}
 	}
-	
-	entity type Feedback {
+
+	relationship type feedback {
+		reviewedProduct[0-N] : Product
+		reviewer[0-N] : Customer,
 		rate : float,
-		content : string,
-		product : string,
-		customer : string
+		content : string
 	}
 	
 	relationship type buys {
@@ -50,15 +50,6 @@ conceptual schema cs {
 		orderedProducts[0-N] : Product
 	}
 	
-	relationship type write{
-		review[0-N] : Feedback
-		reviewer[0-N] : Customer
-	}
-	
-	relationship type has_reviews{
-		reviews[0-N]: Feedback,
-		reviewedProduct[0-N]:Product 
-	}
 }
 
 physical schemas {
@@ -133,15 +124,14 @@ physical schemas {
 }
 
 mapping rules {
+	// Entity types mappings
 	cs.Product(id, title, price,photo) -> kvSchemaB.products(asin, title, price, imgUrl),
 	cs.Customer(id,firstname,lastname, gender, birthday, creationDate, locationip, browser) -> mongoSchemaB.userCol(id, firstName, lastName, gender, birthday, creationDate, locationIP, browserUsed),
-	cs.Feedback(content,rate) -> kvSchemaB.feedback( content, rating),
-	cs.Feedback( customer,product) -> kvSchemaB.feedback( customerid, prodid),
 	cs.Order(id, orderdate) -> relSchemaB.orderTable( orderId, orderDate),
 	cs.Order(id, orderdate, totalprice) -> mongoSchemaB.userCol.orders( id, buydate, totalamount),
-
-	cs.write.review -> kvSchemaB.feedback.writer,
-	cs.has_reviews.reviews -> kvSchemaB.feedback.product,
+	// Relationship types mappings
+	rel : cs.feedback(content,rate) -> kvSchemaB.feedback(content, rating),
+	// Roles mappings
 	cs.composed_of.orderP -> mongoSchemaB.detailOrderCol.orderRef,
 	cs.composed_of.orderedProducts -> mongoSchemaB.detailOrderCol.productRef,
 	cs.buys.order -> relSchemaB.orderTable.clientRef,

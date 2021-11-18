@@ -4,22 +4,22 @@
 	
 	public class BuysTDO extends Buys {
 	
-	private String docSchema_ordersCol_customer_PersonId;
-	public String getDocSchema_ordersCol_customer_PersonId() {
-		return this.docSchema_ordersCol_customer_PersonId;
+	private String relSchemaB_orderTable_clientRef_customerId;
+	public String getRelSchemaB_orderTable_clientRef_customerId() {
+		return this.relSchemaB_orderTable_clientRef_customerId;
 	}
 
-	public void setDocSchema_ordersCol_customer_PersonId( String docSchema_ordersCol_customer_PersonId) {
-		this.docSchema_ordersCol_customer_PersonId = docSchema_ordersCol_customer_PersonId;
+	public void setRelSchemaB_orderTable_clientRef_customerId( String relSchemaB_orderTable_clientRef_customerId) {
+		this.relSchemaB_orderTable_clientRef_customerId = relSchemaB_orderTable_clientRef_customerId;
 	}
 
-	private String docSchema_ordersCol_customer_id;
-	public String getDocSchema_ordersCol_customer_id() {
-		return this.docSchema_ordersCol_customer_id;
+	private String relSchemaB_orderTable_clientRef_id;
+	public String getRelSchemaB_orderTable_clientRef_id() {
+		return this.relSchemaB_orderTable_clientRef_id;
 	}
 
-	public void setDocSchema_ordersCol_customer_id( String docSchema_ordersCol_customer_id) {
-		this.docSchema_ordersCol_customer_id = docSchema_ordersCol_customer_id;
+	public void setRelSchemaB_orderTable_clientRef_id( String relSchemaB_orderTable_clientRef_id) {
+		this.relSchemaB_orderTable_clientRef_id = relSchemaB_orderTable_clientRef_id;
 	}
 
 	

@@ -15,26 +15,26 @@ import conditions.Condition;
 import conditions.Operator;
 import util.Util;
 import conditions.CustomerAttribute;
+import conditions.ProductAttribute;
+import pojo.Product;
+import conditions.CustomerAttribute;
 import conditions.OrderAttribute;
 import pojo.Order;
-import conditions.CustomerAttribute;
-import conditions.FeedbackAttribute;
-import pojo.Feedback;
 
 public abstract class CustomerService {
 	static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(CustomerService.class);
+	protected FeedbackService feedbackService = new dao.impl.FeedbackServiceImpl();
 	protected BuysService buysService = new dao.impl.BuysServiceImpl();
-	protected WriteService writeService = new dao.impl.WriteServiceImpl();
 	
 
 
 	public static enum ROLE_NAME {
-		BUYS_CLIENT, WRITE_REVIEWER
+		FEEDBACK_REVIEWER, BUYS_CLIENT
 	}
 	private static java.util.Map<ROLE_NAME, loading.Loading> defaultLoadingParameters = new java.util.HashMap<ROLE_NAME, loading.Loading>();
 	static {
+		defaultLoadingParameters.put(ROLE_NAME.FEEDBACK_REVIEWER, loading.Loading.LAZY);
 		defaultLoadingParameters.put(ROLE_NAME.BUYS_CLIENT, loading.Loading.LAZY);
-		defaultLoadingParameters.put(ROLE_NAME.WRITE_REVIEWER, loading.Loading.LAZY);
 	}
 	
 	private java.util.Map<ROLE_NAME, loading.Loading> loadingParameters = new java.util.HashMap<ROLE_NAME, loading.Loading>();
@@ -86,7 +86,7 @@ public abstract class CustomerService {
 		MutableBoolean refilterFlag = new MutableBoolean(false);
 		List<Dataset<Customer>> datasets = new ArrayList<Dataset<Customer>>();
 		Dataset<Customer> d = null;
-		d = getCustomerListInCustomerTableFromMysqlbench(condition, refilterFlag);
+		d = getCustomerListInUserColFromMongoModelB(condition, refilterFlag);
 		if(d != null)
 			datasets.add(d);
 		
@@ -106,7 +106,7 @@ public abstract class CustomerService {
 	
 	
 	
-	public abstract Dataset<Customer> getCustomerListInCustomerTableFromMysqlbench(conditions.Condition<conditions.CustomerAttribute> condition, MutableBoolean refilterFlag);
+	public abstract Dataset<Customer> getCustomerListInUserColFromMongoModelB(conditions.Condition<conditions.CustomerAttribute> condition, MutableBoolean refilterFlag);
 	
 	
 	public Customer getCustomerById(String id){
@@ -152,7 +152,7 @@ public abstract class CustomerService {
 	
 	
 	
-	protected static Dataset<Customer> fullOuterJoinsCustomer(List<Dataset<Customer>> datasetsPOJO) {
+	public static Dataset<Customer> fullOuterJoinsCustomer(List<Dataset<Customer>> datasetsPOJO) {
 		return fullOuterJoinsCustomer(datasetsPOJO, "fullouter");
 	}
 	
@@ -343,35 +343,32 @@ public abstract class CustomerService {
 	
 	
 	
-	public Dataset<Customer> getCustomerList(Customer.write role, Feedback feedback) {
-		if(role != null) {
-			if(role.equals(Customer.write.reviewer))
-				return getReviewerListInWriteByReview(feedback);
-		}
-		return null;
+	
+	
+	public abstract Dataset<Customer> getReviewerListInFeedback(conditions.Condition<conditions.ProductAttribute> reviewedProduct_condition,conditions.Condition<conditions.CustomerAttribute> reviewer_condition, conditions.Condition<conditions.FeedbackAttribute> feedback_condition);
+	
+	public Dataset<Customer> getReviewerListInFeedbackByReviewedProductCondition(conditions.Condition<conditions.ProductAttribute> reviewedProduct_condition){
+		return getReviewerListInFeedback(reviewedProduct_condition, null, null);
 	}
 	
-	public Dataset<Customer> getCustomerList(Customer.write role, Condition<FeedbackAttribute> condition) {
-		if(role != null) {
-			if(role.equals(Customer.write.reviewer))
-				return getReviewerListInWriteByReviewCondition(condition);
-		}
-		return null;
+	public Dataset<Customer> getReviewerListInFeedbackByReviewedProduct(pojo.Product reviewedProduct){
+		if(reviewedProduct == null)
+			return null;
+	
+		Condition c;
+		c=Condition.simple(ProductAttribute.id,Operator.EQUALS, reviewedProduct.getId());
+		Dataset<Customer> res = getReviewerListInFeedbackByReviewedProductCondition(c);
+		return res;
 	}
 	
-	public Dataset<Customer> getCustomerList(Customer.write role, Condition<FeedbackAttribute> condition1, Condition<CustomerAttribute> condition2) {
-		if(role != null) {
-			if(role.equals(Customer.write.reviewer))
-				return getReviewerListInWrite(condition1, condition2);
-		}
-		return null;
+	public Dataset<Customer> getReviewerListInFeedbackByReviewerCondition(conditions.Condition<conditions.CustomerAttribute> reviewer_condition){
+		return getReviewerListInFeedback(null, reviewer_condition, null);
 	}
-	
-	
-	
-	
-	
-	
+	public Dataset<Customer> getReviewerListInFeedbackByFeedbackCondition(
+		conditions.Condition<conditions.FeedbackAttribute> feedback_condition
+	){
+		return getReviewerListInFeedback(null, null, feedback_condition);
+	}
 	public abstract Dataset<Customer> getClientListInBuys(conditions.Condition<conditions.OrderAttribute> order_condition,conditions.Condition<conditions.CustomerAttribute> client_condition);
 	
 	public Dataset<Customer> getClientListInBuysByOrderCondition(conditions.Condition<conditions.OrderAttribute> order_condition){
@@ -391,35 +388,50 @@ public abstract class CustomerService {
 	public Dataset<Customer> getClientListInBuysByClientCondition(conditions.Condition<conditions.CustomerAttribute> client_condition){
 		return getClientListInBuys(null, client_condition);
 	}
-	public abstract Dataset<Customer> getReviewerListInWrite(conditions.Condition<conditions.FeedbackAttribute> review_condition,conditions.Condition<conditions.CustomerAttribute> reviewer_condition);
-	
-	public Dataset<Customer> getReviewerListInWriteByReviewCondition(conditions.Condition<conditions.FeedbackAttribute> review_condition){
-		return getReviewerListInWrite(review_condition, null);
-	}
-	
-	public Dataset<Customer> getReviewerListInWriteByReview(pojo.Feedback review){
-		if(review == null)
-			return null;
-	
-		Condition c;
-		c=null;
-		Dataset<Customer> res = getReviewerListInWriteByReviewCondition(c);
-		return res;
-	}
-	
-	public Dataset<Customer> getReviewerListInWriteByReviewerCondition(conditions.Condition<conditions.CustomerAttribute> reviewer_condition){
-		return getReviewerListInWrite(null, reviewer_condition);
-	}
 	
 	
 	public abstract boolean insertCustomer(Customer customer);
 	
-	public abstract boolean insertCustomerInCustomerTableFromMysqlbench(Customer customer); 
+	public abstract boolean insertCustomerInUserColFromMongoModelB(Customer customer); 
 	public abstract void updateCustomerList(conditions.Condition<conditions.CustomerAttribute> condition, conditions.SetClause<conditions.CustomerAttribute> set);
 	
 	public void updateCustomer(pojo.Customer customer) {
 		//TODO using the id
 		return;
+	}
+	public abstract void updateReviewerListInFeedback(
+		conditions.Condition<conditions.ProductAttribute> reviewedProduct_condition,
+		conditions.Condition<conditions.CustomerAttribute> reviewer_condition,
+		conditions.Condition<conditions.FeedbackAttribute> feedback,
+		conditions.SetClause<conditions.CustomerAttribute> set
+	);
+	
+	public void updateReviewerListInFeedbackByReviewedProductCondition(
+		conditions.Condition<conditions.ProductAttribute> reviewedProduct_condition,
+		conditions.SetClause<conditions.CustomerAttribute> set
+	){
+		updateReviewerListInFeedback(reviewedProduct_condition, null, null, set);
+	}
+	
+	public void updateReviewerListInFeedbackByReviewedProduct(
+		pojo.Product reviewedProduct,
+		conditions.SetClause<conditions.CustomerAttribute> set 
+	){
+		//TODO get id in condition
+		return;	
+	}
+	
+	public void updateReviewerListInFeedbackByReviewerCondition(
+		conditions.Condition<conditions.CustomerAttribute> reviewer_condition,
+		conditions.SetClause<conditions.CustomerAttribute> set
+	){
+		updateReviewerListInFeedback(null, reviewer_condition, null, set);
+	}
+	public void updateReviewerListInFeedbackByFeedbackCondition(
+		conditions.Condition<conditions.FeedbackAttribute> feedback_condition,
+		conditions.SetClause<conditions.CustomerAttribute> set
+	){
+		updateReviewerListInFeedback(null, null, feedback_condition, set);
 	}
 	public abstract void updateClientListInBuys(
 		conditions.Condition<conditions.OrderAttribute> order_condition,
@@ -449,34 +461,6 @@ public abstract class CustomerService {
 	){
 		updateClientListInBuys(null, client_condition, set);
 	}
-	public abstract void updateReviewerListInWrite(
-		conditions.Condition<conditions.FeedbackAttribute> review_condition,
-		conditions.Condition<conditions.CustomerAttribute> reviewer_condition,
-		
-		conditions.SetClause<conditions.CustomerAttribute> set
-	);
-	
-	public void updateReviewerListInWriteByReviewCondition(
-		conditions.Condition<conditions.FeedbackAttribute> review_condition,
-		conditions.SetClause<conditions.CustomerAttribute> set
-	){
-		updateReviewerListInWrite(review_condition, null, set);
-	}
-	
-	public void updateReviewerListInWriteByReview(
-		pojo.Feedback review,
-		conditions.SetClause<conditions.CustomerAttribute> set 
-	){
-		//TODO get id in condition
-		return;	
-	}
-	
-	public void updateReviewerListInWriteByReviewerCondition(
-		conditions.Condition<conditions.CustomerAttribute> reviewer_condition,
-		conditions.SetClause<conditions.CustomerAttribute> set
-	){
-		updateReviewerListInWrite(null, reviewer_condition, set);
-	}
 	
 	
 	public abstract void deleteCustomerList(conditions.Condition<conditions.CustomerAttribute> condition);
@@ -484,6 +468,34 @@ public abstract class CustomerService {
 	public void deleteCustomer(pojo.Customer customer) {
 		//TODO using the id
 		return;
+	}
+	public abstract void deleteReviewerListInFeedback(	
+		conditions.Condition<conditions.ProductAttribute> reviewedProduct_condition,	
+		conditions.Condition<conditions.CustomerAttribute> reviewer_condition,
+		conditions.Condition<conditions.FeedbackAttribute> feedback);
+	
+	public void deleteReviewerListInFeedbackByReviewedProductCondition(
+		conditions.Condition<conditions.ProductAttribute> reviewedProduct_condition
+	){
+		deleteReviewerListInFeedback(reviewedProduct_condition, null, null);
+	}
+	
+	public void deleteReviewerListInFeedbackByReviewedProduct(
+		pojo.Product reviewedProduct 
+	){
+		//TODO get id in condition
+		return;	
+	}
+	
+	public void deleteReviewerListInFeedbackByReviewerCondition(
+		conditions.Condition<conditions.CustomerAttribute> reviewer_condition
+	){
+		deleteReviewerListInFeedback(null, reviewer_condition, null);
+	}
+	public void deleteReviewerListInFeedbackByFeedbackCondition(
+		conditions.Condition<conditions.FeedbackAttribute> feedback_condition
+	){
+		deleteReviewerListInFeedback(null, null, feedback_condition);
 	}
 	public abstract void deleteClientListInBuys(	
 		conditions.Condition<conditions.OrderAttribute> order_condition,	
@@ -506,28 +518,6 @@ public abstract class CustomerService {
 		conditions.Condition<conditions.CustomerAttribute> client_condition
 	){
 		deleteClientListInBuys(null, client_condition);
-	}
-	public abstract void deleteReviewerListInWrite(	
-		conditions.Condition<conditions.FeedbackAttribute> review_condition,	
-		conditions.Condition<conditions.CustomerAttribute> reviewer_condition);
-	
-	public void deleteReviewerListInWriteByReviewCondition(
-		conditions.Condition<conditions.FeedbackAttribute> review_condition
-	){
-		deleteReviewerListInWrite(review_condition, null);
-	}
-	
-	public void deleteReviewerListInWriteByReview(
-		pojo.Feedback review 
-	){
-		//TODO get id in condition
-		return;	
-	}
-	
-	public void deleteReviewerListInWriteByReviewerCondition(
-		conditions.Condition<conditions.CustomerAttribute> reviewer_condition
-	){
-		deleteReviewerListInWrite(null, reviewer_condition);
 	}
 	
 }

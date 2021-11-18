@@ -128,7 +128,7 @@ public class SimpleCondition<E> extends Condition<E> {
 
 		return operator.evaluate(objectValue, this.getValue());
 	}
-	private boolean evaluateFeedback(Feedback obj) {
+		private boolean evaluateFeedback(Feedback obj) {
 		if(obj == null)
 			return false;
 		if(this.operator == null)
@@ -141,10 +141,6 @@ public class SimpleCondition<E> extends Condition<E> {
 			objectValue = obj.getRate();
 		if(attr == FeedbackAttribute.content)
 			objectValue = obj.getContent();
-		if(attr == FeedbackAttribute.product)
-			objectValue = obj.getProduct();
-		if(attr == FeedbackAttribute.customer)
-			objectValue = obj.getCustomer();
 
 		return operator.evaluate(objectValue, this.getValue());
 	}

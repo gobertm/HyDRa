@@ -33,11 +33,11 @@ conceptual schema cs {
 		}
 	}
 	
-	entity type Feedback {
+	relationship type feedback {
+		reviewedProduct[0-N] : Product
+		reviewer[0-N] : Customer,
 		rate : float,
-		content : string,
-		product : string,
-		customer : string
+		content : string
 	}
 	
 	relationship type buys {
@@ -50,15 +50,6 @@ conceptual schema cs {
 		orderedProducts[0-N] : Product
 	}
 	
-	relationship type write{
-		review[0-N] : Feedback
-		reviewer[0-N] : Customer
-	}
-	
-	relationship type has_reviews{
-		reviews[0-N]: Feedback,
-		reviewedProduct[0-N]:Product 
-	}
 }
 
 physical schemas {
@@ -119,15 +110,14 @@ physical schemas {
 }
 
 mapping rules {
+	// Entity types mappings
 	cs.Product(id, title, price,photo) -> relSchema.productTable(asin, title, price, imgUrl),
 	cs.Product( id, title, price) -> docSchema.ordersCol.Orderline( asin, title, price),
 	cs.Customer(id,firstname,lastname, gender, birthday, creationDate, locationip, browser) -> relSchema.customerTable(id, firstName, lastName, gender, birthday, creationDate, locationIP, browserUsed),
-	cs.Feedback(content,rate) -> kvSchema.feedback( content, rating),
-	cs.Feedback( customer,product) -> kvSchema.feedback( customerid, prodid),
 	cs.Order(id, orderdate, totalprice) -> docSchema.ordersCol( OrderId, OrderDate, TotalPrice),
-	
-	cs.write.review -> kvSchema.feedback.customer1,
-	cs.has_reviews.reviews -> kvSchema.feedback.product,
+	// Relationship types mappings
+	rel : cs.feedback(content,rate) -> kvSchema.feedback(content, rating),
+	// Roles mappings
 	cs.buys.order -> docSchema.ordersCol.customer,
 	cs.composed_of.orderP -> docSchema.ordersCol.Orderline()
 }

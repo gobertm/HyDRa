@@ -13,14 +13,11 @@ public class Customer extends LoggingPojo {
 	private String locationip;
 	private String browser;
 
+	private List<Feedback> feedbackListAsReviewer;
 	public enum buys {
 		client
 	}
 	private List<Order> orderList;
-	public enum write {
-		reviewer
-	}
-	private List<Feedback> reviewList;
 
 	// Empty constructor
 	public Customer() {}
@@ -114,18 +111,18 @@ public class Customer extends LoggingPojo {
 
 	
 
+	public java.util.List<Feedback> _getFeedbackListAsReviewer() {
+		return feedbackListAsReviewer;
+	}
+
+	public void _setFeedbackListAsReviewer(java.util.List<Feedback> feedbackListAsReviewer) {
+		this.feedbackListAsReviewer = feedbackListAsReviewer;
+	}
 	public List<Order> _getOrderList() {
 		return orderList;
 	}
 
 	public void _setOrderList(List<Order> orderList) {
 		this.orderList = orderList;
-	}
-	public List<Feedback> _getReviewList() {
-		return reviewList;
-	}
-
-	public void _setReviewList(List<Feedback> reviewList) {
-		this.reviewList = reviewList;
 	}
 }

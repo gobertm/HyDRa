@@ -52,345 +52,104 @@ public class ProductServiceImpl extends ProductService {
 	
 	
 	
-	public static String getBSONMatchQueryInOrdersColFromMongobench(Condition<ProductAttribute> condition, MutableBoolean refilterFlag) {	
-		String res = null;	
-		if(condition != null) {
-			if(condition instanceof SimpleCondition) {
-				ProductAttribute attr = ((SimpleCondition<ProductAttribute>) condition).getAttribute();
-				Operator op = ((SimpleCondition<ProductAttribute>) condition).getOperator();
-				Object value = ((SimpleCondition<ProductAttribute>) condition).getValue();
-				if(value != null) {
-					String valueString = Util.transformBSONValue(value);
-					boolean isConditionAttrEncountered = false;
 	
-					if(attr == ProductAttribute.id ) {
-						isConditionAttrEncountered = true;
-					
-						String mongoOp = op.getMongoDBOperator();
-						String preparedValue = valueString;
-						if(op == Operator.CONTAINS && valueString != null) {
-							preparedValue = "'.*" + Util.escapeReservedRegexMongo(valueString)  + ".*'";
-						} else {
-							preparedValue = Util.getDelimitedMongoValue(value.getClass(), preparedValue);
-						}
-						res = "asin': {" + mongoOp + ": " + preparedValue + "}";
-	
-						res = "Orderline." + res;
-					res = "'" + res;
-					}
-					if(attr == ProductAttribute.title ) {
-						isConditionAttrEncountered = true;
-					
-						String mongoOp = op.getMongoDBOperator();
-						String preparedValue = valueString;
-						if(op == Operator.CONTAINS && valueString != null) {
-							preparedValue = "'.*" + Util.escapeReservedRegexMongo(valueString)  + ".*'";
-						} else {
-							preparedValue = Util.getDelimitedMongoValue(value.getClass(), preparedValue);
-						}
-						res = "title': {" + mongoOp + ": " + preparedValue + "}";
-	
-						res = "Orderline." + res;
-					res = "'" + res;
-					}
-					if(attr == ProductAttribute.price ) {
-						isConditionAttrEncountered = true;
-					
-						String mongoOp = op.getMongoDBOperator();
-						String preparedValue = valueString;
-						if(op == Operator.CONTAINS && valueString != null) {
-							preparedValue = "'.*" + Util.escapeReservedRegexMongo(valueString)  + ".*'";
-						} else {
-							preparedValue = Util.getDelimitedMongoValue(value.getClass(), preparedValue);
-						}
-						res = "price': {" + mongoOp + ": " + preparedValue + "}";
-	
-						res = "Orderline." + res;
-					res = "'" + res;
-					}
-					if(!isConditionAttrEncountered) {
-						refilterFlag.setValue(true);
-						res = "$expr: {$eq:[1,1]}";
-					}
-					
-				}
-			}
-	
-			if(condition instanceof AndCondition) {
-				String bsonLeft = getBSONMatchQueryInOrdersColFromMongobench(((AndCondition)condition).getLeftCondition(), refilterFlag);
-				String bsonRight = getBSONMatchQueryInOrdersColFromMongobench(((AndCondition)condition).getRightCondition(), refilterFlag);			
-				if(bsonLeft == null && bsonRight == null)
-					return null;
-				if(bsonLeft == null)
-					return bsonRight;
-				if(bsonRight == null)
-					return bsonLeft;
-				res = " $and: [ {" + bsonLeft + "}, {" + bsonRight + "}] ";
-			}
-	
-			if(condition instanceof OrCondition) {
-				String bsonLeft = getBSONMatchQueryInOrdersColFromMongobench(((OrCondition)condition).getLeftCondition(), refilterFlag);
-				String bsonRight = getBSONMatchQueryInOrdersColFromMongobench(((OrCondition)condition).getRightCondition(), refilterFlag);			
-				if(bsonLeft == null && bsonRight == null)
-					return null;
-				if(bsonLeft == null)
-					return bsonRight;
-				if(bsonRight == null)
-					return bsonLeft;
-				res = " $or: [ {" + bsonLeft + "}, {" + bsonRight + "}] ";	
-			}
-	
-			
-	
-			
+	//TODO redis
+	public Dataset<Product> getProductListInProductsFromRedisModelB(conditions.Condition<conditions.ProductAttribute> condition, MutableBoolean refilterFlag){
+		// Build the key pattern
+		//  - If the condition attribute is in the key pattern, replace by the value. Only if operator is EQUALS.
+		//  - Replace all other fields of key pattern by a '*' 
+		String keypattern= "", keypatternAllVariables="";
+		String valueCond=null;
+		String finalKeypattern;
+		List<String> fieldsListInKey = new ArrayList<>();
+		Set<ProductAttribute> keyAttributes = new HashSet<>();
+		keypattern=keypattern.concat("PRODUCT:");
+		keypatternAllVariables=keypatternAllVariables.concat("PRODUCT:");
+		if(!Util.containsOrCondition(condition)){
+			valueCond=Util.getStringValue(Util.getValueOfAttributeInEqualCondition(condition,ProductAttribute.id));
+			keyAttributes.add(ProductAttribute.id);
 		}
-	
-		return res;
-	}
-	
-	public Dataset<Product> getProductListInOrdersColFromMongobench(conditions.Condition<conditions.ProductAttribute> condition, MutableBoolean refilterFlag){
-		String bsonQuery = ProductServiceImpl.getBSONMatchQueryInOrdersColFromMongobench(condition, refilterFlag);
-		if(bsonQuery != null) {
-			bsonQuery = "{$match: {" + bsonQuery + "}}";	
-		} 
-		
-		Dataset<Row> dataset = dbconnection.SparkConnectionMgr.getSparkSessionForMongoDB("mongobench", "ordersCol", bsonQuery);
-	
-		Dataset<Product> res = dataset.flatMap((FlatMapFunction<Row, Product>) r -> {
-				List<Product> list_res = new ArrayList<Product>();
-				Integer groupIndex = null;
-				String regex = null;
-				String value = null;
-				Pattern p = null;
-				Matcher m = null;
-				boolean matches = false;
-				Row nestedRow = null;
-	
-				boolean addedInList = false;
-				Row r1 = r;
-				Product product1 = new Product();
-					boolean toAdd1  = false;
-					WrappedArray array1  = null;
-					array1 = r1.getAs("Orderline");
-					if(array1!= null) {
-						for (int i2 = 0; i2 < array1.size(); i2++){
-							Row r2 = (Row) array1.apply(i2);
-							Product product2 = (Product) product1.clone();
-							boolean toAdd2  = false;
-							WrappedArray array2  = null;
-							// 	attribute Product.id for field asin			
-							nestedRow =  r2;
-							if(nestedRow != null && Arrays.asList(nestedRow.schema().fieldNames()).contains("asin")) {
-								if(nestedRow.getAs("asin")==null)
-									product2.setId(null);
-								else{
-									product2.setId(Util.getStringValue(nestedRow.getAs("asin")));
-									toAdd2 = true;					
-									}
-							}
-							// 	attribute Product.title for field title			
-							nestedRow =  r2;
-							if(nestedRow != null && Arrays.asList(nestedRow.schema().fieldNames()).contains("title")) {
-								if(nestedRow.getAs("title")==null)
-									product2.setTitle(null);
-								else{
-									product2.setTitle(Util.getStringValue(nestedRow.getAs("title")));
-									toAdd2 = true;					
-									}
-							}
-							// 	attribute Product.price for field price			
-							nestedRow =  r2;
-							if(nestedRow != null && Arrays.asList(nestedRow.schema().fieldNames()).contains("price")) {
-								if(nestedRow.getAs("price")==null)
-									product2.setPrice(null);
-								else{
-									product2.setPrice(Util.getDoubleValue(nestedRow.getAs("price")));
-									toAdd2 = true;					
-									}
-							}
-							if(toAdd2&& (condition ==null || refilterFlag.booleanValue() || condition.evaluate(product2))) {
-								list_res.add(product2);
-								addedInList = true;
-							} 
-							if(addedInList)
-								toAdd1 = false;
-						}
-					}
-					
-					if(toAdd1) {
-						list_res.add(product1);
-						addedInList = true;
-					} 
-					
-					
-				
-				return list_res.iterator();
-	
-		}, Encoders.bean(Product.class));
-		res= res.dropDuplicates(new String[]{"id"});
-		return res;
-		
-	}
-	
-	public static Pair<String, List<String>> getSQLWhereClauseInProductTableFromMysqlbench(Condition<ProductAttribute> condition, MutableBoolean refilterFlag) {
-		return getSQLWhereClauseInProductTableFromMysqlbenchWithTableAlias(condition, refilterFlag, "");
-	}
-	
-	public static Pair<String, List<String>> getSQLWhereClauseInProductTableFromMysqlbenchWithTableAlias(Condition<ProductAttribute> condition, MutableBoolean refilterFlag, String tableAlias) {
-		String where = null;	
-		List<String> preparedValues = new java.util.ArrayList<String>();
-		if(condition != null) {
+		else{
+			valueCond=null;
+			refilterFlag.setValue(true);
+		}
+		if(valueCond==null)
+			keypattern=keypattern.concat("*");
+		else
+			keypattern=keypattern.concat(valueCond);
+		fieldsListInKey.add("asin");
+		keypatternAllVariables=keypatternAllVariables.concat("*");
+		if(!refilterFlag.booleanValue()){
+			Set<ProductAttribute> conditionAttributes = Util.getConditionAttributes(condition);
+			for (ProductAttribute a : conditionAttributes) {
+				if (!keyAttributes.contains(a)) {
+					refilterFlag.setValue(true);
+					break;
+				}
+			}
+		}
 			
-			if(condition instanceof SimpleCondition) {
-				ProductAttribute attr = ((SimpleCondition<ProductAttribute>) condition).getAttribute();
-				Operator op = ((SimpleCondition<ProductAttribute>) condition).getOperator();
-				Object value = ((SimpleCondition<ProductAttribute>) condition).getValue();
-				if(value != null) {
-					boolean isConditionAttrEncountered = false;
-					if(attr == ProductAttribute.id ) {
-						isConditionAttrEncountered = true;
-						String valueString = Util.transformSQLValue(value);
-						String sqlOp = op.getSQLOperator();
-						String preparedValue = valueString;
-						if(op == Operator.CONTAINS && valueString != null) {
-							preparedValue = "%" + Util.escapeReservedCharSQL(valueString)  + "%";
-						}
-						
-						where = tableAlias + "asin " + sqlOp + " ?";
-						preparedValues.add(preparedValue);
-					}
-					if(attr == ProductAttribute.title ) {
-						isConditionAttrEncountered = true;
-						String valueString = Util.transformSQLValue(value);
-						String sqlOp = op.getSQLOperator();
-						String preparedValue = valueString;
-						if(op == Operator.CONTAINS && valueString != null) {
-							preparedValue = "%" + Util.escapeReservedCharSQL(valueString)  + "%";
-						}
-						
-						where = tableAlias + "title " + sqlOp + " ?";
-						preparedValues.add(preparedValue);
-					}
-					if(attr == ProductAttribute.price ) {
-						isConditionAttrEncountered = true;
-						String valueString = Util.transformSQLValue(value);
-						String sqlOp = op.getSQLOperator();
-						String preparedValue = valueString;
-						if(op == Operator.CONTAINS && valueString != null) {
-							preparedValue = "%" + Util.escapeReservedCharSQL(valueString)  + "%";
-						}
-						
-						where = tableAlias + "price " + sqlOp + " ?";
-						preparedValues.add(preparedValue);
-					}
-					if(attr == ProductAttribute.photo ) {
-						isConditionAttrEncountered = true;
-						String valueString = Util.transformSQLValue(value);
-						String sqlOp = op.getSQLOperator();
-						String preparedValue = valueString;
-						if(op == Operator.CONTAINS && valueString != null) {
-							preparedValue = "%" + Util.escapeReservedCharSQL(valueString)  + "%";
-						}
-						
-						where = tableAlias + "imgUrl " + sqlOp + " ?";
-						preparedValues.add(preparedValue);
-					}
-					if(!isConditionAttrEncountered) {
-						refilterFlag.setValue(true);
-						where = "1 = 1";
-					}
-				}
-			}
-	
-			if(condition instanceof AndCondition) {
-				Pair<String, List<String>> pairLeft = getSQLWhereClauseInProductTableFromMysqlbench(((AndCondition) condition).getLeftCondition(), refilterFlag);
-				Pair<String, List<String>> pairRight = getSQLWhereClauseInProductTableFromMysqlbench(((AndCondition) condition).getRightCondition(), refilterFlag);
-				String whereLeft = pairLeft.getKey();
-				String whereRight = pairRight.getKey();
-				List<String> leftValues = pairLeft.getValue();
-				List<String> rightValues = pairRight.getValue();
-				if(whereLeft != null || whereRight != null) {
-					if(whereLeft == null)
-						where = whereRight;
-					else
-						if(whereRight == null)
-							where = whereLeft;
-						else
-							where = "(" + whereLeft + " AND " + whereRight + ")";
-					preparedValues.addAll(leftValues);
-					preparedValues.addAll(rightValues);
-				}
-			}
-	
-			if(condition instanceof OrCondition) {
-				Pair<String, List<String>> pairLeft = getSQLWhereClauseInProductTableFromMysqlbench(((OrCondition) condition).getLeftCondition(), refilterFlag);
-				Pair<String, List<String>> pairRight = getSQLWhereClauseInProductTableFromMysqlbench(((OrCondition) condition).getRightCondition(), refilterFlag);
-				String whereLeft = pairLeft.getKey();
-				String whereRight = pairRight.getKey();
-				List<String> leftValues = pairLeft.getValue();
-				List<String> rightValues = pairRight.getValue();
-				if(whereLeft != null || whereRight != null) {
-					if(whereLeft == null)
-						where = whereRight;
-					else
-						if(whereRight == null)
-							where = whereLeft;
-						else
-							where = "(" + whereLeft + " OR " + whereRight + ")";
-					preparedValues.addAll(leftValues);
-					preparedValues.addAll(rightValues);
-				}
-			}
-	
-		}
-	
-		return new ImmutablePair<String, List<String>>(where, preparedValues);
-	}
-	
-	
-	public Dataset<Product> getProductListInProductTableFromMysqlbench(conditions.Condition<conditions.ProductAttribute> condition, MutableBoolean refilterFlag){
-	
-		Pair<String, List<String>> whereClause = ProductServiceImpl.getSQLWhereClauseInProductTableFromMysqlbench(condition, refilterFlag);
-		String where = whereClause.getKey();
-		List<String> preparedValues = whereClause.getValue();
-		for(String preparedValue : preparedValues) {
-			where = where.replaceFirst("\\?", "'" + Util.escapeQuote(preparedValue) + "'");
-		}
-		
-		Dataset<Row> d = dbconnection.SparkConnectionMgr.getDataset("mysqlbench", "productTable", where);
-		
-	
-		Dataset<Product> res = d.map((MapFunction<Row, Product>) r -> {
+		// Find the type of query to perform in order to retrieve a Dataset<Row>
+		// Based on the type of the value. Is a it a simple string or a hash or a list... 
+		Dataset<Row> rows;
+		StructType structType = new StructType(new StructField[] {
+			DataTypes.createStructField("_id", DataTypes.StringType, true), //technical field to store the key.
+			DataTypes.createStructField("asin", DataTypes.StringType, true)
+	,		DataTypes.createStructField("title", DataTypes.StringType, true)
+	,		DataTypes.createStructField("price", DataTypes.StringType, true)
+	,		DataTypes.createStructField("imgUrl", DataTypes.StringType, true)
+		});
+		rows = SparkConnectionMgr.getRowsFromKeyValueHashes("redisModelB",keypattern, structType);
+		if(rows == null || rows.isEmpty())
+				return null;
+		boolean isStriped = (StringUtils.countMatches(keypattern, "*") == 1 && keypattern.endsWith("*"));
+		String prefix=isStriped?keypattern.substring(0, keypattern.length() - 1):"";
+		finalKeypattern = keypatternAllVariables;
+		Dataset<Product> res = rows.map((MapFunction<Row, Product>) r -> {
 					Product product_res = new Product();
-					Integer groupIndex = null;
+					Integer groupindex = null;
 					String regex = null;
 					String value = null;
-					Pattern p = null;
-					Matcher m = null;
+					Pattern p, pattern = null;
+					Matcher m, match = null;
 					boolean matches = false;
-					
+					String key = isStriped ? prefix + r.getAs("_id") : r.getAs("_id");
+					// Spark Redis automatically strips leading character if the pattern provided contains a single '*' at the end.				
+					pattern = Pattern.compile("\\*");
+			        match = pattern.matcher(finalKeypattern);
+					regex = finalKeypattern.replaceAll("\\*","(.*)");
+					p = Pattern.compile(regex);
+					m = p.matcher(key);
+					matches = m.find();
 					// attribute [Product.Id]
-					String id = Util.getStringValue(r.getAs("asin"));
-					product_res.setId(id);
-					
+					// Attribute mapped in a key.
+					groupindex = fieldsListInKey.indexOf("asin")+1;
+					if(groupindex==null) {
+						logger.warn("Attribute 'Product' mapped physical field 'asin' found in key but can't get index in build keypattern '{}'.", finalKeypattern);
+					}
+					String id = null;
+					if(matches) {
+						id = m.group(groupindex.intValue());
+					} else {
+						logger.warn("Cannot retrieve value for Productid attribute stored in db redisModelB. Probably due to an ambiguous regex.");
+						product_res.addLogEvent("Cannot retrieve value for Product.id attribute stored in db redisModelB. Probably due to an ambiguous regex.");
+					}
+					product_res.setId(id == null ? null : id);
 					// attribute [Product.Title]
-					String title = Util.getStringValue(r.getAs("title"));
+					String title = r.getAs("title") == null ? null : r.getAs("title");
 					product_res.setTitle(title);
-					
 					// attribute [Product.Price]
-					Double price = Util.getDoubleValue(r.getAs("price"));
+					Double price = r.getAs("price") == null ? null : Double.parseDouble(r.getAs("price"));
 					product_res.setPrice(price);
-					
 					// attribute [Product.Photo]
-					String photo = Util.getStringValue(r.getAs("imgUrl"));
+					String photo = r.getAs("imgUrl") == null ? null : r.getAs("imgUrl");
 					product_res.setPhoto(photo);
 	
-	
-	
-					return product_res;
+						return product_res;
 				}, Encoders.bean(Product.class));
-	
-	
+		if(refilterFlag.booleanValue())
+			res = res.filter((FilterFunction<Product>) r -> condition == null || condition.evaluate(r));
+		res=res.dropDuplicates(new String[] {"id"});
 		return res;
 		
 	}
@@ -400,87 +159,16 @@ public class ProductServiceImpl extends ProductService {
 	
 	
 	
-	public Dataset<Product> getOrderedProductsListInComposed_of(conditions.Condition<conditions.OrderAttribute> orderP_condition,conditions.Condition<conditions.ProductAttribute> orderedProducts_condition)		{
-		MutableBoolean orderedProducts_refilter = new MutableBoolean(false);
-		List<Dataset<Product>> datasetsPOJO = new ArrayList<Dataset<Product>>();
-		Dataset<Order> all = null;
-		boolean all_already_persisted = false;
-		MutableBoolean orderP_refilter;
-		org.apache.spark.sql.Column joinCondition = null;
-		
-		
-		Dataset<Composed_of> res_composed_of_orderedProducts;
-		Dataset<Product> res_Product;
-		// Role 'orderP' mapped to EmbeddedObject 'Orderline' 'Product' containing 'Order' 
-		orderP_refilter = new MutableBoolean(false);
-		res_composed_of_orderedProducts = composed_ofService.getComposed_ofListIndocSchemaordersColOrderline(orderP_condition, orderedProducts_condition, orderP_refilter, orderedProducts_refilter);
-		if(orderP_refilter.booleanValue()) {
-			if(all == null)
-				all = new OrderServiceImpl().getOrderList(orderP_condition);
-			joinCondition = null;
-			joinCondition = res_composed_of_orderedProducts.col("orderP.id").equalTo(all.col("id"));
-			if(joinCondition == null)
-				res_Product = res_composed_of_orderedProducts.join(all).select("orderedProducts.*").as(Encoders.bean(Product.class));
-			else
-				res_Product = res_composed_of_orderedProducts.join(all, joinCondition).select("orderedProducts.*").as(Encoders.bean(Product.class));
-		
-		} else
-			res_Product = res_composed_of_orderedProducts.map((MapFunction<Composed_of,Product>) r -> r.getOrderedProducts(), Encoders.bean(Product.class));
-		res_Product = res_Product.dropDuplicates(new String[] {"id"});
-		datasetsPOJO.add(res_Product);
-		
-		
-		//Join datasets or return 
-		Dataset<Product> res = fullOuterJoinsProduct(datasetsPOJO);
-		if(res == null)
-			return null;
-	
-		List<Dataset<Product>> lonelyProductList = new ArrayList<Dataset<Product>>();
-		lonelyProductList.add(getProductListInProductTableFromMysqlbench(orderedProducts_condition, new MutableBoolean(false)));
-		Dataset<Product> lonelyProduct = fullOuterJoinsProduct(lonelyProductList);
-		if(lonelyProduct != null) {
-			res = fullLeftOuterJoinsProduct(Arrays.asList(res, lonelyProduct));
-		}
-		if(orderedProducts_refilter.booleanValue())
-			res = res.filter((FilterFunction<Product>) r -> orderedProducts_condition == null || orderedProducts_condition.evaluate(r));
-		
-	
-		return res;
-		}
-	public Dataset<Product> getReviewedProductListInHas_reviews(conditions.Condition<conditions.FeedbackAttribute> reviews_condition,conditions.Condition<conditions.ProductAttribute> reviewedProduct_condition)		{
+	public Dataset<Product> getReviewedProductListInFeedback(conditions.Condition<conditions.ProductAttribute> reviewedProduct_condition,conditions.Condition<conditions.CustomerAttribute> reviewer_condition, conditions.Condition<conditions.FeedbackAttribute> feedback_condition)		{
 		MutableBoolean reviewedProduct_refilter = new MutableBoolean(false);
 		List<Dataset<Product>> datasetsPOJO = new ArrayList<Dataset<Product>>();
-		Dataset<Feedback> all = null;
+		Dataset<Customer> all = null;
 		boolean all_already_persisted = false;
-		MutableBoolean reviews_refilter;
+		MutableBoolean reviewer_refilter;
 		org.apache.spark.sql.Column joinCondition = null;
 		
-		reviews_refilter = new MutableBoolean(false);
-		// For role 'reviews' in reference 'product'  B->A Scenario
-		Dataset<FeedbackTDO> feedbackTDOproductreviews = has_reviewsService.getFeedbackTDOListReviewsInProductInFeedbackFromKvSchema(reviews_condition, reviews_refilter);
-		Dataset<ProductTDO> productTDOproductreviewedProduct = has_reviewsService.getProductTDOListReviewedProductInProductInFeedbackFromKvSchema(reviewedProduct_condition, reviewedProduct_refilter);
-		if(reviews_refilter.booleanValue()) {
-			if(all == null)
-				all = new FeedbackServiceImpl().getFeedbackList(reviews_condition);
-			joinCondition = null;
-			if(joinCondition == null)
-				feedbackTDOproductreviews = feedbackTDOproductreviews.as("A").join(all).select("A.*").as(Encoders.bean(FeedbackTDO.class));
-			else
-				feedbackTDOproductreviews = feedbackTDOproductreviews.as("A").join(all, joinCondition).select("A.*").as(Encoders.bean(FeedbackTDO.class));
-		}
-		Dataset<Row> res_product = 
-			productTDOproductreviewedProduct.join(feedbackTDOproductreviews
-				.withColumnRenamed("rate", "Feedback_rate")
-				.withColumnRenamed("content", "Feedback_content")
-				.withColumnRenamed("product", "Feedback_product")
-				.withColumnRenamed("customer", "Feedback_customer")
-				.withColumnRenamed("logEvents", "Feedback_logEvents"),
-				productTDOproductreviewedProduct.col("kvSchema_feedback_product_asin").equalTo(feedbackTDOproductreviews.col("kvSchema_feedback_product_prodid")));
-		Dataset<Product> res_Product_product = res_product.select( "id", "title", "price", "photo", "logEvents").as(Encoders.bean(Product.class));
-		res_Product_product = res_Product_product.dropDuplicates(new String[] {"id"});
-		datasetsPOJO.add(res_Product_product);
 		
-		Dataset<Has_reviews> res_has_reviews_reviewedProduct;
+		Dataset<Feedback> res_feedback_reviewedProduct;
 		Dataset<Product> res_Product;
 		
 		
@@ -490,7 +178,7 @@ public class ProductServiceImpl extends ProductService {
 			return null;
 	
 		List<Dataset<Product>> lonelyProductList = new ArrayList<Dataset<Product>>();
-		lonelyProductList.add(getProductListInOrdersColFromMongobench(reviewedProduct_condition, new MutableBoolean(false)));
+		lonelyProductList.add(getProductListInProductsFromRedisModelB(reviewedProduct_condition, new MutableBoolean(false)));
 		Dataset<Product> lonelyProduct = fullOuterJoinsProduct(lonelyProductList);
 		if(lonelyProduct != null) {
 			res = fullLeftOuterJoinsProduct(Arrays.asList(res, lonelyProduct));
@@ -501,40 +189,120 @@ public class ProductServiceImpl extends ProductService {
 	
 		return res;
 		}
+	public Dataset<Product> getOrderedProductsListInComposed_of(conditions.Condition<conditions.OrderAttribute> orderP_condition,conditions.Condition<conditions.ProductAttribute> orderedProducts_condition)		{
+		MutableBoolean orderedProducts_refilter = new MutableBoolean(false);
+		List<Dataset<Product>> datasetsPOJO = new ArrayList<Dataset<Product>>();
+		Dataset<Order> all = null;
+		boolean all_already_persisted = false;
+		MutableBoolean orderP_refilter;
+		org.apache.spark.sql.Column joinCondition = null;
+		// join physical structure A<-AB->B
+		// (A) (AB) (B)  OR (A B) (AB) Join table is 'alone'
+		orderP_refilter = new MutableBoolean(false);
+		Dataset<ProductTDO> productTDOproductReforderedProducts = composed_ofService.getProductTDOListOrderedProductsInProductRefInProductsFromKvSchemaB(orderedProducts_condition, orderedProducts_refilter);
+		Dataset<Composed_ofTDO> composed_ofTDOproductRef_orderRef = composed_ofService.getComposed_ofTDOListInComposed_of_ProductRef_OrderRefInDetailOrderColFromMongoSchemaB();
+		Dataset<OrderTDO> orderTDOproductReforderP = composed_ofService.getOrderTDOListOrderPInOrderRefInOrderTableFromRelSchemaB(orderP_condition, orderP_refilter);
+		if(orderP_refilter.booleanValue()) {
+			if(all == null)
+					all = new OrderServiceImpl().getOrderList(orderP_condition);
+			joinCondition = null;
+				joinCondition = orderTDOproductReforderP.col("id").equalTo(all.col("id"));
+				orderTDOproductReforderP = orderTDOproductReforderP.as("A").join(all, joinCondition).select("A.*").as(Encoders.bean(OrderTDO.class));
+		}
+		Dataset<Row> res_productRef = productTDOproductReforderedProducts.join(composed_ofTDOproductRef_orderRef.withColumnRenamed("logEvents", "composed_of_logEvents"),
+										productTDOproductReforderedProducts.col("mongoSchemaB_detailOrderCol_productRef_asin").equalTo(composed_ofTDOproductRef_orderRef.col("mongoSchemaB_detailOrderCol_productRef_productid")));
+		res_productRef = res_productRef.join(orderTDOproductReforderP
+			.withColumnRenamed("id", "Order_id")
+			.withColumnRenamed("orderdate", "Order_orderdate")
+			.withColumnRenamed("totalprice", "Order_totalprice")
+			.withColumnRenamed("logEvents", "Order_logEvents"),
+			res_productRef.col("mongoSchemaB_detailOrderCol_orderRef_orderid").equalTo(orderTDOproductReforderP.col("mongoSchemaB_detailOrderCol_orderRef_orderId")));
+		Dataset<Product> res_Product_productRef = res_productRef.select( "id", "title", "price", "photo", "logEvents").as(Encoders.bean(Product.class));
+		datasetsPOJO.add(res_Product_productRef.dropDuplicates(new String[] {"id"}));	
+		
+		
+		
+		Dataset<Composed_of> res_composed_of_orderedProducts;
+		Dataset<Product> res_Product;
+		
+		
+		//Join datasets or return 
+		Dataset<Product> res = fullOuterJoinsProduct(datasetsPOJO);
+		if(res == null)
+			return null;
+	
+		if(orderedProducts_refilter.booleanValue())
+			res = res.filter((FilterFunction<Product>) r -> orderedProducts_condition == null || orderedProducts_condition.evaluate(r));
+		
+	
+		return res;
+		}
 	
 	
 	public boolean insertProduct(Product product){
 		// Insert into all mapped standalone AbstractPhysicalStructure 
 		boolean inserted = false;
-			inserted = insertProductInProductTableFromMysqlbench(product) || inserted ;
+			inserted = insertProductInProductsFromRedisModelB(product) || inserted ;
 		return inserted;
 	}
 	
-	public boolean insertProductInProductTableFromMysqlbench(Product product)	{
+	public boolean insertProductInProductsFromRedisModelB(Product product)	{
 		Condition<ProductAttribute> conditionID;
 		String idvalue="";
 		boolean entityExists=false;
 		conditionID = Condition.simple(ProductAttribute.id, Operator.EQUALS, product.getId());
 		idvalue+=product.getId();
-		Dataset res = getProductListInProductTableFromMysqlbench(conditionID,new MutableBoolean(false));
+		Dataset res = getProductListInProductsFromRedisModelB(conditionID,new MutableBoolean(false));
 		entityExists = res != null && !res.isEmpty();
 				
 		if(!entityExists){
-		List<String> columns = new ArrayList<>();
-		List<Object> values = new ArrayList<>();	
-		columns.add("asin");
-		values.add(product.getId());
-		columns.add("title");
-		values.add(product.getTitle());
-		columns.add("price");
-		values.add(product.getPrice());
-		columns.add("imgUrl");
-		values.add(product.getPhoto());
-		DBConnectionMgr.insertInTable(columns, Arrays.asList(values), "productTable", "mysqlbench");
-			logger.info("Inserted [Product] entity ID [{}] in [ProductTable] in database [Mysqlbench]", idvalue);
+			String key="";
+			boolean toAdd = false;
+			key += "PRODUCT:";
+			key += product.getId();
+			List<Tuple2<String,String>> hash = new ArrayList<>();
+			toAdd = false;
+			String fieldname_asin="asin";
+			String value_asin="";
+			// When value is null for a field in the hash we dont add it to the hash.
+			if(toAdd)
+				hash.add(new Tuple2<String,String>(fieldname_asin,value_asin));
+			toAdd = false;
+			String fieldname_title="title";
+			String value_title="";
+			if(product.getTitle()!=null){
+				toAdd = true;
+				value_title += product.getTitle();
+			}
+			// When value is null for a field in the hash we dont add it to the hash.
+			if(toAdd)
+				hash.add(new Tuple2<String,String>(fieldname_title,value_title));
+			toAdd = false;
+			String fieldname_price="price";
+			String value_price="";
+			if(product.getPrice()!=null){
+				toAdd = true;
+				value_price += product.getPrice();
+			}
+			// When value is null for a field in the hash we dont add it to the hash.
+			if(toAdd)
+				hash.add(new Tuple2<String,String>(fieldname_price,value_price));
+			toAdd = false;
+			String fieldname_imgUrl="imgUrl";
+			String value_imgUrl="";
+			if(product.getPhoto()!=null){
+				toAdd = true;
+				value_imgUrl += product.getPhoto();
+			}
+			// When value is null for a field in the hash we dont add it to the hash.
+			if(toAdd)
+				hash.add(new Tuple2<String,String>(fieldname_imgUrl,value_imgUrl));
+			SparkConnectionMgr.writeKeyValueHash(key,hash, "redisModelB");
+	
+			logger.info("Inserted [Product] entity ID [{}] in [Products] in database [RedisModelB]", idvalue);
 		}
 		else
-			logger.warn("[Product] entity ID [{}] already present in [ProductTable] in database [Mysqlbench]", idvalue);
+			logger.warn("[Product] entity ID [{}] already present in [Products] in database [RedisModelB]", idvalue);
 		return !entityExists;
 	} 
 	
@@ -545,6 +313,42 @@ public class ProductServiceImpl extends ProductService {
 	public void updateProduct(pojo.Product product) {
 		//TODO using the id
 		return;
+	}
+	public void updateReviewedProductListInFeedback(
+		conditions.Condition<conditions.ProductAttribute> reviewedProduct_condition,
+		conditions.Condition<conditions.CustomerAttribute> reviewer_condition,
+		conditions.Condition<conditions.FeedbackAttribute> feedback,
+		conditions.SetClause<conditions.ProductAttribute> set
+	){
+		//TODO
+	}
+	
+	public void updateReviewedProductListInFeedbackByReviewedProductCondition(
+		conditions.Condition<conditions.ProductAttribute> reviewedProduct_condition,
+		conditions.SetClause<conditions.ProductAttribute> set
+	){
+		updateReviewedProductListInFeedback(reviewedProduct_condition, null, null, set);
+	}
+	public void updateReviewedProductListInFeedbackByReviewerCondition(
+		conditions.Condition<conditions.CustomerAttribute> reviewer_condition,
+		conditions.SetClause<conditions.ProductAttribute> set
+	){
+		updateReviewedProductListInFeedback(null, reviewer_condition, null, set);
+	}
+	
+	public void updateReviewedProductListInFeedbackByReviewer(
+		pojo.Customer reviewer,
+		conditions.SetClause<conditions.ProductAttribute> set 
+	){
+		//TODO get id in condition
+		return;	
+	}
+	
+	public void updateReviewedProductListInFeedbackByFeedbackCondition(
+		conditions.Condition<conditions.FeedbackAttribute> feedback_condition,
+		conditions.SetClause<conditions.ProductAttribute> set
+	){
+		updateReviewedProductListInFeedback(null, null, feedback_condition, set);
 	}
 	public void updateOrderedProductsListInComposed_of(
 		conditions.Condition<conditions.OrderAttribute> orderP_condition,
@@ -576,36 +380,6 @@ public class ProductServiceImpl extends ProductService {
 	){
 		updateOrderedProductsListInComposed_of(null, orderedProducts_condition, set);
 	}
-	public void updateReviewedProductListInHas_reviews(
-		conditions.Condition<conditions.FeedbackAttribute> reviews_condition,
-		conditions.Condition<conditions.ProductAttribute> reviewedProduct_condition,
-		
-		conditions.SetClause<conditions.ProductAttribute> set
-	){
-		//TODO
-	}
-	
-	public void updateReviewedProductListInHas_reviewsByReviewsCondition(
-		conditions.Condition<conditions.FeedbackAttribute> reviews_condition,
-		conditions.SetClause<conditions.ProductAttribute> set
-	){
-		updateReviewedProductListInHas_reviews(reviews_condition, null, set);
-	}
-	
-	public void updateReviewedProductListInHas_reviewsByReviews(
-		pojo.Feedback reviews,
-		conditions.SetClause<conditions.ProductAttribute> set 
-	){
-		//TODO get id in condition
-		return;	
-	}
-	
-	public void updateReviewedProductListInHas_reviewsByReviewedProductCondition(
-		conditions.Condition<conditions.ProductAttribute> reviewedProduct_condition,
-		conditions.SetClause<conditions.ProductAttribute> set
-	){
-		updateReviewedProductListInHas_reviews(null, reviewedProduct_condition, set);
-	}
 	
 	
 	public void deleteProductList(conditions.Condition<conditions.ProductAttribute> condition){
@@ -615,6 +389,36 @@ public class ProductServiceImpl extends ProductService {
 	public void deleteProduct(pojo.Product product) {
 		//TODO using the id
 		return;
+	}
+	public void deleteReviewedProductListInFeedback(	
+		conditions.Condition<conditions.ProductAttribute> reviewedProduct_condition,	
+		conditions.Condition<conditions.CustomerAttribute> reviewer_condition,
+		conditions.Condition<conditions.FeedbackAttribute> feedback){
+			//TODO
+		}
+	
+	public void deleteReviewedProductListInFeedbackByReviewedProductCondition(
+		conditions.Condition<conditions.ProductAttribute> reviewedProduct_condition
+	){
+		deleteReviewedProductListInFeedback(reviewedProduct_condition, null, null);
+	}
+	public void deleteReviewedProductListInFeedbackByReviewerCondition(
+		conditions.Condition<conditions.CustomerAttribute> reviewer_condition
+	){
+		deleteReviewedProductListInFeedback(null, reviewer_condition, null);
+	}
+	
+	public void deleteReviewedProductListInFeedbackByReviewer(
+		pojo.Customer reviewer 
+	){
+		//TODO get id in condition
+		return;	
+	}
+	
+	public void deleteReviewedProductListInFeedbackByFeedbackCondition(
+		conditions.Condition<conditions.FeedbackAttribute> feedback_condition
+	){
+		deleteReviewedProductListInFeedback(null, null, feedback_condition);
 	}
 	public void deleteOrderedProductsListInComposed_of(	
 		conditions.Condition<conditions.OrderAttribute> orderP_condition,	
@@ -639,30 +443,6 @@ public class ProductServiceImpl extends ProductService {
 		conditions.Condition<conditions.ProductAttribute> orderedProducts_condition
 	){
 		deleteOrderedProductsListInComposed_of(null, orderedProducts_condition);
-	}
-	public void deleteReviewedProductListInHas_reviews(	
-		conditions.Condition<conditions.FeedbackAttribute> reviews_condition,	
-		conditions.Condition<conditions.ProductAttribute> reviewedProduct_condition){
-			//TODO
-		}
-	
-	public void deleteReviewedProductListInHas_reviewsByReviewsCondition(
-		conditions.Condition<conditions.FeedbackAttribute> reviews_condition
-	){
-		deleteReviewedProductListInHas_reviews(reviews_condition, null);
-	}
-	
-	public void deleteReviewedProductListInHas_reviewsByReviews(
-		pojo.Feedback reviews 
-	){
-		//TODO get id in condition
-		return;	
-	}
-	
-	public void deleteReviewedProductListInHas_reviewsByReviewedProductCondition(
-		conditions.Condition<conditions.ProductAttribute> reviewedProduct_condition
-	){
-		deleteReviewedProductListInHas_reviews(null, reviewedProduct_condition);
 	}
 	
 }

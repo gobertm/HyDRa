@@ -78,10 +78,6 @@ public class Tests {
         assertNotNull(orderService.getOrderById("FAKEORDERID"));
     }
 
-    @Test
-    public void testInconsistency() {
-        Order o = orderService.getOrderById("FAKEORDERID");
-        System.out.println(o);
-    }
+ 
 
 }

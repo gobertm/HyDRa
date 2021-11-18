@@ -86,7 +86,10 @@ public abstract class OrderService {
 		MutableBoolean refilterFlag = new MutableBoolean(false);
 		List<Dataset<Order>> datasets = new ArrayList<Dataset<Order>>();
 		Dataset<Order> d = null;
-		d = getOrderListInOrdersColFromMongobench(condition, refilterFlag);
+		d = getOrderListInOrderTableFromMysqlModelB(condition, refilterFlag);
+		if(d != null)
+			datasets.add(d);
+		d = getOrderListInUserColFromMongoModelB(condition, refilterFlag);
 		if(d != null)
 			datasets.add(d);
 		
@@ -106,7 +109,12 @@ public abstract class OrderService {
 	
 	
 	
-	public abstract Dataset<Order> getOrderListInOrdersColFromMongobench(conditions.Condition<conditions.OrderAttribute> condition, MutableBoolean refilterFlag);
+	public abstract Dataset<Order> getOrderListInOrderTableFromMysqlModelB(conditions.Condition<conditions.OrderAttribute> condition, MutableBoolean refilterFlag);
+	
+	
+	
+	
+	public abstract Dataset<Order> getOrderListInUserColFromMongoModelB(conditions.Condition<conditions.OrderAttribute> condition, MutableBoolean refilterFlag);
 	
 	
 	public Order getOrderById(String id){
@@ -132,7 +140,7 @@ public abstract class OrderService {
 	
 	
 	
-	protected static Dataset<Order> fullOuterJoinsOrder(List<Dataset<Order>> datasetsPOJO) {
+	public static Dataset<Order> fullOuterJoinsOrder(List<Dataset<Order>> datasetsPOJO) {
 		return fullOuterJoinsOrder(datasetsPOJO, "fullouter");
 	}
 	
@@ -270,8 +278,6 @@ public abstract class OrderService {
 	
 	
 	
-	
-	
 	public abstract Dataset<Order> getOrderListInBuys(conditions.Condition<conditions.OrderAttribute> order_condition,conditions.Condition<conditions.CustomerAttribute> client_condition);
 	
 	public Dataset<Order> getOrderListInBuysByOrderCondition(conditions.Condition<conditions.OrderAttribute> order_condition){
@@ -316,7 +322,13 @@ public abstract class OrderService {
 		Customer	clientBuys,
 		 List<Product> orderedProductsComposed_of);
 	
-	public abstract boolean insertOrderInOrdersColFromMongobench(Order order,
+	public abstract boolean insertOrderInUserColFromMongoModelB(Order order,
+		Customer	clientBuys,
+		 List<Product> orderedProductsComposed_of);
+	public abstract boolean insertOrderInOrderTableFromMysqlModelB(Order order,
+		Customer	clientBuys,
+		 List<Product> orderedProductsComposed_of);
+	public abstract boolean insertOrderInDetailOrderColFromMongoModelB(Order order,
 		Customer	clientBuys,
 		 List<Product> orderedProductsComposed_of);
 	public abstract void updateOrderList(conditions.Condition<conditions.OrderAttribute> condition, conditions.SetClause<conditions.OrderAttribute> set);

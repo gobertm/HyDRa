@@ -23,9 +23,9 @@ public class DBCredentials {
     }
 	
 	static {
-			dbPorts.put("mysqlbench", new DBCredentials("mysqlbench", "localhost", 3310, "root", "password","mariadb"));
-			dbPorts.put("redisbench", new DBCredentials("", "localhost", 6363, "", "","redis"));
-			dbPorts.put("mongobench", new DBCredentials("", "localhost", 27000, "", "","mongodb"));
+			dbPorts.put("mysqlModelB", new DBCredentials("mysqlModelB", "localhost", 3333, "root", "password","mariadb"));
+			dbPorts.put("redisModelB", new DBCredentials("", "localhost", 6300, "", "","redis"));
+			dbPorts.put("mongoModelB", new DBCredentials("", "localhost", 27700, "", "","mongodb"));
 	}
 
 	public static Map<String, DBCredentials> getDbPorts() {

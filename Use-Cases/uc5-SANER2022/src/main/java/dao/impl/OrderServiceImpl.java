@@ -51,8 +51,139 @@ public class OrderServiceImpl extends OrderService {
 	
 	
 	
+	public static Pair<String, List<String>> getSQLWhereClauseInOrderTableFromMysqlModelB(Condition<OrderAttribute> condition, MutableBoolean refilterFlag) {
+		return getSQLWhereClauseInOrderTableFromMysqlModelBWithTableAlias(condition, refilterFlag, "");
+	}
 	
-	public static String getBSONMatchQueryInOrdersColFromMongobench(Condition<OrderAttribute> condition, MutableBoolean refilterFlag) {	
+	public static Pair<String, List<String>> getSQLWhereClauseInOrderTableFromMysqlModelBWithTableAlias(Condition<OrderAttribute> condition, MutableBoolean refilterFlag, String tableAlias) {
+		String where = null;	
+		List<String> preparedValues = new java.util.ArrayList<String>();
+		if(condition != null) {
+			
+			if(condition instanceof SimpleCondition) {
+				OrderAttribute attr = ((SimpleCondition<OrderAttribute>) condition).getAttribute();
+				Operator op = ((SimpleCondition<OrderAttribute>) condition).getOperator();
+				Object value = ((SimpleCondition<OrderAttribute>) condition).getValue();
+				if(value != null) {
+					boolean isConditionAttrEncountered = false;
+					if(attr == OrderAttribute.id ) {
+						isConditionAttrEncountered = true;
+						String valueString = Util.transformSQLValue(value);
+						String sqlOp = op.getSQLOperator();
+						String preparedValue = valueString;
+						if(op == Operator.CONTAINS && valueString != null) {
+							preparedValue = "%" + Util.escapeReservedCharSQL(valueString)  + "%";
+						}
+						
+						where = tableAlias + "orderId " + sqlOp + " ?";
+						preparedValues.add(preparedValue);
+					}
+					if(attr == OrderAttribute.orderdate ) {
+						isConditionAttrEncountered = true;
+						String valueString = Util.transformSQLValue(value);
+						String sqlOp = op.getSQLOperator();
+						String preparedValue = valueString;
+						if(op == Operator.CONTAINS && valueString != null) {
+							preparedValue = "%" + Util.escapeReservedCharSQL(valueString)  + "%";
+						}
+						
+						where = tableAlias + "orderDate " + sqlOp + " ?";
+						preparedValues.add(preparedValue);
+					}
+					if(!isConditionAttrEncountered) {
+						refilterFlag.setValue(true);
+						where = "1 = 1";
+					}
+				}
+			}
+	
+			if(condition instanceof AndCondition) {
+				Pair<String, List<String>> pairLeft = getSQLWhereClauseInOrderTableFromMysqlModelB(((AndCondition) condition).getLeftCondition(), refilterFlag);
+				Pair<String, List<String>> pairRight = getSQLWhereClauseInOrderTableFromMysqlModelB(((AndCondition) condition).getRightCondition(), refilterFlag);
+				String whereLeft = pairLeft.getKey();
+				String whereRight = pairRight.getKey();
+				List<String> leftValues = pairLeft.getValue();
+				List<String> rightValues = pairRight.getValue();
+				if(whereLeft != null || whereRight != null) {
+					if(whereLeft == null)
+						where = whereRight;
+					else
+						if(whereRight == null)
+							where = whereLeft;
+						else
+							where = "(" + whereLeft + " AND " + whereRight + ")";
+					preparedValues.addAll(leftValues);
+					preparedValues.addAll(rightValues);
+				}
+			}
+	
+			if(condition instanceof OrCondition) {
+				Pair<String, List<String>> pairLeft = getSQLWhereClauseInOrderTableFromMysqlModelB(((OrCondition) condition).getLeftCondition(), refilterFlag);
+				Pair<String, List<String>> pairRight = getSQLWhereClauseInOrderTableFromMysqlModelB(((OrCondition) condition).getRightCondition(), refilterFlag);
+				String whereLeft = pairLeft.getKey();
+				String whereRight = pairRight.getKey();
+				List<String> leftValues = pairLeft.getValue();
+				List<String> rightValues = pairRight.getValue();
+				if(whereLeft != null || whereRight != null) {
+					if(whereLeft == null)
+						where = whereRight;
+					else
+						if(whereRight == null)
+							where = whereLeft;
+						else
+							where = "(" + whereLeft + " OR " + whereRight + ")";
+					preparedValues.addAll(leftValues);
+					preparedValues.addAll(rightValues);
+				}
+			}
+	
+		}
+	
+		return new ImmutablePair<String, List<String>>(where, preparedValues);
+	}
+	
+	
+	public Dataset<Order> getOrderListInOrderTableFromMysqlModelB(conditions.Condition<conditions.OrderAttribute> condition, MutableBoolean refilterFlag){
+	
+		Pair<String, List<String>> whereClause = OrderServiceImpl.getSQLWhereClauseInOrderTableFromMysqlModelB(condition, refilterFlag);
+		String where = whereClause.getKey();
+		List<String> preparedValues = whereClause.getValue();
+		for(String preparedValue : preparedValues) {
+			where = where.replaceFirst("\\?", "'" + Util.escapeQuote(preparedValue) + "'");
+		}
+		
+		Dataset<Row> d = dbconnection.SparkConnectionMgr.getDataset("mysqlModelB", "orderTable", where);
+		
+	
+		Dataset<Order> res = d.map((MapFunction<Row, Order>) r -> {
+					Order order_res = new Order();
+					Integer groupIndex = null;
+					String regex = null;
+					String value = null;
+					Pattern p = null;
+					Matcher m = null;
+					boolean matches = false;
+					
+					// attribute [Order.Id]
+					String id = Util.getStringValue(r.getAs("orderId"));
+					order_res.setId(id);
+					
+					// attribute [Order.Orderdate]
+					LocalDate orderdate = Util.getLocalDateValue(r.getAs("orderDate"));
+					order_res.setOrderdate(orderdate);
+	
+	
+	
+					return order_res;
+				}, Encoders.bean(Order.class));
+	
+	
+		return res;
+		
+	}
+	
+	
+	public static String getBSONMatchQueryInUserColFromMongoModelB(Condition<OrderAttribute> condition, MutableBoolean refilterFlag) {	
 		String res = null;	
 		if(condition != null) {
 			if(condition instanceof SimpleCondition) {
@@ -73,8 +204,9 @@ public class OrderServiceImpl extends OrderService {
 						} else {
 							preparedValue = Util.getDelimitedMongoValue(value.getClass(), preparedValue);
 						}
-						res = "OrderId': {" + mongoOp + ": " + preparedValue + "}";
+						res = "id': {" + mongoOp + ": " + preparedValue + "}";
 	
+						res = "orders." + res;
 					res = "'" + res;
 					}
 					if(attr == OrderAttribute.orderdate ) {
@@ -87,8 +219,9 @@ public class OrderServiceImpl extends OrderService {
 						} else {
 							preparedValue = Util.getDelimitedMongoValue(value.getClass(), preparedValue);
 						}
-						res = "OrderDate': {" + mongoOp + ": " + preparedValue + "}";
+						res = "buydate': {" + mongoOp + ": " + preparedValue + "}";
 	
+						res = "orders." + res;
 					res = "'" + res;
 					}
 					if(attr == OrderAttribute.totalprice ) {
@@ -101,8 +234,9 @@ public class OrderServiceImpl extends OrderService {
 						} else {
 							preparedValue = Util.getDelimitedMongoValue(value.getClass(), preparedValue);
 						}
-						res = "TotalPrice': {" + mongoOp + ": " + preparedValue + "}";
+						res = "totalamount': {" + mongoOp + ": " + preparedValue + "}";
 	
+						res = "orders." + res;
 					res = "'" + res;
 					}
 					if(!isConditionAttrEncountered) {
@@ -114,8 +248,8 @@ public class OrderServiceImpl extends OrderService {
 			}
 	
 			if(condition instanceof AndCondition) {
-				String bsonLeft = getBSONMatchQueryInOrdersColFromMongobench(((AndCondition)condition).getLeftCondition(), refilterFlag);
-				String bsonRight = getBSONMatchQueryInOrdersColFromMongobench(((AndCondition)condition).getRightCondition(), refilterFlag);			
+				String bsonLeft = getBSONMatchQueryInUserColFromMongoModelB(((AndCondition)condition).getLeftCondition(), refilterFlag);
+				String bsonRight = getBSONMatchQueryInUserColFromMongoModelB(((AndCondition)condition).getRightCondition(), refilterFlag);			
 				if(bsonLeft == null && bsonRight == null)
 					return null;
 				if(bsonLeft == null)
@@ -126,8 +260,8 @@ public class OrderServiceImpl extends OrderService {
 			}
 	
 			if(condition instanceof OrCondition) {
-				String bsonLeft = getBSONMatchQueryInOrdersColFromMongobench(((OrCondition)condition).getLeftCondition(), refilterFlag);
-				String bsonRight = getBSONMatchQueryInOrdersColFromMongobench(((OrCondition)condition).getRightCondition(), refilterFlag);			
+				String bsonLeft = getBSONMatchQueryInUserColFromMongoModelB(((OrCondition)condition).getLeftCondition(), refilterFlag);
+				String bsonRight = getBSONMatchQueryInUserColFromMongoModelB(((OrCondition)condition).getRightCondition(), refilterFlag);			
 				if(bsonLeft == null && bsonRight == null)
 					return null;
 				if(bsonLeft == null)
@@ -145,13 +279,13 @@ public class OrderServiceImpl extends OrderService {
 		return res;
 	}
 	
-	public Dataset<Order> getOrderListInOrdersColFromMongobench(conditions.Condition<conditions.OrderAttribute> condition, MutableBoolean refilterFlag){
-		String bsonQuery = OrderServiceImpl.getBSONMatchQueryInOrdersColFromMongobench(condition, refilterFlag);
+	public Dataset<Order> getOrderListInUserColFromMongoModelB(conditions.Condition<conditions.OrderAttribute> condition, MutableBoolean refilterFlag){
+		String bsonQuery = OrderServiceImpl.getBSONMatchQueryInUserColFromMongoModelB(condition, refilterFlag);
 		if(bsonQuery != null) {
 			bsonQuery = "{$match: {" + bsonQuery + "}}";	
 		} 
 		
-		Dataset<Row> dataset = dbconnection.SparkConnectionMgr.getSparkSessionForMongoDB("mongobench", "ordersCol", bsonQuery);
+		Dataset<Row> dataset = dbconnection.SparkConnectionMgr.getSparkSessionForMongoDB("mongoModelB", "userCol", bsonQuery);
 	
 		Dataset<Order> res = dataset.flatMap((FlatMapFunction<Row, Order>) r -> {
 				List<Order> list_res = new ArrayList<Order>();
@@ -168,40 +302,57 @@ public class OrderServiceImpl extends OrderService {
 				Order order1 = new Order();
 					boolean toAdd1  = false;
 					WrappedArray array1  = null;
-					// 	attribute Order.id for field OrderId			
-					nestedRow =  r1;
-					if(nestedRow != null && Arrays.asList(nestedRow.schema().fieldNames()).contains("OrderId")) {
-						if(nestedRow.getAs("OrderId")==null)
-							order1.setId(null);
-						else{
-							order1.setId(Util.getStringValue(nestedRow.getAs("OrderId")));
-							toAdd1 = true;					
+					array1 = r1.getAs("orders");
+					if(array1!= null) {
+						for (int i2 = 0; i2 < array1.size(); i2++){
+							Row r2 = (Row) array1.apply(i2);
+							Order order2 = (Order) order1.clone();
+							boolean toAdd2  = false;
+							WrappedArray array2  = null;
+							// 	attribute Order.id for field id			
+							nestedRow =  r2;
+							if(nestedRow != null && Arrays.asList(nestedRow.schema().fieldNames()).contains("id")) {
+								if(nestedRow.getAs("id")==null)
+									order2.setId(null);
+								else{
+									order2.setId(Util.getStringValue(nestedRow.getAs("id")));
+									toAdd2 = true;					
+									}
 							}
-					}
-					// 	attribute Order.orderdate for field OrderDate			
-					nestedRow =  r1;
-					if(nestedRow != null && Arrays.asList(nestedRow.schema().fieldNames()).contains("OrderDate")) {
-						if(nestedRow.getAs("OrderDate")==null)
-							order1.setOrderdate(null);
-						else{
-							order1.setOrderdate(Util.getLocalDateValue(nestedRow.getAs("OrderDate")));
-							toAdd1 = true;					
+							// 	attribute Order.orderdate for field buydate			
+							nestedRow =  r2;
+							if(nestedRow != null && Arrays.asList(nestedRow.schema().fieldNames()).contains("buydate")) {
+								if(nestedRow.getAs("buydate")==null)
+									order2.setOrderdate(null);
+								else{
+									order2.setOrderdate(Util.getLocalDateValue(nestedRow.getAs("buydate")));
+									toAdd2 = true;					
+									}
 							}
-					}
-					// 	attribute Order.totalprice for field TotalPrice			
-					nestedRow =  r1;
-					if(nestedRow != null && Arrays.asList(nestedRow.schema().fieldNames()).contains("TotalPrice")) {
-						if(nestedRow.getAs("TotalPrice")==null)
-							order1.setTotalprice(null);
-						else{
-							order1.setTotalprice(Util.getDoubleValue(nestedRow.getAs("TotalPrice")));
-							toAdd1 = true;					
+							// 	attribute Order.totalprice for field totalamount			
+							nestedRow =  r2;
+							if(nestedRow != null && Arrays.asList(nestedRow.schema().fieldNames()).contains("totalamount")) {
+								if(nestedRow.getAs("totalamount")==null)
+									order2.setTotalprice(null);
+								else{
+									order2.setTotalprice(Util.getDoubleValue(nestedRow.getAs("totalamount")));
+									toAdd2 = true;					
+									}
 							}
+							if(toAdd2&& (condition ==null || refilterFlag.booleanValue() || condition.evaluate(order2))) {
+								list_res.add(order2);
+								addedInList = true;
+							} 
+							if(addedInList)
+								toAdd1 = false;
+						}
 					}
+					
 					if(toAdd1) {
 						list_res.add(order1);
 						addedInList = true;
 					} 
+					
 					
 				
 				return list_res.iterator();
@@ -224,23 +375,23 @@ public class OrderServiceImpl extends OrderService {
 		boolean all_already_persisted = false;
 		MutableBoolean client_refilter;
 		org.apache.spark.sql.Column joinCondition = null;
-		// For role 'order' in reference 'customer'. A->B Scenario
+		// For role 'order' in reference 'clientRef'. A->B Scenario
 		client_refilter = new MutableBoolean(false);
-		Dataset<OrderTDO> orderTDOcustomerorder = buysService.getOrderTDOListOrderInCustomerInOrdersColFromDocSchema(order_condition, order_refilter);
-		Dataset<CustomerTDO> customerTDOcustomerclient = buysService.getCustomerTDOListClientInCustomerInOrdersColFromDocSchema(client_condition, client_refilter);
+		Dataset<OrderTDO> orderTDOclientReforder = buysService.getOrderTDOListOrderInClientRefInOrderTableFromRelSchemaB(order_condition, order_refilter);
+		Dataset<CustomerTDO> customerTDOclientRefclient = buysService.getCustomerTDOListClientInClientRefInOrderTableFromRelSchemaB(client_condition, client_refilter);
 		if(client_refilter.booleanValue()) {
 			if(all == null)
 				all = new CustomerServiceImpl().getCustomerList(client_condition);
 			joinCondition = null;
-			joinCondition = customerTDOcustomerclient.col("id").equalTo(all.col("id"));
+			joinCondition = customerTDOclientRefclient.col("id").equalTo(all.col("id"));
 			if(joinCondition == null)
-				customerTDOcustomerclient = customerTDOcustomerclient.as("A").join(all).select("A.*").as(Encoders.bean(CustomerTDO.class));
+				customerTDOclientRefclient = customerTDOclientRefclient.as("A").join(all).select("A.*").as(Encoders.bean(CustomerTDO.class));
 			else
-				customerTDOcustomerclient = customerTDOcustomerclient.as("A").join(all, joinCondition).select("A.*").as(Encoders.bean(CustomerTDO.class));
+				customerTDOclientRefclient = customerTDOclientRefclient.as("A").join(all, joinCondition).select("A.*").as(Encoders.bean(CustomerTDO.class));
 		}
 	
 		
-		Dataset<Row> res_customer = orderTDOcustomerorder.join(customerTDOcustomerclient
+		Dataset<Row> res_clientRef = orderTDOclientReforder.join(customerTDOclientRefclient
 				.withColumnRenamed("id", "Customer_id")
 				.withColumnRenamed("firstname", "Customer_firstname")
 				.withColumnRenamed("lastname", "Customer_lastname")
@@ -250,15 +401,32 @@ public class OrderServiceImpl extends OrderService {
 				.withColumnRenamed("locationip", "Customer_locationip")
 				.withColumnRenamed("browser", "Customer_browser")
 				.withColumnRenamed("logEvents", "Customer_logEvents"),
-				orderTDOcustomerorder.col("docSchema_ordersCol_customer_PersonId").equalTo(customerTDOcustomerclient.col("docSchema_ordersCol_customer_id")));
-		Dataset<Order> res_Order_customer = res_customer.select( "id", "orderdate", "totalprice", "logEvents").as(Encoders.bean(Order.class));
+				orderTDOclientReforder.col("relSchemaB_orderTable_clientRef_customerId").equalTo(customerTDOclientRefclient.col("relSchemaB_orderTable_clientRef_id")));
+		Dataset<Order> res_Order_clientRef = res_clientRef.select( "id", "orderdate", "totalprice", "logEvents").as(Encoders.bean(Order.class));
 		
-		res_Order_customer = res_Order_customer.dropDuplicates(new String[] {"id"});
-		datasetsPOJO.add(res_Order_customer);
+		res_Order_clientRef = res_Order_clientRef.dropDuplicates(new String[] {"id"});
+		datasetsPOJO.add(res_Order_clientRef);
 		
 		
 		Dataset<Buys> res_buys_order;
 		Dataset<Order> res_Order;
+		// Role 'client' mapped to EmbeddedObject 'orders' 'Order' containing 'Customer' 
+		client_refilter = new MutableBoolean(false);
+		res_buys_order = buysService.getBuysListInmongoSchemaBuserColorders(client_condition, order_condition, client_refilter, order_refilter);
+		if(client_refilter.booleanValue()) {
+			if(all == null)
+				all = new CustomerServiceImpl().getCustomerList(client_condition);
+			joinCondition = null;
+			joinCondition = res_buys_order.col("client.id").equalTo(all.col("id"));
+			if(joinCondition == null)
+				res_Order = res_buys_order.join(all).select("order.*").as(Encoders.bean(Order.class));
+			else
+				res_Order = res_buys_order.join(all, joinCondition).select("order.*").as(Encoders.bean(Order.class));
+		
+		} else
+			res_Order = res_buys_order.map((MapFunction<Buys,Order>) r -> r.getOrder(), Encoders.bean(Order.class));
+		res_Order = res_Order.dropDuplicates(new String[] {"id"});
+		datasetsPOJO.add(res_Order);
 		
 		
 		//Join datasets or return 
@@ -279,27 +447,35 @@ public class OrderServiceImpl extends OrderService {
 		boolean all_already_persisted = false;
 		MutableBoolean orderedProducts_refilter;
 		org.apache.spark.sql.Column joinCondition = null;
+		// join physical structure A<-AB->B
+		// (A) (AB) (B)  OR (A B) (AB) Join table is 'alone'
+		orderedProducts_refilter = new MutableBoolean(false);
+		Dataset<OrderTDO> orderTDOorderReforderP = composed_ofService.getOrderTDOListOrderPInOrderRefInOrderTableFromRelSchemaB(orderP_condition, orderP_refilter);
+		Dataset<Composed_ofTDO> composed_ofTDOorderRef_productRef = composed_ofService.getComposed_ofTDOListInComposed_of_OrderRef_ProductRefInDetailOrderColFromMongoSchemaB();
+		Dataset<ProductTDO> productTDOorderReforderedProducts = composed_ofService.getProductTDOListOrderedProductsInProductRefInProductsFromKvSchemaB(orderedProducts_condition, orderedProducts_refilter);
+		if(orderedProducts_refilter.booleanValue()) {
+			if(all == null)
+					all = new ProductServiceImpl().getProductList(orderedProducts_condition);
+			joinCondition = null;
+				joinCondition = productTDOorderReforderedProducts.col("id").equalTo(all.col("id"));
+				productTDOorderReforderedProducts = productTDOorderReforderedProducts.as("A").join(all, joinCondition).select("A.*").as(Encoders.bean(ProductTDO.class));
+		}
+		Dataset<Row> res_orderRef = orderTDOorderReforderP.join(composed_ofTDOorderRef_productRef.withColumnRenamed("logEvents", "composed_of_logEvents"),
+										orderTDOorderReforderP.col("mongoSchemaB_detailOrderCol_orderRef_orderId").equalTo(composed_ofTDOorderRef_productRef.col("mongoSchemaB_detailOrderCol_orderRef_orderid")));
+		res_orderRef = res_orderRef.join(productTDOorderReforderedProducts
+			.withColumnRenamed("id", "Product_id")
+			.withColumnRenamed("title", "Product_title")
+			.withColumnRenamed("price", "Product_price")
+			.withColumnRenamed("photo", "Product_photo")
+			.withColumnRenamed("logEvents", "Product_logEvents"),
+			res_orderRef.col("mongoSchemaB_detailOrderCol_productRef_productid").equalTo(productTDOorderReforderedProducts.col("mongoSchemaB_detailOrderCol_productRef_asin")));
+		Dataset<Order> res_Order_orderRef = res_orderRef.select( "id", "orderdate", "totalprice", "logEvents").as(Encoders.bean(Order.class));
+		datasetsPOJO.add(res_Order_orderRef.dropDuplicates(new String[] {"id"}));	
+		
 		
 		
 		Dataset<Composed_of> res_composed_of_orderP;
 		Dataset<Order> res_Order;
-		// Role 'orderP' mapped to EmbeddedObject 'Orderline' - 'Product' containing 'Order'
-		orderedProducts_refilter = new MutableBoolean(false);
-		res_composed_of_orderP = composed_ofService.getComposed_ofListIndocSchemaordersColOrderline(orderP_condition, orderedProducts_condition, orderP_refilter, orderedProducts_refilter);
-		if(orderedProducts_refilter.booleanValue()) {
-			if(all == null)
-				all = new ProductServiceImpl().getProductList(orderedProducts_condition);
-			joinCondition = null;
-			joinCondition = res_composed_of_orderP.col("orderedProducts.id").equalTo(all.col("id"));
-			if(joinCondition == null)
-				res_Order = res_composed_of_orderP.join(all).select("orderP.*").as(Encoders.bean(Order.class));
-			else
-				res_Order = res_composed_of_orderP.join(all, joinCondition).select("orderP.*").as(Encoders.bean(Order.class));
-		
-		} else
-			res_Order = res_composed_of_orderP.map((MapFunction<Composed_of,Order>) r -> r.getOrderP(), Encoders.bean(Order.class));
-		res_Order = res_Order.dropDuplicates(new String[] {"id"});
-		datasetsPOJO.add(res_Order);
 		
 		
 		//Join datasets or return 
@@ -307,6 +483,12 @@ public class OrderServiceImpl extends OrderService {
 		if(res == null)
 			return null;
 	
+		List<Dataset<Order>> lonelyOrderList = new ArrayList<Dataset<Order>>();
+		lonelyOrderList.add(getOrderListInUserColFromMongoModelB(orderP_condition, new MutableBoolean(false)));
+		Dataset<Order> lonelyOrder = fullOuterJoinsOrder(lonelyOrderList);
+		if(lonelyOrder != null) {
+			res = fullLeftOuterJoinsOrder(Arrays.asList(res, lonelyOrder));
+		}
 		if(orderP_refilter.booleanValue())
 			res = res.filter((FilterFunction<Order>) r -> orderP_condition == null || orderP_condition.evaluate(r));
 		
@@ -322,40 +504,73 @@ public class OrderServiceImpl extends OrderService {
 		 	// Insert in standalone structures
 		 	// Insert in structures containing double embedded role
 		 	// Insert in descending structures
-		 	inserted = insertOrderInOrdersColFromMongobench(order,clientBuys,orderedProductsComposed_of)|| inserted ;
 		 	// Insert in ascending structures 
+		 	inserted = insertOrderInUserColFromMongoModelB(order,clientBuys,orderedProductsComposed_of)|| inserted ;
 		 	// Insert in ref structures 
+		 	inserted = insertOrderInOrderTableFromMysqlModelB(order,clientBuys,orderedProductsComposed_of)|| inserted ;
+		 	inserted = insertOrderInDetailOrderColFromMongoModelB(order,clientBuys,orderedProductsComposed_of)|| inserted ;
 		 	// Insert in ref structures mapped to opposite role of mandatory role  
 		 	return inserted;
 		 }
 	
-	public boolean insertOrderInOrdersColFromMongobench(Order order,
+	public boolean insertOrderInUserColFromMongoModelB(Order order,
 		Customer	clientBuys,
 		 List<Product> orderedProductsComposed_of)	{
-			 // Implement Insert in descending complex struct
+			 // Implement Insert in ascending complex struct
+		
+			Bson filter= new Document();
+			Bson updateOp;
+			String addToSet;
+			List<String> fieldName= new ArrayList();
+			List<Bson> arrayFilterCond = new ArrayList();
+			Document docorders_1 = new Document();
+			docorders_1.append("id",order.getId());
+			docorders_1.append("buydate",order.getOrderdate());
+			docorders_1.append("totalamount",order.getTotalprice());
+			
+			// level 1 ascending
+			Customer customer = clientBuys;
+				filter = eq("id",customer.getId());
+				updateOp = addToSet("orders", docorders_1);
+				DBConnectionMgr.upsertMany(filter, updateOp, "userCol", "mongoModelB");					
+		
+			return true;
+		}
+	public boolean insertOrderInOrderTableFromMysqlModelB(Order order,
+		Customer	clientBuys,
+		 List<Product> orderedProductsComposed_of)	{
+			 // Implement Insert in structures with mandatory references
+			List<String> columns = new ArrayList<>();
+			List<Object> values = new ArrayList<>();
+			List<List<Object>> rows = new ArrayList<>();
+		columns.add("orderId");
+		values.add(order.getId());
+		columns.add("orderDate");
+		values.add(order.getOrderdate());
+			// Ref 'clientRef' mapped to role 'order'
+			columns.add("customerId");
+			values.add(clientBuys.getId());
+			rows.add(values);
+			DBConnectionMgr.insertInTable(columns, rows, "orderTable", "mysqlModelB");
+			return true;
+		}
+	public boolean insertOrderInDetailOrderColFromMongoModelB(Order order,
+		Customer	clientBuys,
+		 List<Product> orderedProductsComposed_of)	{
+			 // Implement Insert in structures with mandatory references
+			// In insertRefStruct in MongoDB
 			Bson filter = new Document();
 			Bson updateOp;
-			Document docordersCol_1 = new Document();
-			docordersCol_1.append("OrderId",order.getId());
-			// Ref 'customer' mapped to mandatory role 'order'
-			docordersCol_1.append("PersonId",clientBuys.getId());
-			docordersCol_1.append("OrderDate",order.getOrderdate());
-			docordersCol_1.append("TotalPrice",order.getTotalprice());
-			// field 'Orderline' is mapped to mandatory role 'orderP' with opposite role of type 'Product'
-				List<Document> arrayOrderline_1 = new ArrayList();
-					for(Product product : orderedProductsComposed_of){
-						Document docOrderline_2 = new Document();
-						docOrderline_2.append("asin",product.getId());
-						docOrderline_2.append("title",product.getTitle());
-						docOrderline_2.append("price",product.getPrice());
-						
-						arrayOrderline_1.add(docOrderline_2);
-					}
-				docordersCol_1.append("Orderline", arrayOrderline_1);
-			
-			filter = eq("OrderId",order.getId());
-			updateOp = setOnInsert(docordersCol_1);
-			DBConnectionMgr.upsertMany(filter, updateOp, "ordersCol", "mongobench");
+			List<Document> docsList = new ArrayList();
+			// Role in join structure 
+			String roleEntityField = "orderid";
+			for(Product product : orderedProductsComposed_of){
+				Document doc = new Document();
+				doc.append(roleEntityField,order.getId());
+				doc.append("productid",product.getId());
+				docsList.add(doc);
+			}	
+			DBConnectionMgr.insertMany(docsList, "detailOrderCol", "mongoModelB");
 			return true;
 		}
 	public void updateOrderList(conditions.Condition<conditions.OrderAttribute> condition, conditions.SetClause<conditions.OrderAttribute> set){
