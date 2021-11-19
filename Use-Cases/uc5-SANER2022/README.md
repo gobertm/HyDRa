@@ -30,7 +30,7 @@ This use case shows how HyDRa API code can be used in an evolution context.
     -   Help > Install New Software > Add > https://staff.info.unamur.be/gobertm/
 -   Restart Eclipse. (Note that in some cases the API generation tool requires a second restart of Eclipse)
 
-![eclipse](Use-Cases/resources/eclipse.PNG)
+![eclipse](../resources/eclipse.PNG)
 
 ## Usage
 -   Create a new Maven project or import a pre-existing project in [Use-Cases](Use-Cases/) folder.
@@ -39,7 +39,7 @@ This use case shows how HyDRa API code can be used in an evolution context.
 -   Design your HyDRa polystore schema. Create New File > *.pml file extension.
 -   Generate the conceptual API code by right-clicking on the .pml file > HyDRa API Generation > Generate HyDRa Conceptual API. Note that if no file is generated, it may be necessary to restart Eclipse and to try again.
 
-![Plugin](Use-Cases/resources/ApiPlugin.PNG)
+![Plugin](../resources/ApiPlugin.PNG)
 
 ## Troubleshoot
 -   When clicking on 'Generate HyDRa Conceptual API generation' nothing happens.
