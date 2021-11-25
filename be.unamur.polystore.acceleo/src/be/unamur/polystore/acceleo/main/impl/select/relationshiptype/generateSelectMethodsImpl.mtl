@@ -79,26 +79,23 @@
 			[/if]
 
 	Dataset<[rel.name.toUpperFirst()/]> res_[role.entity.name/]_[ref.name/] = res_[ref.name/].map(
-		new MapFunction<Row, [rel.name.toUpperFirst()/]>() {
-			public [rel.name.toUpperFirst()/] call(Row r) {
-				[rel.name.toUpperFirst()/] res = new [rel.name.toUpperFirst()/]();
-				[role.entity.name.toUpperFirst()/] A = new [role.entity.name.toUpperFirst()/]();
-				[role2.entity.name.toUpperFirst()/] B = new [role2.entity.name.toUpperFirst()/]();
-				[for (attr : Attribute | role.entity.attributes)]
-				A.set[attr.name.toUpperFirst()/](r.getAs("[attr.name.toLowerFirst()/]"));
-				[/for]
-				A.setLogEvents((ArrayList<String>) ScalaUtil.javaList(r.getAs("logEvents")));
+		(MapFunction<Row, [rel.name.toUpperFirst()/]>) r -> {
+			[rel.name.toUpperFirst()/] res = new [rel.name.toUpperFirst()/]();
+			[role.entity.name.toUpperFirst()/] A = new [role.entity.name.toUpperFirst()/]();
+			[role2.entity.name.toUpperFirst()/] B = new [role2.entity.name.toUpperFirst()/]();
+			[for (attr : Attribute | role.entity.attributes)]
+			A.set[attr.name.toUpperFirst()/](r.getAs("[attr.name.toLowerFirst()/]"));
+			[/for]
+			A.setLogEvents((ArrayList<String>) ScalaUtil.javaList(r.getAs("logEvents")));
 
-				[for (attr : Attribute | role2.entity.attributes)]
-				B.set[attr.name.toUpperFirst()/](r.getAs("[role2.entity.name/]_[attr.name.toLowerFirst()/]"));
-				[/for]
-				B.setLogEvents((ArrayList<String>) ScalaUtil.javaList(r.getAs("[role2.entity.name/]_logEvents")));
+			[for (attr : Attribute | role2.entity.attributes)]
+			B.set[attr.name.toUpperFirst()/](r.getAs("[role2.entity.name/]_[attr.name.toLowerFirst()/]"));
+			[/for]
+			B.setLogEvents((ArrayList<String>) ScalaUtil.javaList(r.getAs("[role2.entity.name/]_logEvents")));
 				
-				res.set[role.name.toUpperFirst()/](A);
-				res.set[role2.name.toUpperFirst()/](B);
-				return res;
-			}
-
+			res.set[role.name.toUpperFirst()/](A);
+			res.set[role2.name.toUpperFirst()/](B);
+			return res;
 		},Encoders.bean([rel.name.toUpperFirst()/].class)
 	);
 
@@ -276,73 +273,111 @@
 // (A AB B)
 [role2.name/]_refilter = new MutableBoolean(false);
 Dataset<[role.getRelationShipType().name.toUpperFirst()/]> res_[entity.name/]_[ref.name/]_[ref2.name/] = [role.getRelationShipType().name.toLowerFirst()/]Service.get[role.getRelationShipType().name.toUpperFirst()/]ListIn[table.name/]And[jointable.name/]And[table2.name/]From[db1.name/]([role.name/]_condition, [role2.name/]_condition, [role.name/]_refilter, [role2.name/]_refilter);
-//TODO	
+datasetsPOJO.add(res_[entity.name/]_[ref.name/]_[ref2.name/]);	
 [elseif (db1 = joindb and db1.dbType.isRelational())]
 //join between 2 SQL tables and a non-relational structure
 // (A - AB) (B)
 [role2.name/]_refilter = new MutableBoolean(false);
 Dataset<[role.getRelationShipType().name.toUpperFirst()/]TDO> res_[role.getRelationShipType().name/]_[ref.name/]_[ref2.name/] = [role.getRelationShipType().name.toLowerFirst()/]Service.get[role.getRelationShipType().name.toUpperFirst()/]TDOListIn[table.name/]And[jointable.name/]From[db1.name/]([role.name/]_condition, [role.name/]_refilter);
 Dataset<[role2.entity.name.toUpperFirst()/]TDO> res_[ref2.name/]_[ref.name/] = [role.getRelationShipType().name.toLowerFirst()/]Service.get[role2.entity.name.toUpperFirst()/]TDOList[role2.name.toUpperFirst()/]In[ref2.name.toUpperFirst()/]In[table2.name.toUpperFirst()/]From[table2.getPhysicalSchema().name.toUpperFirst()/]([role2.name/]_condition, [role2.name/]_refilter);
-if([role2.name/]_refilter.booleanValue()) {
-	if(all == null)
-			all = new [role2.entity.name.toUpperFirst()/]ServiceImpl().get[role2.entity.name.toUpperFirst()/]List([role2.name/]_condition);
-	joinCondition = null;
-	[if (role2.entity.identifier.oclIsUndefined() = false and role2.entity.identifier.attributes->size() > 0)]
-	[for (attr : Attribute | role2.entity.identifier.attributes)]
-	[if (i = 1)]
-		joinCondition = res_[ref2.name/]_[ref.name/].col("[attr.name.toLowerFirst()/]").equalTo(all.col("[attr.name.toLowerFirst()/]"));
-	[else]
-		joinCondition = joinCondition.and(res_[ref2.name/]_[ref.name/].col("[attr.name.toLowerFirst()/]").equalTo(all.col("[attr.name.toLowerFirst()/]")));
-	[/if]
-	[/for]
-	[else]
-	[for (attr : Attribute | role2.entity.attributes)]
-	[if (i = 1)]
-		joinCondition = res_[ref2.name/]_[ref.name/].col("[attr.name.toLowerFirst()/]").equalTo(all.col("[attr.name.toLowerFirst()/]"));
-	[else]
-		joinCondition = joinCondition.and(res_[ref2.name/]_[ref.name/].col("[attr.name.toLowerFirst()/]").equalTo(all.col("[attr.name.toLowerFirst()/]")));
-	[/if]
-	[/for]
-	[/if]
-		res_[ref2.name/]_[ref.name/] = res_[ref2.name/]_[ref.name/].as("A").join(all, joinCondition).select("A.*").as(Encoders.bean([role2.entity.name.toUpperFirst()/]TDO.class));
-}
+Dataset<Row> B_res_[ref2.name/]_[ref.name/] = res_[ref2.name/]_[ref.name/]
+[for (attr : Attribute | role2.entity.attributes)]
+	.withColumnRenamed("[attr.name.toLowerFirst()/]", "B_[attr.name.toLowerFirst()/]")
+[/for]
+	.withColumnRenamed("logEvents", "B_logEvents");
 
-Dataset<Row> res_row_[ref.name/]_[ref2.name/] = res_[role.getRelationShipType().name/]_[ref.name/]_[ref2.name/].join(res_[ref2.name/]_[ref.name/].withColumnRenamed("logEvents", "[role.getRelationShipType().name/]_logEvents"),
-													res_[role.getRelationShipType().name/]_[ref.name/]_[ref2.name/].col("[getJavaAbsolutePath(ref2).toLowerFirst() /]_[ref2.sourceField->first().getPhysicalName()/]").equalTo(res_[ref2.name/]_[ref.name/].col("[getJavaAbsolutePath(ref2).toLowerFirst() /]_[ref2.targetField->first().getPhysicalName()/]")));
-Dataset<[entity.name.toUpperFirst()/]> res_[entity.name/]_[ref.name/] = res_row_[ref.name/]_[ref2.name/].select("[entity.name.toLowerFirst()/].*").as(Encoders.bean([entity.name.toUpperFirst()/].class));
+
+Dataset<Row> res_row_[ref.name/]_[ref2.name/] = res_[role.getRelationShipType().name/]_[ref.name/]_[ref2.name/].join(B_res_[ref2.name/]_[ref.name/],
+													res_[role.getRelationShipType().name/]_[ref.name/]_[ref2.name/].col("[getJavaAbsolutePath(ref2).toLowerFirst() /]_[ref2.sourceField->first().getPhysicalName()/]").equalTo(B_res_[ref2.name/]_[ref.name/].col("[getJavaAbsolutePath(ref2).toLowerFirst() /]_[ref2.targetField->first().getPhysicalName()/]")));
+
+Dataset<[role.getRelationShipType().name.toUpperFirst()/]> res_[entity.name/]_[ref.name/] = res_row_[ref.name/]_[ref2.name/].map((MapFunction<Row, [role.getRelationShipType().name.toUpperFirst()/]>) r -> {
+			[role.getRelationShipType().name.toUpperFirst()/] res = new [role.getRelationShipType().name.toUpperFirst()/]();
+			
+			[role.entity.name.toUpperFirst() /] A = new [role.entity.name.toUpperFirst() /]();
+			[role2.entity.name.toUpperFirst() /] B = new [role2.entity.name.toUpperFirst() /]();
+				
+			Object o = r.getAs("[role.name.toLowerFirst()/]");
+			if(o != null) {
+				if(o instanceof Row) {
+					Row r2 = (Row) o;
+					[for (attr : Attribute | role.entity.attributes)]
+					A.set[attr.name.toUpperFirst()/](r2.getAs("[attr.name.toLowerFirst()/]"));
+					[/for]
+					A.setLogEvents((ArrayList<String>) ScalaUtil.javaList(r2.getAs("logEvents")));
+				}
+				if(o instanceof [role.entity.name.toUpperFirst()/])
+					A = ([role.entity.name.toUpperFirst()/]) o;
+			}
+
+
+			[for (attr : Attribute | role.getRelationShipType().attributes)]
+			res.set[attr.name.toUpperFirst()/](r.getAs("[attr.name.toLowerFirst()/]"));
+			[/for]
+			res.setLogEvents((ArrayList<String>) ScalaUtil.javaList(r.getAs("logEvents")));
+
+			[for (attr : Attribute | role2.entity.attributes)]
+			B.set[attr.name.toUpperFirst()/](r.getAs("B_[attr.name.toLowerFirst()/]"));
+			[/for]
+			B.setLogEvents((ArrayList<String>) ScalaUtil.javaList(r.getAs("B_logEvents")));
+				
+			res.set[role.name.toUpperFirst()/](A);
+			res.set[role2.name.toUpperFirst()/](B);
+			return res;
+		}, Encoders.bean([role.getRelationShipType().name.toUpperFirst()/].class));
+
+datasetsPOJO.add(res_[entity.name/]_[ref.name/]);
+
+
 [elseif (db2 = joindb and db2.dbType.isRelational())]
 //join between 2 SQL tables and a non-relational structure
 // (A) (AB - B)
 [role2.name/]_refilter = new MutableBoolean(false);
 Dataset<[role2.getRelationShipType().name.toUpperFirst()/]TDO> res_[role2.getRelationShipType().name/]_[ref2.name/]_[ref.name/] = [role2.getRelationShipType().name.toLowerFirst()/]Service.get[role2.getRelationShipType().name.toUpperFirst()/]TDOListIn[table2.name/]And[jointable.name/]From[db2.name/]([role2.name/]_condition, [role2.name/]_refilter);
 Dataset<[role.entity.name.toUpperFirst()/]TDO> res_[ref.name/]_[ref2.name/] = [role.getRelationShipType().name.toLowerFirst()/]Service.get[role.entity.name.toUpperFirst()/]TDOList[role.name.toUpperFirst()/]In[ref.name.toUpperFirst()/]In[table.name.toUpperFirst()/]From[table.getPhysicalSchema().name.toUpperFirst()/]([role.name/]_condition, [role.name/]_refilter);
-if([role2.name/]_refilter.booleanValue()) {
-	if(all == null)
-			all = new [role2.entity.name.toUpperFirst()/]ServiceImpl().get[role2.entity.name.toUpperFirst()/]List([role2.name/]_condition);
-	joinCondition = null;
-	[if (role2.entity.identifier.oclIsUndefined() = false and role2.entity.identifier.attributes->size() > 0)]
-	[for (attr : Attribute | role2.entity.identifier.attributes)]
-	[if (i = 1)]
-		joinCondition = res_[role2.getRelationShipType().name/]_[ref2.name/]_[ref.name/].col("[role2.name.toLowerFirst()/].[attr.name/]").equalTo(all.col("[attr.name.toLowerFirst()/]"));
-	[else]
-		joinCondition = joinCondition.and(res_[role2.getRelationShipType().name/]_[ref2.name/]_[ref.name/].col("[role2.name.toLowerFirst()/].[attr.name/]").equalTo(all.col("[attr.name.toLowerFirst()/]")));
-	[/if]
-	[/for]
-	[else]
-	[for (attr : Attribute | role2.entity.attributes)]
-	[if (i = 1)]
-		joinCondition = res_[role2.getRelationShipType().name/]_[ref2.name/]_[ref.name/].col("[role2.name.toLowerFirst()/].[attr.name/]").equalTo(all.col("[attr.name.toLowerFirst()/]"));
-	[else]
-		joinCondition = joinCondition.and(res_[role2.getRelationShipType().name/]_[ref2.name/]_[ref.name/].col("[role2.name.toLowerFirst()/].[attr.name/]").equalTo(all.col("[attr.name.toLowerFirst()/]")));
-	[/if]
-	[/for]
-	[/if]
-		res_[role2.getRelationShipType().name/]_[ref2.name/]_[ref.name/] = res_[role2.getRelationShipType().name/]_[ref2.name/]_[ref.name/].as("A").join(all, joinCondition).select("A.*").as(Encoders.bean([role2.getRelationShipType().name.toUpperFirst()/]TDO.class));
-} 
-Dataset<Row> res_row_[ref2.name/]_[ref.name/] = res_[role2.getRelationShipType().name/]_[ref2.name/]_[ref.name/].join(res_[ref.name/]_[ref2.name/].withColumnRenamed("logEvents", "[role2.getRelationShipType().name/]_logEvents"),
-	res_[role2.getRelationShipType().name/]_[ref2.name/]_[ref.name/].col("[getJavaAbsolutePath(ref).toLowerFirst() /]_[ref.sourceField->first().getPhysicalName()/]").equalTo(res_[ref.name/]_[ref2.name/].col("[getJavaAbsolutePath(ref).toLowerFirst() /]_[ref.targetField->first().getPhysicalName()/]")));
-Dataset<[entity.name.toUpperFirst()/]> res_[entity.name/]_[ref.name/] = res_row_[ref2.name/]_[ref.name/].as(Encoders.bean([entity.name.toUpperFirst()/].class));
-[else]
+Dataset<Row> B_res_[ref.name/]_[ref2.name/] = res_[ref.name/]_[ref2.name/]
+[for (attr : Attribute | role.entity.attributes)]
+	.withColumnRenamed("[attr.name.toLowerFirst()/]", "B_[attr.name.toLowerFirst()/]")
+[/for]
+	.withColumnRenamed("logEvents", "B_logEvents");
+
+Dataset<Row> res_row_[ref2.name/]_[ref.name/] = res_[role2.getRelationShipType().name/]_[ref2.name/]_[ref.name/].join(B_res_[ref.name/]_[ref2.name/],
+	res_[role2.getRelationShipType().name/]_[ref2.name/]_[ref.name/].col("[getJavaAbsolutePath(ref).toLowerFirst() /]_[ref.sourceField->first().getPhysicalName()/]").equalTo(B_res_[ref.name/]_[ref2.name/].col("[getJavaAbsolutePath(ref).toLowerFirst() /]_[ref.targetField->first().getPhysicalName()/]")));
+Dataset<[role.getRelationShipType().name.toUpperFirst()/]> res_[entity.name/]_[ref.name/] = res_row_[ref2.name/]_[ref.name/].map((MapFunction<Row, [role.getRelationShipType().name.toUpperFirst()/]>) r -> {
+			[role.getRelationShipType().name.toUpperFirst()/] res = new [role.getRelationShipType().name.toUpperFirst()/]();
+			
+			[role.entity.name.toUpperFirst() /] B = new [role.entity.name.toUpperFirst() /]();
+			[role2.entity.name.toUpperFirst() /] A = new [role2.entity.name.toUpperFirst() /]();
+				
+			Object o = r.getAs("[role2.name.toLowerFirst()/]");
+			if(o != null) {
+				if(o instanceof Row) {
+					Row r2 = (Row) o;
+					[for (attr : Attribute | role2.entity.attributes)]
+					A.set[attr.name.toUpperFirst()/](r2.getAs("[attr.name.toLowerFirst()/]"));
+					[/for]
+					A.setLogEvents((ArrayList<String>) ScalaUtil.javaList(r2.getAs("logEvents")));
+				}
+				if(o instanceof [role2.entity.name.toUpperFirst()/])
+					A = ([role2.entity.name.toUpperFirst()/]) o;
+			}
+
+
+			[for (attr : Attribute | role.getRelationShipType().attributes)]
+			res.set[attr.name.toUpperFirst()/](r.getAs("[attr.name.toLowerFirst()/]"));
+			[/for]
+			res.setLogEvents((ArrayList<String>) ScalaUtil.javaList(r.getAs("logEvents")));
+
+			[for (attr : Attribute | role.entity.attributes)]
+			B.set[attr.name.toUpperFirst()/](r.getAs("B_[attr.name.toLowerFirst()/]"));
+			[/for]
+			B.setLogEvents((ArrayList<String>) ScalaUtil.javaList(r.getAs("B_logEvents")));
+				
+			res.set[role2.name.toUpperFirst()/](A);
+			res.set[role.name.toUpperFirst()/](B);
+			return res;
+		}, Encoders.bean([role.getRelationShipType().name.toUpperFirst()/].class));
+
+datasetsPOJO.add(res_[entity.name/]_[ref.name/]);[else]
 // (A) (AB) (B)  OR (A B) (AB) Join table is 'alone'
 [role2.name/]_refilter = new MutableBoolean(false);
 Dataset<[role.entity.name.toUpperFirst()/]TDO> [role.entity.name.toLowerFirst()/]TDO[ref.name/][role.name/] = this.get[role.entity.name.toUpperFirst()/]TDOList[role.name.toUpperFirst() /]In[ref.name.toUpperFirst()/]In[ref.targetField->first().getAbstractPhysicalStructureNotEmbeddedObject().name.toUpperFirst() /]From[ref.targetField->first().getPhysicalSchema().name.toUpperFirst()/]([role.name/]_condition, [role.name/]_refilter);
@@ -366,31 +401,28 @@ Dataset<Row> res_[ref.name/] = A_[entity.name.toLowerFirst()/]TDO[ref.name/][rol
 res_[ref.name/] = res_[ref.name/].join(C_[role2.entity.name.toLowerFirst()/]TDO[ref.name/][role2.name/],
 	res_[ref.name/].col("[getJavaAbsolutePath(ref2).toLowerFirst() /]_[ref2.sourceField->first().getPhysicalName()/]").equalTo(C_[role2.entity.name.toLowerFirst()/]TDO[ref.name/][role2.name/].col("[getJavaAbsolutePath(ref2).toLowerFirst() /]_[ref2.targetField->first().getPhysicalName()/]")));
 
-Dataset<[role.getRelationShipType().name.toUpperFirst()/]> res_[entity.name/]_[ref.name/] = res_[ref.name/].map(new MapFunction<Row, [role.getRelationShipType().name.toUpperFirst()/]>() {
-			@Override
-			public [role.getRelationShipType().name.toUpperFirst()/] call(Row r) throws Exception {
-				[role.getRelationShipType().name.toUpperFirst()/] res = new [role.getRelationShipType().name.toUpperFirst()/]();
-				[role.entity.name.toUpperFirst() /] A = new [role.entity.name.toUpperFirst() /]();
-				[role2.entity.name.toUpperFirst() /] C = new [role2.entity.name.toUpperFirst() /]();
-				[for (attr : Attribute | role.entity.attributes)]
-				A.set[attr.name.toUpperFirst()/](r.getAs("A_[attr.name.toLowerFirst()/]"));
-				[/for]
-				A.setLogEvents((ArrayList<String>) ScalaUtil.javaList(r.getAs("A_logEvents")));
+Dataset<[role.getRelationShipType().name.toUpperFirst()/]> res_[entity.name/]_[ref.name/] = res_[ref.name/].map((MapFunction<Row, [role.getRelationShipType().name.toUpperFirst()/]>) r -> {
+			[role.getRelationShipType().name.toUpperFirst()/] res = new [role.getRelationShipType().name.toUpperFirst()/]();
+			[role.entity.name.toUpperFirst() /] A = new [role.entity.name.toUpperFirst() /]();
+			[role2.entity.name.toUpperFirst() /] C = new [role2.entity.name.toUpperFirst() /]();
+			[for (attr : Attribute | role.entity.attributes)]
+			A.set[attr.name.toUpperFirst()/](r.getAs("A_[attr.name.toLowerFirst()/]"));
+			[/for]
+			A.setLogEvents((ArrayList<String>) ScalaUtil.javaList(r.getAs("A_logEvents")));
 
-				[for (attr : Attribute | role.getRelationShipType().attributes)]
-				res.set[attr.name.toUpperFirst()/](r.getAs("[attr.name.toLowerFirst()/]"));
-				[/for]
-				res.setLogEvents((ArrayList<String>) ScalaUtil.javaList(r.getAs("logEvents")));				
+			[for (attr : Attribute | role.getRelationShipType().attributes)]
+			res.set[attr.name.toUpperFirst()/](r.getAs("[attr.name.toLowerFirst()/]"));
+			[/for]
+			res.setLogEvents((ArrayList<String>) ScalaUtil.javaList(r.getAs("logEvents")));				
 
-				[for (attr : Attribute | role2.entity.attributes)]
-				C.set[attr.name.toUpperFirst()/](r.getAs("C_[attr.name.toLowerFirst()/]"));
-				[/for]
-				C.setLogEvents((ArrayList<String>) ScalaUtil.javaList(r.getAs("C_logEvents")));
+			[for (attr : Attribute | role2.entity.attributes)]
+			C.set[attr.name.toUpperFirst()/](r.getAs("C_[attr.name.toLowerFirst()/]"));
+			[/for]
+			C.setLogEvents((ArrayList<String>) ScalaUtil.javaList(r.getAs("C_logEvents")));
 				
-				res.set[role.name.toUpperFirst()/](A);
-				res.set[role2.name.toUpperFirst()/](C);
-				return res;
-			}
+			res.set[role.name.toUpperFirst()/](A);
+			res.set[role2.name.toUpperFirst()/](C);
+			return res;
 		}, Encoders.bean([role.getRelationShipType().name.toUpperFirst()/].class));
 
 datasetsPOJO.add(res_[entity.name/]_[ref.name/]);	

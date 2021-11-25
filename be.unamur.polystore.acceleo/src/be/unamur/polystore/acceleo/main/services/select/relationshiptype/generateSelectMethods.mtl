@@ -536,8 +536,7 @@ public static Dataset<[rel.name.toUpperFirst()/]> fullLeftOuterJoinBetween[rel.n
 	[/for]
 
 	d2_ = d1.join(d2_, joinCond, "leftouter");
-	return d2_.map(new MapFunction<Row, [rel.name.toUpperFirst()/]>() {
-		public [rel.name.toUpperFirst()/] call(Row r) {
+	return d2_.map((MapFunction<Row, [rel.name.toUpperFirst()/]>) r -> {
 			[rel.name.toUpperFirst()/] res = new [rel.name.toUpperFirst()/]();
 			[for (attr : Attribute | rel.attributes)]
 			res.set[attr.name.toUpperFirst()/](r.getAs("[attr.name.toLowerFirst() /]"));
@@ -588,8 +587,6 @@ public static Dataset<[rel.name.toUpperFirst()/]> fullLeftOuterJoinBetween[rel.n
 			[/let]
 
 			return res;
-		}
-				
 	}, Encoders.bean([rel.name.toUpperFirst()/].class));
 
 	[/if]
@@ -681,8 +678,7 @@ private static Dataset<[rel.name.toUpperFirst()/]> fullOuterJoins[rel.name.toUpp
 		res = res.join(rows.get(i), joinCond, joinMode);
 	}
 
-	return res.map(new MapFunction<Row, [rel.name.toUpperFirst()/]>() {
-		public [rel.name.toUpperFirst()/] call(Row r) {
+	return res.map((MapFunction<Row, [rel.name.toUpperFirst()/]>) r -> {
 			[rel.name.toUpperFirst() /] [rel.name.toLowerFirst() /]_res = new [rel.name.toUpperFirst() /]();
 				[for (attr : Attribute | rel.attributes)]
 				
@@ -728,7 +724,6 @@ private static Dataset<[rel.name.toUpperFirst()/]> fullOuterJoins[rel.name.toUpp
 				[rel.name.toLowerFirst() /]_res.set[role1.name.toUpperFirst()/]([role1.name.toLowerFirst()/]);
 				[rel.name.toLowerFirst() /]_res.set[role2.name.toUpperFirst()/]([role2.name.toLowerFirst()/]);
 				return [rel.name.toLowerFirst() /]_res;
-		}
 	}
 	, Encoders.bean([rel.name.toUpperFirst()/].class));
 
