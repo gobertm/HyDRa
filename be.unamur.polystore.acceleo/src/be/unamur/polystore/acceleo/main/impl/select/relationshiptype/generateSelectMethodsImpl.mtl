@@ -38,28 +38,7 @@
 	// For role '[role.name/]' in reference '[ref.name/]'. A->B Scenario in SQL DB
 	[role2.name/]_refilter = new MutableBoolean(false);
 	Dataset<[role.getRelationShipType().name.toUpperFirst()/]> res_[ref.name/] = [role.getRelationShipType().name.toLowerFirst()/]Service.get[role.name.toUpperFirst()/]And[role.getOppositeRoles()->any(true).name.toUpperFirst()/]ListIn[ref.name.toUpperFirst()/]In[struct1.name.toUpperFirst()/]From[db1.name.toUpperFirst()/]([role.getRelationShipType().roles->first().name/]_condition, [role.getRelationShipType().roles->first().getOppositeRoles()->any(true).name/]_condition, [role.name/]_refilter, [role2.name/]_refilter);
-	Dataset<[role.entity.name.toUpperFirst()/]> res_[role.entity.name/]_[ref.name/] = null;
-	[comment  Refilter function needed if the condition on B is based on an attribute of B present only in another structure containing B/]
-	if([role2.name/]_refilter.booleanValue()) {
-		if(all == null)
-			all = new [role2.entity.name.toUpperFirst()/]ServiceImpl().get[role2.entity.name.toUpperFirst()/]List([role2.name/]_condition);
-		joinCondition = null;
-					[if (role2.entity.identifier.oclIsUndefined() = false and role2.entity.identifier.attributes->size() > 0)]
-						[for (attr : Attribute | role2.entity.identifier.attributes)]
-							[if (i = 1)]
-		joinCondition = res_[ref.name/].col("[role2.name.toLowerFirst()/].[attr.name/]").equalTo(all.col("[attr.name.toLowerFirst()/]"));
-							[else]
-		joinCondition = joinCondition.and(res_[ref.name/].col("[role2.name.toLowerFirst()/].[attr.name/]").equalTo(all.col("[attr.name.toLowerFirst()/]")));
-							[/if]
-						[/for]
-					[/if]
-		if(joinCondition == null)
-			res_[role.entity.name/]_[ref.name/] = res_[ref.name/].join(all).select("[role.name/].*").as(Encoders.bean([role.entity.name.toUpperFirst()/].class));
-		else
-			res_[role.entity.name/]_[ref.name/] = res_[ref.name/].join(all, joinCondition).select("[role.name/].*").as(Encoders.bean([role.entity.name.toUpperFirst()/].class));
-	} else
-		res_[role.entity.name/]_[ref.name/] = res_[ref.name/].map((MapFunction<[role.getRelationShipType().name.toUpperFirst()/],[role.entity.name.toUpperFirst()/]>) r -> r.get[role.name.toUpperFirst()/](), Encoders.bean([role.entity.name.toUpperFirst()/].class));
-				[else]
+	[else]
 	[comment A & B not in same DB or involve NoSQL struct. So need of TDO objects /]
 	// For role '[role.name/]' in reference '[ref.name/]'. A->B Scenario
 	[role2.name/]_refilter = new MutableBoolean(false);
@@ -100,7 +79,7 @@
 	);
 
 				[/if]
-	datasetsPOJO.add(res_[role.entity.name/]_[ref.name/]);
+	datasetsPOJO.add(res_[ref.name/]);
 				[/let]
 				[/let]
 				[/let]
@@ -121,27 +100,7 @@
 				[if (db1 = db2 and db1.dbType.isRelational())]
 	// For role '[role2.name/]' in reference '[ref.name/]'  B->A Scenario in SQL Db.
 	Dataset<[role.getRelationShipType().name.toUpperFirst()/]> res_[ref.name/] = [role.getRelationShipType().name.toLowerFirst()/]Service.get[role.getOppositeRoles()->any(true).name.toUpperFirst()/]And[role.name.toUpperFirst()/]ListIn[ref.name.toUpperFirst()/]In[struct1.name.toUpperFirst()/]From[db1.name.toUpperFirst()/]([role.getRelationShipType().roles->first().name/]_condition, [role.getRelationShipType().roles->first().getOppositeRoles()->any(true).name/]_condition, [role.getRelationShipType().roles->first().name/]_refilter, [role.getRelationShipType().roles->first().getOppositeRoles()->any(true).name/]_refilter);
-	Dataset<[role.entity.name.toUpperFirst()/]> res_[role.entity.name/]_[ref.name/] = null;
-	if([role2.name/]_refilter.booleanValue()) {
-		if(all == null)
-			all = new [role2.entity.name.toUpperFirst()/]ServiceImpl().get[role2.entity.name.toUpperFirst()/]List([role2.name/]_condition);
-		joinCondition = null;
-					[if (role2.entity.identifier.oclIsUndefined() = false and role2.entity.identifier.attributes->size() > 0)]
-						[for (attr : Attribute | role2.entity.identifier.attributes)]
-							[if (i = 1)]
-		joinCondition = res_[ref.name/].col("[role2.name.toLowerFirst()/].[attr.name.toLowerFirst()/]").equalTo(all.col("[attr.name.toLowerFirst()/]"));
-							[else]
-		joinCondition = joinCondition.and(res_[ref.name/].col("[role2.name.toLowerFirst()/].[attr.name.toLowerFirst()/]").equalTo(all.col("[attr.name.toLowerFirst()/]")));
-							[/if]
-						[/for]
-					[/if]
-		if(joinCondition == null)
-			res_[role.entity.name/]_[ref.name/] = res_[ref.name/].join(all).select("[role.name.toLowerFirst()/].*").as(Encoders.bean([role.entity.name.toUpperFirst()/].class));
-		else
-			res_[role.entity.name/]_[ref.name/] = res_[ref.name/].join(all, joinCondition).select("[role.name.toLowerFirst()/].*").as(Encoders.bean([role.entity.name.toUpperFirst()/].class));
-	} else
-		res_[role.entity.name/]_[ref.name/] = res_[ref.name/].map((MapFunction<[role.getRelationShipType().name.toUpperFirst()/],[role.entity.name.toUpperFirst()/]>) r -> r.get[role.name.toUpperFirst()/](), Encoders.bean([role.entity.name.toUpperFirst()/].class));
-				[else]
+	[else]
 	[comment A & B not in same DB or involve NoSQL struct. So need of TDO objects /]
 	// For role '[role2.name/]' in reference '[ref.name/]'  B->A Scenario
 	Dataset<[role2.entity.name.toUpperFirst()/]TDO> [role2.entity.name.toLowerFirst()/]TDO[ref.name/][role2.name/] = [role.getRelationShipType().name.toLowerFirst()/]Service.get[role2.entity.name.toUpperFirst()/]TDOList[role2.name.toUpperFirst() /]In[ref.name.toUpperFirst()/]In[ref.getAbstractPhysicalStructureNotEmbeddedObject().name.toUpperFirst() /]From[ref.getPhysicalSchema().name.toUpperFirst()/]([role2.name/]_condition, [role2.name/]_refilter);
@@ -185,13 +144,8 @@
 			[/if]
 	Dataset<[role.entity.name.toUpperFirst()/]> res_[role.entity.name/]_[ref.name/] = res_[ref.name/].select([for (attr : Attribute | role.entity.attributes)] "[attr.name/]",[/for] "logEvents").as(Encoders.bean([role.entity.name.toUpperFirst()/].class));
 				[/if]
-				[if (role.entity.identifier.oclIsUndefined() = true)]
-	logger.warn("Conceptual entity '[role.entity.name/]' does not have a declared identifier. Returned results may be inconsistent.");
-	res_[role.entity.name/]_[ref.name/] = res_[role.entity.name/]_[ref.name/].dropDuplicates();
-				[else]
-	res_[role.entity.name/]_[ref.name/] = res_[role.entity.name/]_[ref.name/].dropDuplicates(new String[ '[' /][ ']' /] {[if (role.entity.identifier.oclIsUndefined() = false)][for (attr : Attribute | role.entity.identifier.attributes) separator(',')]"[attr.name/]"[/for][/if]});
-				[/if]
-	datasetsPOJO.add(res_[role.entity.name/]_[ref.name/]);
+			
+	datasetsPOJO.add(res_[ref.name/]);
 				[/let]
 				[/let]
 				[/let]
