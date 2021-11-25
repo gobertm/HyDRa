@@ -165,7 +165,7 @@
 	// Role '[role.name/]' mapped to EmbeddedObject '[embedded.getPhysicalName()/]' - '[role2.entity.name/]' containing '[role.entity.name/]'
 	[role2.name/]_refilter = new MutableBoolean(false);
 	res_[rel.name/]_[role.name/] = [rel.name.toLowerFirst()/]Service.get[rel.name.toUpperFirst()/]ListIn[ getPhysicalFieldAbsolutePath(embedded) /]([role.name/]_condition, [role2.name/]_condition, [role.name/]_refilter, [role2.name/]_refilter);
-	
+ 	
 	datasetsPOJO.add(res_[rel.name/]_[role.name/]);
 		[/for]
 	[comment for method getContainedObject by role/]
