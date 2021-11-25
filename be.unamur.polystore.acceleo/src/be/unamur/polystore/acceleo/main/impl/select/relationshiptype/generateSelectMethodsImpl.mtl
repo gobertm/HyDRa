@@ -45,7 +45,7 @@
 	Dataset<[role.entity.name.toUpperFirst()/]TDO> [role.entity.name.toLowerFirst()/]TDO[ref.name/][role.name/] = [role.getRelationShipType().name.toLowerFirst()/]Service.get[role.entity.name.toUpperFirst()/]TDOList[role.name.toUpperFirst() /]In[ref.name.toUpperFirst()/]In[ref.getAbstractPhysicalStructureNotEmbeddedObject().name.toUpperFirst() /]From[ref.getPhysicalSchema().name.toUpperFirst()/]([role.name/]_condition, [role.name/]_refilter);
 	Dataset<[role2.entity.name.toUpperFirst()/]TDO> [role2.entity.name.toLowerFirst()/]TDO[ref.name/][role2.name/] = [role.getRelationShipType().name.toLowerFirst()/]Service.get[role2.entity.name.toUpperFirst()/]TDOList[role2.name.toUpperFirst() /]In[ref.name.toUpperFirst()/]In[ref.getAbstractPhysicalStructureNotEmbeddedObject().name.toUpperFirst() /]From[ref.getPhysicalSchema().name.toUpperFirst()/]([role2.name/]_condition, [role2.name/]_refilter);
 	
-	Dataset<Row> res_[ref.name/] = [role.entity.name.toLowerFirst()/]TDO[ref.name/][role.name/].join([role2.entity.name.toLowerFirst()/]TDO[ref.name/][role2.name/]
+	Dataset<Row> res_[ref.name/]_temp = [role.entity.name.toLowerFirst()/]TDO[ref.name/][role.name/].join([role2.entity.name.toLowerFirst()/]TDO[ref.name/][role2.name/]
 					[for (attr : Attribute | role2.entity.attributes)]
 			.withColumnRenamed("[attr.name.toLowerFirst() /]", "[role2.entity.name/]_[attr.name.toLowerFirst() /]")
 					[/for]
@@ -57,7 +57,7 @@
 			[role.entity.name.toLowerFirst()/]TDO[ref.name/][role.name/].col("[getJavaAbsolutePath(ref).toLowerFirst() /]_[ref.sourceField->first().getPhysicalName()/]").equalTo([role2.entity.name.toLowerFirst()/]TDO[ref.name/][role2.name/].col("[getJavaAbsolutePath(ref).toLowerFirst().toLowerFirst() /]_[ref.targetField->first().getPhysicalName()/]")));
 			[/if]
 
-	Dataset<[rel.name.toUpperFirst()/]> res_[role.entity.name/]_[ref.name/] = res_[ref.name/].map(
+	Dataset<[rel.name.toUpperFirst()/]> res_[ref.name/] = res_[ref.name/]_temp.map(
 		(MapFunction<Row, [rel.name.toUpperFirst()/]>) r -> {
 			[rel.name.toUpperFirst()/] res = new [rel.name.toUpperFirst()/]();
 			[role.entity.name.toUpperFirst()/] A = new [role.entity.name.toUpperFirst()/]();
@@ -105,27 +105,10 @@
 	// For role '[role2.name/]' in reference '[ref.name/]'  B->A Scenario
 	Dataset<[role2.entity.name.toUpperFirst()/]TDO> [role2.entity.name.toLowerFirst()/]TDO[ref.name/][role2.name/] = [role.getRelationShipType().name.toLowerFirst()/]Service.get[role2.entity.name.toUpperFirst()/]TDOList[role2.name.toUpperFirst() /]In[ref.name.toUpperFirst()/]In[ref.getAbstractPhysicalStructureNotEmbeddedObject().name.toUpperFirst() /]From[ref.getPhysicalSchema().name.toUpperFirst()/]([role2.name/]_condition, [role2.name/]_refilter);
 	Dataset<[role.entity.name.toUpperFirst()/]TDO> [role.entity.name.toLowerFirst()/]TDO[ref.name/][role.name /] = [role.getRelationShipType().name.toLowerFirst()/]Service.get[role.entity.name.toUpperFirst()/]TDOList[role.name.toUpperFirst() /]In[ref.name.toUpperFirst()/]In[ref.getAbstractPhysicalStructureNotEmbeddedObject().name.toUpperFirst() /]From[ref.getPhysicalSchema().name.toUpperFirst()/]([role.name/]_condition, [role.name/]_refilter);
-	if([role2.name/]_refilter.booleanValue()) {
-		if(all == null)
-			all = new [role2.entity.name.toUpperFirst()/]ServiceImpl().get[role2.entity.name.toUpperFirst()/]List([role2.name/]_condition);
-		joinCondition = null;
-					[if (role2.entity.identifier.oclIsUndefined() = false and role2.entity.identifier.attributes->size() > 0)]
-						[for (attr : Attribute | role2.entity.identifier.attributes)]
-							[if (i = 1)]
-		joinCondition = [role2.entity.name.toLowerFirst()/]TDO[ref.name/][role2.name/].col("[attr.name.toLowerFirst()/]").equalTo(all.col("[attr.name.toLowerFirst()/]"));
-							[else]
-		joinCondition = joinCondition.and([role2.entity.name.toLowerFirst()/]TDO[ref.name/][role2.name/].col("[attr.name.toLowerFirst()/]").equalTo(all.col("[attr.name.toLowerFirst()/]")));
-							[/if]
-						[/for]
-					[/if]
-		if(joinCondition == null)
-			[role2.entity.name.toLowerFirst()/]TDO[ref.name/][role2.name/] = [role2.entity.name.toLowerFirst()/]TDO[ref.name/][role2.name/].as("A").join(all).select("A.*").as(Encoders.bean([role2.entity.name.toUpperFirst()/]TDO.class));
-		else
-			[role2.entity.name.toLowerFirst()/]TDO[ref.name/][role2.name/] = [role2.entity.name.toLowerFirst()/]TDO[ref.name/][role2.name/].as("A").join(all, joinCondition).select("A.*").as(Encoders.bean([role2.entity.name.toUpperFirst()/]TDO.class));
-	}
+	
 	[comment TODO Multi valued refernece not handled /]
 			[if (ref.sourceField->any(true).oclIsTypeOf(ArrayField) or (ref.sourceField->any(true).ancestors(KVComplexField)->size()>0 and ref.sourceField->any(true).ancestors(KVComplexField)->any(true).type=KVDataType::LIST))]
-	Dataset<Row> res_[ref.name/] = 
+	Dataset<Row> res_[ref.name/]_temp = 
 		[role2.entity.name.toLowerFirst()/]TDO[ref.name/][role2.name/]
 		[for (attr : Attribute | role2.entity.attributes)]
 		.withColumnRenamed("[attr.name.toLowerFirst() /]", "[role2.entity.name/]_[attr.name.toLowerFirst() /]")
@@ -134,7 +117,7 @@
 		.join([role.entity.name.toLowerFirst()/]TDO[ref.name/][role.name /],
 			functions.array_contains([role2.entity.name.toLowerFirst()/]TDO[ref.name/][role2.name/].col("[getJavaAbsolutePath(ref).toLowerFirst() /]_[ref.sourceField->first().getPhysicalName()/]"),[role.entity.name.toLowerFirst()/]TDO[ref.name/][role.name/].col("[getJavaAbsolutePath(ref).toLowerFirst() /]_[ref.targetField->first().getPhysicalName()/]")));
 			[else]
-	Dataset<Row> res_[ref.name/] = 
+	Dataset<Row> res_[ref.name/]_temp = 
 		[role.entity.name.toLowerFirst()/]TDO[ref.name/][role.name /].join([role2.entity.name.toLowerFirst()/]TDO[ref.name/][role2.name/]
 			[for (attr : Attribute | role2.entity.attributes)]
 			.withColumnRenamed("[attr.name.toLowerFirst() /]", "[role2.entity.name/]_[attr.name.toLowerFirst() /]")
@@ -142,8 +125,29 @@
 			.withColumnRenamed("logEvents", "[role2.entity.name/]_logEvents"),
 			[role.entity.name.toLowerFirst()/]TDO[ref.name/][role.name/].col("[getJavaAbsolutePath(ref).toLowerFirst() /]_[ref.targetField->first().getPhysicalName()/]").equalTo([role2.entity.name.toLowerFirst()/]TDO[ref.name/][role2.name/].col("[getJavaAbsolutePath(ref).toLowerFirst() /]_[ref.sourceField->first().getPhysicalName()/]")));
 			[/if]
-	Dataset<[role.entity.name.toUpperFirst()/]> res_[role.entity.name/]_[ref.name/] = res_[ref.name/].select([for (attr : Attribute | role.entity.attributes)] "[attr.name/]",[/for] "logEvents").as(Encoders.bean([role.entity.name.toUpperFirst()/].class));
-				[/if]
+
+	Dataset<[rel.name.toUpperFirst()/]> res_[ref.name/] = res_[ref.name/]_temp.map(
+		(MapFunction<Row, [rel.name.toUpperFirst()/]>) r -> {
+			[rel.name.toUpperFirst()/] res = new [rel.name.toUpperFirst()/]();
+			[role.entity.name.toUpperFirst()/] A = new [role.entity.name.toUpperFirst()/]();
+			[role2.entity.name.toUpperFirst()/] B = new [role2.entity.name.toUpperFirst()/]();
+			[for (attr : Attribute | role.entity.attributes)]
+			A.set[attr.name.toUpperFirst()/](r.getAs("[attr.name.toLowerFirst()/]"));
+			[/for]
+			A.setLogEvents((ArrayList<String>) ScalaUtil.javaList(r.getAs("logEvents")));
+
+			[for (attr : Attribute | role2.entity.attributes)]
+			B.set[attr.name.toUpperFirst()/](r.getAs("[role2.entity.name/]_[attr.name.toLowerFirst()/]"));
+			[/for]
+			B.setLogEvents((ArrayList<String>) ScalaUtil.javaList(r.getAs("[role2.entity.name/]_logEvents")));
+				
+			res.set[role.name.toUpperFirst()/](A);
+			res.set[role2.name.toUpperFirst()/](B);
+			return res;
+		},Encoders.bean([rel.name.toUpperFirst()/].class)
+	);
+
+[/if]
 			
 	datasetsPOJO.add(res_[ref.name/]);
 				[/let]
