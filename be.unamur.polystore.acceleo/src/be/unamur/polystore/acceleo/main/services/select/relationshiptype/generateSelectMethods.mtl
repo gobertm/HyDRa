@@ -218,14 +218,12 @@ return null;
 [if ( joindb.dbType <> pml::DatabaseType::MARIADB or (joindb <> db1 and joindb <> db2))]
 // return join values [ref.name /] [ref2.name/]
 [comment used in case of A--AB--B, with AB being a join structure hosted in db different from A and B /]
-public [if (override = false)]abstract [/if]Dataset<[roleSource.ancestors(RelationshipType)->any(true).name.toUpperFirst() /]TDO> get[roleSource.ancestors(RelationshipType)->any(true).name.toUpperFirst()/]TDOListIn[roleSource.ancestors(pml::RelationshipType)->any(true).name.toUpperFirst()/]_[ref.name.toUpperFirst()/]_[ref2.name.toUpperFirst()/]In[ref.sourceField->first().getAbstractPhysicalStructureNotEmbeddedObject().name.toUpperFirst() /]From[ref.sourceField->first().getPhysicalSchema().name.toUpperFirst()/]()[if (override = false)];[else]{	
+public [if (override = false)]abstract [/if]Dataset<[roleSource.ancestors(RelationshipType)->any(true).name.toUpperFirst() /]TDO> get[roleSource.ancestors(RelationshipType)->any(true).name.toUpperFirst()/]TDOListIn[roleSource.ancestors(pml::RelationshipType)->any(true).name.toUpperFirst()/]_[ref.name.toUpperFirst()/]_[ref2.name.toUpperFirst()/]In[ref.sourceField->first().getAbstractPhysicalStructureNotEmbeddedObject().name.toUpperFirst() /]From[ref.sourceField->first().getPhysicalSchema().name.toUpperFirst()/]([if(roleSource.getRelationShipType().attributes->size()>0)]Condition<[roleSource.getRelationShipType().name.toUpperFirst()/]Attribute> condition, MutableBoolean refilterFlag[/if])[if (override = false)];[else]{	
 [comment TODO Implemented multi composed ref. Currently Apply only to single attribute reference /]
-	Condition condition = null;
 [let dbs : Set(Database) = ref.sourceField->first().getAbstractPhysicalStructureNotEmbeddedObject().getConcernedDatabases(ref.ancestors(Domainmodel)->any(true))]
 [if (dbs->size() = 0)]
 return null;
 [else]
-	MutableBoolean refilterFlag = new MutableBoolean(false);
 [let db : Database = dbs->any(true)]
 [if (db.dbType = pml::DatabaseType::MARIADB or db.dbType = pml::DatabaseType::SQLITE)]
 [comment TODO change here if needed to handle multi composed refrences/]
