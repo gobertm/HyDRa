@@ -318,7 +318,8 @@ values.add(value_[getPhysicalName(field)/]);
 	[if (struct.oclIsTypeOf(Table))]
 	List<String> columns = new ArrayList<>();
 	List<Object> values = new ArrayList<>();
-	String filtercolumn, filtervalue;
+	String filtercolumn; 
+	Object filtervalue;
 		[for (ref : Reference | getRefOfPhysicalStructure(struct))]
 		[let roleref : Role = getMappedRoleOfReference(ref)]
 			[if (entityType=getOppositeRoleInBinaryRel(roleref).entity)]

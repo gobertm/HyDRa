@@ -156,7 +156,7 @@ public class DBConnectionMgr {
 	}
 
 
-	public static void updateInTable(String filtercolumn, String filtervalue, List<String> columns, List<Object> values, String struct, String db) {
+	public static void updateInTable(String filtercolumn, Object filtervalue, List<String> columns, List<Object> values, String struct, String db) {
 		DBCredentials credentials = DBCredentials.getDbPorts().get(db);
 		if((credentials.getDbType().equals("mariadb") || credentials.getDbType().equals("sqlite"))){
 			try {

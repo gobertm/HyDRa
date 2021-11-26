@@ -153,12 +153,14 @@ values.add(value_[getPhysicalName(field)/]);
 	[if (struct.oclIsTypeOf(Table))]
 	List<String> columns = new ArrayList<>();
 	List<Object> values = new ArrayList<>();
-	String filtercolumn, filtervalue;
+	String filtercolumn;
+	Object filtervalue;
 		[for (ref : Reference | getRefOfPhysicalStructure(struct))]
 		[let role : Role = getMappedRoleOfReference(ref)]
+			[if (role.getRelationShipType()=rel)] 
 	columns.add("[ref.sourceField->any(true).oclAsType(PhysicalField).getPhysicalName()/]");
 	values.add([getOppositeRoleInBinaryRel(role).entity.name.toLowerFirst()/].get[getMappedAttributeOfFieldInStructure(ref.targetField->any(true).oclAsType(PhysicalField), ref.targetField->any(true).oclAsType(PhysicalField).getAbstractPhysicalStructureNotEmbeddedObject()).name.toUpperFirst()/]());
-			[for (attr : Attribute | role.entity.identifier.attributes)]
+					[for (attr : Attribute | role.entity.identifier.attributes)]
 						[if (i=1)]
 	filtercolumn = "[getPhysicalName(getMappedPhysicalField(attr, struct, db, role.entity.getMappingRules()))/]";
 	filtervalue = [role.entity.name.toLowerFirst()/].get[attr.name.toUpperFirst()/]();
@@ -166,7 +168,8 @@ values.add(value_[getPhysicalName(field)/]);
 	logger.error("To implement. Support of multi valued identifiers");
 	throw new UnsupportedOperationException("Can't handle multi valued identifiers");
 						[/if]
-			[/for]
+					[/for]
+			[/if]
 		[/let]
 		[/for]
 	DBConnectionMgr.updateInTable(filtercolumn, filtervalue, columns, values, "[struct.name/]", "[db.name/]");					
