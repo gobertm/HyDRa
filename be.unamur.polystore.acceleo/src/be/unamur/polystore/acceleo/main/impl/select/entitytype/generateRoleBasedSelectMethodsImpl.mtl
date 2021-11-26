@@ -394,6 +394,7 @@ private static Dataset<[entityType.name.toUpperFirst()/]> fullOuterJoins[entityT
 [/template]
 
 [template private generateCodeForJoinPhysicalStructure(entity: EntityType, role: Role, ref: Reference, role2 : Role, ref2: Reference)]
+
 [let table : AbstractPhysicalStructure = ref.targetField->first().getAbstractPhysicalStructureNotEmbeddedObject() ]
 [let table2 : AbstractPhysicalStructure = ref2.targetField->first().getAbstractPhysicalStructureNotEmbeddedObject() ]
 [let jointable : AbstractPhysicalStructure = ref2.getAbstractPhysicalStructureNotEmbeddedObject() ]
@@ -407,6 +408,7 @@ private static Dataset<[entityType.name.toUpperFirst()/]> fullOuterJoins[entityT
 MutableBoolean [role.getRelationShipType().name/]_refilter = new MutableBoolean(false);
 Dataset<[role.getRelationShipType().name.toUpperFirst()/]> res_[entity.name/]_[ref.name/]_[ref2.name/] = [role.getRelationShipType().name.toLowerFirst()/]Service.get[role.getRelationShipType().name.toUpperFirst()/]ListIn[table.name/]And[jointable.name/]And[table2.name/]From[db1.name/]([role.name/]_condition, [role2.name/]_condition[if(role.getRelationShipType().attributes->size()>0)], [role.getRelationShipType().name/]_condition[/if], [role.name/]_refilter, [role2.name/]_refilter[if(role.getRelationShipType().attributes->size()>0)], [role.getRelationShipType().name/]_refilter[/if]);
 Dataset<[entity.name.toUpperFirst()/]> res_[entity.name/]_[ref.name/] = null;
+
 if([role2.name/]_refilter.booleanValue()) {
 	if(all == null)
 			all = new [role2.entity.name.toUpperFirst()/]ServiceImpl().get[role2.entity.name.toUpperFirst()/]List([role2.name/]_condition);

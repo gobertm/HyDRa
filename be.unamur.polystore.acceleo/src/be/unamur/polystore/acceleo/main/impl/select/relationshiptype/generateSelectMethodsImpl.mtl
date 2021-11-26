@@ -209,8 +209,8 @@
 
 	[/for]
 	
-	if([role.name/]_refilter.booleanValue() || [role2.name/]_refilter.booleanValue())
-		res = res.filter((FilterFunction<[rel.name.toUpperFirst() /]>) r -> ([role.name/]_condition == null || [role.name/]_condition.evaluate(r.get[role.name.toUpperFirst()/]())) && ([role2.name/]_condition == null || [role2.name/]_condition.evaluate(r.get[role2.name.toUpperFirst()/]())));
+	if([role.name/]_refilter.booleanValue() || [role2.name/]_refilter.booleanValue()[if(role.getRelationShipType().attributes->size() > 0)] || [role.getRelationShipType().name/]_refilter.booleanValue()[/if])
+		res = res.filter((FilterFunction<[rel.name.toUpperFirst() /]>) r -> ([role.name/]_condition == null || [role.name/]_condition.evaluate(r.get[role.name.toUpperFirst()/]())) && ([role2.name/]_condition == null || [role2.name/]_condition.evaluate(r.get[role2.name.toUpperFirst()/]()))[if(role.getRelationShipType().attributes->size()>0)] && ([role.getRelationShipType().name/]_condition == null || [role.getRelationShipType().name/]_condition.evaluate(r))[/if]);
 	
 
 	return res;
