@@ -293,6 +293,7 @@ public class SparkConnectionMgr {
 		MongoCursor<Document> cursor = null;
 		if (bsonQuery != null) {
 			Document query = Document.parse(bsonQuery);
+			logger.debug("Mongo bsonquery : {}", bsonQuery);
 			cursor = collection.aggregate(Arrays.asList(query)).cursor();
 		} else
 			cursor = collection.find().cursor();
@@ -340,6 +341,7 @@ public class SparkConnectionMgr {
 					"jdbc:mysql://" + credentials.getUrl() + ":" + credentials.getPort() + "/" + credentials.getDbName(),
 					credentials.getUserName(), credentials.getUserPwd());
 			stmt = conn.createStatement();
+			logger.debug("SQL query : {}",query);
 			rs = stmt.executeQuery(query);
 			ResultSetMetaData rsmd = rs.getMetaData();
 			while (rs.next()) {
