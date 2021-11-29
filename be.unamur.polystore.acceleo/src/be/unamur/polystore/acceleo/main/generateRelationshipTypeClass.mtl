@@ -36,6 +36,17 @@ public class [rel.name.toUpperFirst() /] extends LoggingPojo {
 		return cloned;
     }
 
+@Override
+	public String toString(){
+		return "[rel.name/] : "+
+				"roles : {" + [for (role: Role | rel.roles) separator ('+"},"+ \n\t\t\t\t\t')] "[role.name/]:[role.entity.name.toUpperFirst()/]={"+[role.name/][/for]+"}"+
+				 "}"+
+			[if (rel.attributes->size()>0)]
+			" attributes : { " + [for (attr: Attribute | rel.attributes) separator ('+", "+\n\t\t\t\t\t')]"[attr.name/]="+[attr.name/] [/for]+"}"; 
+			[else]
+				"";
+			[/if]
+	}
 [for (role: Role | rel.roles)]
 	public [role.entity.name.toUpperFirst()/] get[role.name.toUpperFirst()/]() {
 		return [role.name/];
