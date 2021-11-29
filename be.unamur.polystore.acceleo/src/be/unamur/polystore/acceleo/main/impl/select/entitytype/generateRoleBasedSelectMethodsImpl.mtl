@@ -394,6 +394,7 @@ private static Dataset<[entityType.name.toUpperFirst()/]> fullOuterJoins[entityT
 [/template]
 
 [template private generateCodeForJoinPhysicalStructure(entity: EntityType, role: Role, ref: Reference, role2 : Role, ref2: Reference)]
+
 [let table : AbstractPhysicalStructure = ref.targetField->first().getAbstractPhysicalStructureNotEmbeddedObject() ]
 [let table2 : AbstractPhysicalStructure = ref2.targetField->first().getAbstractPhysicalStructureNotEmbeddedObject() ]
 [let jointable : AbstractPhysicalStructure = ref2.getAbstractPhysicalStructureNotEmbeddedObject() ]
@@ -404,8 +405,10 @@ private static Dataset<[entityType.name.toUpperFirst()/]> fullOuterJoins[entityT
 //join between 3 SQL tables stored in same db
 // (A AB B)
 [role2.name/]_refilter = new MutableBoolean(false);
-Dataset<[role.getRelationShipType().name.toUpperFirst()/]> res_[entity.name/]_[ref.name/]_[ref2.name/] = [role.getRelationShipType().name.toLowerFirst()/]Service.get[role.getRelationShipType().name.toUpperFirst()/]ListIn[table.name/]And[jointable.name/]And[table2.name/]From[db1.name/]([role.name/]_condition, [role2.name/]_condition, [role.name/]_refilter, [role2.name/]_refilter);
+MutableBoolean [role.getRelationShipType().name/]_refilter = new MutableBoolean(false);
+Dataset<[role.getRelationShipType().name.toUpperFirst()/]> res_[entity.name/]_[ref.name/]_[ref2.name/] = [role.getRelationShipType().name.toLowerFirst()/]Service.get[role.getRelationShipType().name.toUpperFirst()/]ListIn[table.name/]And[jointable.name/]And[table2.name/]From[db1.name/]([role.name/]_condition, [role2.name/]_condition[if(role.getRelationShipType().attributes->size()>0)], [role.getRelationShipType().name/]_condition[/if], [role.name/]_refilter, [role2.name/]_refilter[if(role.getRelationShipType().attributes->size()>0)], [role.getRelationShipType().name/]_refilter[/if]);
 Dataset<[entity.name.toUpperFirst()/]> res_[entity.name/]_[ref.name/] = null;
+
 if([role2.name/]_refilter.booleanValue()) {
 	if(all == null)
 			all = new [role2.entity.name.toUpperFirst()/]ServiceImpl().get[role2.entity.name.toUpperFirst()/]List([role2.name/]_condition);
@@ -430,7 +433,8 @@ if([role2.name/]_refilter.booleanValue()) {
 //join between 2 SQL tables and a non-relational structure
 // (A - AB) (B)
 [role2.name/]_refilter = new MutableBoolean(false);
-Dataset<[role.getRelationShipType().name.toUpperFirst()/]TDO> res_[role.getRelationShipType().name/]_[ref.name/]_[ref2.name/] = [role.getRelationShipType().name.toLowerFirst()/]Service.get[role.getRelationShipType().name.toUpperFirst()/]TDOListIn[table.name/]And[jointable.name/]From[db1.name/]([role.name/]_condition, [role.name/]_refilter);
+MutableBoolean [role.getRelationShipType().name/]_refilter = new MutableBoolean(false);
+Dataset<[role.getRelationShipType().name.toUpperFirst()/]TDO> res_[role.getRelationShipType().name/]_[ref.name/]_[ref2.name/] = [role.getRelationShipType().name.toLowerFirst()/]Service.get[role.getRelationShipType().name.toUpperFirst()/]TDOListIn[table.name/]And[jointable.name/]From[db1.name/]([role.name/]_condition[if(role.getRelationShipType().attributes->size()>0)], [role.getRelationShipType().name/]_condition[/if], [role.name/]_refilter[if(role.getRelationShipType().attributes->size()>0)], [role.getRelationShipType().name/]_refilter[/if]);
 Dataset<[role2.entity.name.toUpperFirst()/]TDO> res_[ref2.name/]_[ref.name/] = [role.getRelationShipType().name.toLowerFirst()/]Service.get[role2.entity.name.toUpperFirst()/]TDOList[role2.name.toUpperFirst()/]In[ref2.name.toUpperFirst()/]In[table2.name.toUpperFirst()/]From[table2.getPhysicalSchema().name.toUpperFirst()/]([role2.name/]_condition, [role2.name/]_refilter);
 if([role2.name/]_refilter.booleanValue()) {
 	if(all == null)
@@ -458,12 +462,13 @@ if([role2.name/]_refilter.booleanValue()) {
 
 Dataset<Row> res_row_[ref.name/]_[ref2.name/] = res_[role.getRelationShipType().name/]_[ref.name/]_[ref2.name/].join(res_[ref2.name/]_[ref.name/].withColumnRenamed("logEvents", "[role.getRelationShipType().name/]_logEvents"),
 													res_[role.getRelationShipType().name/]_[ref.name/]_[ref2.name/].col("[getJavaAbsolutePath(ref2).toLowerFirst() /]_[ref2.sourceField->first().getPhysicalName()/]").equalTo(res_[ref2.name/]_[ref.name/].col("[getJavaAbsolutePath(ref2).toLowerFirst() /]_[ref2.targetField->first().getPhysicalName()/]")));
-Dataset<[entity.name.toUpperFirst()/]> res_[entity.name/]_[ref.name/] = res_row_[ref.name/]_[ref2.name/].select("[entity.name.toLowerFirst()/].*").as(Encoders.bean([entity.name.toUpperFirst()/].class));
+Dataset<[entity.name.toUpperFirst()/]> res_[entity.name/]_[ref.name/] = res_row_[ref.name/]_[ref2.name/].select("[role.name.toLowerFirst()/].*").as(Encoders.bean([entity.name.toUpperFirst()/].class));
 [elseif (db2 = joindb and db2.dbType.isRelational())]
 //join between 2 SQL tables and a non-relational structure
 // (A) (AB - B)
 [role2.name/]_refilter = new MutableBoolean(false);
-Dataset<[role2.getRelationShipType().name.toUpperFirst()/]TDO> res_[role2.getRelationShipType().name/]_[ref2.name/]_[ref.name/] = [role2.getRelationShipType().name.toLowerFirst()/]Service.get[role2.getRelationShipType().name.toUpperFirst()/]TDOListIn[table2.name/]And[jointable.name/]From[db2.name/]([role2.name/]_condition, [role2.name/]_refilter);
+MutableBoolean [role.getRelationShipType().name/]_refilter = new MutableBoolean(false);
+Dataset<[role2.getRelationShipType().name.toUpperFirst()/]TDO> res_[role2.getRelationShipType().name/]_[ref2.name/]_[ref.name/] = [role2.getRelationShipType().name.toLowerFirst()/]Service.get[role2.getRelationShipType().name.toUpperFirst()/]TDOListIn[table2.name/]And[jointable.name/]From[db2.name/]([role2.name/]_condition[if(role.getRelationShipType().attributes->size()>0)], [role.getRelationShipType().name/]_condition[/if], [role2.name/]_refilter[if(role.getRelationShipType().attributes->size()>0)], [role.getRelationShipType().name/]_refilter[/if]);
 Dataset<[role.entity.name.toUpperFirst()/]TDO> res_[ref.name/]_[ref2.name/] = [role.getRelationShipType().name.toLowerFirst()/]Service.get[role.entity.name.toUpperFirst()/]TDOList[role.name.toUpperFirst()/]In[ref.name.toUpperFirst()/]In[table.name.toUpperFirst()/]From[table.getPhysicalSchema().name.toUpperFirst()/]([role.name/]_condition, [role.name/]_refilter);
 if([role2.name/]_refilter.booleanValue()) {
 	if(all == null)
@@ -494,8 +499,9 @@ Dataset<[entity.name.toUpperFirst()/]> res_[entity.name/]_[ref.name/] = res_row_
 [else]
 // (A) (AB) (B)  OR (A B) (AB) Join table is 'alone'
 [role2.name/]_refilter = new MutableBoolean(false);
+MutableBoolean [role2.getRelationShipType().name/]_refilter = new MutableBoolean(false);
 Dataset<[entity.name.toUpperFirst()/]TDO> [entity.name.toLowerFirst()/]TDO[ref.name/][role.name/] = [role.getRelationShipType().name.toLowerFirst()/]Service.get[entity.name.toUpperFirst()/]TDOList[role.name.toUpperFirst() /]In[ref.name.toUpperFirst()/]In[ref.targetField->first().getAbstractPhysicalStructureNotEmbeddedObject().name.toUpperFirst() /]From[ref.targetField->first().getPhysicalSchema().name.toUpperFirst()/]([role.name/]_condition, [role.name/]_refilter);
-Dataset<[role.getRelationShipType().name.toUpperFirst()/]TDO> [role.getRelationShipType().name.toLowerFirst()/]TDO[ref.name/]_[ref2.name/] = [role.getRelationShipType().name.toLowerFirst()/]Service.get[role.getRelationShipType().name.toUpperFirst()/]TDOListIn[role.ancestors(RelationshipType)->any(true).name.toUpperFirst()/]_[ref.name.toUpperFirst()/]_[ref2.name.toUpperFirst()/]In[ref.getAbstractPhysicalStructureNotEmbeddedObject().name.toUpperFirst() /]From[ref.getPhysicalSchema().name.toUpperFirst()/]();
+Dataset<[role.getRelationShipType().name.toUpperFirst()/]TDO> [role.getRelationShipType().name.toLowerFirst()/]TDO[ref.name/]_[ref2.name/] = [role.getRelationShipType().name.toLowerFirst()/]Service.get[role.getRelationShipType().name.toUpperFirst()/]TDOListIn[role.ancestors(RelationshipType)->any(true).name.toUpperFirst()/]_[ref.name.toUpperFirst()/]_[ref2.name.toUpperFirst()/]In[ref.getAbstractPhysicalStructureNotEmbeddedObject().name.toUpperFirst() /]From[ref.getPhysicalSchema().name.toUpperFirst()/]([if(role.getRelationShipType().attributes->size()>0)][role.getRelationShipType().name/]_condition, [role.getRelationShipType().name/]_refilter[/if]);
 Dataset<[role2.entity.name.toUpperFirst()/]TDO> [role2.entity.name.toLowerFirst()/]TDO[ref.name/][role2.name/] = [role.getRelationShipType().name.toLowerFirst()/]Service.get[role2.entity.name.toUpperFirst()/]TDOList[role2.name.toUpperFirst() /]In[ref2.name.toUpperFirst()/]In[ref2.targetField->first().getAbstractPhysicalStructureNotEmbeddedObject().name.toUpperFirst() /]From[ref2.targetField->first().getPhysicalSchema().name.toUpperFirst()/]([role2.name/]_condition, [role2.name/]_refilter);
 if([role2.name/]_refilter.booleanValue()) {
 	if(all == null)

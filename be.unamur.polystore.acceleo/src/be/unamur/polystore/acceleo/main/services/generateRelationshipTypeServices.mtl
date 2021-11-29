@@ -24,6 +24,7 @@ import tdo.[rel.name.toUpperFirst()/]TDO;
 import pojo.[role.entity.name.toUpperFirst() /];
 import pojo.[rel.name.toUpperFirst()/];
 import conditions.[role.entity.name.toUpperFirst() /]Attribute;
+import conditions.[role.getRelationShipType().name.toUpperFirst() /]Attribute;
 import org.apache.commons.lang.mutable.MutableBoolean;
 import java.util.List;
 import java.util.ArrayList;
