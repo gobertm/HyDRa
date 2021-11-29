@@ -45,7 +45,7 @@
 [comment List<Customer> getCustomerListInCustomerFromMyMariabDB(Condition) /]
 
 [template public generateSimpleSelectFromGivenDatabase(ent : EntityType, struct: AbstractPhysicalStructure, db : Database)]{
-[if (db.dbType = pml::DatabaseType::MARIADB or db.dbType = pml::DatabaseType::SQLITE)]
+[if (isRelational(db.dbType))]
 [generateSimpleSelectFromGivenRelationalTable(ent, struct, db) /]
 [elseif (db.dbType = pml::DatabaseType::MONGODB)]
 [generateSimpleSelectFromGivenDocumentCollection(ent, struct, db) /]

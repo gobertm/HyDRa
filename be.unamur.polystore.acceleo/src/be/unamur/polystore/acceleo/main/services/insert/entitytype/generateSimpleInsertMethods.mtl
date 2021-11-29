@@ -35,7 +35,7 @@ public [if (override = false)]abstract [/if]boolean insert[entityType.name.toUpp
 	{
 [generateCheckExistBeforeInsert(entityType, struct, db)/]
 	if(!entityExists){
-[if (override = true and (db.dbType = pml::DatabaseType::MARIADB or db.dbType = pml::DatabaseType::SQLITE))]	[insertInSQLDBImpl(entityType, struct, db)/]
+[if (override = true and isRelational(db.dbType))]	[insertInSQLDBImpl(entityType, struct, db)/]
 [elseif (override = true and db.dbType = pml::DatabaseType::MONGODB) ]	[insertInMongoDBImpl(entityType, struct, db) /]
 [elseif (override = true and db.dbType = pml::DatabaseType::REDIS) ]	[insertInRedisImpl(entityType, struct, db) /]
 [else]
