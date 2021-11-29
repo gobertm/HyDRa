@@ -49,8 +49,7 @@ public class DBConnectionMgr {
 	[instantiateLogger('DBConnectionMgr') /]
 	private static Map<String, DBConnection> mapDB = new HashMap<String, DBConnection>(); 
 	private static Map<String, MongoClient> mapMongoConnection = new HashMap<>();
-	private static MongoClient mongoClient;
-	private static Connection connection;
+	private static Map<String, Connection> mapJDBCConnection = new HashMap<>();
 	
 	public static Map<String, DBConnection> getMapDB(){
 		return mapDB;
@@ -116,7 +115,7 @@ public class DBConnectionMgr {
 	}
 
 	public static MongoClient getMongoClient(DBCredentials credentials) {
-		mongoClient = null;
+		MongoClient mongoClient = null;
 		mongoClient = mapMongoConnection.get(credentials.getUrl()+credentials.getPort());
 		if (mongoClient == null) {
 			mongoClient = MongoClients.create(
@@ -184,16 +183,18 @@ public class DBConnectionMgr {
 		}
 	}
 
-	private static Connection getJDBCConnection(DBCredentials credentials) {
+	public static Connection getJDBCConnection(DBCredentials credentials) {
+		Connection res = mapJDBCConnection.get(credentials.getUrl() + credentials.getPort());
 		try {
-			if (connection == null) {
-				connection = DriverManager.getConnection("jdbc:mysql://" + credentials.getUrl() + ":" + credentials.getPort() + "/" + credentials.getDbName(), credentials.getUserName(), credentials.getUserPwd());
+			if (res == null) {
+				res = DriverManager.getConnection("jdbc:mysql://" + credentials.getUrl() + ":" + credentials.getPort() + "/" + credentials.getDbName(), credentials.getUserName(), credentials.getUserPwd());
+				mapJDBCConnection.put(credentials.getUrl() + credentials.getPort(), res);
 			}
 		} catch (SQLException e) {
 			e.printStackTrace();
 			logger.error("Immpossible to connect to relational db ['['/]{} - {} : {}[']'/] ", credentials.getDbName(), credentials.getUrl(),credentials.getPort());
 		}
-		return connection;
+		return res;
 	}
 
 	
@@ -332,13 +333,10 @@ public class SparkConnectionMgr {
 		if (where != null) {
 			query += " WHERE " + where;
 		}
-		Connection conn = null;
+		Connection conn = DBConnectionMgr.getJDBCConnection(credentials);
 		Statement stmt = null;
 		ResultSet rs = null;
 		try {
-			conn = DriverManager.getConnection(
-					"jdbc:mysql://" + credentials.getUrl() + ":" + credentials.getPort() + "/" + credentials.getDbName(),
-					credentials.getUserName(), credentials.getUserPwd());
 			stmt = conn.createStatement();
 			rs = stmt.executeQuery(query);
 			ResultSetMetaData rsmd = rs.getMetaData();
@@ -364,12 +362,6 @@ public class SparkConnectionMgr {
 			if (stmt != null)
 				try {
 					stmt.close();
-				} catch (SQLException e) {
-					e.printStackTrace();
-				}
-			if (conn != null)
-				try {
-					conn.close();
 				} catch (SQLException e) {
 					e.printStackTrace();
 				}
