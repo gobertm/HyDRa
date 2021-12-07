@@ -67,7 +67,6 @@
 [query public getPhysicalName(field : PhysicalField): String
 = invoke('be.unamur.polystore.acceleo.main.utils.MappingRuleService', 'getPhysicalName(be.unamur.polystore.pml.PhysicalField)', Sequence{field}) /]
 
-
 [query public getPreparedValue(attr: Attribute, field: PhysicalField, parent : LongField, escapeSQLReservedChar :  Boolean, escapeMongoReservedChar :  Boolean): String
 = invoke('be.unamur.polystore.acceleo.main.utils.MappingRuleService', 'getPreparedValue(be.unamur.polystore.pml.Attribute, be.unamur.polystore.pml.PhysicalField, be.unamur.polystore.pml.LongField, boolean, boolean)', Sequence{attr, field, parent, escapeSQLReservedChar, escapeMongoReservedChar}) /]
 
@@ -159,3 +158,9 @@
 [query public getMappedAttributes(field: PhysicalField, entOrRel: OclAny, rules: MappingRules) : Collection(Attribute) =  
 	invoke('be.unamur.polystore.acceleo.main.utils.Util', 'getMappedAttributes(be.unamur.polystore.pml.PhysicalField, java.lang.Object, be.unamur.polystore.pml.MappingRules)', Sequence{field, entOrRel, rules})
 /]
+
+[query public getLevel1PhysicalStructures(ent : EntityType, model: Domainmodel) : Collection(AbstractPhysicalStructure) 
+= invoke('be.unamur.polystore.acceleo.main.utils.MappingRuleService', 'getLevel1PhysicalStructures(be.unamur.polystore.pml.EntityType, be.unamur.polystore.pml.Domainmodel)', Sequence{ent, model}) /]
+
+
+

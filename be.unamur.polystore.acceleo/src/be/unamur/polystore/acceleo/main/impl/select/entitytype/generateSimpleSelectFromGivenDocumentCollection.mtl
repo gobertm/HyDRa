@@ -105,6 +105,61 @@
 
 
 [template public generateBSONMatchQueryMethod(pojoName : String, attributes : Collection(Attribute), struct: AbstractPhysicalStructure, db : Database)]
+public static List<String> getBSONUpdateQueryIn[struct.name.toUpperFirst()/]From[db.name.toUpperFirst() /](SetClause<[pojoName.toUpperFirst() /]Attribute> set) {
+	List<String> res = new ArrayList<String>();
+	if(set != null) {
+		java.util.Map<String, java.util.Map<String, String>> longFieldValues = new java.util.HashMap<String, java.util.Map<String, String>>();
+		java.util.Map<[pojoName.toUpperFirst() /]Attribute, Object> clause = set.getClause();
+		for(java.util.Map.Entry<[pojoName.toUpperFirst() /]Attribute, Object> e : clause.entrySet()) {
+			[pojoName.toUpperFirst() /]Attribute attr = e.getKey();
+			Object value = e.getValue();
+				[for (attr : Attribute | attributes)]
+				[let field : PhysicalField = getMappedPhysicalField(attr, struct, db, struct.ancestors(Domainmodel)->first().mappingRules)][if (field <> null)]
+			if(attr == [pojoName.toUpperFirst() /]Attribute.[attr.name /] ) {
+					[if (field.ancestors(LongField) -> size() = 0)]
+				res.add("[getPhysicalName(field)/] : " + Util.getDelimitedMongoValue((value == null ? null : value.getClass()), (value == null ? null : value.toString())));
+					[else]
+				java.util.Map<String, String> longFieldValue = longFieldValues.get("[getPhysicalName(field.ancestors(LongField) -> first().oclAsType(LongField))/]");
+				if(longFieldValue == null) {
+					longFieldValue = new java.util.HashMap<String, String>();
+					longFieldValues.put("[getPhysicalName(field.ancestors(LongField) -> first().oclAsType(LongField))/]", longFieldValue);
+				}
+				longFieldValue.put("[field.oclAsType(BracketsField).name/]", (value == null ? null : value.toString()));
+					[/if]
+			}
+				[/if]
+				[/let]
+				[/for]			
+		}
+
+		for(java.util.Map.Entry<String, java.util.Map<String, String>> entry : longFieldValues.entrySet()) {
+			String longField = entry.getKey();
+			java.util.Map<String, String> values = entry.getValue();
+			[for (lf : LongField | struct.getDescendentsLongField())]
+			if(longField.equals("[getPhysicalName(lf)/]")) {
+				String value;
+				String v;
+				[for (expr : TerminalExpression | lf.pattern)]
+					[if (expr.oclIsTypeOf(pml::BracketsField))]
+				v = values.get("[expr.oclAsType(BracketsField).name/]");
+					[else]
+				v = "[expr.literal/]";
+					[/if]
+				[if (i = 1)]
+				value = v;
+				[else]
+				value += v;
+				[/if]
+				[/for]
+				res.add("[getPhysicalName(lf)/] : " + Util.getDelimitedMongoValue((value == null ? null : value.getClass()), (value == null ? null : value.toString())));
+			}
+			[/for]
+		}
+
+	}
+	return res;
+}
+
 public static String getBSONMatchQueryIn[struct.name.toUpperFirst()/]From[db.name.toUpperFirst() /](Condition<[pojoName.toUpperFirst() /]Attribute> condition, MutableBoolean refilterFlag) {	
 	String res = null;	
 	if(condition != null) {

@@ -5,6 +5,8 @@
 [import be::unamur::polystore::acceleo::main::impl::update::entitytype::generateSimpleUpdateMethodsImpl/]
 
 [template public generateSimpleUpdateMethods(entityType: EntityType, conceptualSchema: ConceptualSchema, override: Boolean)]
+private boolean inUpdateMethod = false;
+private List<Row> all[entityType.name.toUpperFirst() /]IdList = null;
 public [if (override = false)]abstract [/if]void update[entityType.name.toUpperFirst() /]List(conditions.Condition<conditions.[entityType.name.toUpperFirst() /]Attribute> condition, conditions.SetClause<conditions.[entityType.name.toUpperFirst() /]Attribute> set)[if (override = false)];[else][implMethod1(entityType, conceptualSchema) /][/if]
 
 public void update[entityType.name.toUpperFirst() /](pojo.[entityType.name.toUpperFirst() /] [entityType.name.toLower() /]) {

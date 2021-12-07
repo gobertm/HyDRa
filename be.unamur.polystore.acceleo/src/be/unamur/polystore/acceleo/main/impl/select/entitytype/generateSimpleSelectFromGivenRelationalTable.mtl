@@ -30,7 +30,7 @@
 	String where = whereClause.getKey();
 	List<String> preparedValues = whereClause.getValue();
 	for(String preparedValue : preparedValues) {
-		where = where.replaceFirst("\\?", "'" + Util.escapeQuote(preparedValue) + "'");
+		where = where.replaceFirst("\\?", preparedValue);
 	}
 	
 	Dataset<Row> d = dbconnection.SparkConnectionMgr.getDataset("[db.name /]", "[struct.name/]", where);
@@ -151,6 +151,61 @@ public static Pair<String, List<String>> getSQLWhereClauseIn[struct.name.toUpper
 	return getSQLWhereClauseIn[struct.name.toUpperFirst()/]From[db.name.toUpperFirst() /]WithTableAlias(condition, refilterFlag, "");
 }
 
+public static List<String> getSQLSetClauseIn[struct.name.toUpperFirst()/]From[db.name.toUpperFirst() /](conditions.SetClause<[pojoName.toUpperFirst() /]Attribute> set) {
+	List<String> res = new ArrayList<String>();
+	if(set != null) {
+		java.util.Map<String, java.util.Map<String, String>> longFieldValues = new java.util.HashMap<String, java.util.Map<String, String>>();
+		java.util.Map<[pojoName.toUpperFirst() /]Attribute, Object> clause = set.getClause();
+		for(java.util.Map.Entry<[pojoName.toUpperFirst() /]Attribute, Object> e : clause.entrySet()) {
+			[pojoName.toUpperFirst() /]Attribute attr = e.getKey();
+			Object value = e.getValue();
+				[for (attr : Attribute | pojoAttributes)]
+				[let field : PhysicalField = getMappedPhysicalField(attr, struct, db, struct.ancestors(Domainmodel)->first().mappingRules)][if (field <> null)]
+			if(attr == [pojoName.toUpperFirst() /]Attribute.[attr.name /] ) {
+					[if (field.ancestors(LongField) -> size() = 0)]
+				res.add("[getPhysicalName(field)/] = " + Util.getDelimitedSQLValue((value == null ? null : value.getClass()), (value == null ? null : value.toString())));
+					[else]
+				java.util.Map<String, String> longFieldValue = longFieldValues.get("[getPhysicalName(field.ancestors(LongField) -> first().oclAsType(LongField))/]");
+				if(longFieldValue == null) {
+					longFieldValue = new java.util.HashMap<String, String>();
+					longFieldValues.put("[getPhysicalName(field.ancestors(LongField) -> first().oclAsType(LongField))/]", longFieldValue);
+				}
+				longFieldValue.put("[field.oclAsType(BracketsField).name/]", (value == null ? null : value.toString()));
+					[/if]
+			}
+				[/if]
+				[/let]
+				[/for]			
+		}
+
+		for(java.util.Map.Entry<String, java.util.Map<String, String>> entry : longFieldValues.entrySet()) {
+			String longField = entry.getKey();
+			java.util.Map<String, String> values = entry.getValue();
+			[for (lf : LongField | struct.getDescendentsLongField())]
+			if(longField.equals("[getPhysicalName(lf)/]")) {
+				String value;
+				String v;
+				[for (expr : TerminalExpression | lf.pattern)]
+					[if (expr.oclIsTypeOf(pml::BracketsField))]
+				v = values.get("[expr.oclAsType(BracketsField).name/]");
+					[else]
+				v = "[expr.literal/]";
+					[/if]
+				[if (i = 1)]
+				value = v;
+				[else]
+				value += v;
+				[/if]
+				[/for]
+				res.add("[getPhysicalName(lf)/] = " + Util.getDelimitedSQLValue((value == null ? null : value.getClass()), (value == null ? null : value.toString())));
+			}
+			[/for]
+		}
+
+	}
+	return res;
+}
+
 public static Pair<String, List<String>> getSQLWhereClauseIn[struct.name.toUpperFirst()/]From[db.name.toUpperFirst() /]WithTableAlias(Condition<[pojoName.toUpperFirst() /]Attribute> condition, MutableBoolean refilterFlag, String tableAlias) {
 	String where = null;	
 	List<String> preparedValues = new java.util.ArrayList<String>();
@@ -168,13 +223,17 @@ public static Pair<String, List<String>> getSQLWhereClauseIn[struct.name.toUpper
 					isConditionAttrEncountered = true;
 					String valueString = Util.transformSQLValue(value);
 					String sqlOp = op.getSQLOperator();
+					Class cl = null;
 					[if (field.ancestors(LongField) -> size() = 0)]
 					String preparedValue = valueString;
 					if(op == Operator.CONTAINS && valueString != null) {
 						preparedValue = "%" + Util.escapeReservedCharSQL(valueString)  + "%";
-					}
+						cl = String.class;
+					} else
+						cl = value.getClass();
 					[else]
 					[comment no needs to escape if we do not need to use regex /]
+					cl = String.class;
 					String preparedValue = [getPreparedValue(attr, field, field.ancestors(LongField) -> first().oclAsType(LongField), false, false) /];
 					Boolean like_op = false;
 					if(op == Operator.EQUALS && valueString != null && preparedValue.contains("[getPatternOtherValue() /]")) {
@@ -202,6 +261,8 @@ public static Pair<String, List<String>> getSQLWhereClauseIn[struct.name.toUpper
 					[/if]
 					
 					where = tableAlias + "[getPhysicalName(field)/] " + sqlOp + " ?";
+
+					preparedValue = Util.getDelimitedSQLValue(cl, preparedValue);
 					preparedValues.add(preparedValue);
 				}
 				[/if]
@@ -211,6 +272,20 @@ public static Pair<String, List<String>> getSQLWhereClauseIn[struct.name.toUpper
 					refilterFlag.setValue(true);
 					where = "1 = 1";
 				}
+			} else {
+				[for (attr : Attribute | pojoAttributes)]
+				[let field : PhysicalField = getMappedPhysicalField(attr, struct, db, struct.ancestors(Domainmodel)->first().mappingRules)][if (field <> null)]
+				if(attr == [pojoName.toUpperFirst() /]Attribute.[attr.name /] ) {
+					[if (field.ancestors(LongField) -> size() = 0)]
+					if(op == Operator.EQUALS)
+						where =  "[getPhysicalName(field)/] IS NULL";
+					if(op == Operator.NOT_EQUALS)
+						where =  "[getPhysicalName(field)/] IS NOT NULL";
+					[/if]
+				}
+				[/if]
+				[/let]
+				[/for]
 			}
 		}
 

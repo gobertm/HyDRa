@@ -69,12 +69,6 @@ public class Util {
 		return v.replaceAll("\\*", "\\\\\\\\*").replaceAll("\\^", "\\\\\\\\^").replaceAll("\\$", "\\\\\\\\\\$");
 	}
 
-	public static String escapeQuote(String s) {
-		if(s == null)
-			return null;
-		return s.replaceAll("'", "\\\\\\\\'");
-	}
-
 	
 	public static String getDelimitedMongoValue(Class cl, String value) {
 		if(value == null)
@@ -87,6 +81,19 @@ public class Util {
 		//TODO handle the other special data types, e.g., Byte, Date, ...
 		return value;
 		
+	}
+
+	public static String getDelimitedSQLValue(Class cl, String value) {
+		if(value == null)
+			return null;
+		if(cl == null)
+			return value;
+		if(cl == String.class)
+			return "'" + value.replaceAll("'", "\\\\\\\\'") + "'";
+		if(cl == LocalDate.class)
+			return "'" + value + "'";
+		//TODO other data types
+		return value;
 	}
 
 	public static Double getDoubleValue(Object o) {
@@ -624,6 +631,10 @@ public class SetClause<E> {
 		}
 
 		return cl1;
+	}
+
+	public  java.util.Map<E, Object> getClause() {
+		return sets;
 	}
 }
 [/file]

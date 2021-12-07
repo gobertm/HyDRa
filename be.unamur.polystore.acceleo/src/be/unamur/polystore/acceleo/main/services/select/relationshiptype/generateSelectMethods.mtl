@@ -504,13 +504,13 @@ public [if (override = false)]abstract [/if]Dataset<[role.getRelationShipType().
 	String where1 = whereClause.getKey();
 	List<String> preparedValues = whereClause.getValue();
 	for(String preparedValue : preparedValues) {
-		where1 = where1.replaceFirst("\\?", "'" + Util.escapeQuote(preparedValue) + "'");
+		where1 = where1.replaceFirst("\\?", preparedValue);
 	}
 
 	String where2 = whereClause2.getKey();
 	preparedValues = whereClause2.getValue();
 	for(String preparedValue : preparedValues) {
-		where2 = where2.replaceFirst("\\?", "'" + Util.escapeQuote(preparedValue) + "'");
+		where2 = where2.replaceFirst("\\?", preparedValue);
 	}
 	
 	String where = "";
@@ -550,19 +550,19 @@ public [if (override = false)]abstract [/if]Dataset<[role1.getRelationShipType()
 	String where1 = whereClause1.getKey();
 	List<String> preparedValues = whereClause1.getValue();
 	for(String preparedValue : preparedValues) {
-		where1 = where1.replaceFirst("\\?", "'" + Util.escapeQuote(preparedValue) + "'");
+		where1 = where1.replaceFirst("\\?", preparedValue);
 	}
 
 	String where2 = whereClause2.getKey();
 	preparedValues = whereClause2.getValue();
 	for(String preparedValue : preparedValues) {
-		where2 = where2.replaceFirst("\\?", "'" + Util.escapeQuote(preparedValue) + "'");
+		where2 = where2.replaceFirst("\\?", preparedValue);
 	}
 
 	String where3 = whereClause3.getKey();
 	preparedValues = whereClause3.getValue();
 	for(String preparedValue : preparedValues) {
-		where3 = where3.replaceFirst("\\?", "'" + Util.escapeQuote(preparedValue) + "'");
+		where3 = where3.replaceFirst("\\?", preparedValue);
 	}
 
 	String where = "";
@@ -596,13 +596,13 @@ public [if (override = false)]abstract[/if] Dataset<[roleSource.getRelationShipT
 	String where1 = whereClause1.getKey();
 	List<String> preparedValues = whereClause1.getValue();
 	for(String preparedValue : preparedValues) {
-		where1 = where1.replaceFirst("\\?", "'" + Util.escapeQuote(preparedValue) + "'");
+		where1 = where1.replaceFirst("\\?", preparedValue);
 	}
 
 	String where2 = whereClause2.getKey();
 	preparedValues = whereClause2.getValue();
 	for(String preparedValue : preparedValues) {
-		where2 = where2.replaceFirst("\\?", "'" + Util.escapeQuote(preparedValue) + "'");
+		where2 = where2.replaceFirst("\\?", preparedValue);
 	}
 
 	String where = (where1 == null && where2 == null) ? "" : " AND " + (where1 != null && where2 != null ? where1 + " AND " + where2 : (where1 != null ? where1 : where2) );

@@ -207,6 +207,27 @@ public class MappingRuleService {
 		return res;
 	}
 	
+	public static Set<AbstractPhysicalStructure> getLevel1PhysicalStructures(EntityType entity, Domainmodel domain) {
+		Set<AbstractPhysicalStructure> res = getConcernedPhysicalStructures(entity, domain);
+		
+		for(Attribute attr : entity.getAttributes()) {
+			for(PhysicalField pf : getMappedPhysicalFields(attr, domain.getMappingRules())) {
+				EmbeddedObject o = (EmbeddedObject) getFirstAncestor(EmbeddedObject.class, pf);
+				while(o != null && o.getCardinality() != Cardinality.ONE_MANY && o.getCardinality() != Cardinality.ZERO_MANY) {
+					o = (EmbeddedObject) getFirstAncestor(EmbeddedObject.class, o);
+				}
+				
+				if(o != null) {
+					//physical fields contained within an array embedded object
+					AbstractPhysicalStructure struct = getPhysicalStructureNotEmbeddedObject(o);
+					res.remove(struct);
+				}
+			}
+		}
+		
+		return res;
+	}
+	
 	public static Set<AbstractPhysicalStructure> getDescendingOneLevelPhysicalStructuresOfEntity(EntityType entity, Domainmodel domain){
 		Set<AbstractPhysicalStructure> res = new HashSet();
 		List<PhysicalField> fields = new ArrayList<>();

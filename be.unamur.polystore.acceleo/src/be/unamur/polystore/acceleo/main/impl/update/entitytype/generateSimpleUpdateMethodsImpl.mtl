@@ -1,11 +1,180 @@
 [comment encoding = UTF-8 /]
 [module generateSimpleUpdateMethodsImpl('http://www.unamur.be/polystore/Pml')]
+[import be::unamur::polystore::acceleo::main::util /]
+[import be::unamur::polystore::acceleo::main::mappingrules::util /]
+[import be::unamur::polystore::acceleo::main::impl::insert::entitytype::generateSimpleInsertMethodsImpl /]
 
 
 [template public implMethod1(entityType: EntityType, conceptualSchema: ConceptualSchema)]{
-	//TODO
-}[/template]
+	inUpdateMethod = true;
+	try {
+	[for (struct: AbstractPhysicalStructure | getMappedPhysicalStructureToInsertSingleE(entityType, entityType.ancestors(Domainmodel)->first()))]
+	[for (db: Database | getConcernedDatabases(struct, entityType.ancestors(Domainmodel)->first()))]
+		update[entityType.name.toUpperFirst()/]ListIn[struct.name.toUpperFirst()/]From[db.name.toUpperFirst()/](condition, set);
+	[/for]
+	[/for]
+	} finally {
+		inUpdateMethod = false;
+	}
+}
+
+
+[for (struct: AbstractPhysicalStructure | getMappedPhysicalStructureToInsertSingleE(entityType, entityType.ancestors(Domainmodel)->first()))]
+[for (db: Database | getConcernedDatabases(struct, entityType.ancestors(Domainmodel)->first()))]
+public void update[entityType.name.toUpperFirst()/]ListIn[struct.name.toUpperFirst()/]From[db.name.toUpperFirst()/](Condition<[entityType.name.toUpperFirst()/]Attribute> condition, SetClause<[entityType.name.toUpperFirst()/]Attribute> set) {
+[if ((db.dbType.isRelational()))]
+	[updateInSQLDBImpl(entityType, struct, db)/]
+[elseif (db.dbType = pml::DatabaseType::MONGODB) ]
+	[updateInMongoDBImpl(entityType, struct, db) /]
+[elseif (db.dbType = pml::DatabaseType::REDIS) ]	[updateInRedisImpl(entityType, struct, db) /]
+[else]
+		//other databases to implement
+[/if]
+}
+[/for]
+[/for]
+
+
+[/template]
 
 [template public implMethod2(entityType: EntityType, conceptualSchema: ConceptualSchema)]{
 	//TODO
 }[/template]
+
+[template private updateInSQLDBImpl(entity : EntityType, struct : AbstractPhysicalStructure, db : Database)]
+List<String> setClause = [entity.name.toUpperFirst()/]ServiceImpl.getSQLSetClauseIn[struct.name.toUpperFirst()/]From[db.name.toUpperFirst()/](set);
+String setSQL = null;
+for(int i = 0; i < setClause.size(); i++) {
+	if(i == 0)
+		setSQL = setClause.get(i);
+	else
+		setSQL += ", " + setClause.get(i);
+}
+
+if(setSQL == null)
+	return;
+
+MutableBoolean refilter = new MutableBoolean(false);
+Pair<String, List<String>> whereClause = [entity.name.toUpperFirst()/]ServiceImpl.getSQLWhereClauseIn[struct.name.toUpperFirst()/]From[db.name.toUpperFirst()/](condition, refilter);
+if(!refilter.booleanValue()) {
+	String where = whereClause.getKey();
+	List<String> preparedValues = whereClause.getValue();
+	for(String preparedValue : preparedValues) {
+		where = where.replaceFirst("\\?", preparedValue);
+	}
+	
+	String sql = "UPDATE [struct.name/] SET " + setSQL;
+	if(where != null)
+		sql += " WHERE " + where;
+	
+	DBConnectionMgr.updateInTable(sql, "[db.name/]");
+} else {
+	if(!inUpdateMethod || all[entity.name.toUpperFirst()/]IdList == null)
+		all[entity.name.toUpperFirst()/]IdList = this.get[entity.name.toUpperFirst()/]List(condition).select([if (entity.identifier.oclIsUndefined() = false)][for (attr : Attribute | entity.identifier.attributes) separator(',')]"[attr.name/]"[/for][/if]).collectAsList();
+
+	List<String> updateQueries = new ArrayList<String>();
+	for(Row row : all[entity.name.toUpperFirst()/]IdList) {
+		Condition<[entity.name.toUpperFirst()/]Attribute> conditionId = null;
+		[if (entity.identifier.oclIsUndefined() = false)]
+		[for (attr : Attribute | entity.identifier.attributes)]
+		[if (i = 1)]
+		conditionId = Condition.simple([entity.name.toUpperFirst()/]Attribute.[attr.name.toLowerFirst()/], Operator.EQUALS, row.getAs("[attr.name.toLowerFirst()/]"));
+		[else]
+		conditionId = Condition.and(conditionId, Condition.simple([entity.name.toUpperFirst()/]Attribute.[attr.name.toLowerFirst()/], Operator.EQUALS, row.getAs("[attr.name.toLowerFirst()/]")));
+		[/if]
+		[/for]
+		[/if]
+		whereClause = [entity.name.toUpperFirst()/]ServiceImpl.getSQLWhereClauseIn[struct.name.toUpperFirst()/]From[db.name.toUpperFirst()/](conditionId, refilter);
+		String sql = "UPDATE [struct.name/] SET " + setSQL;
+		String where = whereClause.getKey();
+		List<String> preparedValues = whereClause.getValue();
+		for(String preparedValue : preparedValues) {
+			where = where.replaceFirst("\\?", preparedValue);
+		}
+		if(where != null)
+			sql += " WHERE " + where;
+		updateQueries.add(sql);
+	}
+
+	DBConnectionMgr.updatesInTable(updateQueries, "[db.name/]");
+}
+
+[/template]
+
+[template private updateInDescendingMongoDBImpl(entityType : EntityType, struct : AbstractPhysicalStructure, db : Database)]
+List<String> updates = getBSONUpdateQueryIn[struct.name.toUpperFirst()/]From[db.name.toUpperFirst()/](set);
+String setBSON = null;
+for(int i = 0; i < updates.size(); i++) {
+	if(i == 0)
+		setBSON = updates.get(i);
+	else
+		setBSON += ", " + updates.get(i);
+}
+
+if(setBSON == null)
+	return;
+
+Document updateQuery = null;
+setBSON = "{$set: {" + setBSON + "}}";
+updateQuery = Document.parse(setBSON);
+
+MutableBoolean refilter = new MutableBoolean(false);
+String bsonQuery = getBSONMatchQueryIn[struct.name.toUpperFirst()/]From[db.name.toUpperFirst()/](condition, refilter);
+Document query = null;
+if(bsonQuery != null) {
+	bsonQuery = "{" + bsonQuery + "}";
+	query = Document.parse(bsonQuery);	
+}
+
+
+if(!refilter.booleanValue()) {
+	Condition<[entityType.name.toUpperFirst()/]Attribute> temp = null;
+	int i = 0;
+	for(java.util.Map.Entry<[entityType.name.toUpperFirst()/]Attribute, Object> entry : set.getClause().entrySet()) {
+		if(i == 0)
+			temp = Condition.simple(entry.getKey(), Operator.EQUALS, entry.getValue());
+		else
+			temp = Condition.and(temp, Condition.simple(entry.getKey(), Operator.EQUALS, entry.getValue()));
+		i++;
+	}
+
+	DBConnectionMgr.update(query, updateQuery, "[struct.name/]", "[db.name/]");
+} else {
+	if(!inUpdateMethod || all[entityType.name.toUpperFirst()/]IdList == null)
+		all[entityType.name.toUpperFirst()/]IdList = this.get[entityType.name.toUpperFirst()/]List(condition).select([if (entityType.identifier.oclIsUndefined() = false)][for (attr : Attribute | entityType.identifier.attributes) separator(',')]"[attr.name/]"[/for][/if]).collectAsList();
+
+	List<com.mongodb.client.model.UpdateManyModel<Document>> updateQueries = new ArrayList<com.mongodb.client.model.UpdateManyModel<Document>>();
+	for(Row row : all[entityType.name.toUpperFirst()/]IdList) {
+		Condition<[entityType.name.toUpperFirst()/]Attribute> conditionId = null;
+		[if (entityType.identifier.oclIsUndefined() = false)]
+		[for (attr : Attribute | entityType.identifier.attributes)]
+		[if (i = 1)]
+		conditionId = Condition.simple([entityType.name.toUpperFirst()/]Attribute.[attr.name.toLowerFirst()/], Operator.EQUALS, row.getAs("[attr.name.toLowerFirst()/]"));
+		[else]
+		conditionId = Condition.and(conditionId, Condition.simple([entityType.name.toUpperFirst()/]Attribute.[attr.name.toLowerFirst()/], Operator.EQUALS, row.getAs("[attr.name.toLowerFirst()/]")));
+		[/if]
+		[/for]
+		[/if]
+		bsonQuery = [entityType.name.toUpperFirst()/]ServiceImpl.getBSONMatchQueryIn[struct.name.toUpperFirst()/]From[db.name.toUpperFirst()/](conditionId, refilter);
+		bsonQuery = "{" + bsonQuery + "}";
+		query = Document.parse(bsonQuery);	
+
+		updateQueries.add(new com.mongodb.client.model.UpdateManyModel<Document>(query, updateQuery));
+	}
+
+	DBConnectionMgr.bulkUpdatesInMongoDB(updateQueries, "[struct.name/]", "[db.name/]");
+}
+[/template]
+
+[template private updateInMongoDBImpl(entity : EntityType, struct : AbstractPhysicalStructure, db : Database)]
+[if (getLevel1PhysicalStructures(entity, entity.ancestors(Domainmodel)->first())->includes(struct))]
+[updateInDescendingMongoDBImpl(entity, struct, db)/]
+[/if]
+
+
+
+[/template]
+
+[template private updateInRedisImpl(entity : EntityType, struct : AbstractPhysicalStructure, db : Database)]
+//TODO
+[/template]
