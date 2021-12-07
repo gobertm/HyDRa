@@ -151,7 +151,7 @@ public class DBConnectionMgr {
 
 	public static void insertInTable(List<String> columns, List<List<Object>> rows, String struct, String db) {
 		DBCredentials credentials = DBCredentials.getDbPorts().get(db);
-		if((credentials.getDbType().equals("mariadb") || credentials.getDbType().equals("sqlite"))){
+		if((credentials.getDbType().equals("mariadb") || credentials.getDbType().equals("sqlite") || credentials.getDbType().equals("postgresql") || credentials.getDbType().equals("mysql") )){
 			try {
 				String sql = "INSERT INTO " + struct + "("+String.join(",",columns)+") VALUES ("+String.join(",", Collections.nCopies(columns.size(),"?"))+")";
 				PreparedStatement statement = getJDBCConnection(credentials).prepareStatement(sql);
@@ -170,7 +170,7 @@ public class DBConnectionMgr {
 			}
 		}
 		else{
-			logger.error("Can't perform update, wrong database type, need relational (mariadb or sqlite) database. Database : '{}' , type : '{}' ",credentials.getDbName(), credentials.getDbType());
+			logger.error("Can't perform update, wrong database type, need relational (mariadb or sqlite or postgresql or mysql) database. Database : '{}' , type : '{}' ",credentials.getDbName(), credentials.getDbType());
 			throw new RuntimeException("Can't perform update, wrong database type, need document db");
 		}
 	}
@@ -228,7 +228,7 @@ public class DBConnectionMgr {
 
 	public static void updateInTable(String filtercolumn, Object filtervalue, List<String> columns, List<Object> values, String struct, String db) {
 		DBCredentials credentials = DBCredentials.getDbPorts().get(db);
-		if((credentials.getDbType().equals("mariadb") || credentials.getDbType().equals("sqlite"))){
+		if((credentials.getDbType().equals("mariadb") || credentials.getDbType().equals("sqlite") || credentials.getDbType().equals("postgresql") || credentials.getDbType().equals("mysql"))){
 			try {
 				StringJoiner joiner = new StringJoiner(",", "", "= ?");
 				for (String s : columns) {
@@ -249,7 +249,7 @@ public class DBConnectionMgr {
 			}
 		}
 		else{
-			logger.error("Can't perform update, wrong database type, need relational (mariadb or sqlite) database. Database : '{}' , type : '{}' ",credentials.getDbName(), credentials.getDbType());
+			logger.error("Can't perform update, wrong database type, need relational (mariadb or sqlite or postgresql) database. Database : '{}' , type : '{}' ",credentials.getDbName(), credentials.getDbType());
 			throw new RuntimeException("Can't perform update, wrong database type, need document db");
 		}
 	}
@@ -258,7 +258,7 @@ public class DBConnectionMgr {
 		Connection res = mapJDBCConnection.get(credentials.getUrl() + credentials.getPort());
 		try {
 			if (res == null) {
-				res = DriverManager.getConnection("jdbc:mysql://" + credentials.getUrl() + ":" + credentials.getPort() + "/" + credentials.getDbName(), credentials.getUserName(), credentials.getUserPwd());
+				res = DriverManager.getConnection("jdbc:"+credentials.getDbTypeForJDBCConnection()+"://" + credentials.getUrl() + ":" + credentials.getPort() + "/" + credentials.getDbName(), credentials.getUserName(), credentials.getUserPwd());
 				mapJDBCConnection.put(credentials.getUrl() + credentials.getPort(), res);
 			}
 		} catch (SQLException e) {
@@ -385,7 +385,7 @@ public class SparkConnectionMgr {
 		[if (isSparkConfiguration(conceptualSchema))]
 		DBCredentials credentials = DBCredentials.getDbPorts().get(dbName);
 		DataFrameReader dfr = getSession().sqlContext().read().format("jdbc")
-				.option("url", "jdbc:mysql://" + credentials.getUrl() + ":" + credentials.getPort() + "/" + credentials.getDbName())
+				.option("url", "jdbc:"+credentials.getDbType()+"://" + credentials.getUrl() + ":" + credentials.getPort() + "/" + credentials.getDbName())
 				.option("user", credentials.getUserName()).option("password", credentials.getUserPwd());
 
 		Dataset<Row> d = dfr.option("dbtable", physicalStructName).load();
@@ -398,7 +398,7 @@ public class SparkConnectionMgr {
 
 		DBCredentials credentials = DBCredentials.getDbPorts().get(dbName);
 		DataFrameReader dfr = getSession().sqlContext().read().format("jdbc")
-				.option("url", "jdbc:mysql://" + credentials.getUrl() + ":" + credentials.getPort() + "/" + credentials.getDbName())
+				.option("url", "jdbc:"+credentials.getDbType()+"://" + credentials.getUrl() + ":" + credentials.getPort() + "/" + credentials.getDbName())
 				.option("user", credentials.getUserName()).option("password", credentials.getUserPwd());
 
 		String query = "SELECT * FROM " + physicalStructName;
@@ -460,7 +460,7 @@ public class SparkConnectionMgr {
 			{
 			data.write()
 				.format(formattype)
-				.option("url", "jdbc:mysql://" + credentials.getUrl() + ":" + credentials.getPort() + "/" + credentials.getDbName())
+				.option("url", "jdbc:"+credentials.getDbType()+"://" + credentials.getUrl() + ":" + credentials.getPort() + "/" + credentials.getDbName())
 				.option("dbtable",physicalStructName)
 				.option("user", credentials.getUserName()).option("password", credentials.getUserPwd())
 				.mode(SaveMode.Append)
@@ -747,6 +747,17 @@ public class DBCredentials {
     public String getDbType() {
         return dbType;
     }
+
+    public String getDbTypeForJDBCConnection() {
+	    switch (dbType) {
+            case "mysql":
+            case "mariadb":
+                return "mysql";
+            default:
+                return dbType;
+        }
+    }
+
 }
 
 [/file]
@@ -766,20 +777,21 @@ public class RelationalDBConnection implements DBConnection{
 	protected String schemaName;
 	protected String userName;
 	protected String userPassword;
+	protected String dbType;
 
 	protected String jdbcUrl;
 
 	private java.sql.Connection conn = null;
 
-	public RelationalDBConnection(String host, String port, String schemaName, String userName, String userPassword)
+	public RelationalDBConnection(String host, String port, String dbType, String schemaName, String userName, String userPassword)
 			throws ClassNotFoundException, java.sql.SQLException {
 		this.host = host;
 		this.port = port;
 		this.schemaName = schemaName;
 		this.userName = userName;
 		this.userPassword = userPassword;
-
-		this.jdbcUrl = "jdbc:mysql://" + this.host + ":" + this.port + "/" + this.schemaName;
+		this.dbType = dbType;
+		this.jdbcUrl = "jdbc:"+dbType+"://" + this.host + ":" + this.port + "/" + this.schemaName;
 		this.driverClass = "com.mysql.jdbc.Driver";
 
 		//Class.forName(this.driverClass);

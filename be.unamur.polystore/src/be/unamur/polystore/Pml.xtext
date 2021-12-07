@@ -289,7 +289,7 @@ Databases :
 ;
 
 enum DatabaseType :
-	MARIADB = 'mariadb' | SQLITE = 'sqlite' | REDIS ='redis' | CASSANDRA = 'cassandra' | HBASE = 'hbase' | MONGODB = 'mongodb' | NEO4J = 'neo4j'
+	MYSQL = 'mysql' | MARIADB = 'mariadb' | SQLITE = 'sqlite' | POSTGRESQL = 'postgresql' | REDIS ='redis' | CASSANDRA = 'cassandra' | HBASE = 'hbase' | MONGODB = 'mongodb' | NEO4J = 'neo4j'
 ;
 
 Database :

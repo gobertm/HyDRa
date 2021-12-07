@@ -123,7 +123,7 @@ mapping rules {
 }
 
 databases {
-	mariadb mysqlbench{
+	mysql mysqlbench{
 		dbname : "mysqlbench"
 		host : "localhost"
 		login : "root"

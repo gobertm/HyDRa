@@ -24,7 +24,7 @@ then the implementation needs to take into account the type of database in order
 [for (struct: AbstractPhysicalStructure | getConcernedPhysicalStructures(entityType, entityType.ancestors(Domainmodel)->first()))]
 [if (struct.oclIsTypeOf(pml::EmbeddedObject) = false)]
 [for (db: Database | getConcernedDatabases(struct, entityType.ancestors(Domainmodel)->first()))]
-[if (override = true and (db.dbType = pml::DatabaseType::MARIADB or db.dbType = pml::DatabaseType::SQLITE))][generateGetSQLWhereClauseMethod(entityType, struct, db)/][/if]
+[if (override = true and isRelational(db.dbType))][generateGetSQLWhereClauseMethod(entityType, struct, db)/][/if]
 [if (override = true and db.dbType = pml::DatabaseType::MONGODB) ][generateBSONMatchQueryMethod(entityType, struct, db) /][/if]
 [if (override = true and db.dbType = pml::DatabaseType::REDIS) ]//TODO redis[/if]
 public [if (override = false)]abstract [/if]Dataset<[entityType.name.toUpperFirst()/]> get[entityType.name.toUpperFirst() /]ListIn[struct.name.toUpperFirst()/]From[db.name.toUpperFirst() /](conditions.Condition<conditions.[entityType.name.toUpperFirst() /]Attribute> condition, MutableBoolean refilterFlag)[if (override = false)];[else][generateSimpleSelectFromGivenDatabase(entityType, struct, db) /][/if]

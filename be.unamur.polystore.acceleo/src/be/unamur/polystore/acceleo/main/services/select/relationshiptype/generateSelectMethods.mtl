@@ -131,7 +131,7 @@ public [if (override = false)]abstract [/if]Dataset<[roleSource.entity.name.toUp
 return null;
 [else]
 [let db : Database = dbs->any(true)]
-[if (db.dbType = pml::DatabaseType::MARIADB or db.dbType = pml::DatabaseType::SQLITE)]
+[if (isRelational(db.dbType))]
 [comment TODO change here if needed to handle multi composed refrences/]
 [generateSimpleSelectFromGivenRelationalTable(roleSource.entity, ref.getAbstractPhysicalStructureNotEmbeddedObject(), db, Sequence{Sequence{ref, ref.sourceField}})/]
 [/if]
@@ -156,7 +156,7 @@ public [if (override = false)]abstract [/if]Dataset<[roleTarget.entity.name.toUp
 return null;
 [else]
 [let db : Database = dbs->any(true)]
-[if (db.dbType = pml::DatabaseType::MARIADB or db.dbType = pml::DatabaseType::SQLITE)]
+[if (isRelational(db.dbType))]
 [generateSimpleSelectFromGivenRelationalTable(roleTarget.entity, ref.targetField->any(true).getAbstractPhysicalStructureNotEmbeddedObject(), db, Sequence{Sequence{ref, ref.targetField}})/][/if]
 [if (db.dbType = pml::DatabaseType::MONGODB)] 
 [generateSimpleSelectFromGivenDocumentCollection(roleTarget.entity, ref.targetField->any(true).getAbstractPhysicalStructureNotEmbeddedObject(), db, Sequence{Sequence{ref, ref.targetField}}) /]
@@ -200,7 +200,7 @@ public [if (override = false)]abstract [/if]Dataset<[roleSource.entity.name.toUp
 return null;
 [else]
 [let db : Database = dbs->any(true)]
-[if (db.dbType = pml::DatabaseType::MARIADB or db.dbType = pml::DatabaseType::SQLITE)]
+[if (isRelational(db.dbType))]
 [comment TODO change here if needed to handle multi composed refrences/]
 [generateSimpleSelectFromGivenRelationalTable(roleSource.entity, ref.targetField->first().getAbstractPhysicalStructureNotEmbeddedObject(), db, Sequence{Sequence{ref, ref.targetField}})/]
 [/if]
@@ -215,7 +215,7 @@ return null;
 [/let]		
 }[/if]
 
-[if ( joindb.dbType <> pml::DatabaseType::MARIADB or (joindb <> db1 and joindb <> db2))]
+[if ( isRelational(joindb.dbType)=false or (joindb <> db1 and joindb <> db2))]
 // return join values [ref.name /] [ref2.name/]
 [comment used in case of A--AB--B, with AB being a join structure hosted in db different from A and B /]
 public [if (override = false)]abstract [/if]Dataset<[roleSource.ancestors(RelationshipType)->any(true).name.toUpperFirst() /]TDO> get[roleSource.ancestors(RelationshipType)->any(true).name.toUpperFirst()/]TDOListIn[roleSource.ancestors(pml::RelationshipType)->any(true).name.toUpperFirst()/]_[ref.name.toUpperFirst()/]_[ref2.name.toUpperFirst()/]In[ref.sourceField->first().getAbstractPhysicalStructureNotEmbeddedObject().name.toUpperFirst() /]From[ref.sourceField->first().getPhysicalSchema().name.toUpperFirst()/]([if(roleSource.getRelationShipType().attributes->size()>0)]Condition<[roleSource.getRelationShipType().name.toUpperFirst()/]Attribute> condition, MutableBoolean refilterFlag[/if])[if (override = false)];[else]{	
@@ -225,7 +225,7 @@ public [if (override = false)]abstract [/if]Dataset<[roleSource.ancestors(Relati
 return null;
 [else]
 [let db : Database = dbs->any(true)]
-[if (db.dbType = pml::DatabaseType::MARIADB or db.dbType = pml::DatabaseType::SQLITE)]
+[if (isRelational(db.dbType))]
 [comment TODO change here if needed to handle multi composed refrences/]
 [generateSimpleSelectFromGivenRelationalTable(roleSource.ancestors(RelationshipType)->any(true), ref.sourceField->first().getAbstractPhysicalStructureNotEmbeddedObject(), db, Sequence{Sequence{ref, ref.sourceField}, Sequence{ref2, ref2.sourceField}})/]
 [/if]
@@ -246,7 +246,7 @@ return null;
 [let dbs : Set(Database) = struct.getConcernedDatabases(ref.ancestors(Domainmodel)->any(true))]
 [let rel : RelationshipType = roleSource.ancestors(RelationshipType)->any(true)]
 [for (db : Database | dbs)]
-[if (override = true and (db.dbType = pml::DatabaseType::MARIADB or db.dbType = pml::DatabaseType::SQLITE))][generateGetSQLWhereClauseMethod(rel, struct, db)/][/if]
+[if (override = true and (isRelational(db.dbType)))][generateGetSQLWhereClauseMethod(rel, struct, db)/][/if]
 [if (override = true and db.dbType = pml::DatabaseType::MONGODB) ][generateBSONMatchQueryMethod(rel, struct, db) /][/if]
 [if (override = true and db.dbType = pml::DatabaseType::REDIS) ]//TODO redis[/if]
 [/for]

@@ -179,7 +179,7 @@ field.eContainer(AbstractPhysicalSchema).name + '_' + field.getAbstractPhysicalS
 invoke('be.unamur.polystore.acceleo.main.utils.Util', 'getPhysicalFieldAbsolutePath(be.unamur.polystore.pml.PhysicalField)', Sequence{field})
 /]
 
-[query public isRelational(dbType : DatabaseType) : Boolean = dbType = DatabaseType::MARIADB or  dbType = DatabaseType::SQLITE/]
+[query public isRelational(dbType : DatabaseType) : Boolean = dbType = DatabaseType::MARIADB or  dbType = DatabaseType::SQLITE or dbType = pml::DatabaseType::POSTGRESQL or dbType = pml::DatabaseType::MYSQL/]
 
 [query public getPomArtifactId() : String =  
 invoke('be.unamur.polystore.acceleo.main.utils.Util', 'getPomArtifactId()', Sequence{})
