@@ -329,6 +329,12 @@ public class Util {
 		return GROUPID;
 	}
 	
+	public static PhysicalField getStartField(PhysicalField field) {
+		if(field.eContainer() instanceof LongField)
+			return (LongField) field.eContainer();
+		return field;
+	}
+	
 	
 	
 

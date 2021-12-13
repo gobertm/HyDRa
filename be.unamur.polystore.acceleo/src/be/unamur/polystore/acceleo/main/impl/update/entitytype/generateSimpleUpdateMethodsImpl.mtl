@@ -10,9 +10,30 @@
 	try {
 	[for (struct: AbstractPhysicalStructure | getMappedPhysicalStructureToInsertSingleE(entityType, entityType.ancestors(Domainmodel)->first()))]
 	[for (db: Database | getConcernedDatabases(struct, entityType.ancestors(Domainmodel)->first()))]
-		update[entityType.name.toUpperFirst()/]ListIn[struct.name.toUpperFirst()/]From[db.name.toUpperFirst()/](condition, set);
+		MutableBoolean refilterIn[struct.name.toUpperFirst()/]From[db.name.toUpperFirst()/] = new MutableBoolean(false);
+		[if (db.dbType.isRelational())]
+		getSQLWhereClauseIn[struct.name.toUpperFirst()/]From[db.name.toUpperFirst()/](condition, refilterIn[struct.name.toUpperFirst()/]From[db.name.toUpperFirst()/]);
+		[/if]
+		[if (db.dbType = pml::DatabaseType::MONGODB)]
+		getBSONQueryAndArrayFilterForUpdateQueryIn[struct.name.toUpperFirst()/]From[db.name.toUpperFirst()/](condition, new ArrayList<String>(), new HashSet<String>(), refilterIn[struct.name.toUpperFirst()/]From[db.name.toUpperFirst()/]);
+		[/if]
+		[if (db.dbType = pml::DatabaseType::REDIS)]
+		//TODO
+		[/if]
+		// one first updates in the structures necessitating to execute a "SELECT *" query to establish the update condition 
+		if(refilterIn[struct.name.toUpperFirst()/]From[db.name.toUpperFirst()/].booleanValue())
+			update[entityType.name.toUpperFirst()/]ListIn[struct.name.toUpperFirst()/]From[db.name.toUpperFirst()/](condition, set);
+	
 	[/for]
 	[/for]
+
+	[for (struct: AbstractPhysicalStructure | getMappedPhysicalStructureToInsertSingleE(entityType, entityType.ancestors(Domainmodel)->first()))]
+	[for (db: Database | getConcernedDatabases(struct, entityType.ancestors(Domainmodel)->first()))]
+		if(!refilterIn[struct.name.toUpperFirst()/]From[db.name.toUpperFirst()/].booleanValue())
+			update[entityType.name.toUpperFirst()/]ListIn[struct.name.toUpperFirst()/]From[db.name.toUpperFirst()/](condition, set);
+	[/for]
+	[/for]
+
 	} finally {
 		inUpdateMethod = false;
 	}
@@ -26,7 +47,8 @@ public void update[entityType.name.toUpperFirst()/]ListIn[struct.name.toUpperFir
 	[updateInSQLDBImpl(entityType, struct, db)/]
 [elseif (db.dbType = pml::DatabaseType::MONGODB) ]
 	[updateInMongoDBImpl(entityType, struct, db) /]
-[elseif (db.dbType = pml::DatabaseType::REDIS) ]	[updateInRedisImpl(entityType, struct, db) /]
+[elseif (db.dbType = pml::DatabaseType::REDIS) ]	
+	[updateInRedisImpl(entityType, struct, db) /]
 [else]
 		//other databases to implement
 [/if]
@@ -102,13 +124,20 @@ if(!refilter.booleanValue()) {
 [/template]
 
 [template private updateInDescendingMongoDBImpl(entityType : EntityType, struct : AbstractPhysicalStructure, db : Database)]
-List<String> updates = getBSONUpdateQueryIn[struct.name.toUpperFirst()/]From[db.name.toUpperFirst()/](set);
+
+}
+[/template]
+
+[template private updateInMongoDBImpl(entityType : EntityType, struct : AbstractPhysicalStructure, db : Database)]
+Pair<List<String>, List<String>> updates = getBSONUpdateQueryIn[struct.name.toUpperFirst()/]From[db.name.toUpperFirst()/](set);
+List<String> sets = updates.getLeft();
+final List<String> arrayVariableNames = updates.getRight();
 String setBSON = null;
-for(int i = 0; i < updates.size(); i++) {
+for(int i = 0; i < sets.size(); i++) {
 	if(i == 0)
-		setBSON = updates.get(i);
+		setBSON = sets.get(i);
 	else
-		setBSON += ", " + updates.get(i);
+		setBSON += ", " + sets.get(i);
 }
 
 if(setBSON == null)
@@ -119,30 +148,37 @@ setBSON = "{$set: {" + setBSON + "}}";
 updateQuery = Document.parse(setBSON);
 
 MutableBoolean refilter = new MutableBoolean(false);
-String bsonQuery = getBSONMatchQueryIn[struct.name.toUpperFirst()/]From[db.name.toUpperFirst()/](condition, refilter);
+Set<String> arrayVariablesUsed = new HashSet<String>();
+Pair<String, List<String>> queryAndArrayFilter = getBSONQueryAndArrayFilterForUpdateQueryIn[struct.name.toUpperFirst()/]From[db.name.toUpperFirst()/](condition, arrayVariableNames, arrayVariablesUsed, refilter);
 Document query = null;
+String bsonQuery = queryAndArrayFilter.getLeft();
 if(bsonQuery != null) {
 	bsonQuery = "{" + bsonQuery + "}";
 	query = Document.parse(bsonQuery);	
 }
 
+List<Bson> arrayFilterDocs = new ArrayList<Bson>();
+List<String> arrayFilters = queryAndArrayFilter.getRight();
+for(String arrayFilter : arrayFilters)
+	arrayFilterDocs.add(Document.parse( "{" + arrayFilter + "}"));
 
-if(!refilter.booleanValue()) {
-	Condition<[entityType.name.toUpperFirst()/]Attribute> temp = null;
-	int i = 0;
-	for(java.util.Map.Entry<[entityType.name.toUpperFirst()/]Attribute, Object> entry : set.getClause().entrySet()) {
-		if(i == 0)
-			temp = Condition.simple(entry.getKey(), Operator.EQUALS, entry.getValue());
-		else
-			temp = Condition.and(temp, Condition.simple(entry.getKey(), Operator.EQUALS, entry.getValue()));
-		i++;
+for(String arrayVariableName : arrayVariableNames)
+	if(!arrayVariablesUsed.contains(arrayVariableName)) {
+		arrayFilterDocs.add(Document.parse("{" + arrayVariableName + ": {$exists: true}}"));
 	}
 
-	DBConnectionMgr.update(query, updateQuery, "[struct.name/]", "[db.name/]");
+
+if(!refilter.booleanValue()) {
+	if(arrayFilterDocs.size() == 0) {
+		DBConnectionMgr.update(query, updateQuery, "[struct.name/]", "[db.name/]");
+	} else {
+		DBConnectionMgr.upsertMany(query, updateQuery, arrayFilterDocs, "[struct.name/]", "[db.name/]");
+	}
+
+	
 } else {
 	if(!inUpdateMethod || all[entityType.name.toUpperFirst()/]IdList == null)
 		all[entityType.name.toUpperFirst()/]IdList = this.get[entityType.name.toUpperFirst()/]List(condition).select([if (entityType.identifier.oclIsUndefined() = false)][for (attr : Attribute | entityType.identifier.attributes) separator(',')]"[attr.name/]"[/for][/if]).collectAsList();
-
 	List<com.mongodb.client.model.UpdateManyModel<Document>> updateQueries = new ArrayList<com.mongodb.client.model.UpdateManyModel<Document>>();
 	for(Row row : all[entityType.name.toUpperFirst()/]IdList) {
 		Condition<[entityType.name.toUpperFirst()/]Attribute> conditionId = null;
@@ -155,24 +191,33 @@ if(!refilter.booleanValue()) {
 		[/if]
 		[/for]
 		[/if]
-		bsonQuery = [entityType.name.toUpperFirst()/]ServiceImpl.getBSONMatchQueryIn[struct.name.toUpperFirst()/]From[db.name.toUpperFirst()/](conditionId, refilter);
-		bsonQuery = "{" + bsonQuery + "}";
-		query = Document.parse(bsonQuery);	
 
-		updateQueries.add(new com.mongodb.client.model.UpdateManyModel<Document>(query, updateQuery));
+		arrayVariablesUsed = new HashSet<String>();
+		queryAndArrayFilter = getBSONQueryAndArrayFilterForUpdateQueryIn[struct.name.toUpperFirst()/]From[db.name.toUpperFirst()/](conditionId, arrayVariableNames, arrayVariablesUsed, refilter);
+		query = null;
+		bsonQuery = queryAndArrayFilter.getLeft();
+		if(bsonQuery != null) {
+			bsonQuery = "{" + bsonQuery + "}";
+			query = Document.parse(bsonQuery);	
+		}
+		
+		arrayFilterDocs = new ArrayList<Bson>();
+		arrayFilters = queryAndArrayFilter.getRight();
+		for(String arrayFilter : arrayFilters)
+			arrayFilterDocs.add(Document.parse( "{" + arrayFilter + "}"));
+		
+		for(String arrayVariableName : arrayVariableNames)
+			if(!arrayVariablesUsed.contains(arrayVariableName)) {
+				arrayFilterDocs.add(Document.parse("{" + arrayVariableName + ": {$exists: true}}"));
+			}
+		if(arrayFilterDocs.size() == 0)
+			updateQueries.add(new com.mongodb.client.model.UpdateManyModel<Document>(query, updateQuery));
+		else
+			updateQueries.add(new com.mongodb.client.model.UpdateManyModel<Document>(query, updateQuery, new com.mongodb.client.model.UpdateOptions().arrayFilters(arrayFilterDocs)));
 	}
 
 	DBConnectionMgr.bulkUpdatesInMongoDB(updateQueries, "[struct.name/]", "[db.name/]");
 }
-[/template]
-
-[template private updateInMongoDBImpl(entity : EntityType, struct : AbstractPhysicalStructure, db : Database)]
-[if (getLevel1PhysicalStructures(entity, entity.ancestors(Domainmodel)->first())->includes(struct))]
-[updateInDescendingMongoDBImpl(entity, struct, db)/]
-[/if]
-
-
-
 [/template]
 
 [template private updateInRedisImpl(entity : EntityType, struct : AbstractPhysicalStructure, db : Database)]

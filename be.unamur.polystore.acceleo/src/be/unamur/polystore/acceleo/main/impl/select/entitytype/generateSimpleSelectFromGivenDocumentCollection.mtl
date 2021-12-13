@@ -105,8 +105,9 @@
 
 
 [template public generateBSONMatchQueryMethod(pojoName : String, attributes : Collection(Attribute), struct: AbstractPhysicalStructure, db : Database)]
-public static List<String> getBSONUpdateQueryIn[struct.name.toUpperFirst()/]From[db.name.toUpperFirst() /](SetClause<[pojoName.toUpperFirst() /]Attribute> set) {
+public static Pair<List<String>, List<String>> getBSONUpdateQueryIn[struct.name.toUpperFirst()/]From[db.name.toUpperFirst() /](SetClause<[pojoName.toUpperFirst() /]Attribute> set) {
 	List<String> res = new ArrayList<String>();
+	Set<String> arrayFields = new HashSet<String>();
 	if(set != null) {
 		java.util.Map<String, java.util.Map<String, String>> longFieldValues = new java.util.HashMap<String, java.util.Map<String, String>>();
 		java.util.Map<[pojoName.toUpperFirst() /]Attribute, Object> clause = set.getClause();
@@ -117,7 +118,17 @@ public static List<String> getBSONUpdateQueryIn[struct.name.toUpperFirst()/]From
 				[let field : PhysicalField = getMappedPhysicalField(attr, struct, db, struct.ancestors(Domainmodel)->first().mappingRules)][if (field <> null)]
 			if(attr == [pojoName.toUpperFirst() /]Attribute.[attr.name /] ) {
 					[if (field.ancestors(LongField) -> size() = 0)]
-				res.add("[getPhysicalName(field)/] : " + Util.getDelimitedMongoValue((value == null ? null : value.getClass()), (value == null ? null : value.toString())));
+				String fieldName = "[getPhysicalName(field)/]";
+						[for (parent : PhysicalField | field.ancestors(PhysicalField))]
+							[if (parent.isArrayEmbeddedObject())]
+				fieldName = "[parent.getPhysicalName()/].$['['/][getArrayFilterVariableName(parent.oclAsType(EmbeddedObject))/][']'/]." + fieldName;
+				arrayFields.add("[getArrayFilterVariableName(parent.oclAsType(EmbeddedObject))/]");
+							[else]
+				fieldName = "[parent.getPhysicalName()/]." + fieldName;
+							[/if]
+						[/for]
+				fieldName = "'" + fieldName + "'";
+				res.add(fieldName + " : " + Util.getDelimitedMongoValue((value == null ? null : value.getClass()), (value == null ? null : value.toString())));
 					[else]
 				java.util.Map<String, String> longFieldValue = longFieldValues.get("[getPhysicalName(field.ancestors(LongField) -> first().oclAsType(LongField))/]");
 				if(longFieldValue == null) {
@@ -151,13 +162,24 @@ public static List<String> getBSONUpdateQueryIn[struct.name.toUpperFirst()/]From
 				value += v;
 				[/if]
 				[/for]
-				res.add("[getPhysicalName(lf)/] : " + Util.getDelimitedMongoValue((value == null ? null : value.getClass()), (value == null ? null : value.toString())));
+
+				String fieldName = "[getPhysicalName(lf)/]";
+				[for (parent : PhysicalField | lf.ancestors(PhysicalField))]
+					[if (parent.isArrayEmbeddedObject())]
+				fieldName = "[parent.getPhysicalName()/].$['['/][getArrayFilterVariableName(parent.oclAsType(EmbeddedObject))/][']'/]." + fieldName;
+				arrayFields.add("[getArrayFilterVariableName(parent.oclAsType(EmbeddedObject))/]");
+					[else]
+				fieldName = "[parent.getPhysicalName()/]." + fieldName;
+					[/if]
+				[/for]
+				fieldName = "'" + fieldName + "'";
+				res.add(fieldName + " : " + Util.getDelimitedMongoValue((value == null ? null : value.getClass()), (value == null ? null : value.toString())));
 			}
 			[/for]
 		}
 
 	}
-	return res;
+	return new ImmutablePair<List<String>, List<String>>(res, new ArrayList<String>(arrayFields));
 }
 
 public static String getBSONMatchQueryIn[struct.name.toUpperFirst()/]From[db.name.toUpperFirst() /](Condition<[pojoName.toUpperFirst() /]Attribute> condition, MutableBoolean refilterFlag) {	
@@ -274,6 +296,149 @@ public static String getBSONMatchQueryIn[struct.name.toUpperFirst()/]From[db.nam
 
 	return res;
 }
+
+public static Pair<String, List<String>> getBSONQueryAndArrayFilterForUpdateQueryIn[struct.name.toUpperFirst()/]From[db.name.toUpperFirst() /](Condition<[pojoName.toUpperFirst() /]Attribute> condition, final List<String> arrayVariableNames, Set<String> arrayVariablesUsed, MutableBoolean refilterFlag) {	
+	String query = null;
+	List<String> arrayFilters = new ArrayList<String>();
+	if(condition != null) {
+		if(condition instanceof SimpleCondition) {
+			String bson = null;
+			[pojoName /]Attribute attr = ((SimpleCondition<[pojoName /]Attribute>) condition).getAttribute();
+			Operator op = ((SimpleCondition<[pojoName /]Attribute>) condition).getOperator();
+			Object value = ((SimpleCondition<[pojoName /]Attribute>) condition).getValue();
+			if(value != null) {
+				String valueString = Util.transformBSONValue(value);
+				boolean isConditionAttrEncountered = false;
+
+				[for (attr : Attribute | attributes)]
+				[let field : PhysicalField = getMappedPhysicalField(attr, struct, db, struct.ancestors(Domainmodel)->first().mappingRules)][if (field <> null)]
+				if(attr == [pojoName.toUpperFirst() /]Attribute.[attr.name /] ) {
+					isConditionAttrEncountered = true;
+				[if (field.ancestors(LongField) -> size() > 0)]
+				String preparedValue = [getPreparedValue(attr, field, field.ancestors(LongField) -> first().oclAsType(LongField), false, false) /];
+				boolean like_op = false;
+				boolean not_like = false; 
+				if(op == Operator.EQUALS && valueString != null && preparedValue.contains("[getPatternOtherValue() /]")) {
+					//ex: @@VAR@@' '@@OTHERVAR@@"=> more than one vars in LongField: we shall use regex
+					like_op = true;
+					preparedValue = [getPreparedValue(attr, field, field.ancestors(LongField) -> first().oclAsType(LongField), false, true) /];
+				} else {
+					if(op == Operator.NOT_EQUALS && valueString != null && preparedValue.contains("[getPatternOtherValue() /]")) {
+						//ex: @@VAR@@' '@@OTHERVAR@@"=> more than one vars in LongField: we shall use regex
+						not_like = true;
+						like_op = true;
+						preparedValue = [getPreparedValue(attr, field, field.ancestors(LongField) -> first().oclAsType(LongField), false, true) /];
+					}
+				}
+				if(op == Operator.CONTAINS && valueString != null) {
+					like_op = true;
+					preparedValue = [getPreparedValue(attr, field, field.ancestors(LongField) -> first().oclAsType(LongField), false, true) /];
+					preparedValue = preparedValue.replaceAll("[getPatternValue() /]", ".*[getPatternValue() /].*");
+				}
+					
+				if(like_op)
+					valueString = Util.escapeReservedRegexMongo(valueString);
+				preparedValue = preparedValue.replaceAll("[getPatternValue() /]", valueString).replaceAll("[getPatternOtherValue() /]", ".*");
+				
+				if(valueString.equals(preparedValue)) // 5 <=> 5, the preparedValue is the same type as the original value
+					preparedValue = Util.getDelimitedMongoValue(value.getClass(), preparedValue);
+				else // 5 => 5*, the preparedValue became a string
+					preparedValue = Util.getDelimitedMongoValue(String.class, preparedValue);
+					
+
+				String mongoOp = (like_op) ? "$regex" : op.getMongoDBOperator();
+				//if not_like = true then we need to complement/negate the given regex
+				bson = "[getPhysicalName(field)/]': {" + (!not_like ? (mongoOp + ": " + preparedValue) : ("$not: {" + mongoOp + ": " + preparedValue + "}")) + "}";
+				[else]
+					String mongoOp = op.getMongoDBOperator();
+					String preparedValue = valueString;
+					if(op == Operator.CONTAINS && valueString != null) {
+						preparedValue = "'.*" + Util.escapeReservedRegexMongo(valueString)  + ".*'";
+					} else {
+						preparedValue = Util.getDelimitedMongoValue(value.getClass(), preparedValue);
+					}
+					bson = "[getPhysicalName(field) /]': {" + mongoOp + ": " + preparedValue + "}";
+				[/if]
+				
+					boolean arrayVar = false;
+					[for (parent : PhysicalField | getStartField(field).ancestors(PhysicalField))]
+					if(!arrayVar) {
+						[if (parent.isArrayEmbeddedObject())]
+						if(arrayVariableNames.contains("[getArrayFilterVariableName(parent.oclAsType(EmbeddedObject))/]")) {
+							arrayVar = true;
+							arrayVariablesUsed.add("[getArrayFilterVariableName(parent.oclAsType(EmbeddedObject))/]");
+							bson = "[getArrayFilterVariableName(parent.oclAsType(EmbeddedObject))/]." + bson; 
+						} else {
+							bson = "[parent.getPhysicalName()/]." + bson;
+						}
+						[else]
+						bson = "[parent.getPhysicalName()/]." + bson;
+						[/if]
+					}
+					[/for]
+
+					bson = "'" + bson;
+					if(arrayVar)
+						arrayFilters.add(bson);
+					else
+						query = bson;
+				}
+				[/if]
+				[/let]
+				[/for]
+				if(!isConditionAttrEncountered) {
+					refilterFlag.setValue(true);
+				}
+				
+			}
+
+		}
+
+		if(condition instanceof AndCondition) {
+			Pair<String, List<String>> bsonLeft = getBSONQueryAndArrayFilterForUpdateQueryIn[struct.name.toUpperFirst()/]From[db.name.toUpperFirst() /](((AndCondition)condition).getLeftCondition(), arrayVariableNames, arrayVariablesUsed, refilterFlag);
+			Pair<String, List<String>> bsonRight = getBSONQueryAndArrayFilterForUpdateQueryIn[struct.name.toUpperFirst()/]From[db.name.toUpperFirst() /](((AndCondition)condition).getRightCondition(), arrayVariableNames, arrayVariablesUsed, refilterFlag);			
+			
+			String queryLeft = bsonLeft.getLeft();
+			String queryRight = bsonRight.getLeft();
+			List<String> arrayFilterLeft = bsonLeft.getRight();
+			List<String> arrayFilterRight = bsonRight.getRight();
+
+			if(queryLeft == null && queryRight != null)
+				query = queryRight;
+			if(queryLeft != null && queryRight == null)
+				query = queryLeft;
+			if(queryLeft != null && queryRight != null)
+				query = " $and: [ '[' /] {" + queryLeft + "}, {" + queryRight + "}[ ']' /] ";
+
+			arrayFilters.addAll(arrayFilterLeft);
+			arrayFilters.addAll(arrayFilterRight);
+		}
+
+		if(condition instanceof OrCondition) {
+			Pair<String, List<String>> bsonLeft = getBSONQueryAndArrayFilterForUpdateQueryIn[struct.name.toUpperFirst()/]From[db.name.toUpperFirst() /](((AndCondition)condition).getLeftCondition(), arrayVariableNames, arrayVariablesUsed, refilterFlag);
+			Pair<String, List<String>> bsonRight = getBSONQueryAndArrayFilterForUpdateQueryIn[struct.name.toUpperFirst()/]From[db.name.toUpperFirst() /](((AndCondition)condition).getRightCondition(), arrayVariableNames, arrayVariablesUsed, refilterFlag);			
+			
+			String queryLeft = bsonLeft.getLeft();
+			String queryRight = bsonRight.getLeft();
+			List<String> arrayFilterLeft = bsonLeft.getRight();
+			List<String> arrayFilterRight = bsonRight.getRight();
+
+			if(queryLeft == null && queryRight != null)
+				query = queryRight;
+			if(queryLeft != null && queryRight == null)
+				query = queryLeft;
+			if(queryLeft != null && queryRight != null)
+				query = " $or: [ '[' /] {" + queryLeft + "}, {" + queryRight + "}[ ']' /] ";
+
+			arrayFilters.addAll(arrayFilterLeft);
+			arrayFilters.addAll(arrayFilterRight); // can be a problem
+		}
+	}
+
+	return new ImmutablePair<String, List<String>>(query, arrayFilters);
+}
+
+
 [/template]
 
 
@@ -645,5 +810,15 @@ entities->collect(entity : EntityType | getChildrenArrayPhysicalFieldsHavingDesc
 	invoke('be.unamur.polystore.acceleo.main.utils.Util', 'getSequenceOfNonArrayEmbeddedObjects(org.eclipse.emf.ecore.EObject)', Sequence{field})
 /]
 
+[template private getArrayFilterVariableName(array : EmbeddedObject)]
+[if (array.oclIsUndefined() = false)][getArrayFilterVariableName(array.eContainer(EmbeddedObject))/][array.name /]0[/if]
+[/template]
+
 
 [template public getTDOLiteral(o : OclAny)][if (o.oclIsUndefined() = false)]TDO[/if][/template]
+
+[query private getStartField(field : PhysicalField) : PhysicalField = 
+invoke('be.unamur.polystore.acceleo.main.utils.Util', 'getStartField(be.unamur.polystore.pml.PhysicalField)', Sequence{field})
+/]
+
+

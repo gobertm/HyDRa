@@ -189,6 +189,8 @@ invoke('be.unamur.polystore.acceleo.main.utils.Util', 'getPomArtifactId()', Sequ
 invoke('be.unamur.polystore.acceleo.main.utils.Util', 'getPomGroupId()', Sequence{})
 /]
 
+[query public isArrayEmbeddedObject(field : PhysicalField) : Boolean = field.oclIsTypeOf(EmbeddedObject) and (field.oclAsType(EmbeddedObject).cardinality = Cardinality::ONE_MANY or  field.oclAsType(EmbeddedObject).cardinality = Cardinality::ZERO_MANY)/]
+
 
 
 
