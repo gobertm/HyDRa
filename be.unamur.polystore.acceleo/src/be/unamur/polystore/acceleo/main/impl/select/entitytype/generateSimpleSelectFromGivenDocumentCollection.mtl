@@ -105,7 +105,7 @@
 
 
 [template public generateBSONMatchQueryMethod(pojoName : String, attributes : Collection(Attribute), struct: AbstractPhysicalStructure, db : Database)]
-public static Pair<List<String>, List<String>> getBSONUpdateQueryIn[struct.name.toUpperFirst()/]From[db.name.toUpperFirst() /](SetClause<[pojoName.toUpperFirst() /]Attribute> set) {
+public static Pair<List<String>, List<String>> getBSONUpdateQueryIn[struct.name.toUpperFirst()/]From[db.name.toUpperFirst() /](conditions.SetClause<[pojoName.toUpperFirst() /]Attribute> set) {
 	List<String> res = new ArrayList<String>();
 	Set<String> arrayFields = new HashSet<String>();
 	if(set != null) {
