@@ -153,13 +153,13 @@ import java.util.List;
 
 public class [ent.name.toUpperFirst() /]TDO extends [ent.name.toUpperFirst() /] {
 	[for (rel : RelationshipType | conceptualSchema.relationships)]
-	[if (hasEntityTypeInBinarySimpleRelationshipType(rel, ent))]
-	[for (role : Role | rel.roles)]
-	[let role2 : Role = getOppositeRoles(role)->any(true)]
-	[for (ref: Reference | getMappedReferences(role, conceptualSchema.getMappingRules()))]
-	[if (role.entity = ent)]
-	[let fieldsList : Sequence(PhysicalField) = getFields(ref, role, role2)]
-	[for (field : PhysicalField | fieldsList)]
+		[if (hasEntityTypeInBinarySimpleRelationshipType(rel, ent))]
+			[for (role : Role | rel.roles)]
+			[let role2 : Role = getOppositeRoles(role)->any(true)]
+				[for (ref: Reference | getMappedReferences(role, conceptualSchema.getMappingRules()))]
+					[if (role.entity = ent)]
+					[let fieldsList : Sequence(PhysicalField) = getFields(ref, role, role2)]
+						[for (field : PhysicalField | fieldsList)]
 	private [if (field.oclIsTypeOf(ArrayField)=true or (field.ancestors(KVComplexField)->size() > 0 and field.ancestors(KVComplexField)->any(true).type=KVDataType::LIST))]List<String> [else] String[/if] [getJavaAbsolutePath(ref).toLowerFirst() /]_[field.getPhysicalName() /];
 	public [if (field.oclIsTypeOf(ArrayField)=true or (field.ancestors(KVComplexField)->size() > 0 and field.ancestors(KVComplexField)->any(true).type=KVDataType::LIST))]List<String> [else] String[/if] get[getJavaAbsolutePath(ref).toUpperFirst() /]_[field.getPhysicalName() /]() {
 		return this.[getJavaAbsolutePath(ref).toLowerFirst() /]_[field.getPhysicalName() /];
@@ -169,11 +169,11 @@ public class [ent.name.toUpperFirst() /]TDO extends [ent.name.toUpperFirst() /] 
 		this.[getJavaAbsolutePath(ref).toLowerFirst() /]_[field.getPhysicalName() /] = [getJavaAbsolutePath(ref) /]_[field.getPhysicalName() /];
 	}
 
-	[/for]
-	[/let]
-	[/if]
-	[if (role2.entity = ent and hasMappedReferenceInSamePhysicalStructureForOppoisteRole(role2, ref.getAbstractPhysicalStructureNotEmbeddedObject()) = false)]
-	[for (field : PhysicalField | ref.targetField)]
+						[/for]
+					[/let]
+					[/if]
+					[if (role2.entity = ent and hasMappedReferenceInSamePhysicalStructureForOppoisteRole(role2, ref.getAbstractPhysicalStructureNotEmbeddedObject()) = false)]
+						[for (field : PhysicalField | ref.targetField)]
 	private [if (field.oclIsTypeOf(ArrayField)=true)]List<String> [else] String[/if] [getJavaAbsolutePath(ref).toLowerFirst() /]_[field.getPhysicalName() /];
 	public [if (field.oclIsTypeOf(ArrayField)=true)]List<String> [else] String[/if] get[getJavaAbsolutePath(ref).toUpperFirst() /]_[field.getPhysicalName() /]() {
 		return this.[getJavaAbsolutePath(ref).toLowerFirst() /]_[field.getPhysicalName() /];
@@ -183,12 +183,12 @@ public class [ent.name.toUpperFirst() /]TDO extends [ent.name.toUpperFirst() /] 
 		this.[getJavaAbsolutePath(ref).toLowerFirst() /]_[field.getPhysicalName() /] = [getJavaAbsolutePath(ref) /]_[field.getPhysicalName() /];
 	}
 
-	[/for]
-	[/if]
-	[/for]
-	[/let]
-	[/for]
-	[/if]
+						[/for]
+					[/if]
+				[/for]
+			[/let]
+			[/for]
+		[/if]
 	[/for]
 }
 [/file]
