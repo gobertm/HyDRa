@@ -33,7 +33,19 @@ public [if (override = false)]abstract [/if]boolean insert[entityType.name.toUpp
 
 public [if (override = false)]abstract [/if]boolean insert[entityType.name.toUpperFirst() /]In[struct.name.toUpperFirst()/]From[db.name.toUpperFirst() /]([entityType.name.toUpperFirst()/] [entityType.name.toLowerFirst()/])[if (override = false)]; [else]
 	{
-[generateCheckExistBeforeInsert(entityType, struct, db)/]
+	String idvalue="";
+	[if (entityType.identifier.oclIsUndefined()=false)]
+	[for (attr : Attribute | entityType.identifier.attributes)]
+		[if (i=1)]
+	idvalue+=[entityType.name.toLowerFirst()/].get[attr.name.toUpperFirst()/]();
+		[else]
+	idvalue+=","+[entityType.name.toLowerFirst()/].get[attr.name.toUpperFirst()/]();
+		[/if]
+	[/for]
+	[/if]
+[comment]Comment & Uncomment the next two lines to generate checking code[/comment]
+[comment][generateCheckExistBeforeInsert(entityType, struct, db)/][/comment]
+	boolean entityExists = false; // Modify in acceleo code (in 'main.services.insert.entitytype.generateSimpleInsertMethods.mtl') to generate checking before insert
 	if(!entityExists){
 [if (override = true and isRelational(db.dbType))]	[insertInSQLDBImpl(entityType, struct, db)/]
 [elseif (override = true and db.dbType = pml::DatabaseType::MONGODB) ]	[insertInMongoDBImpl(entityType, struct, db) /]
