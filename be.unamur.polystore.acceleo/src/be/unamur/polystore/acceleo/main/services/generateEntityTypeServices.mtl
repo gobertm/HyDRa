@@ -17,6 +17,7 @@ package dao.services;
 [generateImportRow(entityType)/]
 [generateImportWrappedArray(entityType)/]
 import pojo.[entityType.name.toUpperFirst() /];
+import conditions.[entityType.name.toUpperFirst() /]Attribute;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.ArrayList;
