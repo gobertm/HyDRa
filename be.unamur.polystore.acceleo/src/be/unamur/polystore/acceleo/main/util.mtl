@@ -40,7 +40,7 @@
 [if (type.oclIsTypeOf(pml::BoolType))][varName/] == null ? null : Boolean.parseBoolean([varName/])[/if]
 [if (type.oclIsTypeOf(pml::FloatType))][varName/] == null ? null : Double.parseDouble([varName/])[/if]
 [if (type.oclIsTypeOf(pml::BlobType))][varName/] == null ? null : Byte.parseByte([varName/])[/if]
-[if (type.oclIsTypeOf(pml::DateType))]TODO[/if]
+[if (type.oclIsTypeOf(pml::DateType))][varName/] == null ? null : LocalDate.parse([varName/])[/if]
 [comment d�finir un format dans la grammaire pourles dates au niveau conceptuel ex: birthdate: date {MY_FORMAT}/]
 [if (type.oclIsTypeOf(pml::DatetimeType))]TODO[/if]
 [/template]
