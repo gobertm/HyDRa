@@ -242,7 +242,7 @@ public static String getBSONMatchQueryIn[struct.name.toUpperFirst()/]From[db.nam
 					} else {
 						preparedValue = Util.getDelimitedMongoValue(value.getClass(), preparedValue);
 					}
-					res = "[getPhysicalName(field) /]': {" + mongoOp + ": " + preparedValue + "}";
+					res = "[getPhysicalName(field) /]': {" + mongoOp + ": " + [if (attr.type.oclIsTypeOf(pml::DateType))] "ISODate("+preparedValue + ")}";[else]preparedValue + "}";[/if]
 				[/if]
 
 				[if (ancestorsList->size() > 0)]
