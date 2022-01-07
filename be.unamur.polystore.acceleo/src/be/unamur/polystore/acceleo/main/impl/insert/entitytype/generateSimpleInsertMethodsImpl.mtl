@@ -271,6 +271,7 @@ values.add(value_[getPhysicalName(field)/]);
 	[/if]
 	DBConnectionMgr.insertInTable(columns, rows, "[struct.name/]", "[db.name/]");
 [else]
+[if (struct.oclIsTypeOf(pml::Collection))]
 [comment]//Docdb ref support. Code written by copy pasting adapting above. Late writing. [/comment]
 	// In insertRefStruct in MongoDB
 	Bson filter = new Document();
@@ -306,6 +307,12 @@ values.add(value_[getPhysicalName(field)/]);
 		[/for]
 	DBConnectionMgr.insertMany(docsList, "[struct.name/]", "[db.name/]");
 	[/if]
+[else]
+[if (struct.oclIsTypeOf(pml::KeyValuePair))]
+	// In insertRefStruct in KeyValuePair
+	throw new UnsupportedOperationException("Not implemented yet");
+[/if]
+[/if]
 [/if]
 	return true;
 [/template]
