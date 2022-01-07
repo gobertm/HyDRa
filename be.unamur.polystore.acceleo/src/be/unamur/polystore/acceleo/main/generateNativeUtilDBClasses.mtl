@@ -1,5 +1,6 @@
 [comment encoding = UTF-8 /]
 [module generateNativeUtilDBClasses('http://www.unamur.be/polystore/Pml')]
+[import be::unamur::polystore::acceleo::main::util /]
 
 [template public generateNativeUtilDBClasses()]
 [file ('src/main/java/util/Dataset.java', false, 'UTF-8')]
@@ -29,6 +30,7 @@ import pojo.IPojo;
 import scala.collection.Seq;
 
 public class Dataset<E> extends ArrayList<E> {
+	[instantiateLogger('Dataset') /]
 	private String alias = null;
 
 	public void show() {
@@ -270,7 +272,7 @@ public class Dataset<E> extends ArrayList<E> {
 	public <E2> Dataset<Row> join(Dataset<E2> d, Column joinCondition, String joinMode) {
 		if (joinMode == null)
 			joinMode = "inner";
-
+		logger.debug(joinMode+" join of Datasets of size ['['/]{}[']'/] & ['['/]{}[']'/]", this.size(), d.size());
 		switch (joinMode) {
 		case "fullouter":
 			return fullOuterJoin(d, joinCondition);
