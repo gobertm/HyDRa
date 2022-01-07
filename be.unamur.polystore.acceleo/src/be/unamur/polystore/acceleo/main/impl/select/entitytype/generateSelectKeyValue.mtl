@@ -66,6 +66,28 @@
 			}
 		}
 	}
+
+[comment]	// Exclude other similar subsequent KeyValuePairs patterns (ex ORDER:*:AMOUNT kv pairs must not be retrieved when searching ORDER:*[/comment]
+	String originKeyPattern = keypattern;
+	[if (entOrRel.oclIsTypeOf(EntityType))]
+		[for (otherstruct: AbstractPhysicalStructure | getConcernedPhysicalStructures(entOrRel.oclAsType(EntityType), entOrRel.ancestors(Domainmodel)->first()))]
+			[if (otherstruct.oclIsTypeOf(KeyValuePair) and not(otherstruct=struct))]
+	// Exclude other similar subsequent KeyValuePairs patterns
+	String keyPattern[otherstruct.name/]="";
+				[for (expr : TerminalExpression | otherstruct.oclAsType(KeyValuePair).key.pattern)]
+					[if (expr.oclIsTypeOf(pml::BracketsField) = true)]
+	keyPattern[otherstruct.name/]=keyPattern[otherstruct.name/].concat("*");
+					[else]
+	keyPattern[otherstruct.name/]=keyPattern[otherstruct.name/].concat("[expr.literal/]");
+					[/if]
+				[/for]
+	if(keyPattern[otherstruct.name/].startsWith(originKeyPattern)){
+		String suffixToRemove = StringUtils.right(keyPattern[otherstruct.name/],keyPattern[otherstruct.name/].length()-originKeyPattern.length());
+		keypattern = keypattern.concat("['['/]^"+suffixToRemove+"[']'/]");
+	}
+			[/if]
+		[/for]  
+	[/if]
 		
 	// Find the type of query to perform in order to retrieve a Dataset<Row>
 	// Based on the type of the value. Is a it a simple string or a hash or a list... 
