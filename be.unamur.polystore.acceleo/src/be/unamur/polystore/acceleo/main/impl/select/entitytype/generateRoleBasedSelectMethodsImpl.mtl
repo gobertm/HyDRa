@@ -332,6 +332,7 @@ private static Dataset<[entityType.name.toUpperFirst()/]> fullOuterJoins[entityT
 		[for (attr : Attribute | entityType.identifier.attributes)]
 		idFields.add("[attr.name /]");
 		[/for]
+		logger.debug("Start {} of ['['/]{}[']'/] datasets of ['['/][entityType.name.toUpperFirst()/][']'/] objects",joinMode,datasetsPOJO.size());
 		scala.collection.Seq<String> seq = scala.collection.JavaConverters.asScalaIteratorConverter(idFields.iterator()).asScala().toSeq();
 		Dataset<Row> res = d.join(datasetsPOJO.get(1)
 	[for (attr : Attribute | entityType.attributes)][if (entityType.identifier.attributes->includes(attr) = false)]
@@ -346,7 +347,9 @@ private static Dataset<[entityType.name.toUpperFirst()/]> fullOuterJoins[entityT
 	[/if][/for]	
 							.withColumnRenamed("logEvents", "logEvents_" + i)
 					, seq, joinMode);
-		} 
+		}
+		logger.debug("End join. Start");
+		logger.debug("Start transforming Row objects to ['['/][entityType.name.toUpperFirst()/][']'/] objects"); 
 		d = res.map((MapFunction<Row, [entityType.name.toUpperFirst() /]>) r -> {
 				[entityType.name.toUpperFirst() /] [entityType.name.toLowerFirst() /]_res = new [entityType.name.toUpperFirst() /]();
 				[for (attr : Attribute | entityType.attributes)]
