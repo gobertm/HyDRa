@@ -389,8 +389,9 @@
 	[/if]
 	[comment Contrary to other dbs, we perform the filter here, as in case of role based selection, at least one of the retrieved TDO datasets must be filtered in order to join. But refilterFlag is not available at the caller level
 	And to not refactor everything we do it here. As the refilterFlag is always true. /]
-	if(refilterFlag.booleanValue())
-		res = res.filter((FilterFunction<[pojoName /][if (references->size() > 0)][getTDOLiteral('') /][/if]>) r -> condition == null || condition.evaluate(r));
+[comment]	UPDATE : Commented as it prevented the retrieval of splitted attribute of entity[/comment]
+[comment]	if(refilterFlag.booleanValue())[/comment]
+[comment]		res = res.filter((FilterFunction<[pojoName /][if (references->size() > 0)][getTDOLiteral('') /][/if]>) r -> condition == null || condition.evaluate(r));[/comment]
 	[comment 
 	 This drop duplicates is necessary when readin data from a key value db, with key structures such as PRODUCT:id:REVIEW:reviewid . /]
 	[if (entOrRel.eAllContents(pml::Identifier)->any(true).oclIsUndefined() = true)]
