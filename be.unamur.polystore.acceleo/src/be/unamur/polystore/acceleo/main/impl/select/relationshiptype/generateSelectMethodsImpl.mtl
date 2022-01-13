@@ -64,12 +64,12 @@
 			[role.entity.name.toUpperFirst()/] A = new [role.entity.name.toUpperFirst()/]();
 			[role2.entity.name.toUpperFirst()/] B = new [role2.entity.name.toUpperFirst()/]();
 			[for (attr : Attribute | role.entity.attributes)]
-			A.set[attr.name.toUpperFirst()/](r.getAs("[attr.name.toLowerFirst()/]"));
+			A.set[attr.name.toUpperFirst()/](Util.get[generateJavaType(attr.type) /]Value(r.getAs("[attr.name.toLowerFirst()/]")));
 			[/for]
 			A.setLogEvents((ArrayList<String>) ScalaUtil.javaList(r.getAs("logEvents")));
 
 			[for (attr : Attribute | role2.entity.attributes)]
-			B.set[attr.name.toUpperFirst()/](r.getAs("[role2.entity.name/]_[attr.name.toLowerFirst()/]"));
+			B.set[attr.name.toUpperFirst()/](Util.get[generateJavaType(attr.type) /]Value(r.getAs("[role2.entity.name/]_[attr.name.toLowerFirst()/]")));
 			[/for]
 			B.setLogEvents((ArrayList<String>) ScalaUtil.javaList(r.getAs("[role2.entity.name/]_logEvents")));
 				
@@ -133,12 +133,12 @@
 			[role.entity.name.toUpperFirst()/] A = new [role.entity.name.toUpperFirst()/]();
 			[role2.entity.name.toUpperFirst()/] B = new [role2.entity.name.toUpperFirst()/]();
 			[for (attr : Attribute | role.entity.attributes)]
-			A.set[attr.name.toUpperFirst()/](r.getAs("[attr.name.toLowerFirst()/]"));
+			A.set[attr.name.toUpperFirst()/](Util.get[generateJavaType(attr.type) /]Value(r.getAs("[attr.name.toLowerFirst()/]")));
 			[/for]
 			A.setLogEvents((ArrayList<String>) ScalaUtil.javaList(r.getAs("logEvents")));
 
 			[for (attr : Attribute | role2.entity.attributes)]
-			B.set[attr.name.toUpperFirst()/](r.getAs("[role2.entity.name/]_[attr.name.toLowerFirst()/]"));
+			B.set[attr.name.toUpperFirst()/](Util.get[generateJavaType(attr.type) /]Value(r.getAs("[role2.entity.name/]_[attr.name.toLowerFirst()/]")));
 			[/for]
 			B.setLogEvents((ArrayList<String>) ScalaUtil.javaList(r.getAs("[role2.entity.name/]_logEvents")));
 				
@@ -260,7 +260,7 @@ Dataset<[role.getRelationShipType().name.toUpperFirst()/]> res_[entity.name/]_[r
 				if(o instanceof Row) {
 					Row r2 = (Row) o;
 					[for (attr : Attribute | role.entity.attributes)]
-					A.set[attr.name.toUpperFirst()/](r2.getAs("[attr.name.toLowerFirst()/]"));
+					A.set[attr.name.toUpperFirst()/](Util.get[generateJavaType(attr.type) /]Value(r2.getAs("[attr.name.toLowerFirst()/]")));
 					[/for]
 					A.setLogEvents((ArrayList<String>) ScalaUtil.javaList(r2.getAs("logEvents")));
 				}
@@ -270,12 +270,12 @@ Dataset<[role.getRelationShipType().name.toUpperFirst()/]> res_[entity.name/]_[r
 
 
 			[for (attr : Attribute | role.getRelationShipType().attributes)]
-			res.set[attr.name.toUpperFirst()/](r.getAs("[attr.name.toLowerFirst()/]"));
+			res.set[attr.name.toUpperFirst()/](Util.get[generateJavaType(attr.type) /]Value(r.getAs("[attr.name.toLowerFirst()/]")));
 			[/for]
 			res.setLogEvents((ArrayList<String>) ScalaUtil.javaList(r.getAs("logEvents")));
 
 			[for (attr : Attribute | role2.entity.attributes)]
-			B.set[attr.name.toUpperFirst()/](r.getAs("B_[attr.name.toLowerFirst()/]"));
+			B.set[attr.name.toUpperFirst()/](Util.get[generateJavaType(attr.type) /]Value(r.getAs("B_[attr.name.toLowerFirst()/]")));
 			[/for]
 			B.setLogEvents((ArrayList<String>) ScalaUtil.javaList(r.getAs("B_logEvents")));
 				
@@ -312,7 +312,7 @@ Dataset<[role.getRelationShipType().name.toUpperFirst()/]> res_[entity.name/]_[r
 				if(o instanceof Row) {
 					Row r2 = (Row) o;
 					[for (attr : Attribute | role2.entity.attributes)]
-					A.set[attr.name.toUpperFirst()/](r2.getAs("[attr.name.toLowerFirst()/]"));
+					A.set[attr.name.toUpperFirst()/](Util.get[generateJavaType(attr.type) /]Value(r2.getAs("[attr.name.toLowerFirst()/]")));
 					[/for]
 					A.setLogEvents((ArrayList<String>) ScalaUtil.javaList(r2.getAs("logEvents")));
 				}
@@ -322,12 +322,12 @@ Dataset<[role.getRelationShipType().name.toUpperFirst()/]> res_[entity.name/]_[r
 
 
 			[for (attr : Attribute | role.getRelationShipType().attributes)]
-			res.set[attr.name.toUpperFirst()/](r.getAs("[attr.name.toLowerFirst()/]"));
+			res.set[attr.name.toUpperFirst()/](Util.get[generateJavaType(attr.type) /]Value(r.getAs("[attr.name.toLowerFirst()/]")));
 			[/for]
 			res.setLogEvents((ArrayList<String>) ScalaUtil.javaList(r.getAs("logEvents")));
 
 			[for (attr : Attribute | role.entity.attributes)]
-			B.set[attr.name.toUpperFirst()/](r.getAs("B_[attr.name.toLowerFirst()/]"));
+			B.set[attr.name.toUpperFirst()/](Util.get[generateJavaType(attr.type) /]Value(r.getAs("B_[attr.name.toLowerFirst()/]")));
 			[/for]
 			B.setLogEvents((ArrayList<String>) ScalaUtil.javaList(r.getAs("B_logEvents")));
 				
@@ -365,17 +365,17 @@ Dataset<[role.getRelationShipType().name.toUpperFirst()/]> res_[entity.name/]_[r
 			[role.entity.name.toUpperFirst() /] A = new [role.entity.name.toUpperFirst() /]();
 			[role2.entity.name.toUpperFirst() /] C = new [role2.entity.name.toUpperFirst() /]();
 			[for (attr : Attribute | role.entity.attributes)]
-			A.set[attr.name.toUpperFirst()/](r.getAs("A_[attr.name.toLowerFirst()/]"));
+			A.set[attr.name.toUpperFirst()/](Util.get[generateJavaType(attr.type) /]Value(r.getAs("A_[attr.name.toLowerFirst()/]")));
 			[/for]
 			A.setLogEvents((ArrayList<String>) ScalaUtil.javaList(r.getAs("A_logEvents")));
 
 			[for (attr : Attribute | role.getRelationShipType().attributes)]
-			res.set[attr.name.toUpperFirst()/](r.getAs("[attr.name.toLowerFirst()/]"));
+			res.set[attr.name.toUpperFirst()/](Util.get[generateJavaType(attr.type) /]Value(r.getAs("[attr.name.toLowerFirst()/]")));
 			[/for]
 			res.setLogEvents((ArrayList<String>) ScalaUtil.javaList(r.getAs("logEvents")));				
 
 			[for (attr : Attribute | role2.entity.attributes)]
-			C.set[attr.name.toUpperFirst()/](r.getAs("C_[attr.name.toLowerFirst()/]"));
+			C.set[attr.name.toUpperFirst()/](Util.get[generateJavaType(attr.type) /]Value(r.getAs("C_[attr.name.toLowerFirst()/]")));
 			[/for]
 			C.setLogEvents((ArrayList<String>) ScalaUtil.javaList(r.getAs("C_logEvents")));
 				
