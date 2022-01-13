@@ -160,7 +160,8 @@ public class Dataset<E> extends ArrayList<E> {
 	}
 
 	public <E2> Dataset<Row> join(Dataset<E2> d, Column joinCondition) {
-		return join(d, joinCondition, "inner");
+[comment]		return join(d, joinCondition, "inner");[/comment]
+		return join(d, joinCondition, "innerhash");
 	}
 
 	private <E2> Dataset<Row> fullOuterJoin(Dataset<E2> d, Column joinCondition) {
@@ -221,6 +222,87 @@ public class Dataset<E> extends ArrayList<E> {
 		return res;
 	}
 
+	private <E2> Dataset<Row> fullOuterJoinHash(Dataset<E2> d, Column joinCondition) {
+		Dataset<Row> res = new Dataset<Row>();
+		HashMap<Object, Object> hash = new HashMap<>();
+		Set<Object> matchedKeys = new HashSet<>();
+
+		// Parse condition
+		String cond = joinCondition.toString();
+		cond = cond.replaceAll("\\(", "").replaceAll("\\)", "");
+		String['['/][']'/] conditions = cond.split(" AND ");
+		String condition = conditions['['/]0[']'/];
+		String['['/][']'/] columns;
+		String col1, col2;
+		if(conditions.length>1)
+			throw new UnsupportedOperationException("Not supported joincondition in full outer hash join algo. ['['/]"+condition+"[']'/]");
+		if (condition.contains("=")) {
+			// X = Y
+			columns = condition.split(" = ");
+			col1 = columns['['/]0[']'/];
+			col2 = columns['['/]1[']'/];
+		} else
+			throw new UnsupportedOperationException("Not supported joincondition in full outer hash join algo. ['['/]"+condition+"[']'/]");
+		//Build phase
+		if (this.count() < d.count()) {
+			for (E e : this) {
+				hash.put(getValue(e,col1.split("\\.") ), e);
+			}
+		}else{
+			for (E2 e2 : d) {
+				hash.put(getValue(e2,col2.split("\\.") ), e2);
+			}
+		}
+		try {
+			// Probe phase
+			Object value;
+			if (this.count() < d.count()) {
+				for (E2 e2 : d) {
+					// Find matching rows
+					Row r = null;
+					value = hash.get(getValue(e2, col2.split("\\.")));
+					if (value != null) {
+						matchedKeys.add(getValue(e2, col2.split("\\.")));
+						r = merge(value, this.alias, e2, d.alias);
+						res.add(r);
+					} else{
+						// We found a 'right' single
+						r = merge(e2, d.alias, null, null);
+						res.add(r);
+					}
+				}
+				// We need to find 'left' singles. We remove found elements from the hash. Only 'left' singles will remain
+				hash.keySet().removeAll(matchedKeys);
+				for (Object e : hash.values()) {
+					Row r = merge(e, this.alias, null, null);
+					res.add(r);
+				}
+			} else {
+				for (E e : this) {
+					Row r = null;
+					value = hash.get(getValue(e, col1.split("\\.")));
+					if (value != null) {
+						matchedKeys.add(getValue(e, col1.split("\\.")));
+						r = merge(value, this.alias, e, d.alias);
+						res.add(r);
+					} else{
+						r = merge(e, this.alias, null, null);
+						res.add(r);
+					}
+				}
+				// We need to find 'left' singles. We remove found elements from the hash. Only 'left' singles will remain
+				hash.keySet().removeAll(matchedKeys);
+				for (Object e : hash.values()) {
+					Row r = merge(e, d.alias, null, null);
+					res.add(r);
+				}
+			}
+		} catch (IntrospectionException e) {
+			e.printStackTrace();
+		}
+		return res;
+	}
+
 	private <E2> Dataset<Row> leftOuterJoin(Dataset<E2> d, Column joinCondition) {
 		Dataset<Row> res = new Dataset<Row>();
 		for (E e : this) {
@@ -269,17 +351,86 @@ public class Dataset<E> extends ArrayList<E> {
 		return res;
 	}
 
+	private <E2> Dataset<Row> innerHashJoin(Dataset<E2> d, Column joinCondition)  {
+		Dataset<Row> res = new Dataset<Row>();
+		HashMap<Object, Object> hash = new HashMap<>();
+
+		// Parse condition
+		String cond = joinCondition.toString();
+		cond = cond.replaceAll("\\(", "").replaceAll("\\)", "");
+		String['['/][']'/] conditions = cond.split(" AND ");
+		String condition = conditions['['/]0[']'/];
+		String['['/][']'/] columns;
+		String col1, col2;
+		if(conditions.length>1)
+			throw new UnsupportedOperationException("Not supported joincondition in hash join algo. ['['/]"+condition+"[']'/]");
+		if (condition.contains("=")) {
+			// X = Y
+			columns = condition.split(" = ");
+			col1 = columns['['/]0[']'/];
+			col2 = columns['['/]1[']'/];
+		} else
+			throw new UnsupportedOperationException("Not supported joincondition in hash join algo. ['['/]"+condition+"[']'/]");
+
+		//Build phase
+		if (this.count() < d.count()) {
+			for (E e : this) {
+				hash.put(getValue(e,col1.split("\\.") ), e);
+			}
+		}else{
+			for (E2 e2 : d) {
+				hash.put(getValue(e2,col2.split("\\.") ), e2);
+			}
+		}
+
+		// Probe phase
+		Object value;
+		if(this.count()<d.count()){
+			for (E2 e2 : d) {
+				value = hash.get(getValue(e2, col2.split("\\.")));
+				if (value != null) {
+					Row r = null;
+					try {
+						r = merge(value, this.alias, e2, d.alias);
+					} catch (IntrospectionException e) {
+						logger.error("Impossible to merge rows");
+						e.printStackTrace();
+					}
+					res.add(r);
+				}
+			}
+		}else{
+			for (E e : this) {
+				value = hash.get(getValue(e, col1.split("\\.")));
+				if (value != null) {
+					Row r = null;
+					try {
+						r = merge(value, this.alias, e, d.alias);
+					} catch (IntrospectionException ex) {
+						logger.error("Impossible to merge rows");
+						ex.printStackTrace();
+					}
+					res.add(r);
+				}
+			}
+		}
+		return res;
+	}
+
 	public <E2> Dataset<Row> join(Dataset<E2> d, Column joinCondition, String joinMode) {
 		if (joinMode == null)
-			joinMode = "inner";
+[comment]			joinMode = "inner";[/comment]
+			joinMode = "innerhash";
 		logger.debug(joinMode+" join of Datasets of size ['['/]{}[']'/] & ['['/]{}[']'/]", this.size(), d.size());
 		switch (joinMode) {
 		case "fullouter":
 			return fullOuterJoin(d, joinCondition);
 		case "leftouter":
 			return leftOuterJoin(d, joinCondition);
-		case "inner":
-			return innerJoin(d, joinCondition);
+		case "innerhash":
+			return innerHashJoin(d, joinCondition);
+[comment]		case "inner":[/comment]
+[comment]			return innerJoin(d, joinCondition);[/comment]
 		default:
 			return null;
 		}
