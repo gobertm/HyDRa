@@ -335,9 +335,10 @@ public class SparkConnectionMgr {
 		return session;
 	}
 
-	public static Dataset<Row> getSparkSessionForMongoDB(String dbName, String collectionName, String bsonQuery) {
+	public static Dataset<Row> getDatasetFromMongoDB(String dbName, String collectionName, String bsonQuery) {
 		Map<String, String> readOverrides = new HashMap<String, String>();
 		DBCredentials credentials = DBCredentials.getDbPorts().get(dbName);
+		logger.debug("Mongo find on db ['['/]{}[']'/], collection ['['/]{}[']'/], bsonquery : ['['/]{}[']'/]",dbName, collectionName, bsonQuery);
 		[if (isSparkConfiguration())]	
 		// https://docs.mongodb.com/manual/core/read-preference/#replica-set-read-preference-modes
 		
@@ -365,7 +366,6 @@ public class SparkConnectionMgr {
 		MongoCursor<Document> cursor = null;
 		if (bsonQuery != null) {
 			Document query = Document.parse(bsonQuery);
-			logger.debug("Mongo bsonquery : {}", bsonQuery);
 			cursor = collection.aggregate(Arrays.asList(query)).cursor();
 		} else
 			cursor = collection.find().cursor();

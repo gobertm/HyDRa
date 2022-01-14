@@ -32,7 +32,7 @@
 
 	String bsonQuery = bsons.size() == 0 ? null : "{$match: { $and: [ '['/]" + String.join(",", bsons) + "[ ']'/] }}";
 
-	Dataset<Row> dataset = dbconnection.SparkConnectionMgr.getSparkSessionForMongoDB("[db.name /]", "[struct.name /]", bsonQuery);
+	Dataset<Row> dataset = dbconnection.SparkConnectionMgr.getDatasetFromMongoDB("[db.name /]", "[struct.name /]", bsonQuery);
 
 	Dataset<[rel.name.toUpperFirst() /]> res = dataset.flatMap((FlatMapFunction<Row, [rel.name.toUpperFirst() /]>) r -> {
 			List<[rel.name.toUpperFirst() /]> list_res = new ArrayList<[rel.name.toUpperFirst() /]>();
@@ -67,7 +67,7 @@
 		bsonQuery = "{$match: {" + bsonQuery + "}}";	
 	} 
 	
-	Dataset<Row> dataset = dbconnection.SparkConnectionMgr.getSparkSessionForMongoDB("[db.name /]", "[struct.name /]", bsonQuery);
+	Dataset<Row> dataset = dbconnection.SparkConnectionMgr.getDatasetFromMongoDB("[db.name /]", "[struct.name /]", bsonQuery);
 
 	Dataset<[pojoName /][if (references->size() > 0)][getTDOLiteral('') /][/if]> res = dataset.flatMap((FlatMapFunction<Row, [pojoName /][if (references->size() > 0)][getTDOLiteral('') /][/if]>) r -> {
 			List<[pojoName /][if (references->size() > 0)][getTDOLiteral('') /][/if]> list_res = new ArrayList<[pojoName /][if (references->size() > 0)][getTDOLiteral('') /][/if]>();
