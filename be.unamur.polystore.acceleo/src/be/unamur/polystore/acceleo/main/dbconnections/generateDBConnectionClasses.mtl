@@ -389,6 +389,7 @@ public class SparkConnectionMgr {
 				.option("user", credentials.getUserName()).option("password", credentials.getUserPwd());
 
 		Dataset<Row> d = dfr.option("dbtable", physicalStructName).load();
+		logger.debug("Spark SQL data retrieval : ['['/]{}[']'/]['['/]{}[']'/] ", physicalStructName, where)
 		if(where != null) {
 			d = d.where(where);
 		}
@@ -506,6 +507,7 @@ public class SparkConnectionMgr {
 
 	public static Dataset<Row> getRowsFromKeyValue(String dbName, String keypattern) {
 		DBCredentials credentials = DBCredentials.getDbPorts().get(dbName);
+		logger.debug("Get keypattern (string value) ['['/]{}[']'/] from redis db ['['/]{}[']'/]", keypattern, dbName);
 		[if (isSparkConfiguration())]
 		SparkConf sparkConf = new SparkConf()
                 .setAppName("MyApp")
@@ -571,6 +573,7 @@ public class SparkConnectionMgr {
 
 	public static Dataset<Row> getRowsFromKeyValueHashes(String dbName, String keypattern, StructType structTypeHash){
 		DBCredentials credentials = DBCredentials.getDbPorts().get(dbName);
+		logger.debug("Get keypattern (hash value) ['['/]{}[']'/] from redis db ['['/]{}[']'/]", keypattern, dbName);
 		[if (isSparkConfiguration())]
 		SparkConf sparkConf = new SparkConf()
                 .setAppName("MyApp")
@@ -622,6 +625,7 @@ public class SparkConnectionMgr {
 
 	public static Dataset<Row> getRowsFromKeyValueList(String dbName, String keypattern, StructType structType){
 		DBCredentials credentials = DBCredentials.getDbPorts().get(dbName);
+		logger.debug("Get keypattern (list value) ['['/]{}[']'/] from redis db ['['/]{}[']'/]", keypattern, dbName);
 		[if (isSparkConfiguration())]
 		List<Row> rows = new ArrayList<>();
 		Jedis jedis;
