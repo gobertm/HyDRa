@@ -551,7 +551,7 @@ public [if (override = false)]abstract [/if]Dataset<[role.getRelationShipType().
 public [if (override = false)]abstract [/if]Dataset<[role1.getRelationShipType().name.toUpperFirst()/]> get[role1.getRelationShipType().name.toUpperFirst()/]ListIn[table1.name/]And[joinTable.name/]And[table2.name/]From[db.name/](Condition<[role1.entity.name.toUpperFirst()/]Attribute> [role1.name/]_cond, Condition<[role2.entity.name.toUpperFirst()/]Attribute> [role2.name/]_cond[if(role1.getRelationShipType().attributes->size()>0)], Condition<[role1.getRelationShipType().name.toUpperFirst()/]Attribute> [role1.getRelationShipType().name/]_cond[/if], MutableBoolean [role1.name/]_refilter, MutableBoolean [role2.name/]_refilter[if(role1.getRelationShipType().attributes->size() > 0)], MutableBoolean [role1.getRelationShipType().name/]_refilter[/if])[if (override = true)]{
 	Pair<String, List<String>> whereClause1 = [role1.entity.name.toUpperFirst()/]ServiceImpl.getSQLWhereClauseIn[table1.name.toUpperFirst()/]From[db.name.toUpperFirst() /]WithTableAlias([role1.name/]_cond, [role1.name/]_refilter, "[table1.name/].");
 	Pair<String, List<String>> whereClause2 = [role2.entity.name.toUpperFirst()/]ServiceImpl.getSQLWhereClauseIn[table2.name.toUpperFirst()/]From[db.name.toUpperFirst() /]WithTableAlias([role2.name/]_cond, [role2.name/]_refilter, "[table2.name/].");
-	Pair<String, List<String>> whereClause3 = [role1.getRelationShipType().name.toUpperFirst()/]ServiceImpl.getSQLWhereClauseIn[joinTable.name.toUpperFirst()/]From[db.name.toUpperFirst() /]WithTableAlias([role1.getRelationShipType().name/]_cond, [role1.getRelationShipType().name/]_refilter, "[joinTable.name/].");
+	[if(role1.getRelationShipType().attributes->size() > 0)]Pair<String, List<String>> whereClause3 = [role1.getRelationShipType().name.toUpperFirst()/]ServiceImpl.getSQLWhereClauseIn[joinTable.name.toUpperFirst()/]From[db.name.toUpperFirst() /]WithTableAlias([role1.getRelationShipType().name/]_cond, [role1.getRelationShipType().name/]_refilter, "[joinTable.name/].");[/if]
 
 	String where1 = whereClause1.getKey();
 	List<String> preparedValues = whereClause1.getValue();
@@ -564,21 +564,22 @@ public [if (override = false)]abstract [/if]Dataset<[role1.getRelationShipType()
 	for(String preparedValue : preparedValues) {
 		where2 = where2.replaceFirst("\\?", preparedValue);
 	}
-
+	[if(role1.getRelationShipType().attributes->size() > 0)]
 	String where3 = whereClause3.getKey();
 	preparedValues = whereClause3.getValue();
 	for(String preparedValue : preparedValues) {
 		where3 = where3.replaceFirst("\\?", preparedValue);
 	}
-
+	[/if]
 	String where = "";
 	if(where1 != null)
 		where += " AND " + where1;
 	if(where2 != null)
 		where += " AND " + where2;
+	[if(role1.getRelationShipType().attributes->size() > 0)]
 	if(where3 != null)
 		where += " AND " + where3; 
-
+	[/if]
 	String aliasedColumns = "[for (field : PhysicalField | table1.oclAsType(Table).columns) separator(',')][table1.name /].[field.getPhysicalName() /] as [table1.name /]_[field.getPhysicalName() /][/for],[for (field : PhysicalField | table2.oclAsType(Table).columns) separator(',')][table2.name /].[field.getPhysicalName() /] as [table2.name /]_[field.getPhysicalName() /][/for],[for (field : PhysicalField | joinTable.oclAsType(Table).columns) separator(',')][joinTable.name /].[field.getPhysicalName() /] as [joinTable.name /]_[field.getPhysicalName() /][/for]";
 	Dataset<Row> d = dbconnection.SparkConnectionMgr.getDataset("[db.name /]", "(SELECT " + aliasedColumns + " FROM [table1.name/], [table2.name/], [joinTable.name/] WHERE [for (srcField : PhysicalField | ref1.sourceField) separator(' AND ')][joinTable.name/].[srcField.getPhysicalName()/] = [table1.name /].[ref1.targetField->at(i).getPhysicalName()/][/for] AND [for (srcField : PhysicalField | ref2.sourceField) separator(' AND ')][joinTable.name/].[srcField.getPhysicalName()/] = [table2.name /].[ref2.targetField->at(i).getPhysicalName()/][/for]" + where + ") AS JOIN_TABLE", null);
 [generateRowToRelationshipTypeMapper(role1, table1, role2, table2, joinTable, db)/]
