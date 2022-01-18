@@ -314,7 +314,7 @@
 [template public generateOuterJoinsMethods(entityType : EntityType)]
 
 public static Dataset<[entityType.name.toUpperFirst()/]> fullOuterJoins[entityType.name.toUpperFirst()/](List<Dataset<[entityType.name.toUpperFirst()/]>> datasetsPOJO) {
-	return fullOuterJoins[entityType.name.toUpperFirst()/](datasetsPOJO, "fullouterhash");
+	return fullOuterJoins[entityType.name.toUpperFirst()/](datasetsPOJO, "fullouter");
 }
 
 protected static Dataset<[entityType.name.toUpperFirst()/]> fullLeftOuterJoins[entityType.name.toUpperFirst()/](List<Dataset<[entityType.name.toUpperFirst()/]>> datasetsPOJO) {

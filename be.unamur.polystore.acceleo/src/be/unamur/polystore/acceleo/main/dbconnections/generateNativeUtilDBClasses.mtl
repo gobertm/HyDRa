@@ -156,8 +156,7 @@ public class Dataset<E> extends ArrayList<E> {
 	}
 
 	public <E2> Dataset<Row> join(Dataset<E2> d, Column joinCondition) {
-[comment]		return join(d, joinCondition, "inner");[/comment]
-		return join(d, joinCondition, "innerhash");
+		return join(d, joinCondition, "inner");
 	}
 
 	private <E2> Dataset<Row> fullOuterJoin(Dataset<E2> d, Column joinCondition) {
@@ -415,20 +414,15 @@ public class Dataset<E> extends ArrayList<E> {
 
 	public <E2> Dataset<Row> join(Dataset<E2> d, Column joinCondition, String joinMode) {
 		if (joinMode == null)
-[comment]			joinMode = "inner";[/comment]
-			joinMode = "innerhash";
+			joinMode = "inner";
 		logger.debug(joinMode+" join of Datasets of size ['['/]{}[']'/] & ['['/]{}[']'/]", this.size(), d.size());
 		switch (joinMode) {
 		case "fullouter":
-			return fullOuterJoin(d, joinCondition);
-		case "fullouterhash":
 			return fullOuterJoinHash(d, joinCondition);
 		case "leftouter":
 			return leftOuterJoin(d, joinCondition);
-		case "innerhash":
+		case "inner":
 			return innerHashJoin(d, joinCondition);
-[comment]		case "inner":[/comment]
-[comment]			return innerJoin(d, joinCondition);[/comment]
 		default:
 			return null;
 		}
