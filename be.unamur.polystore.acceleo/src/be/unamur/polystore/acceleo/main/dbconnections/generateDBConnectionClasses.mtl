@@ -389,7 +389,7 @@ public class SparkConnectionMgr {
 				.option("user", credentials.getUserName()).option("password", credentials.getUserPwd());
 
 		Dataset<Row> d = dfr.option("dbtable", physicalStructName).load();
-		logger.debug("Spark SQL data retrieval : ['['/]{}[']'/]['['/]{}[']'/] ", physicalStructName, where)
+		logger.debug("Spark SQL data retrieval : ['['/]{}[']'/]['['/]{}[']'/] ", physicalStructName, where);
 		if(where != null) {
 			d = d.where(where);
 		}

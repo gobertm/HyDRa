@@ -90,8 +90,7 @@
 
 	[for (ref: Reference | getMappedReferences(role2, conceptualSchema.getMappingRules()))]
 			[if (hasMappedReferenceInSamePhysicalStructureForOppoisteRole(role, ref.getAbstractPhysicalStructureNotEmbeddedObject()) = false)]
-	[comment B -> A /]
-	[comment reference mapped to a conceptual role. /]
+	[comment B -> A (based on reference role, this classification makes more sense in GetRoleList methods instead of GetR./]
 	[comment optimization possible when the 2 physical structures to join are stored in the same database (ex: a SQL join is possible instead of a brute-force Spark join /]
 				[let struct1 : AbstractPhysicalStructure = ref.getAbstractPhysicalStructureNotEmbeddedObject()]
 				[let struct2 : AbstractPhysicalStructure = ref.targetField->first().getAbstractPhysicalStructureNotEmbeddedObject()]
