@@ -408,6 +408,12 @@ public class Dataset<E> extends ArrayList<E> {
 								break;
 							}
 						}
+						if (searchedvalue instanceof List) {
+							if (((List<?>) searchedvalue).contains(key)) {
+								value = hash.get(key);
+								break;
+							}
+						}
 					}
 					if (value == null)
 						value = hash.get(searchedvalue);
@@ -439,6 +445,12 @@ public class Dataset<E> extends ArrayList<E> {
 						}
 						if (key instanceof WrappedArray) {
 							if (((WrappedArray) key).list().contains(searchedvalue)) {
+								value = hash.get(key);
+								break;
+							}
+						}
+						if (searchedvalue instanceof List) {
+							if (((List<?>) searchedvalue).contains(key)) {
 								value = hash.get(key);
 								break;
 							}
