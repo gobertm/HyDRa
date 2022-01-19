@@ -89,8 +89,8 @@
 			.withColumnRenamed("[attr.name.toLowerFirst() /]", "[role2.entity.name/]_[attr.name.toLowerFirst() /]")
 					[/for]
 			.withColumnRenamed("logEvents", "[role2.entity.name/]_logEvents"),
-				[comment TODO Multi valued refernece not handled /]
-			[if (ref.sourceField->any(true).oclIsTypeOf(ArrayField) or (ref.sourceField->any(true).ancestors(KVComplexField)->size() > 0 and ref.sourceField->any(true).ancestors(KVComplexField)->any(true).type=KVDataType::LIST))]
+			[if (ref.sourceField->any(true).oclIsTypeOf(ArrayField)  or ref.sourceField.ancestors(EmbeddedObject)->size() > 0 or (ref.sourceField->any(true).ancestors(KVComplexField)->size() > 0 and ref.sourceField->any(true).ancestors(KVComplexField)->any(true).type=KVDataType::LIST))]
+			// Multi valued reference
 			functions.array_contains([entity.name.toLowerFirst()/]TDO[ref.name/][role.name/].col("[getJavaAbsolutePath(ref).toLowerFirst() /]_[ref.sourceField->first().getPhysicalName()/]"),[role2.entity.name.toLowerFirst()/]TDO[ref.name/][role2.name/].col("[getJavaAbsolutePath(ref).toLowerFirst() /]_[ref.targetField->first().getPhysicalName()/]")));
 			[else]
 			[entity.name.toLowerFirst()/]TDO[ref.name/][role.name/].col("[getJavaAbsolutePath(ref).toLowerFirst() /]_[ref.sourceField->first().getPhysicalName()/]").equalTo([role2.entity.name.toLowerFirst()/]TDO[ref.name/][role2.name/].col("[getJavaAbsolutePath(ref).toLowerFirst().toLowerFirst() /]_[ref.targetField->first().getPhysicalName()/]")));
@@ -169,8 +169,8 @@
 		else
 			[role2.entity.name.toLowerFirst()/]TDO[ref.name/][role2.name/] = [role2.entity.name.toLowerFirst()/]TDO[ref.name/][role2.name/].as("A").join(all, joinCondition).select("A.*").as(Encoders.bean([role2.entity.name.toUpperFirst()/]TDO.class));
 	}
-	[comment TODO Multi valued refernece not handled /]
-			[if (ref.sourceField->any(true).oclIsTypeOf(ArrayField) or (ref.sourceField->any(true).ancestors(KVComplexField)->size()>0 and ref.sourceField->any(true).ancestors(KVComplexField)->any(true).type=KVDataType::LIST))]
+			[if (ref.sourceField->any(true).oclIsTypeOf(ArrayField) or ref.sourceField.ancestors(EmbeddedObject)->size() > 0 or (ref.sourceField->any(true).ancestors(KVComplexField)->size()>0 and ref.sourceField->any(true).ancestors(KVComplexField)->any(true).type=KVDataType::LIST))]
+	// Multi valued reference
 	Dataset<Row> res_[ref.name/] = 
 		[role2.entity.name.toLowerFirst()/]TDO[ref.name/][role2.name/]
 		[for (attr : Attribute | role2.entity.attributes)]
