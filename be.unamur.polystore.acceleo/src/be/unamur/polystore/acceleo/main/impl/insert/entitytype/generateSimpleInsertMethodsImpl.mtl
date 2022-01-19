@@ -640,7 +640,7 @@ doc[objectName/]_[level/].append("[ref.sourceField->any(true).oclAsType(Physical
 	[generateDocument(entityType, field.oclAsType(EmbeddedObject).fields, field.getPhysicalName(), level+1,embeddedRoleLevel)/]
 				[if (field.oclAsType(EmbeddedObject).cardinality= pml::Cardinality::ONE_MANY) or (field.oclAsType(EmbeddedObject).cardinality= pml::Cardinality::ZERO_MANY)]
 	List<Document> array[field.getPhysicalName()/]_[level/] = new ArrayList();
-	array[field.getPhysicalName()/]_[level/].add(doc_[field.getPhysicalName()/]_[level+1/]);
+	array[field.getPhysicalName()/]_[level/].add(doc[field.getPhysicalName()/]_[level+1/]);
 	doc[objectName/]_[level/].append("[field.getPhysicalName()/]", array[field.getPhysicalName()/]_[level/]);
 				[else]
 	doc[objectName/]_[level/].append("[field.getPhysicalName()/]", doc[field.getPhysicalName()/]_[level+1/]);
