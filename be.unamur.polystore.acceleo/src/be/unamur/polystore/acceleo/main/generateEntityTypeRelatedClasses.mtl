@@ -150,6 +150,7 @@ package tdo;
 
 import pojo.[ent.name.toUpperFirst() /];
 import java.util.List;
+import java.util.ArrayList;
 
 public class [ent.name.toUpperFirst() /]TDO extends [ent.name.toUpperFirst() /] {
 	[for (rel : RelationshipType | conceptualSchema.relationships)]
@@ -160,12 +161,12 @@ public class [ent.name.toUpperFirst() /]TDO extends [ent.name.toUpperFirst() /] 
 					[if (role.entity = ent)]
 					[let fieldsList : Sequence(PhysicalField) = getFields(ref, role, role2)]
 						[for (field : PhysicalField | fieldsList)]
-	private [if (field.oclIsTypeOf(ArrayField)=true or (field.ancestors(KVComplexField)->size() > 0 and field.ancestors(KVComplexField)->any(true).type=KVDataType::LIST))]List<String> [else] String[/if] [getJavaAbsolutePath(ref).toLowerFirst() /]_[field.getPhysicalName() /];
-	public [if (field.oclIsTypeOf(ArrayField)=true or (field.ancestors(KVComplexField)->size() > 0 and field.ancestors(KVComplexField)->any(true).type=KVDataType::LIST))]List<String> [else] String[/if] get[getJavaAbsolutePath(ref).toUpperFirst() /]_[field.getPhysicalName() /]() {
+	private [if (field.oclIsTypeOf(ArrayField)=true or field.ancestors(EmbeddedObject)->size() > 0 or (field.ancestors(KVComplexField)->size() > 0 and field.ancestors(KVComplexField)->any(true).type=KVDataType::LIST))]List<String> [getJavaAbsolutePath(ref).toLowerFirst() /]_[field.getPhysicalName() /] = new ArrayList<>();[else] String [getJavaAbsolutePath(ref).toLowerFirst() /]_[field.getPhysicalName() /];[/if] 
+	public [if (field.oclIsTypeOf(ArrayField)=true or field.ancestors(EmbeddedObject)->size() > 0 or (field.ancestors(KVComplexField)->size() > 0 and field.ancestors(KVComplexField)->any(true).type=KVDataType::LIST))]List<String> [else] String[/if] get[getJavaAbsolutePath(ref).toUpperFirst() /]_[field.getPhysicalName() /]() {
 		return this.[getJavaAbsolutePath(ref).toLowerFirst() /]_[field.getPhysicalName() /];
 	}
 
-	public void set[getJavaAbsolutePath(ref).toUpperFirst() /]_[field.getPhysicalName() /]( [if (field.oclIsTypeOf(ArrayField)=true or (field.ancestors(KVComplexField)->size() > 0 and field.ancestors(KVComplexField)->any(true).type=KVDataType::LIST))]List<String> [else] String[/if] [getJavaAbsolutePath(ref) /]_[field.getPhysicalName() /]) {
+	public void set[getJavaAbsolutePath(ref).toUpperFirst() /]_[field.getPhysicalName() /]( [if (field.oclIsTypeOf(ArrayField)=true or field.ancestors(EmbeddedObject)->size() > 0 or (field.ancestors(KVComplexField)->size() > 0 and field.ancestors(KVComplexField)->any(true).type=KVDataType::LIST))]List<String> [else] String[/if] [getJavaAbsolutePath(ref) /]_[field.getPhysicalName() /]) {
 		this.[getJavaAbsolutePath(ref).toLowerFirst() /]_[field.getPhysicalName() /] = [getJavaAbsolutePath(ref) /]_[field.getPhysicalName() /];
 	}
 

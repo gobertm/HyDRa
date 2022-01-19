@@ -51,8 +51,7 @@
 			.withColumnRenamed("[attr.name.toLowerFirst() /]", "[role2.entity.name/]_[attr.name.toLowerFirst() /]")
 					[/for]
 			.withColumnRenamed("logEvents", "[role2.entity.name/]_logEvents"),
-				[comment TODO Multi valued refernece not handled /]
-			[if (ref.sourceField->any(true).oclIsTypeOf(ArrayField) or (ref.sourceField->any(true).ancestors(KVComplexField)->size() > 0 and ref.sourceField->any(true).ancestors(KVComplexField)->any(true).type=KVDataType::LIST))]
+			[if (ref.sourceField->any(true).oclIsTypeOf(ArrayField) or ref.sourceField.ancestors(EmbeddedObject)->size() > 0 or (ref.sourceField->any(true).ancestors(KVComplexField)->size() > 0 and ref.sourceField->any(true).ancestors(KVComplexField)->any(true).type=KVDataType::LIST))]
 			functions.array_contains([role.entity.name.toLowerFirst()/]TDO[ref.name/][role.name/].col("[getJavaAbsolutePath(ref).toLowerFirst() /]_[ref.sourceField->first().getPhysicalName()/]"),[role2.entity.name.toLowerFirst()/]TDO[ref.name/][role2.name/].col("[getJavaAbsolutePath(ref).toLowerFirst() /]_[ref.targetField->first().getPhysicalName()/]")));
 			[else]
 			[role.entity.name.toLowerFirst()/]TDO[ref.name/][role.name/].col("[getJavaAbsolutePath(ref).toLowerFirst() /]_[ref.sourceField->first().getPhysicalName()/]").equalTo([role2.entity.name.toLowerFirst()/]TDO[ref.name/][role2.name/].col("[getJavaAbsolutePath(ref).toLowerFirst().toLowerFirst() /]_[ref.targetField->first().getPhysicalName()/]")));
@@ -106,8 +105,8 @@
 	Dataset<[role2.entity.name.toUpperFirst()/]TDO> [role2.entity.name.toLowerFirst()/]TDO[ref.name/][role2.name/] = [role.getRelationShipType().name.toLowerFirst()/]Service.get[role2.entity.name.toUpperFirst()/]TDOList[role2.name.toUpperFirst() /]In[ref.name.toUpperFirst()/]In[ref.getAbstractPhysicalStructureNotEmbeddedObject().name.toUpperFirst() /]From[ref.getPhysicalSchema().name.toUpperFirst()/]([role2.name/]_condition, [role2.name/]_refilter);
 	Dataset<[role.entity.name.toUpperFirst()/]TDO> [role.entity.name.toLowerFirst()/]TDO[ref.name/][role.name /] = [role.getRelationShipType().name.toLowerFirst()/]Service.get[role.entity.name.toUpperFirst()/]TDOList[role.name.toUpperFirst() /]In[ref.name.toUpperFirst()/]In[ref.getAbstractPhysicalStructureNotEmbeddedObject().name.toUpperFirst() /]From[ref.getPhysicalSchema().name.toUpperFirst()/]([role.name/]_condition, [role.name/]_refilter);
 	
-	[comment TODO Multi valued refernece not handled /]
-			[if (ref.sourceField->any(true).oclIsTypeOf(ArrayField) or (ref.sourceField->any(true).ancestors(KVComplexField)->size()>0 and ref.sourceField->any(true).ancestors(KVComplexField)->any(true).type=KVDataType::LIST))]
+			[if (ref.sourceField->any(true).oclIsTypeOf(ArrayField) or ref.sourceField.ancestors(EmbeddedObject)->size() > 0 or (ref.sourceField->any(true).ancestors(KVComplexField)->size()>0 and ref.sourceField->any(true).ancestors(KVComplexField)->any(true).type=KVDataType::LIST))]
+	// Multi valued reference	
 	Dataset<Row> res_[ref.name/]_temp = 
 		[role2.entity.name.toLowerFirst()/]TDO[ref.name/][role2.name/]
 		[for (attr : Attribute | role2.entity.attributes)]

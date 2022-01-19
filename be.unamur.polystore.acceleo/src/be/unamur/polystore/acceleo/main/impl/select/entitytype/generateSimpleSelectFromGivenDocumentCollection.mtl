@@ -688,7 +688,7 @@ if(nestedRow != null && Arrays.asList(nestedRow.schema().fieldNames()).contains(
 [for (refField : PhysicalField | refFields)]
 [comment Ici r�it�rer sur 'child' et v�fifier ce n'est aps le refField Si oui appliquer comme au dessus /]
 [for (child : PhysicalField | getChildrenNonArrayPhysicalFields(arg))]
-[if (child.getPhysicalName() = refField.getPhysicalName())]
+[if (child = refField)]
 	// field  [getPhysicalName(child) /] for reference [ref.name/] . Reference field : [getPhysicalName(refField)/]
 [let ancestorsList : Sequence(EmbeddedObject) = getSequenceOfNonArrayEmbeddedObjects(child)]
 nestedRow =  r[level /];
@@ -703,7 +703,12 @@ if(nestedRow != null) {
 	// Reference is in an Array Field
 	[pojoName.toLowerFirst() /][level/].set[getJavaAbsolutePath(ref).toUpperFirst() /]_[refField.getPhysicalName() /](nestedRow.getAs("[refField.getPhysicalName() /]") == null ? null : ScalaUtil.javaList(nestedRow.getAs("[refField.getPhysicalName() /]")));
 		[else]
+			[if (child.ancestors(EmbeddedObject)->size() > 0)]
+	// Reference is in an Array of Embedded Objects
+	[pojoName.toLowerFirst() /][level/].get[getJavaAbsolutePath(ref).toUpperFirst() /]_[refField.getPhysicalName() /]().add(nestedRow.getAs("[refField.getPhysicalName() /]") == null ? null : nestedRow.getAs("[refField.getPhysicalName() /]").toString());
+			[else]
 	[pojoName.toLowerFirst() /][level/].set[getJavaAbsolutePath(ref).toUpperFirst() /]_[refField.getPhysicalName() /](nestedRow.getAs("[refField.getPhysicalName() /]") == null ? null : nestedRow.getAs("[refField.getPhysicalName() /]").toString());
+			[/if]
 		[/if]
 	[comment shortField or bracketfield/]
 	toAdd[level/] = true;					
