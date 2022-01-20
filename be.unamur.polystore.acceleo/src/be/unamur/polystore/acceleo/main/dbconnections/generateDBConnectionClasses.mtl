@@ -473,7 +473,7 @@ public class SparkConnectionMgr {
 	public static void writeKeyValue(String key, String value, String dbName){
 		DBCredentials credentials = DBCredentials.getDbPorts().get(dbName);
 		SparkConf sparkConf = new SparkConf()
-                .setAppName("MyApp")
+                .setAppName("Polystore")
                 .setMaster("local['['/]*[']'/]")
                 .set("spark.redis.host", credentials.getUrl())
                 .set("spark.redis.port", String.valueOf(credentials.getPort()));
@@ -491,7 +491,7 @@ public class SparkConnectionMgr {
 	public static void writeKeyValueHash(String key, List<Tuple2<String, String>> hash, String dbName){
 		DBCredentials credentials = DBCredentials.getDbPorts().get(dbName);
 		SparkConf sparkConf = new SparkConf()
-                .setAppName("MyApp")
+                .setAppName("Polystore")
                 .setMaster("local['['/]*[']'/]")
                 .set("spark.redis.host", credentials.getUrl())
                 .set("spark.redis.port", String.valueOf(credentials.getPort()));
@@ -510,7 +510,7 @@ public class SparkConnectionMgr {
 		logger.debug("Get keypattern (string value) ['['/]{}[']'/] from redis db ['['/]{}[']'/]", keypattern, dbName);
 		[if (isSparkConfiguration())]
 		SparkConf sparkConf = new SparkConf()
-                .setAppName("MyApp")
+                .setAppName("Polystore")
                 .setMaster("local['['/]*[']'/]")
                 .set("spark.redis.host", credentials.getUrl())
                 .set("spark.redis.port", ""+credentials.getPort());
@@ -575,13 +575,9 @@ public class SparkConnectionMgr {
 		DBCredentials credentials = DBCredentials.getDbPorts().get(dbName);
 		logger.debug("Get keypattern (hash value) ['['/]{}[']'/] from redis db ['['/]{}[']'/]", keypattern, dbName);
 		[if (isSparkConfiguration())]
-		SparkConf sparkConf = new SparkConf()
-                .setAppName("MyApp")
-                .setMaster("local['['/]*[']'/]")
-                .set("spark.redis.host", credentials.getUrl())
-                .set("spark.redis.port", ""+credentials.getPort());
-		SparkSession spark = SparkSession.builder().config(sparkConf).getOrCreate();
-		Dataset<Row> res = spark.read().format("org.apache.spark.sql.redis")
+		getSession().sparkContext().conf().set("spark.redis.host", credentials.getUrl());
+		getSession().sparkContext().conf().set("spark.redis.port", ""+credentials.getPort());
+		Dataset<Row> res = getSession().read().format("org.apache.spark.sql.redis")
                 .option("keys.pattern",keypattern)
 				.option("key.column", "_id")
                 .schema(structTypeHash).load();
