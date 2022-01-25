@@ -82,8 +82,8 @@ public class [rel.name.toUpperFirst() /] extends LoggingPojo {
 	public class [rel.name.toUpperFirst() /]TDO extends [rel.name.toUpperFirst() /] {
 	
 	[for (role : Role | rel.roles)]
-	[for (ref: Reference | getMappedReferences(role, conceptualSchema.getMappingRules()))]
-	[for (field : PhysicalField | ref.sourceField)]
+		[for (ref: Reference | getMappedReferences(role, conceptualSchema.getMappingRules()))]
+			[for (field : PhysicalField | ref.sourceField)]
 	private String [getJavaAbsolutePath(ref) /]_[field.getPhysicalName() /];
 	public String get[getJavaAbsolutePath(ref).toUpperFirst() /]_[field.getPhysicalName() /]() {
 		return this.[getJavaAbsolutePath(ref) /]_[field.getPhysicalName() /];
@@ -93,8 +93,8 @@ public class [rel.name.toUpperFirst() /] extends LoggingPojo {
 		this.[getJavaAbsolutePath(ref) /]_[field.getPhysicalName() /] = [getJavaAbsolutePath(ref) /]_[field.getPhysicalName() /];
 	}
 
-	[/for]
-	[for (field : PhysicalField | ref.targetField)]
+			[/for]
+			[for (field : PhysicalField | ref.targetField)]
 	private String [getJavaAbsolutePath(ref) /]_[field.getPhysicalName() /];
 	public String get[getJavaAbsolutePath(ref).toUpperFirst() /]_[field.getPhysicalName() /]() {
 		return this.[getJavaAbsolutePath(ref) /]_[field.getPhysicalName() /];
@@ -104,8 +104,8 @@ public class [rel.name.toUpperFirst() /] extends LoggingPojo {
 		this.[getJavaAbsolutePath(ref) /]_[field.getPhysicalName() /] = [getJavaAbsolutePath(ref) /]_[field.getPhysicalName() /];
 	}
 
-	[/for]
-	[/for]
+			[/for]
+		[/for]
 	[/for]
 	
 	}

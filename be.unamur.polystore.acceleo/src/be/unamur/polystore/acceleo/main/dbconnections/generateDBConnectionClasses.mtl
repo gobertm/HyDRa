@@ -44,6 +44,7 @@ import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.model.UpdateOptions;
 import com.mongodb.client.model.UpdateManyModel;
+import redis.clients.jedis.Jedis;
 
 public class DBConnectionMgr {
 
@@ -252,6 +253,15 @@ public class DBConnectionMgr {
 			logger.error("Can't perform update, wrong database type, need relational (mariadb or sqlite or postgresql) database. Database : '{}' , type : '{}' ",credentials.getDbName(), credentials.getDbType());
 			throw new RuntimeException("Can't perform update, wrong database type, need document db");
 		}
+	}
+
+	public static void writeKeyValueList(String key, String value, String dbName) {
+		DBCredentials credentials = DBCredentials.getDbPorts().get(dbName);
+		logger.debug("Jedis LPush key ['['/]{}[']'/] value ['['/]{}[']'/] to redis db ['['/]{}[']'/]", key, value, dbName);
+		Jedis jedis;
+		jedis = new Jedis(credentials.getUrl(), credentials.getPort());
+		jedis.lpush(key, value);
+		jedis.close();
 	}
 
 	public static Connection getJDBCConnection(DBCredentials credentials) {
@@ -594,18 +604,8 @@ public class SparkConnectionMgr {
 					jedis.scan(cur, scanParams);
 			List<String> keysList = scanResult.getResult();
 
-			boolean isStriped = (org.apache.commons.lang3.StringUtils.countMatches(keypattern, "*") == 1 && keypattern.endsWith("*"));
-			String regex = keypattern.replaceAll("\\*","(.*)");
-			java.util.regex.Pattern p = java.util.regex.Pattern.compile(regex);
-			
 			for (String key : keysList) {
 				Map map = jedis.hgetAll(key);
-				if(isStriped) {
-					java.util.regex.Matcher matcher = p.matcher(key);
-					matcher.find();
-					key = matcher.group(1);
-				}
-				
 				map.put("_id", key);
 				res.add(new Row(map));
 			}
