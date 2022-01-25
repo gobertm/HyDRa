@@ -159,6 +159,23 @@ public class Dataset<E> extends ArrayList<E> {
 		return join(d, joinCondition, "inner");
 	}
 
+	public <E2> Dataset<Row> join(Dataset<E2> d, Column joinCondition, String joinMode) {
+		if (joinMode == null)
+			joinMode = "inner";
+		logger.debug(joinMode+" join of Datasets of size ['['/]{}[']'/] & ['['/]{}[']'/]. Condition ['['/]{}[']'/]", this.size(), d.size(), joinCondition);
+		switch (joinMode) {
+		case "fullouter":
+				return outerHashJoin(d, joinCondition,true);
+			case "leftouter":
+				return outerHashJoin(d, joinCondition, false);
+		case "inner":
+			return innerHashJoin(d, joinCondition);
+		default:
+			return null;
+		}
+
+	}
+
 	private <E2> Dataset<Row> fullOuterJoin(Dataset<E2> d, Column joinCondition) {
 		Dataset<Row> res = new Dataset<Row>();
 		for (E e : this) {
@@ -217,7 +234,7 @@ public class Dataset<E> extends ArrayList<E> {
 		return res;
 	}
 
-	private <E2> Dataset<Row> fullOuterJoinHash(Dataset<E2> d, Column joinCondition) {
+	private <E2> Dataset<Row> outerHashJoin(Dataset<E2> d, Column joinCondition, boolean isFullOuter) {
 		Dataset<Row> res = new Dataset<Row>();
 		HashMap<Object, Object> hash = new HashMap<>();
 		Set<Object> matchedKeys = new HashSet<>();
@@ -262,8 +279,10 @@ public class Dataset<E> extends ArrayList<E> {
 						res.add(r);
 					} else{
 						// We found a 'right' single
-						r = merge(e2, d.alias, null, null);
-						res.add(r);
+						if(isFullOuter){
+							r = merge(e2, d.alias, null, null);
+							res.add(r);
+						}
 					}
 				}
 				// We need to find 'left' singles. We remove found elements from the hash. Only 'left' singles will remain
@@ -280,9 +299,12 @@ public class Dataset<E> extends ArrayList<E> {
 						matchedKeys.add(getValue(e, col1.split("\\.")));
 						r = merge(value, this.alias, e, d.alias);
 						res.add(r);
-					} else{
-						r = merge(e, this.alias, null, null);
-						res.add(r);
+					} else{	
+						// We found a 'right' single
+						if (isFullOuter) {
+							r = merge(e, this.alias, null, null);
+							res.add(r);
+						}
 					}
 				}
 				// We need to find 'left' singles. We remove found elements from the hash. Only 'left' singles will remain
@@ -474,22 +496,6 @@ public class Dataset<E> extends ArrayList<E> {
 			}
 		}
 		return res;
-	}
-	public <E2> Dataset<Row> join(Dataset<E2> d, Column joinCondition, String joinMode) {
-		if (joinMode == null)
-			joinMode = "inner";
-		logger.debug(joinMode+" join of Datasets of size ['['/]{}[']'/] & ['['/]{}[']'/]", this.size(), d.size());
-		switch (joinMode) {
-		case "fullouter":
-			return fullOuterJoinHash(d, joinCondition);
-		case "leftouter":
-			return leftOuterJoin(d, joinCondition);
-		case "inner":
-			return innerHashJoin(d, joinCondition);
-		default:
-			return null;
-		}
-
 	}
 
 	private static <E1, E2> Row merge(E1 e1, String alias1, E2 e2, String alias2) throws IntrospectionException {
