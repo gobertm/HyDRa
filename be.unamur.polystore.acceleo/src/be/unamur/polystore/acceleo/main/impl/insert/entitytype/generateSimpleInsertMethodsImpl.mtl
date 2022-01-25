@@ -270,6 +270,7 @@ values.add(value_[getPhysicalName(field)/]);
 		[/for]
 	[/if]
 	DBConnectionMgr.insertInTable(columns, rows, "[struct.name/]", "[db.name/]");
+	return true;
 [else]
 [if (struct.oclIsTypeOf(pml::Collection))]
 [comment]//Docdb ref support. Code written by copy pasting adapting above. Late writing. [/comment]
@@ -306,6 +307,7 @@ values.add(value_[getPhysicalName(field)/]);
 			[/let] 
 		[/for]
 	DBConnectionMgr.insertMany(docsList, "[struct.name/]", "[db.name/]");
+	return true;
 	[/if]
 [else]
 [if (struct.oclIsTypeOf(pml::KeyValuePair))]
@@ -314,12 +316,12 @@ values.add(value_[getPhysicalName(field)/]);
 [/if]
 [/if]
 [/if]
-	return true;
 [/template]
 
 [template public insertInRefStructureOfOppositeRole(entityType: EntityType, struct : AbstractPhysicalStructure, db : Database)]
  	// Entity '[entityType.name/]' reference in structure '[struct.name/]'
 	[if (struct.oclIsTypeOf(Table))]
+	// In relational table
 	List<String> columns = new ArrayList<>();
 	List<Object> values = new ArrayList<>();
 	String filtercolumn; 
@@ -345,6 +347,7 @@ values.add(value_[getPhysicalName(field)/]);
 	return true;
 	[else]
 		[if (struct.oclIsTypeOf(pml::Collection))]
+	// In document db
 	Bson filter;
 	Bson updateOp;
 			[for (ref : Reference | getRefOfPhysicalStructure(struct))]
@@ -368,7 +371,41 @@ values.add(value_[getPhysicalName(field)/]);
 				[/let]
 			[/for]
 		[else]
+			[if (struct.oclIsTypeOf(pml::KeyValuePair))]
+	// In Key value database
+				[for (ref : Reference | getRefOfPhysicalStructure(struct))]
+				[let roleref : Role = getMappedRoleOfReference(ref)]
+					[if (entityType=getOppositeRoleInBinaryRel(roleref).entity)]
+	// Build key
+	String key="";
+	String value="";
+	boolean toAdd = false;
+						[for (component : TerminalExpression | struct.oclAsType(KeyValuePair).key.pattern)]
+							[if (component.oclIsTypeOf(BracketsField))]
+							[let attr : Attribute = getMappedAttributeOfFieldInStructure(component.oclAsType(PhysicalField),struct)]
+								[if (attr.ancestors(EntityType)->first()=entityType)]
+	key += [getOppositeRoleInBinaryRel(roleref).entity.name.toLowerFirst()/].get[attr.name.toUpperFirst()/]();
+								[else]
+	key += [roleref.name.toLowerFirst()/][roleref.getRelationShipType().name.toUpperFirst()/].get[attr.name.toUpperFirst()/]();
+								[/if]
+							[/let]
+							[else]
+	key += "[component.literal/]";
+							[/if]
+						[/for]
+						[if (ref.sourceField.ancestors(KVComplexField)->first().type=pml::KVDataType::LIST)]
+	// Value part
+						[let attr : Attribute = getMappedAttributeOfFieldInStructure(ref.sourceField->any(true).oclAsType(PhysicalField),struct)]
+	value =  [getOppositeRoleInBinaryRel(roleref).entity.name.toLowerFirst()/].get[attr.name.toUpperFirst()/]();
+						[/let]
+	DBConnectionMgr.writeKeyValueList(key,value,"[db.name/]");
+						[/if]
+					[/if]
+				[/let]
+				[/for]
 	return false;
+				
+			[/if]
 		[/if]
 	[/if]
 	
