@@ -160,7 +160,8 @@ public class MappingRuleService {
 			res.addAll(((Collection)structure).getReferences());
 		if(structure instanceof TableColumnDB)
 			res.addAll(((TableColumnDB)structure).getReferences());
-		// TODO For graph and others
+		if(structure instanceof KeyValuePair)
+			res.addAll(((KeyValuePair)structure).getReferences());
 		return res;
 	}
 
