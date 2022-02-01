@@ -334,8 +334,9 @@ Dataset<[role.getRelationShipType().name.toUpperFirst()/]> res_[entity.name/]_[r
 			return res;
 		}, Encoders.bean([role.getRelationShipType().name.toUpperFirst()/].class));
 
-datasetsPOJO.add(res_[entity.name/]_[ref.name/]);[else]
-// (A) (AB) (B)  OR (A B) (AB) Join table is 'alone'
+datasetsPOJO.add(res_[entity.name/]_[ref.name/]);
+[else]
+// (A) (AB) (B)  OR (A B) (AB) Join table is 'alone' 
 [role2.name/]_refilter = new MutableBoolean(false);
 Dataset<[role.entity.name.toUpperFirst()/]TDO> [role.entity.name.toLowerFirst()/]TDO[ref.name/][role.name/] = this.get[role.entity.name.toUpperFirst()/]TDOList[role.name.toUpperFirst() /]In[ref.name.toUpperFirst()/]In[ref.targetField->first().getAbstractPhysicalStructureNotEmbeddedObject().name.toUpperFirst() /]From[ref.targetField->first().getPhysicalSchema().name.toUpperFirst()/]([role.name/]_condition, [role.name/]_refilter);
 Dataset<[role.getRelationShipType().name.toUpperFirst()/]TDO> [role.getRelationShipType().name.toLowerFirst()/]TDO[ref.name/]_[ref2.name/] = this.get[role.getRelationShipType().name.toUpperFirst()/]TDOListIn[role.ancestors(RelationshipType)->any(true).name.toUpperFirst()/]_[ref.name.toUpperFirst()/]_[ref2.name.toUpperFirst()/]In[ref.getAbstractPhysicalStructureNotEmbeddedObject().name.toUpperFirst() /]From[ref.getPhysicalSchema().name.toUpperFirst()/]([if (role.getRelationShipType().attributes->size() > 0)][role.getRelationShipType().name/]_condition, [role.getRelationShipType().name/]_refilter[/if]);

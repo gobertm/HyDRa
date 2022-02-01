@@ -70,7 +70,7 @@
 	Dataset<Row> dataset = dbconnection.SparkConnectionMgr.getDatasetFromMongoDB("[db.name /]", "[struct.name /]", bsonQuery);
 
 	Dataset<[pojoName /][if (references->size() > 0)][getTDOLiteral('') /][/if]> res = dataset.flatMap((FlatMapFunction<Row, [pojoName /][if (references->size() > 0)][getTDOLiteral('') /][/if]>) r -> {
-			List<[pojoName /][if (references->size() > 0)][getTDOLiteral('') /][/if]> list_res = new ArrayList<[pojoName /][if (references->size() > 0)][getTDOLiteral('') /][/if]>();
+			Set<[pojoName /][if (references->size() > 0)][getTDOLiteral('') /][/if]> list_res = new HashSet<[pojoName /][if (references->size() > 0)][getTDOLiteral('') /][/if]>();
 			Integer groupIndex = null;
 			String regex = null;
 			String value = null;
@@ -750,11 +750,11 @@ if(nestedRow != null) {
 
 [comment Ici modifier �galement afin d'aller voir dans les multi value complex object si l'objet refField n'y est pas./]
 [for (pair : Sequence(OclAny) | references)]
-[let ref : Reference = pair->at(1)]
-[let refFields : Sequence(PhysicalField) = pair->at(2)]
-[let children : Collection(PhysicalField) = getChildrenArrayPhysicalFieldsHavingDescendantMappedToGivenEntityTypeOrToRefField(arg, entOrRel, entOrRel.ancestors(Domainmodel)->first().mappingRules, refFields)]
-[if (children->size() > 0)]
-[for (child : PhysicalField | children)]
+	[let ref : Reference = pair->at(1)]
+	[let refFields : Sequence(PhysicalField) = pair->at(2)]
+	[let children : Collection(PhysicalField) = getChildrenArrayPhysicalFieldsHavingDescendantMappedToGivenEntityTypeOrToRefField(arg, entOrRel, entOrRel.ancestors(Domainmodel)->first().mappingRules, refFields)]
+	[if (children->size() > 0)]
+		[for (child : PhysicalField | children)]
 array[level /] = r[level /].getAs("[getPhysicalName(child)/]");
 if(array[level /]!= null) {
 	for (int i[level + 1/] = 0; i[level + 1/] < array[level /].size(); i[level + 1/]++){
@@ -768,21 +768,24 @@ if(toAdd[level /][if (level > 1)]&&((condition == null || refilterFlag.booleanVa
 	list_res.add([pojoName.toLowerFirst() /][level /]);
 	addedInList = true;
 } 
-[if (level > 1)]if(addedInList)
-	toAdd[level - 1 /] = false;[/if]
-
-[/for]
-[else]
+			[if (level > 1)]
+if(addedInList)
+	toAdd[level - 1 /] = false;
+			[/if]
+		[/for]
+	[else]
 if(toAdd[level /][if (level > 1)]&&((condition ==null || refilterFlag.booleanValue() || condition.evaluate([pojoName.toLowerFirst() /][level /])))[/if]) {
 	list_res.add([pojoName.toLowerFirst() /][level /]);
 	addedInList = true;
 } 
-[if (level > 1)]if(addedInList)
-	toAdd[level - 1 /] = false;[/if]
-[/if]
-[/let]
-[/let]
-[/let]
+		[if (level > 1)]
+if(addedInList)
+	toAdd[level - 1 /] = false;
+		[/if]
+	[/if]
+	[/let]
+	[/let]
+	[/let]
 [/for]
 
 [/template]

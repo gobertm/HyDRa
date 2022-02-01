@@ -50,7 +50,8 @@ public class Util {
 	public static String transformBSONValue(Object o) {
 			if(o == null)
 				return null;
-	
+			if(o instanceof LocalDate)
+				return o.toString().concat("T00:00:00Z");
 			//TODO comportement different en fct des types de donnees (ex: dates et leur format)
 			return o.toString();
 	}
