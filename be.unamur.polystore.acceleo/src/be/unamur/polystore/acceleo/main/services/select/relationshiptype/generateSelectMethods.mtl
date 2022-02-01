@@ -9,16 +9,10 @@
 
 
 [template public generateSelectMethods(rel : RelationshipType, conceptualSchema: ConceptualSchema, override: Boolean)]
-
 [comment Role TDO pojo retrieval methods /]
-
 [if (rel.roles -> size() = 2)]
 [let role1 : Role = rel.roles->any(true)]
 [let role2 : Role = role1.getOppositeRoles()->any(true)]
-
-/* Retrieve the Technical Data Object (TDO) for a Role in a mapped reference declared in a specific Abstract Physical Structure. 
-	The entity mapped on the right hand side of the reference may be stored in another physical structure than where the ref is declared. 
-	Leading to apparent inconsistency in the method name. But it is actually the physical structure of the ref and not the EntityDTO.*/
 [for (ref : Reference | role1.getMappedReferences(role1.getMappingRules()))]
 [if (hasMappedReferenceInSamePhysicalStructureForOppoisteRole(role2, ref.getAbstractPhysicalStructureNotEmbeddedObject()) = false)]
 [comment A->B. getAListInREL/]
@@ -27,6 +21,7 @@
 [if (hasMappedReferenceInSamePhysicalStructureForOppoisteRole(role2, ref.getAbstractPhysicalStructureNotEmbeddedObject()))]
 [comment A<-AB->B. getAListInREL/]
 [let ref2 : Reference = getMappedReferenceInSamePhysicalStructureForOppositeRole(role2, ref.getAbstractPhysicalStructureNotEmbeddedObject())]
+// A<-AB->B . getAListInREL
 [generateRefRelatedMethodsInJoinPhysicalStructure(ref, ref2, override, role1, role2)/]
 [/let]
 [/if]
@@ -39,6 +34,7 @@
 [if (hasMappedReferenceInSamePhysicalStructureForOppoisteRole(role1, ref.getAbstractPhysicalStructureNotEmbeddedObject()))]
 [let ref2 : Reference = getMappedReferenceInSamePhysicalStructureForOppositeRole(role1, ref.getAbstractPhysicalStructureNotEmbeddedObject())]
 [comment A<-AB->B. getBListInREL/]
+// A<-AB->B . getBListInREL
 [generateRefRelatedMethodsInJoinPhysicalStructure(ref, ref2, override, role2, role1)/]
 [/let]
 [/if]
@@ -51,19 +47,15 @@
 [for (embedded : EmbeddedObject | getMappedEmbeddedObjects(role2, role2.getMappingRules()))]
 [generateEmbeddedObjectMappedToRoleMethod(role2, embedded, role1, override) /]
 [/for]
-
 [if (override = false)]
 [generateOuterJoinsMethods(rel)/]
 [/if]
-
 [/let]
 [/let]
 [else]
 // Not implemented yet
 [/if]
-
 [comment Relationship type POJO retrieval methods /]
-
 public [if (override = false)]abstract [/if]Dataset<pojo.[rel.name.toUpperFirst()/]> get[rel.name.toUpperFirst()/]List([for (role: Role | rel.roles)][if (i > 1)],[/if]
 	conditions.Condition<conditions.[role.entity.name.toUpperFirst() /]Attribute> [role.name/]_condition[/for][if (rel.attributes->size() > 0)],
 	conditions.Condition<conditions.[rel.name.toUpperFirst() /]Attribute> [rel.name /]_condition
@@ -177,7 +169,6 @@ return null;
 [/template]
 
 [template private generateRefRelatedMethodsInJoinPhysicalStructure(ref : Reference, ref2 : Reference, override : Boolean, roleSource : Role, roleTarget : Role)]
-
 [let joinTable : AbstractPhysicalStructure = ref.getAbstractPhysicalStructureNotEmbeddedObject()]
 [let table1 : AbstractPhysicalStructure = ref.targetField->first().getAbstractPhysicalStructureNotEmbeddedObject()]
 [let table2 : AbstractPhysicalStructure = ref2.targetField->first().getAbstractPhysicalStructureNotEmbeddedObject()]
