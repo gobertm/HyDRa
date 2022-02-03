@@ -496,7 +496,7 @@ Dataset<[role.getRelationShipType().name.toUpperFirst() /]TDO> res = d.map((MapF
 
 public [if (override = false)]abstract [/if]Dataset<[role.getRelationShipType().name.toUpperFirst()/]TDO> get[role.getRelationShipType().name.toUpperFirst()/]TDOListIn[table.name/]And[joinTable.name/]From[db.name/](Condition<[role.entity.name.toUpperFirst()/]Attribute> [role.name/]_cond[if(role.getRelationShipType().attributes->size()>0)], Condition<[role.getRelationShipType().name.toUpperFirst()/]Attribute> [role.getRelationShipType().name/]_cond[/if], MutableBoolean refilterFlag[if(role.getRelationShipType().attributes->size()>0)], MutableBoolean [role.getRelationShipType().name/]_refilter[/if])[if (override = true)] {
 	Pair<String, List<String>> whereClause = [role.entity.name.toUpperFirst()/]ServiceImpl.getSQLWhereClauseIn[table.name.toUpperFirst()/]From[db.name.toUpperFirst() /]WithTableAlias([role.name/]_cond, refilterFlag, "[table.name/].");
-	Pair<String, List<String>> whereClause2 = [role.getRelationShipType().name.toUpperFirst()/]ServiceImpl.getSQLWhereClauseIn[joinTable.name.toUpperFirst()/]From[db.name.toUpperFirst() /]WithTableAlias([role.getRelationShipType().name/]_cond, [role.getRelationShipType().name/]_refilter, "[joinTable.name/].");
+	[if(role.getRelationShipType().attributes->size() > 0)]Pair<String, List<String>> whereClause2 = [role.getRelationShipType().name.toUpperFirst()/]ServiceImpl.getSQLWhereClauseIn[joinTable.name.toUpperFirst()/]From[db.name.toUpperFirst() /]WithTableAlias([role.getRelationShipType().name/]_cond, [role.getRelationShipType().name/]_refilter, "[joinTable.name/].");[/if]
 	
 	String where1 = whereClause.getKey();
 	List<String> preparedValues = whereClause.getValue();
@@ -504,17 +504,21 @@ public [if (override = false)]abstract [/if]Dataset<[role.getRelationShipType().
 		where1 = where1.replaceFirst("\\?", preparedValue);
 	}
 
+	[if(role.getRelationShipType().attributes->size() > 0)]
 	String where2 = whereClause2.getKey();
 	preparedValues = whereClause2.getValue();
 	for(String preparedValue : preparedValues) {
 		where2 = where2.replaceFirst("\\?", preparedValue);
 	}
+	[/if]
 	
 	String where = "";
 	if(where1 != null)
 		where = " AND " + where1;
+	[if(role.getRelationShipType().attributes->size() > 0)]
 	if(where2 != null)
 		where = " AND " + where2;
+	[/if]
 
 	String aliasedColumns = "[for (field : PhysicalField | table.oclAsType(Table).columns) separator(',')][table.name /].[field.getPhysicalName() /] as [table.name /]_[field.getPhysicalName() /][/for], [for (col : PhysicalField | joinTable.oclAsType(Table).columns) separator(',')][joinTable.name /].[col.getPhysicalName() /] as [joinTable.name /]_[col.getPhysicalName() /][/for]";
 	Dataset<Row> d = dbconnection.SparkConnectionMgr.getDataset("[db.name /]", "(SELECT " + aliasedColumns + " FROM [table.name/], [joinTable.name/] WHERE [for (srcField : PhysicalField | ref.sourceField) separator(' AND ')][joinTable.name/].[srcField.getPhysicalName()/] = [table.name /].[ref.targetField->at(i).getPhysicalName()/][/for]" + where + ") AS JOIN_TABLE", null);
