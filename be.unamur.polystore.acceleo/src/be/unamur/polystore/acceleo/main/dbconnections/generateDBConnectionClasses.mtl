@@ -305,8 +305,11 @@ import org.apache.spark.sql.types.StructField;
 import org.apache.spark.sql.types.StructType;
 import org.bson.Document;
 import redis.clients.jedis.Jedis;
+import redis.clients.jedis.exceptions.JedisDataException;
 import redis.clients.jedis.ScanParams;
 import redis.clients.jedis.ScanResult;
+
+import org.apache.commons.lang3.StringUtils;
 
 import com.mongodb.spark.MongoSpark;
 import com.mongodb.spark.config.ReadConfig;
@@ -518,6 +521,8 @@ public class SparkConnectionMgr {
 	public static Dataset<Row> getRowsFromKeyValue(String dbName, String keypattern) {
 		DBCredentials credentials = DBCredentials.getDbPorts().get(dbName);
 		logger.debug("Get keypattern (string value) ['['/]{}[']'/] from redis db ['['/]{}[']'/]", keypattern, dbName);
+ 		int countInKeyPattern = StringUtils.countMatches(keypattern,':'); // According to Redis naming convention. Semi-colon should be used as separator. 
+        int countInKey;
 		[if (isSparkConfiguration())]
 		SparkConf sparkConf = new SparkConf()
                 .setAppName("Polystore")
@@ -564,15 +569,20 @@ public class SparkConnectionMgr {
 		if(keys.isEmpty())
 			return null;
 		List<String> values = jedis.mget(keys.toArray(new String['['/]keys.size()[']'/]));
-
+		
 		for (int i = 0; i < keys.size(); i++) {
 				String key = keys.get(i);
-				Map<String, Object> map = new HashMap<String, Object>();
-				String value = values.get(i);
-				if(value != null) {
-					map.put("key", key);
-					map.put("value", value);
-					res.add(new Row(map));
+				countInKey = StringUtils.countMatches(key,':');
+				if(countInKey <= countInKeyPattern){
+					Map<String, Object> map = new HashMap<String, Object>();
+					String value = values.get(i);
+					if(value != null) {
+						map.put("key", key);
+						map.put("value", value);
+						res.add(new Row(map));
+					}
+				}else{
+					logger.error("Possible overlapping key retrieved. Key ['['/]{}[']'/], Keypattern ['['/]{}[']'/]. Skipping...", key,keypattern);
 				}
 		}
 
@@ -605,9 +615,15 @@ public class SparkConnectionMgr {
 			List<String> keysList = scanResult.getResult();
 
 			for (String key : keysList) {
-				Map map = jedis.hgetAll(key);
-				map.put("_id", key);
-				res.add(new Row(map));
+				try {
+					Map map = jedis.hgetAll(key);
+					map.put("_id", key);
+					res.add(new Row(map));
+				}catch(JedisDataException e)
+				{
+					logger.warn("Wrong type value for key ['['/]{}[']'/]. Key pattern asked ['['/]{}[']'/]. This indicates that other key value pairs not mentioned in the schema are in the database and in conflict. Continuing...", key, keypattern);
+					//e.printStackTrace();
+				}
 			}
 			cur = scanResult.getCursor();
 			if (cur.equals("0")) {
@@ -637,8 +653,14 @@ public class SparkConnectionMgr {
 
 			//do whatever with the key-value pairs in result
 			for (String key : keysList) {
-				List<String> listvalues = jedis.lrange(key, 0, -1);
-				listKV.put(key, listvalues);
+				try{
+					List<String> listvalues = jedis.lrange(key, 0, -1);
+					listKV.put(key, listvalues);
+				}catch(JedisDataException e)
+				{
+					logger.warn("Wrong type value for key ['['/]{}[']'/]. Key pattern asked ['['/]{}[']'/]. This indicates that other key value pairs not mentioned in the schema are in the database and in conflict. Continuing...", key, keypattern);
+					//e.printStackTrace();
+				}
 			}
 			cur = scanResult.getCursor();
 			if (cur.equals("0")) {
@@ -664,8 +686,14 @@ public class SparkConnectionMgr {
 
 			//do whatever with the key-value pairs in result
 			for (String key : keysList) {
-				List<String> listvalues = jedis.lrange(key, 0, -1);
-				listKV.put(key, listvalues);
+				try{
+					List<String> listvalues = jedis.lrange(key, 0, -1);
+					listKV.put(key, listvalues);
+				}catch(JedisDataException e)
+				{
+					logger.warn("Wrong type value for key ['['/]{}[']'/]. Key pattern asked ['['/]{}[']'/]. This indicates that other key value pairs not mentioned in the schema are in the database and in conflict. Continuing...", key, keypattern);
+					e.printStackTrace();
+				}
 			}
 			cur = scanResult.getCursor();
 			if (cur.equals("0")) {
