@@ -312,7 +312,47 @@ values.add(value_[getPhysicalName(field)/]);
 [else]
 [if (struct.oclIsTypeOf(pml::KeyValuePair))]
 	// In insertRefStruct in KeyValuePair
-	throw new UnsupportedOperationException("Not implemented yet");
+	// In Key value database
+				[for (ref : Reference | getRefOfPhysicalStructure(struct))]
+				[let roleref : Role = getMappedRoleOfReference(ref)]
+				[let oppositerole : Role = roleref.getOppositeRoleInBinaryRel()]
+					[if (entityType=roleref.entity)]
+						[if (oppositerole.isCardinalityMaxN())]
+	for([oppositerole.entity.name.toUpperFirst()/] [oppositerole.entity.name.toLowerFirst()/] : [oppositerole.name/][getRelationShipType(oppositerole).name.toUpperFirst()/]){
+						[else]
+	[oppositerole.entity.name.toUpperFirst()/] [oppositerole.entity.name.toLowerFirst()/] = [oppositerole.name/][getRelationShipType(oppositerole).name.toUpperFirst()/];
+						[/if]
+	// Build key
+		String key="";
+		String value="";
+						[for (component : TerminalExpression | struct.oclAsType(KeyValuePair).key.pattern)]
+							[if (component.oclIsTypeOf(BracketsField))]
+							[let attr : Attribute = getMappedAttributeOfFieldInStructure(component.oclAsType(PhysicalField),struct)]
+								[if (attr.ancestors(EntityType)->first()=entityType)]
+		key += [roleref.entity.name.toLowerFirst()/].get[attr.name.toUpperFirst()/]();
+								[else]
+		key += [getOppositeRoleInBinaryRel(roleref).entity.name.toLowerFirst()/].get[attr.name.toUpperFirst()/]();
+								[/if]
+							[/let]
+							[else]
+		key += "[component.literal/]";
+							[/if]
+						[/for]
+						[if (ref.sourceField.ancestors(KVComplexField)->first().type=pml::KVDataType::LIST)]
+		// Value part
+						[let attr : Attribute = getMappedAttributeOfFieldInStructure(ref.sourceField->any(true).oclAsType(PhysicalField),struct)]
+		value =  [oppositerole.entity.name.toLowerFirst()/].get[attr.name.toUpperFirst()/]();
+						[/let]
+		DBConnectionMgr.writeKeyValueList(key,value,"[db.name/]");
+						[/if]
+					[if (roleref.getOppositeRoleInBinaryRel().isCardinalityMaxN())]
+	}
+					[/if]
+					[/if]
+				[/let]
+				[/let]
+				[/for]
+	return false;
 [/if]
 [/if]
 [/if]
@@ -376,30 +416,37 @@ values.add(value_[getPhysicalName(field)/]);
 				[for (ref : Reference | getRefOfPhysicalStructure(struct))]
 				[let roleref : Role = getMappedRoleOfReference(ref)]
 					[if (entityType=getOppositeRoleInBinaryRel(roleref).entity)]
+						[if (roleref.getOppositeRoleInBinaryRel().isCardinalityMaxN())]
+	for([roleref.entity.name.toUpperFirst()/] [roleref.entity.name.toLowerFirst()/] : [roleref.name/][getRelationShipType(roleref).name.toUpperFirst()/]){
+						[else]
+	[roleref.entity.name.toUpperFirst()/] [roleref.entity.name.toLowerFirst()/] = [roleref.name/][getRelationShipType(roleref).name.toUpperFirst()/];
+						[/if]
 	// Build key
-	String key="";
-	String value="";
-	boolean toAdd = false;
+		String key="";
+		String value="";
 						[for (component : TerminalExpression | struct.oclAsType(KeyValuePair).key.pattern)]
 							[if (component.oclIsTypeOf(BracketsField))]
 							[let attr : Attribute = getMappedAttributeOfFieldInStructure(component.oclAsType(PhysicalField),struct)]
 								[if (attr.ancestors(EntityType)->first()=entityType)]
-	key += [getOppositeRoleInBinaryRel(roleref).entity.name.toLowerFirst()/].get[attr.name.toUpperFirst()/]();
+		key += [getOppositeRoleInBinaryRel(roleref).entity.name.toLowerFirst()/].get[attr.name.toUpperFirst()/]();
 								[else]
-	key += [roleref.name.toLowerFirst()/][roleref.getRelationShipType().name.toUpperFirst()/].get[attr.name.toUpperFirst()/]();
+		key += [roleref.entity.name.toLowerFirst()/].get[attr.name.toUpperFirst()/]();
 								[/if]
 							[/let]
 							[else]
-	key += "[component.literal/]";
+		key += "[component.literal/]";
 							[/if]
 						[/for]
 						[if (ref.sourceField.ancestors(KVComplexField)->first().type=pml::KVDataType::LIST)]
-	// Value part
+		// Value part
 						[let attr : Attribute = getMappedAttributeOfFieldInStructure(ref.sourceField->any(true).oclAsType(PhysicalField),struct)]
-	value =  [getOppositeRoleInBinaryRel(roleref).entity.name.toLowerFirst()/].get[attr.name.toUpperFirst()/]();
+		value =  [getOppositeRoleInBinaryRel(roleref).entity.name.toLowerFirst()/].get[attr.name.toUpperFirst()/]();
 						[/let]
-	DBConnectionMgr.writeKeyValueList(key,value,"[db.name/]");
+		DBConnectionMgr.writeKeyValueList(key,value,"[db.name/]");
 						[/if]
+					[if (roleref.getOppositeRoleInBinaryRel().isCardinalityMaxN())]
+	}
+					[/if]
 					[/if]
 				[/let]
 				[/for]
@@ -497,7 +544,8 @@ values.add(value_[getPhysicalName(field)/]);
 		key += "[component.literal/]";
 						[/if]
 		[/for]
-		[if (struct.oclAsType(KeyValuePair).value.oclIsTypeOf(pml::KVComplexField))]
+		[if (struct.oclAsType(KeyValuePair).value.oclIsTypeOf(pml::KVComplexField) and struct.oclAsType(KeyValuePair).value.oclAsType(pml::KVComplexField).type=pml::KVDataType::HASH)]
+		// Generate for hash value
 			[comment Generate value for hash structure /]
 		List<Tuple2<String,String>> hash = new ArrayList<>();
 			[for (field : PhysicalField | struct.oclAsType(KeyValuePair).value.oclAsType(KVComplexField).fields)]
@@ -604,8 +652,8 @@ values.add(value_[getPhysicalName(field)/]);
 				[/if]
 			[/if]
 			[/let]
-		[comment  No addition of key value pari when the value is null./]
-		//No addition of key value pair when the value is null.
+		[comment  No addition of key value pair when the value is null./]
+		//No addition of key value pair when the value is null/empty.
 		if(toAdd)
 			SparkConnectionMgr.writeKeyValue(key,value,"[db.name/]");
 		[/if]
