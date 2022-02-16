@@ -582,7 +582,7 @@ public class SparkConnectionMgr {
 						res.add(new Row(map));
 					}
 				}else{
-					logger.error("Possible overlapping key retrieved. Key ['['/]{}[']'/], Keypattern ['['/]{}[']'/]. Skipping...", key,keypattern);
+					logger.warn("Possible overlapping key retrieved. Key ['['/]{}[']'/], Keypattern ['['/]{}[']'/]. Skipping...", key,keypattern);
 				}
 		}
 
