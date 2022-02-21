@@ -297,7 +297,7 @@ public class Dataset<E> extends ArrayList<E> {
 					value = hash.get(getValue(e, col1.split("\\.")));
 					if (value != null) {
 						matchedKeys.add(getValue(e, col1.split("\\.")));
-						r = merge(value, this.alias, e, d.alias);
+						r = merge(value, d.alias, e, this.alias);
 						res.add(r);
 					} else{	
 						// We found a 'right' single
@@ -310,7 +310,7 @@ public class Dataset<E> extends ArrayList<E> {
 				// We need to find 'left' singles. We remove found elements from the hash. Only 'left' singles will remain
 				hash.keySet().removeAll(matchedKeys);
 				for (Object e : hash.values()) {
-					Row r = merge(e, d.alias, null, null);
+					Row r = merge(e, this.alias, null, null);
 					res.add(r);
 				}
 			}
@@ -486,7 +486,7 @@ public class Dataset<E> extends ArrayList<E> {
 				if (value != null) {
 					Row r = null;
 					try {
-						r = merge(value, this.alias, e, d.alias);
+						r = merge(value, d.alias, e, this.alias);
 					} catch (IntrospectionException ex) {
 						logger.error("Impossible to merge rows");
 						ex.printStackTrace();
