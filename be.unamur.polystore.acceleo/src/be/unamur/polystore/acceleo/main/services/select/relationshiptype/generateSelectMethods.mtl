@@ -56,33 +56,33 @@
 // Not implemented yet
 [/if]
 [comment Relationship type POJO retrieval methods /]
-public [if (override = false)]abstract [/if]Dataset<pojo.[rel.name.toUpperFirst()/]> get[rel.name.toUpperFirst()/]List([for (role: Role | rel.roles)][if (i > 1)],[/if]
-	conditions.Condition<conditions.[role.entity.name.toUpperFirst() /]Attribute> [role.name/]_condition[/for][if (rel.attributes->size() > 0)],
-	conditions.Condition<conditions.[rel.name.toUpperFirst() /]Attribute> [rel.name /]_condition
+public [if (override = false)]abstract [/if]Dataset<[rel.name.toUpperFirst()/]> get[rel.name.toUpperFirst()/]List([for (role: Role | rel.roles)][if (i > 1)],[/if]
+	Condition<[role.entity.name.toUpperFirst() /]Attribute> [role.name/]_condition[/for][if (rel.attributes->size() > 0)],
+	Condition<[rel.name.toUpperFirst() /]Attribute> [rel.name /]_condition
 	[/if]
 )[if (override = false)];[else][implMethod1(rel, conceptualSchema) /][/if]
 
 [for (role: Role | rel.roles)]
-public Dataset<pojo.[rel.name.toUpperFirst()/]> get[rel.name.toUpperFirst()/]ListBy[role.name.toUpperFirst() /]Condition(
-	conditions.Condition<conditions.[role.entity.name.toUpperFirst()/]Attribute> [role.name/]_condition
+public Dataset<[rel.name.toUpperFirst()/]> get[rel.name.toUpperFirst()/]ListBy[role.name.toUpperFirst() /]Condition(
+	Condition<[role.entity.name.toUpperFirst()/]Attribute> [role.name/]_condition
 ){
 	return get[rel.name.toUpperFirst() /]List([getListOfNullValues(i - 1) /][if(i - 1 > 0)], [/if][role.name/]_condition[getListOfNullValues(rel.roles->size() -  i, true) /][if (rel.attributes->size() > 0)], null[/if]);
 }
 
-public [if (isCardinalityMaxOne(role) = false)]Dataset<pojo.[rel.name.toUpperFirst() /]>[else]pojo.[rel.name.toUpperFirst() /][/if] get[rel.name.toUpperFirst() /][if (isCardinalityMaxOne(role) = false)]List[/if]By[role.name.toUpperFirst() /](pojo.[role.entity.name.toUpperFirst()/] [role.name /]) {
-	conditions.Condition<conditions.[role.entity.name.toUpperFirst()/]Attribute> cond = null;
+public [if (isCardinalityMaxOne(role) = false)]Dataset<[rel.name.toUpperFirst() /]>[else][rel.name.toUpperFirst() /][/if] get[rel.name.toUpperFirst() /][if (isCardinalityMaxOne(role) = false)]List[/if]By[role.name.toUpperFirst() /]([role.entity.name.toUpperFirst()/] [role.name /]) {
+	Condition<[role.entity.name.toUpperFirst()/]Attribute> cond = null;
 	[if (role.entity.identifier.oclIsUndefined() = false)]
 		[for (attr : Attribute | role.entity.identifier.attributes)]
 			[if (i = 1)]
-	cond = conditions.Condition.simple(conditions.[role.entity.name.toUpperFirst()/]Attribute.[attr.name.toLowerFirst()/], conditions.Operator.EQUALS, [role.name /].get[attr.name.toUpperFirst()/]());
+	cond = Condition.simple([role.entity.name.toUpperFirst()/]Attribute.[attr.name/], Operator.EQUALS, [role.name /].get[attr.name.toUpperFirst()/]());
 			[else]
-	cond = conditions.Condition.and(cond, conditions.Condition.simple(conditions.[role.entity.name.toUpperFirst()/]Attribute.[attr.name.toLowerFirst()/], conditions.Operator.EQUALS, [role.name /].get[attr.name.toUpperFirst()/]()));
+	cond = Condition.and(cond, Condition.simple([role.entity.name.toUpperFirst()/]Attribute.[attr.name/], Operator.EQUALS, [role.name /].get[attr.name.toUpperFirst()/]()));
 			[/if]
 		[/for]
-	Dataset<pojo.[rel.name.toUpperFirst() /]> res = get[rel.name.toUpperFirst() /]ListBy[role.name.toUpperFirst() /]Condition(cond);
+	Dataset<[rel.name.toUpperFirst() /]> res = get[rel.name.toUpperFirst() /]ListBy[role.name.toUpperFirst() /]Condition(cond);
 	[if (isCardinalityMaxOne(role) = false)]return res;
 	[else]
-	List<pojo.[rel.name.toUpperFirst() /]> list = res.collectAsList();
+	List<[rel.name.toUpperFirst() /]> list = res.collectAsList();
 	if(list.size() > 0)
 		return list.get(0);
 	else
@@ -95,8 +95,8 @@ public [if (isCardinalityMaxOne(role) = false)]Dataset<pojo.[rel.name.toUpperFir
 [/for]
 [if (rel.attributes->size() > 0)]
 
-public Dataset<pojo.[rel.name.toUpperFirst() /]> get[rel.name.toUpperFirst() /]ListBy[rel.name.toUpperFirst() /]Condition(
-	conditions.Condition<conditions.[rel.name.toUpperFirst()/]Attribute> [rel.name/]_condition
+public Dataset<[rel.name.toUpperFirst() /]> get[rel.name.toUpperFirst() /]ListBy[rel.name.toUpperFirst() /]Condition(
+	Condition<[rel.name.toUpperFirst()/]Attribute> [rel.name/]_condition
 ){
 	return get[rel.name.toUpperFirst() /]List([getListOfNullValues(rel.roles->size()) /], [rel.name/]_condition);
 }
@@ -263,7 +263,7 @@ return null;
 
 [template private generateEmbeddedObjectMappedToRoleMethod(role : Role, embedded : EmbeddedObject, opposite : Role, override : Boolean)]
 // method accessing the embedded object [embedded.name/] mapped to role [role.name /]
-public [if (override = false)]abstract [/if]Dataset<pojo.[role.getRelationShipType().name.toUpperFirst() /]> get[role.getRelationShipType().name.toUpperFirst()/]ListIn[ getPhysicalFieldAbsolutePath(embedded) /](Condition<[role.entity.name.toUpperFirst()/]Attribute> [role.name /]_condition, Condition<[opposite.entity.name.toUpperFirst()/]Attribute> [opposite.name /]_condition, MutableBoolean [role.name/]_refilter, MutableBoolean [opposite.name/]_refilter)[if (override = false)];[else]{	
+public [if (override = false)]abstract [/if]Dataset<[role.getRelationShipType().name.toUpperFirst() /]> get[role.getRelationShipType().name.toUpperFirst()/]ListIn[ getPhysicalFieldAbsolutePath(embedded) /](Condition<[role.entity.name.toUpperFirst()/]Attribute> [role.name /]_condition, Condition<[opposite.entity.name.toUpperFirst()/]Attribute> [opposite.name /]_condition, MutableBoolean [role.name/]_refilter, MutableBoolean [opposite.name/]_refilter)[if (override = false)];[else]{	
 [let dbs : Set(Database) = embedded.getAbstractPhysicalStructureNotEmbeddedObject().getConcernedDatabases(embedded.ancestors(Domainmodel)->any(true))]
 [if (dbs->size() = 0)]
 	return null;
