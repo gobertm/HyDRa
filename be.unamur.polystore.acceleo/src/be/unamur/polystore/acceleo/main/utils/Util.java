@@ -17,6 +17,7 @@ import be.unamur.polystore.pml.Attribute;
 import be.unamur.polystore.pml.BracketsField;
 import be.unamur.polystore.pml.Cardinality;
 import be.unamur.polystore.pml.Collection;
+import be.unamur.polystore.pml.ConceptualSchema;
 import be.unamur.polystore.pml.Database;
 import be.unamur.polystore.pml.EmbeddedObject;
 import be.unamur.polystore.pml.EntityMappingRule;
@@ -25,12 +26,13 @@ import be.unamur.polystore.pml.LongField;
 import be.unamur.polystore.pml.MappingRules;
 import be.unamur.polystore.pml.PhysicalField;
 import be.unamur.polystore.pml.Reference;
+import be.unamur.polystore.pml.RelationshipMappingRule;
 import be.unamur.polystore.pml.RelationshipType;
 import be.unamur.polystore.pml.ShortField;
 import be.unamur.polystore.pml.TerminalExpression;
 
 public class Util {
-	
+
 	public static String ARTIFACTID = "be.unamur.polystore";
 	public static String GROUPID = "example";
 
@@ -56,7 +58,8 @@ public class Util {
 		if (literal == null)
 			return null;
 		return literal/** .replaceAll("\s", "\\\\s") **/
-				.replaceAll("\\*", "\\\\\\\\*").replaceAll("\\$", "\\\\\\\\\\$").replaceAll("\\(", "\\\\\\(").replaceAll("\\)", "\\\\\\)"); // TODO
+				.replaceAll("\\*", "\\\\\\\\*").replaceAll("\\$", "\\\\\\\\\\$").replaceAll("\\(", "\\\\\\(")
+				.replaceAll("\\)", "\\\\\\)"); // TODO
 	}
 
 	public static String getPositionInLongField(PhysicalField field, LongField parent) {
@@ -118,25 +121,27 @@ public class Util {
 		return res;
 
 	}
-	
+
 	public static java.util.Collection<Attribute> getMappedAttributes(PhysicalField field, final Object entOrRel,
 			final MappingRules rules) {
-		if(entOrRel == null)
+		if (entOrRel == null)
 			return new ArrayList<Attribute>();
-		
-		if(entOrRel instanceof EntityType)
+
+		if (entOrRel instanceof EntityType)
 			return getMappedAttributes(field, (EntityType) entOrRel, rules);
-		
-		if(entOrRel instanceof RelationshipType)
+
+		if (entOrRel instanceof RelationshipType)
 			return getMappedAttributes(field, (RelationshipType) entOrRel, rules);
-		
+
 		return new ArrayList<Attribute>();
-		
+
 	}
 
 	/**
-	 * Recursive function if argument field is an EmbeddedObject.
-	 * Goes through the mapping rules and return a list of conceptual attributes that are mapped to the given PhysicalField.
+	 * Recursive function if argument field is an EmbeddedObject. Goes through the
+	 * mapping rules and return a list of conceptual attributes that are mapped to
+	 * the given PhysicalField.
+	 * 
 	 * @param field
 	 * @param ent
 	 * @param rules
@@ -169,7 +174,7 @@ public class Util {
 			}
 		return new ArrayList<Attribute>(res);
 	}
-	
+
 	public static java.util.Collection<Attribute> getMappedAttributes(PhysicalField field, final RelationshipType rel,
 			final MappingRules rules) {
 		Set<Attribute> res = new HashSet<Attribute>();
@@ -179,35 +184,34 @@ public class Util {
 				res.addAll(getMappedAttributes(pf, rel, rules));
 		} else if (rules != null)
 			for (AbstractMappingRule rule : rules.getMappingRules()) {
-				//TODO attributes of rel could be mapped to phyical fields.
-				// NOT ALLOWED at this moment
-				
-//				if (rule instanceof RelationshipMappingRule) {
-//					RelationshipMappingRule r = (RelationshipMappingRule) rule;
-//					if (r.getEntityConceptual() == ent && r.getAttributesConceptual().size() > 0) {
-//						List<PhysicalField> fields = r.getPhysicalFields();
-//						for (int i = 0; i < fields.size(); i++) {
-//							PhysicalField pf = fields.get(i);
-//							if (field instanceof LongField) {
-//								if (((LongField) field).getPattern().contains(pf))
-//									res.add(r.getAttributesConceptual().get(i));
-//
-//							} else if (pf == field)
-//								res.add(r.getAttributesConceptual().get(i));
-//						}
-//					}
-//				}
+				if (rule instanceof RelationshipMappingRule) {
+					RelationshipMappingRule r = (RelationshipMappingRule) rule;
+					if (r.getRelationshipConceptual() == rel && r.getAttributesConceptual().size() > 0) {
+						List<PhysicalField> fields = r.getPhysicalFields();
+						for (int i = 0; i < fields.size(); i++) {
+							PhysicalField pf = fields.get(i);
+							if (field instanceof LongField) {
+								if (((LongField) field).getPattern().contains(pf))
+									res.add(r.getAttributesConceptual().get(i));
+
+							} else if (pf == field)
+								res.add(r.getAttributesConceptual().get(i));
+						}
+					}
+				}
+
 			}
 		return new ArrayList<Attribute>(res);
 	}
 
-	public static java.util.Collection<Attribute> getMappedAttributes(EntityType entity, AbstractPhysicalStructure structure, Database db, MappingRules rules){
+	public static java.util.Collection<Attribute> getMappedAttributes(EntityType entity,
+			AbstractPhysicalStructure structure, Database db, MappingRules rules) {
 		Set<Attribute> res = new HashSet<Attribute>();
-		
+
 		for (AbstractMappingRule rule : rules.getMappingRules()) {
 			if (rule instanceof EntityMappingRule) {
 				EntityMappingRule r = (EntityMappingRule) rule;
-				if(r.getPhysicalStructure()== structure) {
+				if (r.getPhysicalStructure() == structure) {
 					if (r.getEntityConceptual() == entity && r.getAttributesConceptual().size() > 0) {
 						List<PhysicalField> fields = r.getPhysicalFields();
 						for (int i = 0; i < fields.size(); i++) {
@@ -216,15 +220,36 @@ public class Util {
 					}
 				}
 			}
-		}	
+		}
 		return res;
 	}
 
-	
-	public static java.util.Collection<EmbeddedObject> getChildrenArrayPhysicalFieldsHavingDescendantMappedToGivenEntityType(Object arg, Object entOrRel, MappingRules rules){
-		return getChildrenArrayPhysicalFieldsHavingDescendantMappedToGivenEntityTypeOrToRefField(arg, entOrRel, rules, null);
+	public static java.util.Collection<Attribute> getMappedAttributes(RelationshipType rel,
+			AbstractPhysicalStructure structure, Database db, MappingRules rules) {
+		Set<Attribute> res = new HashSet<Attribute>();
+
+		for (AbstractMappingRule rule : rules.getMappingRules()) {
+			if (rule instanceof RelationshipMappingRule) {
+				RelationshipMappingRule r = (RelationshipMappingRule) rule;
+				if (r.getPhysicalStructure() == structure) {
+					if (r.getRelationshipConceptual() == rel && r.getAttributesConceptual().size() > 0) {
+						List<PhysicalField> fields = r.getPhysicalFields();
+						for (int i = 0; i < fields.size(); i++) {
+							res.add(r.getAttributesConceptual().get(i));
+						}
+					}
+				}
+			}
+		}
+		return res;
 	}
-	
+
+	public static java.util.Collection<EmbeddedObject> getChildrenArrayPhysicalFieldsHavingDescendantMappedToGivenEntityType(
+			Object arg, Object entOrRel, MappingRules rules) {
+		return getChildrenArrayPhysicalFieldsHavingDescendantMappedToGivenEntityTypeOrToRefField(arg, entOrRel, rules,
+				null);
+	}
+
 	public static java.util.Collection<EmbeddedObject> getChildrenArrayPhysicalFieldsHavingDescendantMappedToGivenEntityTypeOrToRefField(
 			Object arg, Object entOrRel, MappingRules rules, List<PhysicalField> refFields) {
 		List<EmbeddedObject> res = new ArrayList<EmbeddedObject>();
@@ -248,7 +273,7 @@ public class Util {
 							res.add((EmbeddedObject) field);
 					}
 				}
-				if(field instanceof ArrayField) {
+				if (field instanceof ArrayField) {
 					java.util.Collection<Attribute> mappedAttributes = getMappedAttributes(field, entOrRel, rules);
 				}
 			}
@@ -257,26 +282,25 @@ public class Util {
 	}
 
 	private static boolean isContainedInPhysicalFields(List<PhysicalField> refFields, PhysicalField field) {
-		if(refFields != null)
-			for(PhysicalField refField : refFields)
-				if(isContainedInPhysicalField(refField, field))
+		if (refFields != null)
+			for (PhysicalField refField : refFields)
+				if (isContainedInPhysicalField(refField, field))
 					return true;
 		return false;
-		
-		
+
 	}
-	
+
 	private static boolean isContainedInPhysicalField(PhysicalField refField, PhysicalField field) {
-		if(refField!=null) {
+		if (refField != null) {
 			if (field instanceof LongField) {
-				if(((LongField) field).getPattern().contains(refField))
+				if (((LongField) field).getPattern().contains(refField))
 					return true;
 			}
-			if(refField.equals(field))
+			if (refField.equals(field))
 				return true;
 			if (field instanceof EmbeddedObject) {
 				for (PhysicalField pf : ((EmbeddedObject) field).getFields())
-					return isContainedInPhysicalField(refField,pf);
+					return isContainedInPhysicalField(refField, pf);
 			}
 			return false;
 		}
@@ -294,48 +318,63 @@ public class Util {
 
 		return res;
 	}
-	
+
 	public static java.util.Collection<PhysicalField> getFields(Reference ref, Boolean hasToReturnTargetFields) {
 		List<PhysicalField> res = (hasToReturnTargetFields) ? ref.getTargetField() : ref.getSourceField();
 		return res;
 	}
-	
+
 	public static String getPhysicalFieldAbsolutePath(PhysicalField field) {
 		return getAbsoluteName(field);
-		
+
 	}
-	
+
 	private static String getAbsoluteName(EObject o) {
-		if(o instanceof AbstractPhysicalSchema)
+		if (o instanceof AbstractPhysicalSchema)
 			return ((AbstractPhysicalSchema) o).getName();
-		
-		if(o instanceof PhysicalField) {
-			return getAbsoluteName(o.eContainer()) + MappingRuleService.getPhysicalName((PhysicalField)o);
+
+		if (o instanceof PhysicalField) {
+			return getAbsoluteName(o.eContainer()) + MappingRuleService.getPhysicalName((PhysicalField) o);
 		}
-		
-		if(o instanceof AbstractPhysicalStructure) {
-			return getAbsoluteName(o.eContainer()) + ((AbstractPhysicalStructure)o).getName();
+
+		if (o instanceof AbstractPhysicalStructure) {
+			return getAbsoluteName(o.eContainer()) + ((AbstractPhysicalStructure) o).getName();
 		}
-		
+
 		return null;
+
+	}
+
+	public static String getPomArtifactId(EObject obj) {
+		EObject res = getFirstAncestor(ConceptualSchema.class, obj);
+		if (res == null)
+			return ARTIFACTID;
+		ConceptualSchema cs = (ConceptualSchema) res;
+		return cs.getName();
 		
 	}
-	
-	public static String getPomArtifactId() {
-		return ARTIFACTID;
+
+	public static String getPomGroupId(EObject obj) {
+		EObject res = getFirstAncestor(ConceptualSchema.class, obj);
+		if (res == null)
+			return GROUPID;
+		ConceptualSchema cs = (ConceptualSchema) res;
+		return cs.getName();
 	}
-	
-	public static String getPomGroupId() {
-		return GROUPID;
-	}
-	
+
 	public static PhysicalField getStartField(PhysicalField field) {
-		if(field.eContainer() instanceof LongField)
+		if (field.eContainer() instanceof LongField)
 			return (LongField) field.eContainer();
 		return field;
 	}
-	
-	
-	
+
+	private static EObject getFirstAncestor(final Class cl, EObject obj) {
+		if (obj == null)
+			return null;
+		if (cl.isAssignableFrom(obj.getClass()))
+			return obj;
+
+		return getFirstAncestor(cl, obj.eContainer());
+	}
 
 }

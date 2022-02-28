@@ -16,6 +16,9 @@
 [file ('src/main/java/pojo/' + rel.name.toUpperFirst().concat('.java'), false, 'UTF-8')]
 package pojo;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+
 public class [rel.name.toUpperFirst() /] extends LoggingPojo {
 
 [for (role: Role | rel.roles)]

@@ -100,9 +100,9 @@ if(!refilter.booleanValue()) {
 		[if (entity.identifier.oclIsUndefined() = false)]
 		[for (attr : Attribute | entity.identifier.attributes)]
 		[if (i = 1)]
-		conditionId = Condition.simple([entity.name.toUpperFirst()/]Attribute.[attr.name.toLowerFirst()/], Operator.EQUALS, row.getAs("[attr.name.toLowerFirst()/]"));
+		conditionId = Condition.simple([entity.name.toUpperFirst()/]Attribute.[attr.name/], Operator.EQUALS, row.getAs("[attr.name.toLowerFirst()/]"));
 		[else]
-		conditionId = Condition.and(conditionId, Condition.simple([entity.name.toUpperFirst()/]Attribute.[attr.name.toLowerFirst()/], Operator.EQUALS, row.getAs("[attr.name.toLowerFirst()/]")));
+		conditionId = Condition.and(conditionId, Condition.simple([entity.name.toUpperFirst()/]Attribute.[attr.name/], Operator.EQUALS, row.getAs("[attr.name.toLowerFirst()/]")));
 		[/if]
 		[/for]
 		[/if]
@@ -185,9 +185,9 @@ if(!refilter.booleanValue()) {
 		[if (entityType.identifier.oclIsUndefined() = false)]
 		[for (attr : Attribute | entityType.identifier.attributes)]
 		[if (i = 1)]
-		conditionId = Condition.simple([entityType.name.toUpperFirst()/]Attribute.[attr.name.toLowerFirst()/], Operator.EQUALS, row.getAs("[attr.name.toLowerFirst()/]"));
+		conditionId = Condition.simple([entityType.name.toUpperFirst()/]Attribute.[attr.name/], Operator.EQUALS, row.getAs("[attr.name.toLowerFirst()/]"));
 		[else]
-		conditionId = Condition.and(conditionId, Condition.simple([entityType.name.toUpperFirst()/]Attribute.[attr.name.toLowerFirst()/], Operator.EQUALS, row.getAs("[attr.name.toLowerFirst()/]")));
+		conditionId = Condition.and(conditionId, Condition.simple([entityType.name.toUpperFirst()/]Attribute.[attr.name/], Operator.EQUALS, row.getAs("[attr.name.toLowerFirst()/]")));
 		[/if]
 		[/for]
 		[/if]

@@ -35,52 +35,12 @@
 	[entityType.name.toUpperFirst()/] [entityType.name.toLowerFirst()/] = [rel.name.toLowerFirst()/].get[rolerel.name.toUpperFirst()/]();
 [/let]
 [/for]
+
+	[setAttributesInJoinStructure(struct, rel, rel.name)/]
+
 [for (rolerel : Role | rel.roles)]
 	[let entityType : EntityType = rolerel.entity]
-[comment]//TODO Docdb ref support. Only for relational reference for now[/comment]
-[if (struct.oclIsTypeOf(Table))]
-[comment]Normal fields [/comment]
-[for (field : PhysicalField | struct.oclAsType(Table).columns)]
-	[if (field.oclIsTypeOf(ShortField))]
-		[let attr : Attribute = getMappedAttributes(field, entityType, entityType.getMappingRules())->any(true)]
-			[if (attr.oclIsUndefined()=false)]
-columns.add("[getPhysicalName(field)/]");
-values.add([entityType.name.toLowerFirst()/].get[attr.name.toUpperFirst()/]());
-			[/if]
-		[/let] 
-	[/if]
-	[if (field.oclIsTypeOf(LongField))]
-		[comment LongField with only one component and is BracketsField /]
-		[if (field.oclAsType(LongField).pattern->size()=1 and field.oclAsType(LongField).pattern->any(true).oclIsTypeOf(BracketsField))]
-			[let brackets : BracketsField = field.oclAsType(LongField).pattern->any(true).oclAsType(BracketsField)]
-				[let attr : Attribute = getMappedAttributes(field, entityType, entityType.getMappingRules())->any(true)]
-				[if (attr.oclIsUndefined()=false)]
-columns.add("[getPhysicalName(field)/]");
-values.add([entityType.name.toLowerFirst()/].get[attr.name.toUpperFirst()/]());
-				[/if]
-				[/let] 
-			[/let]
-		[else]
-			[if (field.oclAsType(LongField).pattern->filter(BracketsField)->exists(b |getMappedAttributes(b, entityType, entityType.getMappingRules())->size()=0)=false)]
-				[comment All BracketsField are mapped to the corresponding entity or composed of only one Terminal expression/]
-				[comment LongField is composed of component, therefore can only be StringType /]
-String value_[getPhysicalName(field)/] = "";
-				[for (component : TerminalExpression | field.oclAsType(LongField).pattern)]
-					[if (component.oclIsTypeOf(BracketsField))]
-						[let attr : Attribute = getMappedAttributes(component.oclAsType(BracketsField), entityType, entityType.getMappingRules())->any(true)]
-value_[getPhysicalName(field)/] += [entityType.name.toLowerFirst()/].get[attr.name.toUpperFirst()/]();
-						[/let]
-					[else]
-value_[getPhysicalName(field)/] += "[component.literal/]";
-					[/if]
-				[/for]
-columns.add("[getPhysicalName(field)/]");
-values.add(value_[getPhysicalName(field)/]);
-			[/if]
-		[/if]
-	[/if]
-[/for]
-[/if]
+	[setAttributesInJoinStructure(struct, entityType, entityType.name)/]
 	[/let]
 [/for]
 [comment]	Reference fields [/comment]
@@ -96,6 +56,53 @@ values.add(value_[getPhysicalName(field)/]);
 	DBConnectionMgr.insertInTable(columns, rows, "[struct.name/]", "[db.name/]"); [comment]In join structure so no existing line should exist. We insert[/comment]					
 	return true;
 }[/template]
+
+[template private setAttributesInJoinStructure(struct : AbstractPhysicalStructure, entOrRel: OclAny, entOrRelName: String)]
+	[comment] Works only for relational/cassandra join table for the moment [/comment]
+	[if (struct.oclIsTypeOf(Table) or struct.oclIsTypeOf(TableColumnDB))]
+// attributes of [entOrRelName/]
+[for (field : PhysicalField | struct.eContents(pml::PhysicalField))]
+	[if (field.oclIsTypeOf(ShortField))]
+		[let attr : Attribute = getMappedAttributes(field, entOrRel, entOrRel.getMappingRules())->any(true)]
+			[if (attr.oclIsUndefined()=false)]
+columns.add("[getPhysicalName(field)/]");
+values.add([entOrRelName.toLowerFirst()/].get[attr.name.toUpperFirst()/]());
+			[/if]
+		[/let] 
+	[/if]
+	[if (field.oclIsTypeOf(LongField))]
+		[comment LongField with only one component and is BracketsField /]
+		[if (field.oclAsType(LongField).pattern->size()=1 and field.oclAsType(LongField).pattern->any(true).oclIsTypeOf(BracketsField))]
+			[let brackets : BracketsField = field.oclAsType(LongField).pattern->any(true).oclAsType(BracketsField)]
+				[let attr : Attribute = getMappedAttributes(field, entOrRel, entOrRel.getMappingRules())->any(true)]
+				[if (attr.oclIsUndefined()=false)]
+columns.add("[getPhysicalName(field)/]");
+values.add([entOrRelName.toLowerFirst()/].get[attr.name.toUpperFirst()/]());
+				[/if]
+				[/let] 
+			[/let]
+		[else]
+			[if (field.oclAsType(LongField).pattern->filter(BracketsField)->exists(b |getMappedAttributes(b, entOrRel, entOrRel.getMappingRules())->size()=0)=false)]
+				[comment All BracketsField are mapped to the corresponding entity or composed of only one Terminal expression/]
+				[comment LongField is composed of component, therefore can only be StringType /]
+String value_[getPhysicalName(field)/] = "";
+				[for (component : TerminalExpression | field.oclAsType(LongField).pattern)]
+					[if (component.oclIsTypeOf(BracketsField))]
+						[let attr : Attribute = getMappedAttributes(component.oclAsType(BracketsField), entOrRel, entOrRel.getMappingRules())->any(true)]
+value_[getPhysicalName(field)/] += [entOrRelName.toLowerFirst()/].get[attr.name.toUpperFirst()/]();
+						[/let]
+					[else]
+value_[getPhysicalName(field)/] += "[component.literal/]";
+					[/if]
+				[/for]
+columns.add("[getPhysicalName(field)/]");
+values.add(value_[getPhysicalName(field)/]);
+			[/if]
+		[/if]
+	[/if]
+[/for]
+[/if]
+[/template]
 
 [template public insertRInEmbeddedStruct(rel: RelationshipType, struct : AbstractPhysicalStructure, db : Database)]{
  	// Rel '[rel.name/]' Insert in embedded structure '[struct.name/]'

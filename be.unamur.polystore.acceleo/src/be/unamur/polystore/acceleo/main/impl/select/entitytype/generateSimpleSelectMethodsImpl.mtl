@@ -5,6 +5,8 @@
 [import be::unamur::polystore::acceleo::main::impl::select::entitytype::generateSimpleSelectFromGivenRelationalTable /]
 [import be::unamur::polystore::acceleo::main::impl::select::entitytype::generateSimpleSelectFromGivenDocumentCollection /]
 [import be::unamur::polystore::acceleo::main::impl::select::entitytype::generateSelectKeyValue /]
+[import be::unamur::polystore::acceleo::main::impl::select::entitytype::generateSimpleSelectFromGivenColumnTable /]
+
 
 [comment get{E}List({E)AttributeCondition /]
 
@@ -51,6 +53,8 @@
 [generateSimpleSelectFromGivenDocumentCollection(ent, struct, db) /]
 [elseif (db.dbType = pml::DatabaseType::REDIS)]
 [generateSelectKeyValue(ent, struct.oclAsType(pml::KeyValuePair), db) /]
+[elseif (db.dbType = pml::DatabaseType::CASSANDRA)]
+[generateSimpleSelectFromGivenColumnTable(ent, struct, db) /]
 [else]return null;
 [/if]	
 	

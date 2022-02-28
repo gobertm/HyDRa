@@ -8,6 +8,7 @@
 [generateDBConnectionMgr(conceptualSchema)/]
 [generateSparkConnectionMgr(conceptualSchema) /]
 [generateRelationalDBConnectionClasses(conceptualSchema) /]
+[generateDatabaseTypeConverters()/]
 [comment][generateDocumentDBConnectionClasses(conceptualSchema) /]
 [generateKeyValueDBConnectionClasses(conceptualSchema) /]
 [generateColumnDBConnectionClasses(conceptualSchema) /]
@@ -31,8 +32,11 @@ package dbconnection;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.util.*;
+import java.util.Map.Entry;
 
 import org.bson.Document;
 import org.bson.conversions.Bson;
@@ -45,6 +49,17 @@ import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.model.UpdateOptions;
 import com.mongodb.client.model.UpdateManyModel;
 import redis.clients.jedis.Jedis;
+import com.datastax.oss.driver.api.core.CqlSession;
+import java.net.InetSocketAddress;
+import com.datastax.oss.driver.api.core.CqlIdentifier;
+import com.datastax.oss.driver.api.core.cql.BatchStatement;
+import com.datastax.oss.driver.api.core.cql.BoundStatement;
+import com.datastax.oss.driver.api.core.cql.BatchType;
+import com.datastax.oss.driver.api.core.metadata.schema.ColumnMetadata;
+import com.datastax.oss.driver.api.core.type.DataType;
+
+import util.CassandraTypeConverter;
+import util.SQLTypeConverter;
 
 public class DBConnectionMgr {
 
@@ -52,6 +67,7 @@ public class DBConnectionMgr {
 	private static Map<String, DBConnection> mapDB = new HashMap<String, DBConnection>(); 
 	private static Map<String, MongoClient> mapMongoConnection = new HashMap<>();
 	private static Map<String, Connection> mapJDBCConnection = new HashMap<>();
+	private static Map<String, CqlSession> mapCassandraSession = new HashMap<>();
 	
 	public static Map<String, DBConnection> getMapDB(){
 		return mapDB;
@@ -153,12 +169,16 @@ public class DBConnectionMgr {
 	public static void insertInTable(List<String> columns, List<List<Object>> rows, String struct, String db) {
 		DBCredentials credentials = DBCredentials.getDbPorts().get(db);
 		if((credentials.getDbType().equals("mariadb") || credentials.getDbType().equals("sqlite") || credentials.getDbType().equals("postgresql") || credentials.getDbType().equals("mysql") )){
+			PreparedStatement statement = null;
 			try {
 				String sql = "INSERT INTO " + struct + "("+String.join(",",columns)+") VALUES ("+String.join(",", Collections.nCopies(columns.size(),"?"))+")";
-				PreparedStatement statement = getJDBCConnection(credentials).prepareStatement(sql);
+				Connection conn = getJDBCConnection(credentials);
+				// Map<String, String> columnTypes = getSQLColumns(conn, struct);
+				statement = conn.prepareStatement(sql);
 				for (List<Object> row : rows) {
 					for (int i = 1; i <= row.size(); i++) {
-						statement.setObject(i,row.get(i-1));
+						// statement.setObject(i, SQLTypeConverter.get(row.get(i-1), columnTypes.get(columns.get(i-1))));
+						statement.setObject(i, row.get(i-1));
 					}
 					statement.addBatch();
 					statement.clearParameters();
@@ -168,12 +188,86 @@ public class DBConnectionMgr {
 			} catch (SQLException e) {
 				e.printStackTrace();
 				logger.error("SQL Error in preparedStatement");
+			} finally {
+				if(statement != null) {
+					try {
+						statement.close();
+					} catch(SQLException e2) {}
+				}
+			}
+		} else
+			if(credentials.getDbType().equals("cassandra")) {
+				CqlSession session = getCassandraConnection(credentials);
+				Map<String, DataType> schema = getCassandraColumns(session, db, struct);
+				List<DataType> columnTypes = new ArrayList<DataType>();
+				for(String colName : columns)
+					columnTypes.add(schema.get(colName));
+				
+				String cql = "INSERT INTO " + struct + "("+String.join(",",columns)+") VALUES ("+String.join(",", Collections.nCopies(columns.size(),"?"))+")";
+				
+				com.datastax.oss.driver.api.core.cql.PreparedStatement statement = getCassandraConnection(credentials).prepare(cql);
+				
+				BoundStatement['['/][']'/] bounds = new BoundStatement['['/]rows.size()[']'/];
+				int counter = 0;
+				for (List<Object> row : rows) {
+					Object['['/][']'/] cqlRow = new Object['['/]row.size()[']'/];
+					for(int i = 0; i < row.size(); i++)
+						cqlRow['['/]i[']'/] = (CassandraTypeConverter.get(row.get(i), columnTypes.get(i)));
+					
+					bounds['['/]counter[']'/] = statement.bind(cqlRow);
+					counter++;
+				}
+				
+				BatchStatement batchStmt = BatchStatement.newInstance(BatchType.LOGGED, bounds);
+				session.execute(batchStmt);
+			}
+			else{
+				logger.error("Can't perform update, wrong database type, need relational (mariadb or sqlite or postgresql or mysql) or cassandra database. Database : '{}' , type : '{}' ",credentials.getDbName(), credentials.getDbType());
+				throw new RuntimeException("Can't perform update, wrong database type, need document db");
+			}
+	}
+
+	private static Map<String, DataType> getCassandraColumns(CqlSession session, String db, String table) {
+		Map<String, DataType> res = new HashMap<String, DataType>();
+		for(Entry<CqlIdentifier, ColumnMetadata> entry : session.getMetadata().getKeyspace(db).get().getTable(table).get().getColumns().entrySet()) {
+			String colName = entry.getKey().asCql(true);
+			DataType colType = entry.getValue().getType();
+			res.put(colName, colType);
+		}
+		
+		return res;
+	}
+
+	private static Map<String, String> getSQLColumns(Connection conn, String table) {
+		Map<String, String> res = new HashMap<String, String>();
+		PreparedStatement ps = null;
+		ResultSet rs = null;
+		try {
+			ps = conn.prepareStatement("select * from " + table + " LIMIT 0");
+			rs = ps.executeQuery();
+			ResultSetMetaData rsm = rs.getMetaData();
+			for (int i = 1; i <= rsm.getColumnCount(); i++) {
+				String colName = rsm.getColumnLabel(i);
+				String colType = rsm.getColumnClassName(i);
+				res.put(colName, colType);
+			}
+
+		} catch (SQLException e) {
+			e.printStackTrace();
+		} finally {
+			try {
+				if (rs != null)
+					rs.close();
+			} catch (SQLException e) {
+			}
+			try {
+				if (ps != null)
+					ps.close();
+			} catch (SQLException e) {
 			}
 		}
-		else{
-			logger.error("Can't perform update, wrong database type, need relational (mariadb or sqlite or postgresql or mysql) database. Database : '{}' , type : '{}' ",credentials.getDbName(), credentials.getDbType());
-			throw new RuntimeException("Can't perform update, wrong database type, need document db");
-		}
+
+		return res;
 	}
 
 	public static void updatesInTable(List<String> updates, String db) {
@@ -278,8 +372,25 @@ public class DBConnectionMgr {
 		return res;
 	}
 
-	
+	public static CqlSession getCassandraConnection(DBCredentials credentials) {
+		CqlSession res = mapCassandraSession.get(credentials.getUrl() + credentials.getDbName() + credentials.getPort());
+		
+			if (res == null) {
+				res = CqlSession
+                		.builder()
+                   		.addContactPoint(new InetSocketAddress(credentials.getUrl(), credentials.getPort()))
+                    	.withLocalDatacenter("datacenter1")
+                    	.withKeyspace(credentials.getDbName())
+                    	.build();
+				mapCassandraSession.put(credentials.getUrl() + credentials.getDbName() + credentials.getPort(), res);
+			}
+		
+		return res;
+	}
+
 }
+
+
 [/file]
 [/template]
 
@@ -327,6 +438,8 @@ import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.Statement;
+
+import com.datastax.oss.driver.api.core.CqlSession;
 
 [generateImportDataset(conceptualSchema)/]
 [generateImportRow(conceptualSchema)/]
@@ -392,6 +505,41 @@ public class SparkConnectionMgr {
 		return res;
 		[/if]
 
+	}
+
+	public static Dataset<Row> getCassandraDataset(String dbName, String physicalStructName, String where) {
+		[if (isSparkConfiguration(conceptualSchema))]
+		//TODO Spark for Cassandra
+		[else]
+		Dataset<Row> res = new Dataset<Row>();
+		DBCredentials credentials = DBCredentials.getDbPorts().get(dbName);
+		CqlSession session = DBConnectionMgr.getCassandraConnection(credentials);
+		String query = "SELECT * FROM " + physicalStructName;
+		if (where != null) {
+			query += " WHERE " + where + " ALLOW FILTERING";
+		}
+
+		try {
+			com.datastax.oss.driver.api.core.cql.ResultSet rs = session.execute(query);
+			java.util.Iterator<com.datastax.oss.driver.api.core.cql.Row> it = rs.iterator();
+			while (it.hasNext()) {
+				com.datastax.oss.driver.api.core.cql.Row row = it.next();
+				Map<String, Object> fieldValues = new HashMap<String, Object>();
+				for(int i = 0; i < row.getColumnDefinitions().size(); i++) {
+					String colName = row.getColumnDefinitions().get(i).getName().asCql(true);
+					Object value = row.getObject(colName);
+					fieldValues.put(colName, value);
+				}
+				res.add(new Row(fieldValues));
+			}
+		} catch (Exception e) {
+			logger.debug("Impossible to execute query on db ['['/]{}[']'/], keyspace ['['/]{}[']'/], query : ['['/]{}[']'/]", dbName,
+					physicalStructName, query);
+			e.printStackTrace();
+		}
+
+		return res;
+		[/if]
 	}
 
 	public static Dataset<Row> getDataset(String dbName, String physicalStructName, String where) {
@@ -582,7 +730,7 @@ public class SparkConnectionMgr {
 						res.add(new Row(map));
 					}
 				}else{
-					logger.error("Possible overlapping key retrieved. Key ['['/]{}[']'/], Keypattern ['['/]{}[']'/]. Skipping...", key,keypattern);
+					logger.warn("Possible overlapping key retrieved. Key ['['/]{}[']'/], Keypattern ['['/]{}[']'/]. Skipping...", key,keypattern);
 				}
 		}
 
@@ -1134,6 +1282,443 @@ public class GraphDBConnection {
 	public void insertOrUpdateorDelete(String cypher, java.util.Map<String,Object> parameters) {
 		openConnection();
 		session.run(cypher, parameters);
+	}
+
+}
+
+[/file]
+[/template]
+
+[template private generateDatabaseTypeConverters()]
+
+[file ('src/main/java/util/DBTypeConverter.java', false, 'UTF-8')]
+package util;
+
+import java.math.BigDecimal;
+import java.math.BigInteger;
+import java.sql.Blob;
+import java.sql.Date;
+import java.sql.SQLException;
+import java.sql.Time;
+import java.sql.Timestamp;
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
+import java.util.UUID;
+
+import javax.sql.rowset.serial.SerialBlob;
+
+public class DBTypeConverter {
+	
+	protected static String getString(Object o) {
+		return o.toString();
+	}
+
+	protected static Short getShort(Object o) {
+		if(o instanceof Short)
+			return (Short) o;
+		if (o instanceof Integer)
+			return ((Integer) o).shortValue();
+		if (o instanceof Long)
+			return ((Long) o).shortValue();
+		if (o instanceof Boolean)
+			return (boolean) o ? (short) 1 : (short) 0;
+		if (o instanceof Float)
+			return ((Float) o).shortValue();
+		if (o instanceof Double)
+			return ((Double) o).shortValue();
+
+		try {
+			return Short.parseShort(o.toString());
+		} catch (NumberFormatException e) {
+			return null;
+		}
+
+	}
+
+	protected static UUID getUUID(Object o) {
+		try {
+			return UUID.fromString(o.toString());
+		} catch (IllegalArgumentException e) {
+			return null;
+		}
+	}
+
+	protected static Integer getInteger(Object o) {
+		if (o instanceof Integer)
+			return ((Integer) o);
+		if (o instanceof Short)
+			return ((Short) o).intValue();
+		if (o instanceof Long)
+			return ((Long) o).intValue();
+		if (o instanceof Boolean)
+			return (boolean) o ? 1 : 0;
+		if (o instanceof Float)
+			return ((Float) o).intValue();
+		if (o instanceof Double)
+			return ((Double) o).intValue();
+
+		try {
+			return Integer.parseInt(o.toString());
+		} catch (NumberFormatException e) {
+			return null;
+		}
+	}
+	
+	protected static Long getLong(Object o) {
+		if(o instanceof Long)
+			return (Long) o;
+		if (o instanceof Integer)
+			return ((Integer) o).longValue();
+		if (o instanceof Short)
+			return ((Short) o).longValue();
+		if (o instanceof Long)
+			return ((Long) o).longValue();
+		if (o instanceof Boolean)
+			return (boolean) o ? 1L : 0L;
+		if (o instanceof Float)
+			return ((Float) o).longValue();
+		if (o instanceof Double)
+			return ((Double) o).longValue();
+
+		try {
+			return Long.parseLong(o.toString());
+		} catch (NumberFormatException e) {
+			return null;
+		}
+	}
+
+	protected static LocalTime getLocalTime(Object o) {
+		//TODO pml::LocalTime is missing
+		return null;
+	}
+
+	protected static Instant getInstant(Object o) {
+		if(o instanceof LocalDateTime) // yyyy-mm-dd['['/](T| )HH:MM:SS['['/].fff[']'/][']'/]['['/](+|-)NNNN[']'/]
+			return ((LocalDateTime) o).atZone(ZoneId.systemDefault()).toInstant();
+		
+		if(o instanceof LocalDate) // yyyy-mm-dd
+			return ((LocalDate) o).atStartOfDay().atZone(ZoneId.systemDefault()).toInstant();
+		
+		try {
+			return LocalDateTime.parse(o.toString(), DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS")).atZone(ZoneId.systemDefault()).toInstant();
+		} catch(DateTimeParseException e) {
+			return null;
+		}
+		
+	}
+	
+	protected static LocalDateTime getLocalDateTime(Object o) {
+		if(o instanceof LocalDateTime) // yyyy-mm-dd['['/](T| )HH:MM:SS['['/].fff[']'/][']'/]['['/](+|-)NNNN[']'/]
+			return (LocalDateTime) o;
+		
+		if(o instanceof LocalDate) // yyyy-mm-dd
+			return ((LocalDate) o).atStartOfDay();
+		
+		try {
+			return LocalDateTime.parse(o.toString(), DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS"));
+		} catch(DateTimeParseException e) {
+			return null;
+		}
+		
+	}
+	
+	protected static Date getDate(Object o) {
+		if(o instanceof LocalDate) // yyyy-mm-dd
+			return Date.valueOf((LocalDate) o);
+		
+		if(o instanceof LocalDateTime) // yyyy-mm-dd['['/](T| )HH:MM:SS['['/].fff[']'/][']'/]['['/](+|-)NNNN[']'/]
+			return Date.valueOf(((LocalDateTime) o).toLocalDate());
+		
+		try {
+			return Date.valueOf(LocalDate.parse(o.toString(), DateTimeFormatter.ofPattern("yyyy-MM-dd")));
+		} catch(DateTimeParseException e) {
+			return null;
+		}
+	}
+	
+	protected static Time getTime(Object o) {
+		//TODO pml::LocalTime is missing
+		return null;
+	}
+	
+	protected static Timestamp getTimestamp(Object o) {
+		if(o instanceof LocalDate) // yyyy-mm-dd
+			return Timestamp.valueOf(((LocalDate) o).atStartOfDay());
+		
+		if(o instanceof LocalDateTime) // yyyy-mm-dd['['/](T| )HH:MM:SS['['/].fff[']'/][']'/]['['/](+|-)NNNN[']'/]
+			return Timestamp.valueOf((LocalDateTime) o);
+		
+		try {
+			return Timestamp.valueOf(LocalDateTime.parse(o.toString(), DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
+		} catch(DateTimeParseException e) {
+			return null;
+		}
+	}
+
+	protected static LocalDate getLocalDate(Object o) {
+		if(o instanceof LocalDate) // yyyy-mm-dd
+			return (LocalDate) o;
+		
+		if(o instanceof LocalDateTime) // yyyy-mm-dd['['/](T| )HH:MM:SS['['/].fff[']'/][']'/]['['/](+|-)NNNN[']'/]
+			return ((LocalDateTime) o).toLocalDate();
+		
+		try {
+			return LocalDate.parse(o.toString(), DateTimeFormatter.ofPattern("yyyy-MM-dd"));
+		} catch(DateTimeParseException e) {
+			return null;
+		}
+	}
+
+	protected static Float getFloat(Object o) {
+		if (o instanceof Float)
+			return ((Float) o);
+		if (o instanceof Integer)
+			return ((Integer) o).floatValue();
+		if (o instanceof Short)
+			return ((Short) o).floatValue();
+		if (o instanceof Long)
+			return ((Long) o).floatValue();
+		if (o instanceof Boolean)
+			return (boolean) o ? 1f : 0f;
+		if (o instanceof Double)
+			return ((Double) o).floatValue();
+
+		try {
+			return Float.parseFloat(o.toString());
+		} catch (NumberFormatException e) {
+			return null;
+		}
+	}
+
+	protected static Double getDouble(Object o) {
+		if (o instanceof Float)
+			return ((Float) o).doubleValue();
+		if (o instanceof Integer)
+			return ((Integer) o).doubleValue();
+		if (o instanceof Short)
+			return ((Short) o).doubleValue();
+		if (o instanceof Long)
+			return ((Long) o).doubleValue();
+		if (o instanceof Boolean)
+			return (boolean) o ? 1d : 0d;
+		if (o instanceof Double)
+			return ((Double) o);
+
+		try {
+			return Double.parseDouble(o.toString());
+		} catch (NumberFormatException e) {
+			return null;
+		}
+	}
+
+	protected static Byte getByte(Object o) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	protected static Boolean getBoolean(Object o) {
+		if(o instanceof Boolean)
+			return (Boolean) o;
+		
+		if(o instanceof String)
+			return o.equals("true") || o.equals("1");
+		
+		if (o instanceof Integer)
+			return ((Integer) o) == 1;
+		if (o instanceof Short)
+			return ((Short) o).intValue() == 1;
+		if (o instanceof Long)
+			return  ((Long) o).intValue() == 1;
+		if (o instanceof Float)
+			return  ((Float) o).intValue() == 1;
+		if (o instanceof Double)
+			return  ((Double) o).intValue() == 1;
+
+		return null;
+	}
+	
+
+	protected static BigInteger getBigInteger(Object o) {
+		if (o instanceof Integer)
+			return BigInteger.valueOf((Integer) o);
+		if (o instanceof Short)
+			return BigInteger.valueOf(((Short) o));
+		if (o instanceof Long)
+			return  BigInteger.valueOf((Long) o);
+		if (o instanceof Boolean)
+			return  BigInteger.valueOf((boolean) o ? 1 : 0);
+		if (o instanceof Float)
+			return  BigInteger.valueOf(((Float) o).intValue());
+		if (o instanceof Double)
+			return  BigInteger.valueOf(((Double) o).intValue());
+
+		try {
+			return BigInteger.valueOf(Integer.parseInt(o.toString()));
+		} catch (NumberFormatException e) {
+			return null;
+		}
+	}
+
+	protected static BigDecimal getBigDecimal(Object o) {
+		if (o instanceof Integer)
+			return new BigDecimal((Integer) o);
+		if (o instanceof Short)
+			return new BigDecimal(((Short) o));
+		if (o instanceof Long)
+			return  new BigDecimal((Long) o);
+		if (o instanceof Boolean)
+			return  new BigDecimal((boolean) o ? 1 : 0);
+		if (o instanceof Float)
+			return  new BigDecimal(((Float) o).intValue());
+		if (o instanceof Double)
+			return  new BigDecimal(((Double) o).intValue());
+
+		try {
+			return new BigDecimal(o.toString());
+		} catch (NumberFormatException e) {
+			return null;
+		}
+	}
+	
+
+	protected static Blob getBlob(Object o) {
+		try {
+			return new SerialBlob(o.toString().getBytes());
+		} catch (SQLException e) {
+			e.printStackTrace();
+			return null;
+		}
+	}
+
+}
+
+[/file]
+
+[file ('src/main/java/util/CassandraTypeConverter.java', false, 'UTF-8')]
+package util;
+
+import java.math.BigDecimal;
+import java.math.BigInteger;
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.LocalTime;
+import java.util.UUID;
+
+import com.datastax.oss.driver.api.core.type.DataType;
+import com.datastax.oss.driver.api.core.type.DataTypes;
+
+public class CassandraTypeConverter extends DBTypeConverter {
+
+	public static Object get(Object o, DataType type) {
+		if (o == null || type == null)
+			return null;
+
+		if (type.equals(DataTypes.DECIMAL))
+			return (BigDecimal) getBigDecimal(o);
+		if (type.equals(DataTypes.BIGINT))
+			return (BigInteger) getBigInteger(o);
+		if (type.equals(DataTypes.BOOLEAN))
+			return (Boolean) getBoolean(o);
+		if (type.equals(DataTypes.BLOB))
+			return (Byte) getByte(o);
+		if (type.equals(DataTypes.DOUBLE))
+			return (Double) getDouble(o);
+		if (type.equals(DataTypes.FLOAT))
+			return (Float) getFloat(o);
+		if (type.equals(DataTypes.DATE)) // yyyy-mm-dd
+			return (LocalDate) getLocalDate(o);
+//		if (type.equals(DataTypes.DURATION))
+//			return (Instant) getInstant(o);
+		if (type.equals(DataTypes.TIMESTAMP)) // yyyy-mm-dd['['/](T| )HH:MM:SS['['/].fff[']'/][']'/]['['/](+|-)NNNN[']'/]
+			return (Instant) getInstant(o);
+		if (type.equals(DataTypes.TIME)) // HH:MM:SS['['/].fff[']'/]
+			return (LocalTime) getLocalTime(o);
+		if (type.equals(DataTypes.SMALLINT))
+			return (Integer) getInteger(o);
+		if (type.equals(DataTypes.UUID))
+			return (UUID) getUUID(o);
+		if (type.equals(DataTypes.INT))
+			return (Integer) getInteger(o);
+		if (type.equals(DataTypes.TINYINT))
+			return (Short) getShort(o);
+		if (type.equals(DataTypes.TEXT))
+			return (String) getString(o);
+		// java.math.BigDecimal
+		// java.math.BigInteger
+		// boolean
+		// byte
+		// double
+		// float
+		// java.time.Instant
+		// int
+		// List
+		// java.time.LocalDate
+		// java.time.LocalTime
+		// long
+		// Map
+		// Set
+		// short
+		// String
+		// java.util.UUID
+		return null;
+	}
+
+	
+
+}
+
+[/file]
+
+[file ('src/main/java/util/SQLTypeConverter.java', false, 'UTF-8')]
+package util;
+
+import java.math.BigDecimal;
+import java.sql.Blob;
+import java.sql.Date;
+import java.sql.Time;
+import java.sql.Timestamp;
+
+public class SQLTypeConverter extends DBTypeConverter {
+	
+	
+	public static Object get(Object o, String className) {
+		if (o == null || className == null)
+			return null;
+		
+		
+		if(className.equals("java.lang.String"))
+			return (String) getString(o);
+		if(className.equals("java.lang.Integer"))
+			return (Integer) getInteger(o);
+		if(className.equals("java.lang.Float"))
+			return (Float) getFloat(o);
+		if(className.equals("java.sql.Date"))
+			return (Date) getDate(o);
+		if(className.equals("java.sql.Timestamp"))
+			return (Timestamp) getTimestamp(o);
+		if(className.equals("java.sql.Time"))
+			return (Time) getTime(o);
+		if(className.equals("java.math.BigDecimal"))
+			return (BigDecimal) getBigDecimal(o);
+		if(className.equals("java.lang.Boolean"))
+			return (Boolean) getBoolean(o);
+		if(className.equals("java.lang.Double"))
+			return (Double) getDouble(o);
+		if(className.equals("java.lang.Long"))
+			return (Long) getLong(o);
+		if(className.equals("java.sql.Blob") || className.equals("['['/]B"))
+			return (Blob) getBlob(o);
+		
+//		java.lang.Byte
+//		java.sql.Clob
+//		java.sql.NClob
+		
+		return null;
 	}
 
 }

@@ -19,6 +19,7 @@ package dao.services;
 import pojo.[entityType.name.toUpperFirst() /];
 import conditions.[entityType.name.toUpperFirst() /]Attribute;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.ArrayList;
 import org.apache.spark.api.java.function.MapFunction;
@@ -30,6 +31,7 @@ import conditions.Operator;
 import util.Util;
 [for (role: Role | getRolesFromEntityType(entityType, conceptualSchema))]
 import conditions.[role.entity.name.toUpperFirst()/]Attribute;
+import pojo.[getRelationShipType(role).name.toUpperFirst()/];
 [for (oppositeRole : Role | role.getOppositeRoles())]
 import conditions.[oppositeRole.entity.name.toUpperFirst()/]Attribute;
 import pojo.[oppositeRole.entity.name.toUpperFirst()/];

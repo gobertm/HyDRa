@@ -68,7 +68,8 @@
 	}
 
 [comment]	// Exclude other similar subsequent KeyValuePairs patterns (ex ORDER:*:AMOUNT kv pairs must not be retrieved when searching ORDER:*[/comment]
-	String originKeyPattern = keypattern;
+[comment]!!!! Removed as it does not work as expected. Exclude based on individual letters and not complete sequence.[/comment]
+[comment]	String originKeyPattern = keypattern;
 	[if (entOrRel.oclIsTypeOf(EntityType))]
 		[for (otherstruct: AbstractPhysicalStructure | getConcernedPhysicalStructures(entOrRel.oclAsType(EntityType), entOrRel.ancestors(Domainmodel)->first()))]
 			[if (otherstruct.oclIsTypeOf(KeyValuePair) and not(otherstruct=struct))]
@@ -87,7 +88,7 @@
 	}
 			[/if]
 		[/for]  
-	[/if]
+	[/if][/comment]
 		
 	// Find the type of query to perform in order to retrieve a Dataset<Row>
 	// Based on the type of the value. Is a it a simple string or a hash or a list... 
