@@ -306,9 +306,9 @@ values.add(value_[getPhysicalName(field)/]);
 			[/if]
 			[/let] 
 		[/for]
+	[/if]
 	DBConnectionMgr.insertMany(docsList, "[struct.name/]", "[db.name/]");
 	return true;
-	[/if]
 [else]
 [if (struct.oclIsTypeOf(pml::KeyValuePair))]
 	// In insertRefStruct in KeyValuePair
