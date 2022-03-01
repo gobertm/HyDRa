@@ -64,6 +64,14 @@ public class [entityType.name.toUpperFirst() /] extends LoggingPojo {
 	// Empty constructor
 	public [entityType.name.toUpperFirst() /]() {}
 
+	[if (entityType.identifier.oclIsUndefined() = false)]
+	// Constructor on Identifier
+	public [entityType.name.toUpperFirst() /]([for (attr : Attribute | attributes->any(true).ancestors(EntityType)->first().identifier.attributes) separator(',')][generateJavaType(attr.type) /] [attr.name/][/for]){
+		[for (attr: Attribute | entityType.identifier.attributes)]
+		this.[attr.name /] = [attr.name /];
+		[/for]		
+	}
+	[/if]
 	/*
 	* Constructor on simple attribute 
 	*/
