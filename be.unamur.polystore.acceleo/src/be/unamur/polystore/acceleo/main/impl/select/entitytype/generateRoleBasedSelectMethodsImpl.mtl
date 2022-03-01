@@ -468,7 +468,6 @@ Dataset<Row> res_row_[ref.name/]_[ref2.name/] = res_[role.getRelationShipType().
 																												// Multi valued reference
 																												functions.array_contains(res_[ref2.name/]_[ref.name/].col("[getJavaAbsolutePath(ref2).toLowerFirst() /]_[ref2.targetField->first().getPhysicalName()/]"),res_[role.getRelationShipType().name/]_[ref.name/]_[ref2.name/].col("[getJavaAbsolutePath(ref2).toLowerFirst() /]_[ref2.sourceField->first().getPhysicalName()/]")));
 																												[else]
-																												[ref2.sourceField/]
 																												res_[role.getRelationShipType().name/]_[ref.name/]_[ref2.name/].col("[getJavaAbsolutePath(ref2).toLowerFirst() /]_[ref2.sourceField->first().getPhysicalName()/]").equalTo(res_[ref2.name/]_[ref.name/].col("[getJavaAbsolutePath(ref2).toLowerFirst() /]_[ref2.targetField->first().getPhysicalName()/]")));[/if]
 																												
 																												
