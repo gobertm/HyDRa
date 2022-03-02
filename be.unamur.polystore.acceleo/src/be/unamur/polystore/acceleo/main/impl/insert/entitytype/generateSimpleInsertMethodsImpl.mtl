@@ -732,6 +732,16 @@ if(toAdd)
 	hash.add(new Tuple2<String,String>(fieldname_[getPhysicalName(field)/],value_[getPhysicalName(field)/]));
 	[/for]
 
+[comment]// A -> B[/comment]
+[for (ref : Reference | getRefOfPhysicalStructure(struct))]
+	[let role : Role = getMappedRoleOfReference(ref)]
+		[if (role.isMandatoryRole())]
+// Ref '[ref.name/]' mapped to role '[role.name/]'
+hash.add(new Tuple2<String,String>("[ref.sourceField->any(true).oclAsType(PhysicalField).getPhysicalName()/]",[role.getOppositeRoleInBinaryRel().name.toLowerFirst()/][role.getRelationShipType().name.toUpperFirst()/].get[getMappedAttributeOfFieldInStructure(ref.targetField->any(true).oclAsType(PhysicalField), ref.targetField->any(true).oclAsType(PhysicalField).getAbstractPhysicalStructureNotEmbeddedObject()).name.toUpperFirst()/]()));
+		[/if]
+	[/let]
+[/for]
+
 [/template]
 
 [template public generateDocument(entityType : EntityType, fields : Collection(PhysicalField), objectName : String, level : Integer, embeddedRoleLevel : Integer)]
