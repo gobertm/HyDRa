@@ -275,44 +275,58 @@ values.add(value_[getPhysicalName(field)/]);
 [else]
 [if (struct.oclIsTypeOf(pml::Collection))]
 [comment]//Docdb ref support. Code written by copy pasting adapting above. Late writing. [/comment]
-	// In insertRefStruct in MongoDB
-	Bson filter = new Document();
-	Bson updateOp;
-	List<Document> docsList = new ArrayList();
-	Document doc = new Document();
-	String roleEntityField;
-
+// In insertRefStruct in MongoDB
+Bson filter = new Document();
+Bson updateOp;
+List<Document> docsList = new ArrayList();
+Document doc = new Document();
+String roleEntityField;
+java.util.Map<String, java.util.Map<String, String>> longFieldValues = new java.util.HashMap<String, java.util.Map<String, String>>();
 
 	[comment]Normal fields [/comment]
 	[for (attr : Attribute | entityType.attributes)]
-		[for (field : PhysicalField | getMappedPhysicalField(attr, struct, db, db.getMappingRules()))]
-			[if (field.oclIsTypeOf(ShortField))]
+		[let field : PhysicalField = getMappedPhysicalField(attr, struct, db, db.getMappingRules())]
+		[if (field <> null)]
+			[if (field.ancestors(LongField) -> size() = 0)]
+			[comment]Short fields [/comment]
 doc.append("[getPhysicalName(field)/]", [entityType.name.toLowerFirst()/].get[attr.name.toUpperFirst()/]());
-		[/if]
-		[if (field.oclIsTypeOf(LongField))]
-		[comment LongField with only one component and is BracketsField /]
-			[if (field.oclAsType(LongField).pattern->size()=1 and field.oclAsType(LongField).pattern->any(true).oclIsTypeOf(BracketsField))]
-				[let brackets : BracketsField = field.oclAsType(LongField).pattern->any(true).oclAsType(BracketsField)]
-doc.append("[getPhysicalName(field)/]", [entityType.name.toLowerFirst()/].get[attr.name.toUpperFirst()/]());
-				[/let]
 			[else]
-				[if (field.oclAsType(LongField).pattern->filter(BracketsField)->exists(b |getMappedAttributes(b, entityType, entityType.getMappingRules())->size()=0)=false)]
-				[comment All BracketsField are mapped to the corresponding entity or composed of only one Terminal expression/]
-				[comment LongField is composed of component, therefore can only be StringType /]
-String value_[getPhysicalName(field)/] = "";
-					[for (component : TerminalExpression | field.oclAsType(LongField).pattern)]
-						[if (component.oclIsTypeOf(BracketsField))]
-value_[getPhysicalName(field)/] += [entityType.name.toLowerFirst()/].get[attr.name.toUpperFirst()/]();
-						[else]
-value_[getPhysicalName(field)/] += "[component.literal/]";
-						[/if]
-					[/for]
-doc.append("[getPhysicalName(field)/]", value_[getPhysicalName(field)/]);
-				[/if]
+			[comment]Long fields [/comment]
+java.util.Map<String, String> longFieldValue = longFieldValues.get("[getPhysicalName(field.ancestors(LongField) -> first().oclAsType(LongField))/]");
+if(longFieldValue == null) {
+	longFieldValue = new java.util.HashMap<String, String>();
+	longFieldValues.put("[getPhysicalName(field.ancestors(LongField) -> first().oclAsType(LongField))/]", longFieldValue);
+}
+longFieldValue.put("[field.oclAsType(BracketsField).name/]", (value == null ? null : value.toString()));
 			[/if]
 		[/if]
+		[/let]
+	[/for]
+for(java.util.Map.Entry<String, java.util.Map<String, String>> entry : longFieldValues.entrySet()) {
+	String longField = entry.getKey();
+	java.util.Map<String, String> values = entry.getValue();
+	[for (lf : LongField | struct.getDescendentsLongField())]
+	if(longField.equals("[getPhysicalName(lf)/]")) {
+		String value;
+		String v;
+		[for (expr : TerminalExpression | lf.pattern)]
+			[if (expr.oclIsTypeOf(pml::BracketsField))]
+		v = values.get("[expr.oclAsType(BracketsField).name/]");
+			[else]
+		v = "[expr.literal/]";
+			[/if]
+			[if (i = 1)]
+		value = v;
+			[else]
+		value += v;
+			[/if]
 		[/for]
-	[/for]	
+
+		String fieldName = "[getPhysicalName(lf)/]";
+		doc.append(fieldName, value);
+	}
+			[/for]
+}	
 
 [comment]	Reference fields [/comment]
 	[if (isJoinStructureOfMappedMandatoryRoleOfEntity(entityType, struct, entityType.ancestors(Domainmodel)->first()))]
