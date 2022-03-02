@@ -465,7 +465,7 @@ if(nestedRow != null && Arrays.asList(nestedRow.schema().fieldNames()).contains(
 	if(nestedRow.getAs("[getPhysicalName(child)/]")==null)
 		[rel.name.toLowerFirst() /][level/].get[rel.roles->select(role : Role | role.entity = entity )->any(true).name.toUpperFirst() /]().set[attr.name.toUpperFirst() /](null);
 	else{
-		[rel.name.toLowerFirst() /][level/].get[rel.roles->select(role : Role | role.entity = entity )->any(true).name.toUpperFirst() /]().set[attr.name.toUpperFirst() /](Util.get[generateJavaType(attr.type) /]Value(nestedRow.getAs("[getPhysicalName(child)/]")));
+		[rel.name.toLowerFirst() /][level/].get[rel.roles->select(role : Role | role.entity = entity )->any(true).name.toUpperFirst() /]().set[attr.name.toUpperFirst() /](Util.get[generateJavaTypeMethodNameCompliant(attr.type) /]Value(nestedRow.getAs("[getPhysicalName(child)/]")));
 		toAdd[level/] = true;					
 		}
 	[else]
@@ -473,7 +473,7 @@ if(nestedRow != null && Arrays.asList(nestedRow.schema().fieldNames()).contains(
 	if(nestedRow.getAs("[getPhysicalName(child.ancestors(LongField) -> first().oclAsType(LongField)) /]")==null)
 		[rel.name.toLowerFirst() /][level/].get[rel.roles->select(role : Role | role.entity = entity )->any(true).name.toUpperFirst() /]().set[attr.name.toUpperFirst() /](null)
 	else{
-		[rel.name.toLowerFirst() /][level/].get[rel.roles->select(role : Role | role.entity = entity )->any(true).name.toUpperFirst() /]().set[attr.name.toUpperFirst() /](Util.get[generateJavaType(attr.type) /]Value(nestedRow.getAs("[getPhysicalName(child.ancestors(LongField) -> first().oclAsType(LongField)) /]")));
+		[rel.name.toLowerFirst() /][level/].get[rel.roles->select(role : Role | role.entity = entity )->any(true).name.toUpperFirst() /]().set[attr.name.toUpperFirst() /](Util.get[generateJavaTypeMethodNameCompliant(attr.type) /]Value(nestedRow.getAs("[getPhysicalName(child.ancestors(LongField) -> first().oclAsType(LongField)) /]")));
 		toAdd[level/] = true;	
 		}
 		[else]
@@ -555,7 +555,7 @@ if(nestedRow != null && Arrays.asList(nestedRow.schema().fieldNames()).contains(
 	if(nestedRow.getAs("[getPhysicalName(child)/]")==null)
 		[pojoName.toLowerFirst() /][level/].set[attr.name.toUpperFirst() /](null);
 	else{
-		[pojoName.toLowerFirst() /][level/].set[attr.name.toUpperFirst() /](Util.get[generateJavaType(attr.type) /]Value(nestedRow.getAs("[getPhysicalName(child) /]")));
+		[pojoName.toLowerFirst() /][level/].set[attr.name.toUpperFirst() /](Util.get[generateJavaTypeMethodNameCompliant(attr.type) /]Value(nestedRow.getAs("[getPhysicalName(child) /]")));
 		toAdd[level/] = true;					
 		}
 	[else]
@@ -564,7 +564,7 @@ if(nestedRow != null && Arrays.asList(nestedRow.schema().fieldNames()).contains(
 		[pojoName.toLowerFirst() /][level/].set[attr.name.toUpperFirst() /](null);
 	else{
 		if(Arrays.asList(nestedRow.schema().fieldNames()).contains("[getPhysicalName(child.ancestors(LongField) -> first().oclAsType(LongField)) /]")){
-			[pojoName.toLowerFirst() /][level/].set[attr.name.toUpperFirst() /](Util.get[generateJavaType(attr.type) /]Value(nestedRow.getAs("[getPhysicalName(child.ancestors(LongField) -> first().oclAsType(LongField)) /]")));
+			[pojoName.toLowerFirst() /][level/].set[attr.name.toUpperFirst() /](Util.get[generateJavaTypeMethodNameCompliant(attr.type) /]Value(nestedRow.getAs("[getPhysicalName(child.ancestors(LongField) -> first().oclAsType(LongField)) /]")));
 			toAdd[level/] = true;	
 			}
 		}
@@ -645,7 +645,7 @@ if(nestedRow != null && Arrays.asList(nestedRow.schema().fieldNames()).contains(
 	if(nestedRow.getAs("[getPhysicalName(child)/]") == null){
 		[pojoName.toLowerFirst() /][level/].set[attr.name.toUpperFirst() /](null);
 	}else{
-		[pojoName.toLowerFirst() /][level/].set[attr.name.toUpperFirst() /](Util.get[generateJavaType(attr.type) /]Value(nestedRow.getAs("[getPhysicalName(child) /]")));
+		[pojoName.toLowerFirst() /][level/].set[attr.name.toUpperFirst() /](Util.get[generateJavaTypeMethodNameCompliant(attr.type) /]Value(nestedRow.getAs("[getPhysicalName(child) /]")));
 		toAdd[level/] = true;					
 		}
 	[else]
@@ -653,7 +653,7 @@ if(nestedRow != null && Arrays.asList(nestedRow.schema().fieldNames()).contains(
 	if(nestedRow.getAs("[getPhysicalName(child.ancestors(LongField) -> first().oclAsType(LongField)) /]")==null)
 		[pojoName.toLowerFirst() /][level/].set[attr.name.toUpperFirst() /](null);
 	else{
-		[pojoName.toLowerFirst() /][level/].set[attr.name.toUpperFirst() /](Util.get[generateJavaType(attr.type) /]Value(nestedRow.getAs("[getPhysicalName(child.ancestors(LongField) -> first().oclAsType(LongField)) /]")));
+		[pojoName.toLowerFirst() /][level/].set[attr.name.toUpperFirst() /](Util.get[generateJavaTypeMethodNameCompliant(attr.type) /]Value(nestedRow.getAs("[getPhysicalName(child.ancestors(LongField) -> first().oclAsType(LongField)) /]")));
 		toAdd[level/] = true;	
 	}
 		[else]

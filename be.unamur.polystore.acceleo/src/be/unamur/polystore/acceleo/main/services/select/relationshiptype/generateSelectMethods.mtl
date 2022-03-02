@@ -295,7 +295,7 @@ Dataset<[role.getRelationShipType().name.toUpperFirst() /]TDO> res = d.map((MapF
 			// attribute [ '[' /][role.getRelationShipType().name.toUpperFirst() /].[attr.name.toUpperFirst() /][ ']' /]
 			[if (field.ancestors(LongField) -> size() = 0)]
 			[comment shortField or bracketfield/]
-			[generateJavaType(attr.type)/] [role.getRelationShipType().name.toLowerFirst()/]_[attr.name.toLowerFirst()/] = Util.get[generateJavaType(attr.type) /]Value(r.getAs("[joinTable.name/]_[getPhysicalName(field) /]"));
+			[generateJavaType(attr.type)/] [role.getRelationShipType().name.toLowerFirst()/]_[attr.name.toLowerFirst()/] = Util.get[generateJavaTypeMethodNameCompliant(attr.type) /]Value(r.getAs("[joinTable.name/]_[getPhysicalName(field) /]"));
 			[role.getRelationShipType().name.toUpperFirst().toLowerFirst() /]_res.set[attr.name.toUpperFirst()/]([role.getRelationShipType().name.toLowerFirst()/]_[attr.name.toLowerFirst()/]);
 			[else]
 			[comment LongField /]
@@ -329,7 +329,7 @@ Dataset<[role.getRelationShipType().name.toUpperFirst() /]TDO> res = d.map((MapF
 			// attribute [ '[' /][role.entity.name.toUpperFirst() /].[attr.name.toUpperFirst() /][ ']' /]
 			[if (field.ancestors(LongField) -> size() = 0)]
 			[comment shortField or bracketfield/]
-			[generateJavaType(attr.type)/] [role.entity.name.toLowerFirst()/]_[attr.name.toLowerFirst()/] = Util.get[generateJavaType(attr.type) /]Value(r.getAs("[table.name/]_[getPhysicalName(field) /]"));
+			[generateJavaType(attr.type)/] [role.entity.name.toLowerFirst()/]_[attr.name.toLowerFirst()/] = Util.get[generateJavaTypeMethodNameCompliant(attr.type) /]Value(r.getAs("[table.name/]_[getPhysicalName(field) /]"));
 			[role.getRelationShipType().name.toUpperFirst().toLowerFirst() /]_res.get[role.name.toUpperFirst()/]().set[attr.name.toUpperFirst()/]([role.entity.name.toLowerFirst()/]_[attr.name.toLowerFirst()/]);
 			[else]
 			[comment LongField /]
@@ -387,7 +387,7 @@ Dataset<[role.getRelationShipType().name.toUpperFirst() /]TDO> res = d.map((MapF
 				// attribute [ '[' /][role1.getRelationShipType().name.toUpperFirst() /].[attr.name.toUpperFirst() /][ ']' /]
 				[if (field.ancestors(LongField) -> size() = 0)]
 				[comment shortField or bracketfield/]
-				[generateJavaType(attr.type)/] [role1.getRelationShipType().name.toLowerFirst()/]_[attr.name.toLowerFirst()/] = Util.get[generateJavaType(attr.type) /]Value(r.getAs("[joinTable.name/]_[getPhysicalName(field) /]"));
+				[generateJavaType(attr.type)/] [role1.getRelationShipType().name.toLowerFirst()/]_[attr.name.toLowerFirst()/] = Util.get[generateJavaTypeMethodNameCompliant(attr.type) /]Value(r.getAs("[joinTable.name/]_[getPhysicalName(field) /]"));
 				[role1.getRelationShipType().name.toUpperFirst().toLowerFirst() /]_res.set[attr.name.toUpperFirst()/]([role1.getRelationShipType().name.toLowerFirst()/]_[attr.name.toLowerFirst()/]);
 				[else]
 				[comment LongField /]
@@ -421,7 +421,7 @@ Dataset<[role.getRelationShipType().name.toUpperFirst() /]TDO> res = d.map((MapF
 				// attribute [ '[' /][role1.entity.name.toUpperFirst() /].[attr.name.toUpperFirst() /][ ']' /]
 				[if (field.ancestors(LongField) -> size() = 0)]
 				[comment shortField or bracketfield/]
-				[generateJavaType(attr.type)/] [role1.entity.name.toLowerFirst()/]_[attr.name.toLowerFirst()/] = Util.get[generateJavaType(attr.type) /]Value(r.getAs("[table1.name/]_[getPhysicalName(field) /]"));
+				[generateJavaType(attr.type)/] [role1.entity.name.toLowerFirst()/]_[attr.name.toLowerFirst()/] = Util.get[generateJavaTypeMethodNameCompliant(attr.type) /]Value(r.getAs("[table1.name/]_[getPhysicalName(field) /]"));
 				[role1.getRelationShipType().name.toUpperFirst().toLowerFirst() /]_res.get[role1.name.toUpperFirst()/]().set[attr.name.toUpperFirst()/]([role1.entity.name.toLowerFirst()/]_[attr.name.toLowerFirst()/]);
 				[else]
 				[comment LongField /]
@@ -454,7 +454,7 @@ Dataset<[role.getRelationShipType().name.toUpperFirst() /]TDO> res = d.map((MapF
 				// attribute [ '[' /][role2.entity.name.toUpperFirst() /].[attr.name.toUpperFirst() /][ ']' /]
 				[if (field.ancestors(LongField) -> size() = 0)]
 				[comment shortField or bracketfield/]
-				[generateJavaType(attr.type)/] [role2.entity.name.toLowerFirst()/]_[attr.name.toLowerFirst()/] = Util.get[generateJavaType(attr.type) /]Value(r.getAs("[table2.name/]_[getPhysicalName(field) /]"));
+				[generateJavaType(attr.type)/] [role2.entity.name.toLowerFirst()/]_[attr.name.toLowerFirst()/] = Util.get[generateJavaTypeMethodNameCompliant(attr.type) /]Value(r.getAs("[table2.name/]_[getPhysicalName(field) /]"));
 				[role2.getRelationShipType().name.toUpperFirst().toLowerFirst() /]_res.get[role2.name.toUpperFirst()/]().set[attr.name.toUpperFirst()/]([role2.entity.name.toLowerFirst()/]_[attr.name.toLowerFirst()/]);
 				[else]
 				[comment LongField /]
@@ -653,7 +653,7 @@ public static Dataset<[rel.name.toUpperFirst()/]> fullLeftOuterJoinBetween[rel.n
 				if(o instanceof Row) {
 					Row r2 = (Row) o;
 					[for (attr : Attribute | role.entity.attributes)]
-					[role.name.toLowerFirst() /].set[attr.name.toUpperFirst()/](Util.get[generateJavaType(attr.type) /]Value(r2.getAs("[attr.name.toLowerFirst() /]")));
+					[role.name.toLowerFirst() /].set[attr.name.toUpperFirst()/](Util.get[generateJavaTypeMethodNameCompliant(attr.type) /]Value(r2.getAs("[attr.name.toLowerFirst() /]")));
 					[/for]
 				} 
 				if(o instanceof [role.entity.name.toUpperFirst()/]) {
@@ -664,7 +664,7 @@ public static Dataset<[rel.name.toUpperFirst()/]> fullLeftOuterJoinBetween[rel.n
 			res.set[role.name.toUpperFirst()/]([role.name.toLowerFirst() /]);
 
 			[for (attr : Attribute | role.entity.attributes)]
-			[generateJavaType(attr.type) /] [attr.name.toLowerFirst()/] = Util.get[generateJavaType(attr.type) /]Value(r.getAs("A_[attr.name.toLowerFirst() /]"));
+			[generateJavaType(attr.type) /] [attr.name.toLowerFirst()/] = Util.get[generateJavaTypeMethodNameCompliant(attr.type) /]Value(r.getAs("A_[attr.name.toLowerFirst() /]"));
 			if ([role.name.toLowerFirst() /].get[attr.name.toUpperFirst() /]() != null && [attr.name.toLowerFirst() /] != null && ![role.name.toLowerFirst() /].get[attr.name.toUpperFirst() /]().equals([attr.name.toLowerFirst() /])) {
 				res.addLogEvent("Data consistency problem for ['['/][rel.name.toUpperFirst() /] - different values found for attribute '[rel.name.toUpperFirst() /].[attr.name.toLowerFirst() /]': " + [role.name.toLowerFirst() /].get[attr.name.toUpperFirst() /]() + " and " + [attr.name.toLowerFirst() /] + "." );
 				logger.warn("Data consistency problem for ['['/][rel.name.toUpperFirst() /] - different values found for attribute '[rel.name.toUpperFirst() /].[attr.name.toLowerFirst() /]': " + [role.name.toLowerFirst() /].get[attr.name.toUpperFirst() /]() + " and " + [attr.name.toLowerFirst() /] + "." );
@@ -680,7 +680,7 @@ public static Dataset<[rel.name.toUpperFirst()/]> fullLeftOuterJoinBetween[rel.n
 				if(o instanceof Row) {
 					Row r2 = (Row) o;
 					[for (attr : Attribute | role2.entity.attributes)]
-					[role2.name.toLowerFirst() /].set[attr.name.toUpperFirst()/](Util.get[generateJavaType(attr.type) /]Value(r2.getAs("[attr.name.toLowerFirst() /]")));
+					[role2.name.toLowerFirst() /].set[attr.name.toUpperFirst()/](Util.get[generateJavaTypeMethodNameCompliant(attr.type) /]Value(r2.getAs("[attr.name.toLowerFirst() /]")));
 					[/for]
 				} 
 				if(o instanceof [role2.entity.name.toUpperFirst()/]) {
@@ -788,9 +788,9 @@ private static Dataset<[rel.name.toUpperFirst()/]> fullOuterJoins[rel.name.toUpp
 				[for (attr : Attribute | rel.attributes)]
 				
 				// attribute '[rel.name.toUpperFirst() /].[attr.name.toLowerFirst() /]'
-				[generateJavaType(attr.type) /] firstNotNull_[attr.name /] = Util.get[generateJavaType(attr.type) /]Value(r.getAs("[attr.name.toLowerFirst() /]_0"));
+				[generateJavaType(attr.type) /] firstNotNull_[attr.name /] = Util.get[generateJavaTypeMethodNameCompliant(attr.type) /]Value(r.getAs("[attr.name.toLowerFirst() /]_0"));
 				for (int i = 1; i < datasetsPOJO.size(); i++) {
-					[generateJavaType(attr.type) /] [attr.name.toLowerFirst() /]2 = Util.get[generateJavaType(attr.type) /]Value(r.getAs("[attr.name.toLowerFirst() /]_" + i));
+					[generateJavaType(attr.type) /] [attr.name.toLowerFirst() /]2 = Util.get[generateJavaTypeMethodNameCompliant(attr.type) /]Value(r.getAs("[attr.name.toLowerFirst() /]_" + i));
 					if (firstNotNull_[attr.name /] != null && [attr.name.toLowerFirst() /]2 != null && !firstNotNull_[attr.name/].equals([attr.name.toLowerFirst() /]2)) {
 						[rel.name.toLowerFirst() /]_res.addLogEvent("Data consistency problem for ['['/][rel.name.toUpperFirst() /] - different values found for attribute '[rel.name.toUpperFirst() /].[attr.name.toLowerFirst() /]': " + firstNotNull_[attr.name /] + " and " + [attr.name.toLowerFirst() /]2 + "." );
 						logger.warn("Data consistency problem for ['['/][rel.name.toUpperFirst() /] - different values found for attribute '[rel.name.toUpperFirst() /].[attr.name.toLowerFirst() /]': " + firstNotNull_[attr.name /] + " and " + [attr.name.toLowerFirst() /]2 + "." );
@@ -818,12 +818,12 @@ private static Dataset<[rel.name.toUpperFirst()/]> fullOuterJoins[rel.name.toUpp
 
 				[role1.entity.name.toUpperFirst()/] [role1.name.toLowerFirst()/] = new [role1.entity.name.toUpperFirst()/]();
 				[for (attr : Attribute | role1.entity.attributes)]
-				[role1.name.toLowerFirst()/].set[attr.name.toUpperFirst()/](Util.get[generateJavaType(attr.type) /]Value(r.getAs("[role1.name.toLowerFirst()/]_0.[attr.name.toLowerFirst()/]")));
+				[role1.name.toLowerFirst()/].set[attr.name.toUpperFirst()/](Util.get[generateJavaTypeMethodNameCompliant(attr.type) /]Value(r.getAs("[role1.name.toLowerFirst()/]_0.[attr.name.toLowerFirst()/]")));
 				[/for]
 
 				[role2.entity.name.toUpperFirst()/] [role2.name.toLowerFirst()/] = new [role2.entity.name.toUpperFirst()/]();
 				[for (attr : Attribute | role2.entity.attributes)]
-				[role2.name.toLowerFirst()/].set[attr.name.toUpperFirst()/](Util.get[generateJavaType(attr.type) /]Value(r.getAs("[role2.name.toLowerFirst()/]_0.[attr.name.toLowerFirst()/]")));
+				[role2.name.toLowerFirst()/].set[attr.name.toUpperFirst()/](Util.get[generateJavaTypeMethodNameCompliant(attr.type) /]Value(r.getAs("[role2.name.toLowerFirst()/]_0.[attr.name.toLowerFirst()/]")));
 				[/for]
 
 				[rel.name.toLowerFirst() /]_res.set[role1.name.toUpperFirst()/]([role1.name.toLowerFirst()/]);

@@ -185,11 +185,13 @@ public class Util {
 		throw new IncompatibleAttributesTypeException("Conceptual attribute type in model file incompatible with found datatype in database");
 	}
 
-	public static Byte getByteValue(Object o) {
+	public static byte['['/][']'/] getByteArrayValue(Object o) {
 		if(o==null)
 			return null;
+		if(o instanceof String)
+			return ((String) o).getBytes();
 		// TODO To improve
-		return (Byte) o;
+		throw new IncompatibleAttributesTypeException("Conceptual attribute type ['['/]blob[']'/] in model file incompatible with found datatype in database ['['/]"+o+"[']'/]");
 	}
 
 	public static LocalDate getLocalDateValue(Object o){
