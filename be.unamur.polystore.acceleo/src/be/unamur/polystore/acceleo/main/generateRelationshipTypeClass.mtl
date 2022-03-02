@@ -25,7 +25,16 @@ public class [rel.name.toUpperFirst() /] extends LoggingPojo {
 	private [generateJavaType(attr.type)/] [attr.name/];	
 [/for]
 
+	//Empty constructor
 	public [rel.name.toUpperFirst() /]() {}
+	
+	//Role constructor
+	public [rel.name.toUpperFirst() /]([for (role: Role | rel.roles) separator(',')][role.entity.name.toUpperFirst()/] [role.name/][/for]){
+		[for (role: Role | rel.roles)]
+		this.[role.name/]=[role.name/];
+		[/for]
+	}
+	
 
 	@Override
     public Object clone() throws CloneNotSupportedException {
