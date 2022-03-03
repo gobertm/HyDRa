@@ -114,7 +114,7 @@ public class Util {
 			return ((Long) o).doubleValue();
 		if (o instanceof String)
 			return Double.parseDouble((String) o);
-		throw new IncompatibleAttributesTypeException("Conceptual attribute type in model file incompatible with found datatype in database");
+		throw new IncompatibleAttributesTypeException("Conceptual attribute type in model file incompatible with found datatype in database. Double vs "+o.getClass());
 	}
 
 	public static Integer getIntegerValue(Object o) {
@@ -134,7 +134,7 @@ public class Util {
 			return ((Long) o).intValue();
 		if(o instanceof String)
 			return Integer.parseInt((String) o);
-		throw new IncompatibleAttributesTypeException("Conceptual attribute type in model file incompatible with found datatype in database");
+		throw new IncompatibleAttributesTypeException("Conceptual attribute type in model file incompatible with found datatype in database. Integer vs "+o.getClass());
 	}
 
 	public static Long getLongValue(Object o) {
@@ -154,7 +154,7 @@ public class Util {
 			return ((Long) o).longValue();
 		if(o instanceof String)
 			return Long.parseLong((String)o);
-		throw new IncompatibleAttributesTypeException("Conceptual attribute type in model file incompatible with found datatype in database");
+		throw new IncompatibleAttributesTypeException("Conceptual attribute type in model file incompatible with found datatype in database. Long vs "+o.getClass());
 	}
 
 	public static String getStringValue(Object o) {
@@ -174,7 +174,7 @@ public class Util {
 			return ((Long) o).toString();
 		if(o instanceof String)
 			return (String) o ;
-		throw new IncompatibleAttributesTypeException("Conceptual attribute type in model file incompatible with found datatype in database");
+		throw new IncompatibleAttributesTypeException("Conceptual attribute type in model file incompatible with found datatype in database. String vs "+o.getClass());
 	}
 
 	public static Boolean getBooleanValue(Object o) {
@@ -182,7 +182,7 @@ public class Util {
 			return null;
 		if(o instanceof Boolean)
 			return (Boolean) o;
-		throw new IncompatibleAttributesTypeException("Conceptual attribute type in model file incompatible with found datatype in database");
+		throw new IncompatibleAttributesTypeException("Conceptual attribute type in model file incompatible with found datatype in database. Boolean vs "+o.getClass());
 	}
 
 	public static byte['['/][']'/] getByteArrayValue(Object o) {
@@ -192,7 +192,7 @@ public class Util {
 			return ((String) o).getBytes();
 		if (o instanceof byte['['/][']'/]) 
 			return (byte['['/][']'/]) o;
-		throw new IncompatibleAttributesTypeException("Conceptual attribute type ['['/]blob[']'/] in model file incompatible with found datatype in database ['['/]"+o+"[']'/]");
+		throw new IncompatibleAttributesTypeException("Conceptual attribute type in model file incompatible with found datatype in database. Blob vs "+o.getClass());
 	}
 
 	public static LocalDate getLocalDateValue(Object o){
@@ -213,7 +213,7 @@ public class Util {
 		} catch (ParseException e) {
 			e.printStackTrace();
 		}
-		throw new IncompatibleAttributesTypeException("Conceptual attribute type in model file incompatible with found datatype in database");
+		throw new IncompatibleAttributesTypeException("Conceptual attribute type in model file incompatible with found datatype in database. LocalDate vs "+o.getClass());
 	}
 
 	public static <E> Object getValueOfAttributeInEqualCondition(Condition<E> condition, E attribute) {
