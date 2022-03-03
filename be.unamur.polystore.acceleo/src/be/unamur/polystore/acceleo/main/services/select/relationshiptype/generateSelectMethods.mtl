@@ -56,6 +56,13 @@
 // Not implemented yet
 [/if]
 [comment Relationship type POJO retrieval methods /]
+[if (override = false)]
+//Empty arguments
+public Dataset<[rel.name.toUpperFirst()/]> get[rel.name.toUpperFirst()/]List(){
+	 return get[rel.name.toUpperFirst()/]List([for (role: Role | rel.roles) separator(',')]null[/for][if (rel.attributes->size() > 0)],null[/if]);
+}
+[/if]	
+
 public [if (override = false)]abstract [/if]Dataset<[rel.name.toUpperFirst()/]> get[rel.name.toUpperFirst()/]List([for (role: Role | rel.roles)][if (i > 1)],[/if]
 	Condition<[role.entity.name.toUpperFirst() /]Attribute> [role.name/]_condition[/for][if (rel.attributes->size() > 0)],
 	Condition<[rel.name.toUpperFirst() /]Attribute> [rel.name /]_condition
