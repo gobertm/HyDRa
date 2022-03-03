@@ -190,7 +190,8 @@ public class Util {
 			return null;
 		if(o instanceof String)
 			return ((String) o).getBytes();
-		// TODO To improve
+		if (o instanceof byte['['/][']'/]) 
+			return (byte['['/][']'/]) o;
 		throw new IncompatibleAttributesTypeException("Conceptual attribute type ['['/]blob[']'/] in model file incompatible with found datatype in database ['['/]"+o+"[']'/]");
 	}
 
