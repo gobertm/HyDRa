@@ -146,7 +146,7 @@ values.add(value_[getPhysicalName(field)/]);
  	// Rel '[rel.name/]' Insert in reference structure '[struct.name/]'
 	[for (rolerel : Role | rel.roles)]
 	[let entityType : EntityType = rolerel.entity]
-	[entityType.name.toUpperFirst()/] [entityType.name.toLowerFirst()/] = [rel.name.toLowerFirst()/].get[rolerel.name.toUpperFirst()/]();
+	[entityType.name.toUpperFirst()/] [entityType.name.toLowerFirst()/][rolerel.name.toUpperFirst()/] = [rel.name.toLowerFirst()/].get[rolerel.name.toUpperFirst()/]();
 	[/let]
 	[/for]
 
@@ -159,11 +159,11 @@ values.add(value_[getPhysicalName(field)/]);
 		[let role : Role = getMappedRoleOfReference(ref)]
 			[if (role.getRelationShipType()=rel)] 
 	columns.add("[ref.sourceField->any(true).oclAsType(PhysicalField).getPhysicalName()/]");
-	values.add([getOppositeRoleInBinaryRel(role).entity.name.toLowerFirst()/].get[getMappedAttributeOfFieldInStructure(ref.targetField->any(true).oclAsType(PhysicalField), ref.targetField->any(true).oclAsType(PhysicalField).getAbstractPhysicalStructureNotEmbeddedObject()).name.toUpperFirst()/]());
+	values.add([getOppositeRoleInBinaryRel(role).entity.name.toLowerFirst()/][getOppositeRoleInBinaryRel(role).name.toUpperFirst()/]==null?null:[getOppositeRoleInBinaryRel(role).entity.name.toLowerFirst()/][getOppositeRoleInBinaryRel(role).name.toUpperFirst()/].get[getMappedAttributeOfFieldInStructure(ref.targetField->any(true).oclAsType(PhysicalField), ref.targetField->any(true).oclAsType(PhysicalField).getAbstractPhysicalStructureNotEmbeddedObject()).name.toUpperFirst()/]());
 					[for (attr : Attribute | role.entity.identifier.attributes)]
 						[if (i=1)]
 	filtercolumn = "[getPhysicalName(getMappedPhysicalField(attr, struct, db, role.entity.getMappingRules()))/]";
-	filtervalue = [role.entity.name.toLowerFirst()/].get[attr.name.toUpperFirst()/]();
+	filtervalue = [role.entity.name.toLowerFirst()/][role.name.toUpperFirst()/].get[attr.name.toUpperFirst()/]();
 						[else]
 	logger.error("To implement. Support of multi valued identifiers");
 	throw new UnsupportedOperationException("Can't handle multi valued identifiers");
@@ -183,12 +183,12 @@ values.add(value_[getPhysicalName(field)/]);
 			[for (ref : Reference | getRefOfPhysicalStructure(struct))]
 				[let roleref : Role = getMappedRoleOfReference(ref)]
 				[if (rolerel=roleref)]
-	updateOp = set("[ref.sourceField->any(true).oclAsType(PhysicalField).getPhysicalName()/]",[getOppositeRoleInBinaryRel(rolerel).entity.name.toLowerFirst()/].get[getMappedAttributeOfFieldInStructure(ref.targetField->any(true).oclAsType(PhysicalField), ref.targetField->any(true).oclAsType(PhysicalField).getAbstractPhysicalStructureNotEmbeddedObject()).name.toUpperFirst()/]());
+	updateOp = set("[ref.sourceField->any(true).oclAsType(PhysicalField).getPhysicalName()/]",[getOppositeRoleInBinaryRel(rolerel).entity.name.toLowerFirst()/][getOppositeRoleInBinaryRel(rolerel).name.toUpperFirst()/].get[getMappedAttributeOfFieldInStructure(ref.targetField->any(true).oclAsType(PhysicalField), ref.targetField->any(true).oclAsType(PhysicalField).getAbstractPhysicalStructureNotEmbeddedObject()).name.toUpperFirst()/]());
 					[for (attr : Attribute | entityType.identifier.attributes)]
 						[if (i=1)]
-	filter = eq("[getPhysicalName(getMappedPhysicalField(attr, struct, db, entityType.getMappingRules()))/]",[entityType.name.toLowerFirst()/].get[attr.name.toUpperFirst()/]());
+	filter = eq("[getPhysicalName(getMappedPhysicalField(attr, struct, db, entityType.getMappingRules()))/]",[entityType.name.toLowerFirst()/][rolerel.name.toUpperFirst()/].get[attr.name.toUpperFirst()/]());
 						[else]
-	filter = and(filter,eq("[getPhysicalName(getMappedPhysicalField(attr, struct, db, entityType.getMappingRules()))/]",[entityType.name.toLowerFirst()/].get[attr.name.toUpperFirst()/]());
+	filter = and(filter,eq("[getPhysicalName(getMappedPhysicalField(attr, struct, db, entityType.getMappingRules()))/]",[entityType.name.toLowerFirst()/][rolerel.name.toUpperFirst()/].get[attr.name.toUpperFirst()/]());
 						[/if]
 					[/for]
 	DBConnectionMgr.update(filter, updateOp, "[struct.name/]", "[db.name/]");
