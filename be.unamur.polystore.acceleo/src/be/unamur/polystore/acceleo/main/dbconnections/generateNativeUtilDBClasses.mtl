@@ -243,51 +243,76 @@ public class Dataset<E> extends ArrayList<E> {
 		String cond = joinCondition.toString();
 		cond = cond.replaceAll("\\(", "").replaceAll("\\)", "");
 		String['['/][']'/] conditions = cond.split(" AND ");
-		String condition = conditions['['/]0[']'/];
-		String['['/][']'/] columns;
-		String col1, col2;
-		if (conditions.length > 1)
-			throw new UnsupportedOperationException(
-					"Not supported joincondition in full outer hash join algo. ['['/]" + condition + "[']'/]");
-		if (condition.contains("=")) {
-			// X = Y
-			columns = condition.split(" = ");
-			col1 = columns['['/]0[']'/];
-			col2 = columns['['/]1[']'/];
-		} else
-			throw new UnsupportedOperationException(
-					"Not supported joincondition in full outer hash join algo. ['['/]" + condition + "[']'/]");
+		List<String> columns1 = new ArrayList<String>();
+		List<String> columns2 = new ArrayList<String>();
+		for (String condition : conditions) {
+			if (condition.contains("=")) {
+				// X = Y
+				String['['/][']'/] columns = condition.split(" = ");
+				columns1.add(columns['['/]0[']'/]);
+				columns2.add(columns['['/]1[']'/]);
+			} else
+				throw new UnsupportedOperationException(
+						"Not supported joincondition in full outer hash join algo. ['['/]" + condition + "[']'/]");
+		}
 		// Build phase
 		for (E2 e2 : d) {
-			hash.put(getValue(e2, col2.split("\\.")), e2);
+			String key = "";
+			for(int i = 0; i < columns2.size(); i++) {
+				if(i > 0)
+					key += ":";
+				key += getValue(e2, columns2.get(i).split("\\."));
+			}
+			hash.put(key, e2);
 		}
-		
-		if(fullOuterJoin)
-			for(E e : this)
-				hash2.put(getValue(e, col2.split("\\.")), e);
-		
+
+		if (fullOuterJoin)
+			for (E e : this) {
+				String key = "";
+				for(int i = 0; i < columns1.size(); i++) {
+					if(i > 0)
+						key += ":";
+					key += getValue(e, columns1.get(i).split("\\."));
+				}
+				hash2.put(key, e);
+			}
+
 		try {
 			// Probe phase
 			Object value;
 			for (E e : this) {
 				Row r = null;
-				value = hash.get(getValue(e, col1.split("\\.")));
+				String key = "";
+				for(int i = 0; i < columns1.size(); i++) {
+					if(i > 0)
+						key += ":";
+					key += getValue(e, columns1.get(i).split("\\."));
+				}
+				
+				
+				value = hash.get(key);
 				r = merge(e, this.alias, value, value == null ? null : d.alias);
 				res.add(r);
 			}
-			
-			
-			if(fullOuterJoin) {
+
+			if (fullOuterJoin) {
 				for (E2 e2 : d) {
 					Row r = null;
-					value = hash2.get(getValue(e2, col1.split("\\.")));
-					if(value == null) {
+					String key = "";
+					for(int i = 0; i < columns2.size(); i++) {
+						if(i > 0)
+							key += ":";
+						key += getValue(e2, columns2.get(i).split("\\."));
+					}
+					
+					value = hash2.get(key);
+					if (value == null) {
 						r = merge(e2, d.alias, null, null);
 						res.add(r);
 					}
 				}
 			}
-			
+
 		} catch (IntrospectionException e) {
 			e.printStackTrace();
 		}
@@ -714,6 +739,9 @@ public class Dataset<E> extends ArrayList<E> {
 				for (Entry<String, Object> entry : fieldValues.entrySet()) {
 					String field = entry.getKey();
 					Object value = entry.getValue();
+					if(value != null && value instanceof WrappedArray) {
+						value = ((WrappedArray) value).list();
+					}
 
 					if (value != null) {
 						Method m = getSetter(field, e1, value.getClass());

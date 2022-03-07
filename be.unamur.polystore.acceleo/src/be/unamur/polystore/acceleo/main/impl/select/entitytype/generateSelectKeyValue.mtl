@@ -361,7 +361,7 @@
 				// Get reference column in value [ '[' /][refField.getPhysicalName()/] [ ']' /] for reference [ '[' /][ref.name/][ ']' /]
 				[if (refField.ancestors(LongField) -> size() = 0)]
 				[comment shortField or bracketfield/]
-				[pojoName.toLowerFirst() /]_res.set[getJavaAbsolutePath(ref).toUpperFirst() /]_[refField.getPhysicalName() /]([if (refField.ancestors(KVComplexField)->any(true).type=KVDataType::LIST)]ScalaUtil.javaList(r.getAs("[getPhysicalName(refField) /]"))[else]r.getAs("[getPhysicalName(refField) /]")[/if]);
+				[pojoName.toLowerFirst() /]_res.set[getJavaAbsolutePath(ref).toUpperFirst() /]_[refField.getPhysicalName() /]([if (refField.ancestors(KVComplexField)->any(true).type=KVDataType::LIST)]new ArrayList<String>(ScalaUtil.javaList(r.getAs("[getPhysicalName(refField) /]")))[else]r.getAs("[getPhysicalName(refField) /]")[/if]);
 				[else]
 				[comment LongField /]
 				regex = "[getJavaRegexFromLongField(refField.ancestors(LongField) -> first().oclAsType(LongField)) /]";

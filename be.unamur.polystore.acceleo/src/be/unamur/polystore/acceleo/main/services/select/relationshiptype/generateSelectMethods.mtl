@@ -438,28 +438,28 @@ Dataset<[role.getRelationShipType().name.toUpperFirst() /]TDO> res = d.map((MapF
 				// attribute [ '[' /][role1.entity.name.toUpperFirst() /].[attr.name.toUpperFirst() /][ ']' /]
 				[if (field.ancestors(LongField) -> size() = 0)]
 				[comment shortField or bracketfield/]
-				[generateJavaType(attr.type)/] [role1.entity.name.toLowerFirst()/]_[attr.name.toLowerFirst()/] = Util.get[generateJavaTypeMethodNameCompliant(attr.type) /]Value(r.getAs("[table1.name/]_[getPhysicalName(field) /]"));
-				[role1.getRelationShipType().name.toUpperFirst().toLowerFirst() /]_res.get[role1.name.toUpperFirst()/]().set[attr.name.toUpperFirst()/]([role1.entity.name.toLowerFirst()/]_[attr.name.toLowerFirst()/]);
+				[generateJavaType(attr.type)/] [role1.name.toLowerFirst()/]_[attr.name.toLowerFirst()/] = Util.get[generateJavaTypeMethodNameCompliant(attr.type) /]Value(r.getAs("[table1.name/]A_[getPhysicalName(field) /]"));
+				[role1.getRelationShipType().name.toUpperFirst().toLowerFirst() /]_res.get[role1.name.toUpperFirst()/]().set[attr.name.toUpperFirst()/]([role1.name.toLowerFirst()/]_[attr.name.toLowerFirst()/]);
 				[else]
 				[comment LongField /]
 				regex = "[getJavaRegexFromLongField(field.ancestors(LongField) -> first().oclAsType(LongField)) /]";
 				groupIndex = [getPositionInLongField(field, field.ancestors(LongField) -> first().oclAsType(LongField))/];
 				if(groupIndex == null) {
-					logger.warn("Cannot retrieve value for [role1.entity.name /].[attr.name /] attribute stored in db [db.name/]. Probably due to an ambiguous regex.");
-					throw new Exception("Cannot retrieve value for [role1.entity.name /].[attr.name /] attribute stored in db [db.name/]. Probably due to an ambiguous regex.");
+					logger.warn("Cannot retrieve value for [role1.name /].[attr.name /] attribute stored in db [db.name/]. Probably due to an ambiguous regex.");
+					throw new Exception("Cannot retrieve value for [role1.name /].[attr.name /] attribute stored in db [db.name/]. Probably due to an ambiguous regex.");
 				}
-				value = r.getAs("[table1.name/]_[field.ancestors(LongField) -> first().oclAsType(LongField).physicalName /]");
+				value = r.getAs("[table1.name/]A_[field.ancestors(LongField) -> first().oclAsType(LongField).physicalName /]");
 				p = Pattern.compile(regex);
 				m = p.matcher(value);
 				matches = m.find();
-				String [role1.entity.name.toLowerFirst()/]_[attr.name.toLowerFirst()/] = null;
+				String [role1.name.toLowerFirst()/]_[attr.name.toLowerFirst()/] = null;
 				if(matches) {
-					[role1.entity.name.toLowerFirst()/]_[attr.name.toLowerFirst()/] = m.group(groupIndex.intValue());
+					[role1.name.toLowerFirst()/]_[attr.name.toLowerFirst()/] = m.group(groupIndex.intValue());
 				} else {
-					logger.warn("Cannot retrieve value for [role1.entity.name /].[attr.name /] attribute stored in db [db.name/]. Probably due to an ambiguous regex.");
-					throw new Exception("Cannot retrieve value for [role1.entity.name /].[attr.name /] attribute stored in db [db.name/]. Probably due to an ambiguous regex.");
+					logger.warn("Cannot retrieve value for [role1.name /].[attr.name /] attribute stored in db [db.name/]. Probably due to an ambiguous regex.");
+					throw new Exception("Cannot retrieve value for [role1.name /].[attr.name /] attribute stored in db [db.name/]. Probably due to an ambiguous regex.");
 				}
-				[role1.getRelationShipType().name.toLowerFirst() /]_res.get[role1.name.toUpperFirst()/]().set[attr.name.toUpperFirst()/]([generateParsingFunctionJavaType(attr.type, role1.entity.name.toLowerFirst() + '_' + attr.name.toLowerFirst())/]);
+				[role1.getRelationShipType().name.toLowerFirst() /]_res.get[role1.name.toUpperFirst()/]().set[attr.name.toUpperFirst()/]([generateParsingFunctionJavaType(attr.type, role1.name.toLowerFirst() + '_' + attr.name.toLowerFirst())/]);
 				[/if]
 				[/if]
 				[/let]
@@ -468,31 +468,31 @@ Dataset<[role.getRelationShipType().name.toUpperFirst() /]TDO> res = d.map((MapF
 				[for (attr : Attribute | role2.entity.attributes)]
 				[let field : PhysicalField = getMappedPhysicalField(attr, table2, db, table2.ancestors(Domainmodel)->first().mappingRules)][if (field <> null)]
 				
-				// attribute [ '[' /][role2.entity.name.toUpperFirst() /].[attr.name.toUpperFirst() /][ ']' /]
+				// attribute [ '[' /][role2.name.toUpperFirst() /].[attr.name.toUpperFirst() /][ ']' /]
 				[if (field.ancestors(LongField) -> size() = 0)]
 				[comment shortField or bracketfield/]
-				[generateJavaType(attr.type)/] [role2.entity.name.toLowerFirst()/]_[attr.name.toLowerFirst()/] = Util.get[generateJavaTypeMethodNameCompliant(attr.type) /]Value(r.getAs("[table2.name/]_[getPhysicalName(field) /]"));
-				[role2.getRelationShipType().name.toUpperFirst().toLowerFirst() /]_res.get[role2.name.toUpperFirst()/]().set[attr.name.toUpperFirst()/]([role2.entity.name.toLowerFirst()/]_[attr.name.toLowerFirst()/]);
+				[generateJavaType(attr.type)/] [role2.name.toLowerFirst()/]_[attr.name.toLowerFirst()/] = Util.get[generateJavaTypeMethodNameCompliant(attr.type) /]Value(r.getAs("[table2.name/]B_[getPhysicalName(field) /]"));
+				[role2.getRelationShipType().name.toUpperFirst().toLowerFirst() /]_res.get[role2.name.toUpperFirst()/]().set[attr.name.toUpperFirst()/]([role2.name.toLowerFirst()/]_[attr.name.toLowerFirst()/]);
 				[else]
 				[comment LongField /]
 				regex = "[getJavaRegexFromLongField(field.ancestors(LongField) -> first().oclAsType(LongField)) /]";
 				groupIndex = [getPositionInLongField(field, field.ancestors(LongField) -> first().oclAsType(LongField))/];
 				if(groupIndex == null) {
-					logger.warn("Cannot retrieve value for [role2.entity.name /].[attr.name /] attribute stored in db [db.name/]. Probably due to an ambiguous regex.");
-					throw new Exception("Cannot retrieve value for [role2.entity.name /].[attr.name /] attribute stored in db [db.name/]. Probably due to an ambiguous regex.");
+					logger.warn("Cannot retrieve value for [role2.name /].[attr.name /] attribute stored in db [db.name/]. Probably due to an ambiguous regex.");
+					throw new Exception("Cannot retrieve value for [role2.name /].[attr.name /] attribute stored in db [db.name/]. Probably due to an ambiguous regex.");
 				}
-				value = r.getAs("[table2.name/]_[field.ancestors(LongField) -> first().oclAsType(LongField).physicalName /]");
+				value = r.getAs("[table2.name/]B_[field.ancestors(LongField) -> first().oclAsType(LongField).physicalName /]");
 				p = Pattern.compile(regex);
 				m = p.matcher(value);
 				matches = m.find();
-				String [role2.entity.name.toLowerFirst()/]_[attr.name.toLowerFirst()/] = null;
+				String [role2.name.toLowerFirst()/]_[attr.name.toLowerFirst()/] = null;
 				if(matches) {
-					[role2.entity.name.toLowerFirst()/]_[attr.name.toLowerFirst()/] = m.group(groupIndex.intValue());
+					[role2.name.toLowerFirst()/]_[attr.name.toLowerFirst()/] = m.group(groupIndex.intValue());
 				} else {
-					logger.warn("Cannot retrieve value for [role2.entity.name /].[attr.name /] attribute stored in db [db.name/]. Probably due to an ambiguous regex.");
-					throw new Exception("Cannot retrieve value for [role2.entity.name /].[attr.name /] attribute stored in db [db.name/]. Probably due to an ambiguous regex.");
+					logger.warn("Cannot retrieve value for [role2.name /].[attr.name /] attribute stored in db [db.name/]. Probably due to an ambiguous regex.");
+					throw new Exception("Cannot retrieve value for [role2.name /].[attr.name /] attribute stored in db [db.name/]. Probably due to an ambiguous regex.");
 				}
-				[role2.getRelationShipType().name.toLowerFirst() /]_res.get[role2.name.toUpperFirst()/]().set[attr.name.toUpperFirst()/]([generateParsingFunctionJavaType(attr.type, role2.entity.name.toLowerFirst() + '_' + attr.name.toLowerFirst())/]);
+				[role2.getRelationShipType().name.toLowerFirst() /]_res.get[role2.name.toUpperFirst()/]().set[attr.name.toUpperFirst()/]([generateParsingFunctionJavaType(attr.type, role2.name.toLowerFirst() + '_' + attr.name.toLowerFirst())/]);
 				[/if]
 				[/if]
 				[/let]
@@ -561,8 +561,8 @@ public [if (override = false)]abstract [/if]Dataset<[role.getRelationShipType().
 [/if]
 
 public [if (override = false)]abstract [/if]Dataset<[role1.getRelationShipType().name.toUpperFirst()/]> get[role1.getRelationShipType().name.toUpperFirst()/]ListIn[table1.name/]And[joinTable.name/]And[table2.name/]From[db.name/](Condition<[role1.entity.name.toUpperFirst()/]Attribute> [role1.name/]_cond, Condition<[role2.entity.name.toUpperFirst()/]Attribute> [role2.name/]_cond[if(role1.getRelationShipType().attributes->size()>0)], Condition<[role1.getRelationShipType().name.toUpperFirst()/]Attribute> [role1.getRelationShipType().name/]_cond[/if], MutableBoolean [role1.name/]_refilter, MutableBoolean [role2.name/]_refilter[if(role1.getRelationShipType().attributes->size() > 0)], MutableBoolean [role1.getRelationShipType().name/]_refilter[/if])[if (override = true)]{
-	Pair<String, List<String>> whereClause1 = [role1.entity.name.toUpperFirst()/]ServiceImpl.getSQLWhereClauseIn[table1.name.toUpperFirst()/]From[db.name.toUpperFirst() /]WithTableAlias([role1.name/]_cond, [role1.name/]_refilter, "[table1.name/].");
-	Pair<String, List<String>> whereClause2 = [role2.entity.name.toUpperFirst()/]ServiceImpl.getSQLWhereClauseIn[table2.name.toUpperFirst()/]From[db.name.toUpperFirst() /]WithTableAlias([role2.name/]_cond, [role2.name/]_refilter, "[table2.name/].");
+	Pair<String, List<String>> whereClause1 = [role1.entity.name.toUpperFirst()/]ServiceImpl.getSQLWhereClauseIn[table1.name.toUpperFirst()/]From[db.name.toUpperFirst() /]WithTableAlias([role1.name/]_cond, [role1.name/]_refilter, "[table1.name/]A.");
+	Pair<String, List<String>> whereClause2 = [role2.entity.name.toUpperFirst()/]ServiceImpl.getSQLWhereClauseIn[table2.name.toUpperFirst()/]From[db.name.toUpperFirst() /]WithTableAlias([role2.name/]_cond, [role2.name/]_refilter, "[table2.name/]B.");
 	[if(role1.getRelationShipType().attributes->size() > 0)]Pair<String, List<String>> whereClause3 = [role1.getRelationShipType().name.toUpperFirst()/]ServiceImpl.getSQLWhereClauseIn[joinTable.name.toUpperFirst()/]From[db.name.toUpperFirst() /]WithTableAlias([role1.getRelationShipType().name/]_cond, [role1.getRelationShipType().name/]_refilter, "[joinTable.name/].");[/if]
 
 	String where1 = whereClause1.getKey();
@@ -592,8 +592,8 @@ public [if (override = false)]abstract [/if]Dataset<[role1.getRelationShipType()
 	if(where3 != null)
 		where += " AND " + where3; 
 	[/if]
-	String aliasedColumns = "[for (field : PhysicalField | table1.oclAsType(Table).columns) separator(',')][table1.name /].[field.getPhysicalName() /] as [table1.name /]_[field.getPhysicalName() /][/for],[for (field : PhysicalField | table2.oclAsType(Table).columns) separator(',')][table2.name /].[field.getPhysicalName() /] as [table2.name /]_[field.getPhysicalName() /][/for],[for (field : PhysicalField | joinTable.oclAsType(Table).columns) separator(',')][joinTable.name /].[field.getPhysicalName() /] as [joinTable.name /]_[field.getPhysicalName() /][/for]";
-	Dataset<Row> d = dbconnection.SparkConnectionMgr.getDataset("[db.name /]", "(SELECT " + aliasedColumns + " FROM [table1.name/], [table2.name/], [joinTable.name/] WHERE [for (srcField : PhysicalField | ref1.sourceField) separator(' AND ')][joinTable.name/].[srcField.getPhysicalName()/] = [table1.name /].[ref1.targetField->at(i).getPhysicalName()/][/for] AND [for (srcField : PhysicalField | ref2.sourceField) separator(' AND ')][joinTable.name/].[srcField.getPhysicalName()/] = [table2.name /].[ref2.targetField->at(i).getPhysicalName()/][/for]" + where + ") AS JOIN_TABLE", null);
+	String aliasedColumns = "[for (field : PhysicalField | table1.oclAsType(Table).columns) separator(',')][table1.name /]A.[field.getPhysicalName() /] as [table1.name /]A_[field.getPhysicalName() /][/for],[for (field : PhysicalField | table2.oclAsType(Table).columns) separator(',')][table2.name /]B.[field.getPhysicalName() /] as [table2.name /]B_[field.getPhysicalName() /][/for],[for (field : PhysicalField | joinTable.oclAsType(Table).columns) separator(',')][joinTable.name /].[field.getPhysicalName() /] as [joinTable.name /]_[field.getPhysicalName() /][/for]";
+	Dataset<Row> d = dbconnection.SparkConnectionMgr.getDataset("[db.name /]", "(SELECT " + aliasedColumns + " FROM [table1.name/] [table1.name/]A, [table2.name/] [table2.name/]B, [joinTable.name/] WHERE [for (srcField : PhysicalField | ref1.sourceField) separator(' AND ')][joinTable.name/].[srcField.getPhysicalName()/] = [table1.name /]A.[ref1.targetField->at(i).getPhysicalName()/][/for] AND [for (srcField : PhysicalField | ref2.sourceField) separator(' AND ')][joinTable.name/].[srcField.getPhysicalName()/] = [table2.name /]B.[ref2.targetField->at(i).getPhysicalName()/][/for]" + where + ") AS JOIN_TABLE", null);
 [generateRowToRelationshipTypeMapper(role1, table1, role2, table2, joinTable, db)/]
 
 	return res;
@@ -609,8 +609,8 @@ public [if (override = false)]abstract [/if]Dataset<[role1.getRelationShipType()
 [let table2 : AbstractPhysicalStructure = ref.targetField->first().getAbstractPhysicalStructureNotEmbeddedObject()]
 [let db : Database = table.getConcernedDatabases(table.ancestors(Domainmodel)->first())->any(true)]
 public [if (override = false)]abstract[/if] Dataset<[roleSource.getRelationShipType().name.toUpperFirst() /]> get[roleSource.name.toUpperFirst()/]And[roleTarget.name.toUpperFirst()/]ListIn[ref.name.toUpperFirst()/]In[table.name.toUpperFirst()/]From[db.name.toUpperFirst()/](Condition<[roleSource.getRelationShipType().roles->first().entity.name.toUpperFirst()/]Attribute> [roleSource.getRelationShipType().roles->first().name/]_cond, Condition<[roleSource.getRelationShipType().roles->first().getOppositeRoles()->any(true).entity.name.toUpperFirst()/]Attribute> [roleSource.getRelationShipType().roles->first().getOppositeRoles()->any(true).name/]_cond, MutableBoolean [roleSource.getRelationShipType().roles->first().name/]_refilter, MutableBoolean [roleSource.getRelationShipType().roles->first().getOppositeRoles()->any(true).name/]_refilter)[if (override = false)];[else] {
-	Pair<String, List<String>> whereClause1 = [roleSource.entity.name.toUpperFirst()/]ServiceImpl.getSQLWhereClauseIn[table.name.toUpperFirst()/]From[db.name.toUpperFirst() /]WithTableAlias([roleSource.name/]_cond, [roleSource.name/]_refilter, "[table.name/].");
-	Pair<String, List<String>> whereClause2 = [roleTarget.entity.name.toUpperFirst()/]ServiceImpl.getSQLWhereClauseIn[table2.name.toUpperFirst()/]From[db.name.toUpperFirst() /]WithTableAlias([roleTarget.name/]_cond, [roleTarget.name/]_refilter, "[table2.name/].");
+	Pair<String, List<String>> whereClause1 = [roleSource.entity.name.toUpperFirst()/]ServiceImpl.getSQLWhereClauseIn[table.name.toUpperFirst()/]From[db.name.toUpperFirst() /]WithTableAlias([roleSource.name/]_cond, [roleSource.name/]_refilter, "[table.name/]A.");
+	Pair<String, List<String>> whereClause2 = [roleTarget.entity.name.toUpperFirst()/]ServiceImpl.getSQLWhereClauseIn[table2.name.toUpperFirst()/]From[db.name.toUpperFirst() /]WithTableAlias([roleTarget.name/]_cond, [roleTarget.name/]_refilter, "[table2.name/]B.");
 	
 	String where1 = whereClause1.getKey();
 	List<String> preparedValues = whereClause1.getValue();
@@ -625,8 +625,8 @@ public [if (override = false)]abstract[/if] Dataset<[roleSource.getRelationShipT
 	}
 
 	String where = (where1 == null && where2 == null) ? "" : " AND " + (where1 != null && where2 != null ? where1 + " AND " + where2 : (where1 != null ? where1 : where2) );
-	String aliasedColumns = "[for (field : PhysicalField | table.oclAsType(Table).columns) separator(',')][table.name /].[field.getPhysicalName() /] as [table.name /]_[field.getPhysicalName() /][/for],[for (field : PhysicalField | table2.oclAsType(Table).columns) separator(',')][table2.name /].[field.getPhysicalName() /] as [table2.name /]_[field.getPhysicalName() /][/for]";
-	Dataset<Row> d = dbconnection.SparkConnectionMgr.getDataset("[db.name /]", "(SELECT " + aliasedColumns + " FROM [table.name/], [table2.name/] WHERE [for (srcField : PhysicalField | ref.sourceField) separator(' AND ')][table.name/].[srcField.getPhysicalName()/] = [table2.name /].[ref.targetField->at(i).getPhysicalName()/][/for]" + where + ") AS JOIN_TABLE", null);
+	String aliasedColumns = "[for (field : PhysicalField | table.oclAsType(Table).columns) separator(',')][table.name /]A.[field.getPhysicalName() /] as [table.name /]A_[field.getPhysicalName() /][/for],[for (field : PhysicalField | table2.oclAsType(Table).columns) separator(',')][table2.name /]B.[field.getPhysicalName() /] as [table2.name /]B_[field.getPhysicalName() /][/for]";
+	Dataset<Row> d = dbconnection.SparkConnectionMgr.getDataset("[db.name /]", "(SELECT " + aliasedColumns + " FROM [table.name/] [table.name/]A, [table2.name/] [table2.name/]B WHERE [for (srcField : PhysicalField | ref.sourceField) separator(' AND ')][table.name/]A.[srcField.getPhysicalName()/] = [table2.name /]B.[ref.targetField->at(i).getPhysicalName()/][/for]" + where + ") AS JOIN_TABLE", null);
 	
 [generateRowToRelationshipTypeMapper(roleSource, table, roleTarget, table2, null, db)/]
 
@@ -833,18 +833,31 @@ private static Dataset<[rel.name.toUpperFirst()/]> fullOuterJoins[rel.name.toUpp
 					}
 				}
 
-				[role1.entity.name.toUpperFirst()/] [role1.name.toLowerFirst()/] = new [role1.entity.name.toUpperFirst()/]();
-				[for (attr : Attribute | role1.entity.attributes)]
-				[role1.name.toLowerFirst()/].set[attr.name.toUpperFirst()/](Util.get[generateJavaTypeMethodNameCompliant(attr.type) /]Value(r.getAs("[role1.name.toLowerFirst()/]_0.[attr.name.toLowerFirst()/]")));
+				[role1.entity.name.toUpperFirst()/] [role1.name.toLowerFirst()/]_res = new [role1.entity.name.toUpperFirst()/]();
+				[role2.entity.name.toUpperFirst()/] [role2.name.toLowerFirst()/]_res = new [role2.entity.name.toUpperFirst()/]();
+				
+				[for (ri : Role | Sequence{role1, role2})]
+				[for (attr : Attribute | ri.entity.attributes)]
+				// attribute '[ri.entity.name.toUpperFirst() /].[attr.name.toLowerFirst() /]'
+				[generateJavaType(attr.type) /] firstNotNull_[ri.name/]_[attr.name /] = Util.get[generateJavaTypeMethodNameCompliant(attr.type) /]Value(r.getAs("[ri.name.toLowerFirst()/]_0.[attr.name.toLowerFirst()/]"));
+				[if (ri.entity.identifier.attributes->includes(attr) = false)]
+				for (int i = 1; i < datasetsPOJO.size(); i++) {
+					[generateJavaType(attr.type) /] [ri.name/]_[attr.name.toLowerFirst() /]2 = Util.get[generateJavaTypeMethodNameCompliant(attr.type) /]Value(r.getAs("[ri.name.toLowerFirst()/]_" + i + ".[attr.name.toLowerFirst()/]"));
+					if (firstNotNull_[ri.name/]_[attr.name /] != null && [ri.name/]_[attr.name.toLowerFirst() /]2 != null && !firstNotNull_[ri.name/]_[attr.name /].equals([ri.name/]_[attr.name.toLowerFirst() /]2)) {
+						[rel.name.toLowerFirst() /]_res.addLogEvent("Data consistency problem for ['['/][ri.entity.name.toUpperFirst() /] - id :"[if (ri.entity.identifier.oclIsUndefined() = false)]+[for (attr : Attribute | ri.entity.identifier.attributes) separator('+')][ri.name.toLowerFirst() /]_res.get[attr.name.toUpperFirst()/]()[/for][/if]+"[']'/]: different values found for attribute '[ri.entity.name.toUpperFirst() /].[attr.name.toLowerFirst() /]': " + firstNotNull_[ri.name/]_[attr.name /] + " and " + [ri.name/]_[attr.name.toLowerFirst() /]2 + "." );
+						logger.warn("Data consistency problem for ['['/][ri.entity.name.toUpperFirst() /] - id :"[if (ri.entity.identifier.oclIsUndefined() = false)]+[for (attr : Attribute | ri.entity.identifier.attributes) separator('+')][ri.name.toLowerFirst() /]_res.get[attr.name.toUpperFirst()/]()[/for][/if]+"[']'/]: different values found for attribute '[ri.entity.name.toUpperFirst() /].[attr.name.toLowerFirst() /]': " + firstNotNull_[ri.name/]_[attr.name /] + " and " + [ri.name/]_[attr.name.toLowerFirst() /]2 + "." );
+					}
+					if (firstNotNull_[ri.name/]_[attr.name /] == null && [ri.name/]_[attr.name.toLowerFirst() /]2 != null) {
+						firstNotNull_[ri.name/]_[attr.name /] = [ri.name/]_[attr.name.toLowerFirst() /]2;
+					}
+				}
+				[/if]
+				[ri.name.toLowerFirst() /]_res.set[attr.name.toUpperFirst() /](firstNotNull_[ri.name/]_[attr.name /]);
+				[/for]
 				[/for]
 
-				[role2.entity.name.toUpperFirst()/] [role2.name.toLowerFirst()/] = new [role2.entity.name.toUpperFirst()/]();
-				[for (attr : Attribute | role2.entity.attributes)]
-				[role2.name.toLowerFirst()/].set[attr.name.toUpperFirst()/](Util.get[generateJavaTypeMethodNameCompliant(attr.type) /]Value(r.getAs("[role2.name.toLowerFirst()/]_0.[attr.name.toLowerFirst()/]")));
-				[/for]
-
-				[rel.name.toLowerFirst() /]_res.set[role1.name.toUpperFirst()/]([role1.name.toLowerFirst()/]);
-				[rel.name.toLowerFirst() /]_res.set[role2.name.toUpperFirst()/]([role2.name.toLowerFirst()/]);
+				[rel.name.toLowerFirst() /]_res.set[role1.name.toUpperFirst()/]([role1.name.toLowerFirst()/]_res);
+				[rel.name.toLowerFirst() /]_res.set[role2.name.toUpperFirst()/]([role2.name.toLowerFirst()/]_res);
 				return [rel.name.toLowerFirst() /]_res;
 	}
 	, Encoders.bean([rel.name.toUpperFirst()/].class));

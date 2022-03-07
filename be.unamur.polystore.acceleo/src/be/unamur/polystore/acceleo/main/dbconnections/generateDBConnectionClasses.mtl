@@ -186,8 +186,9 @@ public class DBConnectionMgr {
 				int['['/][']'/] result = statement.executeBatch();
 				logger.info("BATCH INSERT INTO '{}' - '{}' lines ", struct, result.length);  
 			} catch (SQLException e) {
-				e.printStackTrace();
 				logger.error("SQL Error in preparedStatement");
+				e.printStackTrace();
+				throw new RuntimeException("Error in insert SQL statement");
 			} finally {
 				if(statement != null) {
 					try {
