@@ -25,6 +25,7 @@ import be.unamur.polystore.pml.LongField;
 import be.unamur.polystore.pml.MappingRules;
 import be.unamur.polystore.pml.PhysicalField;
 import be.unamur.polystore.pml.Reference;
+import be.unamur.polystore.pml.RelationshipMappingRule;
 import be.unamur.polystore.pml.RelationshipType;
 import be.unamur.polystore.pml.ShortField;
 import be.unamur.polystore.pml.TerminalExpression;
@@ -179,24 +180,22 @@ public class Util {
 				res.addAll(getMappedAttributes(pf, rel, rules));
 		} else if (rules != null)
 			for (AbstractMappingRule rule : rules.getMappingRules()) {
-				//TODO attributes of rel could be mapped to phyical fields.
-				// NOT ALLOWED at this moment
 				
-//				if (rule instanceof RelationshipMappingRule) {
-//					RelationshipMappingRule r = (RelationshipMappingRule) rule;
-//					if (r.getEntityConceptual() == ent && r.getAttributesConceptual().size() > 0) {
-//						List<PhysicalField> fields = r.getPhysicalFields();
-//						for (int i = 0; i < fields.size(); i++) {
-//							PhysicalField pf = fields.get(i);
-//							if (field instanceof LongField) {
-//								if (((LongField) field).getPattern().contains(pf))
-//									res.add(r.getAttributesConceptual().get(i));
-//
-//							} else if (pf == field)
-//								res.add(r.getAttributesConceptual().get(i));
-//						}
-//					}
-//				}
+				if (rule instanceof RelationshipMappingRule) {
+					RelationshipMappingRule r = (RelationshipMappingRule) rule;
+					if (r.getRelationshipConceptual() == rel && r.getAttributesConceptual().size() > 0) {
+						List<PhysicalField> fields = r.getPhysicalFields();
+						for (int i = 0; i < fields.size(); i++) {
+							PhysicalField pf = fields.get(i);
+							if (field instanceof LongField) {
+								if (((LongField) field).getPattern().contains(pf))
+									res.add(r.getAttributesConceptual().get(i));
+
+							} else if (pf == field)
+								res.add(r.getAttributesConceptual().get(i));
+						}
+					}
+				}
 			}
 		return new ArrayList<Attribute>(res);
 	}
