@@ -184,6 +184,7 @@ public class Util {
 				res.addAll(getMappedAttributes(pf, rel, rules));
 		} else if (rules != null)
 			for (AbstractMappingRule rule : rules.getMappingRules()) {
+				
 				if (rule instanceof RelationshipMappingRule) {
 					RelationshipMappingRule r = (RelationshipMappingRule) rule;
 					if (r.getRelationshipConceptual() == rel && r.getAttributesConceptual().size() > 0) {
@@ -198,9 +199,7 @@ public class Util {
 								res.add(r.getAttributesConceptual().get(i));
 						}
 					}
-				}
-
-			}
+				}			}
 		return new ArrayList<Attribute>(res);
 	}
 

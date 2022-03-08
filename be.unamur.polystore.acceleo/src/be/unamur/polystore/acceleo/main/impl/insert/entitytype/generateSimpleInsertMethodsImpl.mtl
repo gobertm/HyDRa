@@ -274,7 +274,7 @@ values.add(value_[getPhysicalName(field)/]);
 	return true;
 [else]
 [if (struct.oclIsTypeOf(pml::Collection))]
-[comment]//Docdb ref support. Code written by copy pasting adapting above. Late writing. [/comment]
+[comment]//Docdb ref support.  [/comment]
 // In insertRefStruct in MongoDB
 Bson filter = new Document();
 Bson updateOp;

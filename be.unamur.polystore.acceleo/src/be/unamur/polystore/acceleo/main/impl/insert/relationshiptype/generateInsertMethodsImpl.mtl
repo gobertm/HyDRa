@@ -27,46 +27,23 @@
 
 [template public insertRInJoinStruct(rel: RelationshipType, struct : AbstractPhysicalStructure, db : Database)]{
  	// Rel '[rel.name/]' Insert in join structure '[struct.name/]'
+	
+[for (rolerel : Role | rel.roles)]
+	[let entityType : EntityType = rolerel.entity]
+	[entityType.name.toUpperFirst()/] [rolerel.name.toLowerFirst()/]_[entityType.name.toLowerFirst()/] = [rel.name.toLowerFirst()/].get[rolerel.name.toUpperFirst()/]();
+[/let]
+[/for]
+[if (struct.oclIsTypeOf(Table))]
+[comment]Normal fields [/comment]
 	List<String> columns = new ArrayList<>();
 	List<Object> values = new ArrayList<>();
 	List<List<Object>> rows = new ArrayList<>();
-[for (rolerel : Role | rel.roles)]
-	[let entityType : EntityType = rolerel.entity]
-	[entityType.name.toUpperFirst()/] [entityType.name.toLowerFirst()/] = [rel.name.toLowerFirst()/].get[rolerel.name.toUpperFirst()/]();
-[/let]
-[/for]
-
-	[setAttributesInJoinStructure(struct, rel, rel.name)/]
-
-[for (rolerel : Role | rel.roles)]
-	[let entityType : EntityType = rolerel.entity]
-	[setAttributesInJoinStructure(struct, entityType, entityType.name)/]
-	[/let]
-[/for]
-[comment]	Reference fields [/comment]
-	[for (ref : Reference | getRefOfPhysicalStructure(struct))]
-		[let role : Role = getMappedRoleOfReference(ref)]
-	// Role in join structure 
-	columns.add("[ref.sourceField->any(true).oclAsType(PhysicalField).getPhysicalName()/]");
-	Object [role.entity.name.toLowerFirst()/]Id = [role.entity.name.toLowerFirst()/].get[getMappedAttributeOfFieldInStructure(ref.targetField->any(true).oclAsType(PhysicalField), ref.targetField->any(true).oclAsType(PhysicalField).getAbstractPhysicalStructureNotEmbeddedObject()).name.toUpperFirst()/]();
-	values.add([role.entity.name.toLowerFirst()/]Id);
-	[/let]
-	[/for]
-	rows.add(values);
-	DBConnectionMgr.insertInTable(columns, rows, "[struct.name/]", "[db.name/]"); [comment]In join structure so no existing line should exist. We insert[/comment]					
-	return true;
-}[/template]
-
-[template private setAttributesInJoinStructure(struct : AbstractPhysicalStructure, entOrRel: OclAny, entOrRelName: String)]
-	[comment] Works only for relational/cassandra join table for the moment [/comment]
-	[if (struct.oclIsTypeOf(Table) or struct.oclIsTypeOf(TableColumnDB))]
-// attributes of [entOrRelName/]
-[for (field : PhysicalField | struct.eContents(pml::PhysicalField))]
+[for (field : PhysicalField | struct.oclAsType(Table).columns)]
 	[if (field.oclIsTypeOf(ShortField))]
-		[let attr : Attribute = getMappedAttributes(field, entOrRel, entOrRel.getMappingRules())->any(true)]
+		[let attr : Attribute = getMappedAttributes(field, rel, rel.getMappingRules())->any(true)]
 			[if (attr.oclIsUndefined()=false)]
-columns.add("[getPhysicalName(field)/]");
-values.add([entOrRelName.toLowerFirst()/].get[attr.name.toUpperFirst()/]());
+	columns.add("[getPhysicalName(field)/]");
+	values.add([rel.name.toLowerFirst()/].get[attr.name.toUpperFirst()/]());
 			[/if]
 		[/let] 
 	[/if]
@@ -74,35 +51,114 @@ values.add([entOrRelName.toLowerFirst()/].get[attr.name.toUpperFirst()/]());
 		[comment LongField with only one component and is BracketsField /]
 		[if (field.oclAsType(LongField).pattern->size()=1 and field.oclAsType(LongField).pattern->any(true).oclIsTypeOf(BracketsField))]
 			[let brackets : BracketsField = field.oclAsType(LongField).pattern->any(true).oclAsType(BracketsField)]
-				[let attr : Attribute = getMappedAttributes(field, entOrRel, entOrRel.getMappingRules())->any(true)]
+				[let attr : Attribute = getMappedAttributes(field, rel, rel.getMappingRules())->any(true)]
 				[if (attr.oclIsUndefined()=false)]
-columns.add("[getPhysicalName(field)/]");
-values.add([entOrRelName.toLowerFirst()/].get[attr.name.toUpperFirst()/]());
+	columns.add("[getPhysicalName(field)/]");
+	values.add([rel.name.toLowerFirst()/].get[attr.name.toUpperFirst()/]());
 				[/if]
 				[/let] 
 			[/let]
 		[else]
-			[if (field.oclAsType(LongField).pattern->filter(BracketsField)->exists(b |getMappedAttributes(b, entOrRel, entOrRel.getMappingRules())->size()=0)=false)]
+			[if (field.oclAsType(LongField).pattern->filter(BracketsField)->exists(b |getMappedAttributes(b, rel, rel.getMappingRules())->size()=0)=false)]
 				[comment All BracketsField are mapped to the corresponding entity or composed of only one Terminal expression/]
 				[comment LongField is composed of component, therefore can only be StringType /]
-String value_[getPhysicalName(field)/] = "";
+	String value_[getPhysicalName(field)/] = "";
 				[for (component : TerminalExpression | field.oclAsType(LongField).pattern)]
 					[if (component.oclIsTypeOf(BracketsField))]
-						[let attr : Attribute = getMappedAttributes(component.oclAsType(BracketsField), entOrRel, entOrRel.getMappingRules())->any(true)]
-value_[getPhysicalName(field)/] += [entOrRelName.toLowerFirst()/].get[attr.name.toUpperFirst()/]();
+						[let attr : Attribute = getMappedAttributes(component.oclAsType(BracketsField), rel, rel.getMappingRules())->any(true)]
+	value_[getPhysicalName(field)/] += [rel.name.toLowerFirst()/].get[attr.name.toUpperFirst()/]();
 						[/let]
 					[else]
-value_[getPhysicalName(field)/] += "[component.literal/]";
+	value_[getPhysicalName(field)/] += "[component.literal/]";
 					[/if]
 				[/for]
-columns.add("[getPhysicalName(field)/]");
-values.add(value_[getPhysicalName(field)/]);
+	columns.add("[getPhysicalName(field)/]");
+	values.add(value_[getPhysicalName(field)/]);
 			[/if]
 		[/if]
 	[/if]
 [/for]
+[comment]	Reference fields [/comment]
+	[for (ref : Reference | getRefOfPhysicalStructure(struct))]
+		[let role : Role = getMappedRoleOfReference(ref)]
+	// Role in join structure 
+	columns.add("[ref.sourceField->any(true).oclAsType(PhysicalField).getPhysicalName()/]");
+	Object [role.entity.name.toLowerFirst()/]Id = [role.name.toLowerFirst()/]_[role.entity.name.toLowerFirst()/].get[getMappedAttributeOfFieldInStructure(ref.targetField->any(true).oclAsType(PhysicalField), ref.targetField->any(true).oclAsType(PhysicalField).getAbstractPhysicalStructureNotEmbeddedObject()).name.toUpperFirst()/]();
+	values.add([role.entity.name.toLowerFirst()/]Id);
+	[/let]
+	[/for]
+	rows.add(values);
+	DBConnectionMgr.insertInTable(columns, rows, "[struct.name/]", "[db.name/]"); [comment]In join structure so no existing line should exist. We insert[/comment]					
+	return true;
 [/if]
-[/template]
+[if (struct.oclIsTypeOf(pml::Collection))]
+[comment]//Docdb ref support.  [/comment]
+// In insertRefStruct in MongoDB
+Bson filter = new Document();
+Bson updateOp;
+List<Document> docsList = new ArrayList();
+Document doc = new Document();
+String roleEntityField;
+java.util.Map<String, java.util.Map<String, String>> longFieldValues = new java.util.HashMap<String, java.util.Map<String, String>>();
+
+	[comment]Normal fields [/comment]
+	[for (attr : Attribute | rel.attributes)]
+		[let field : PhysicalField = getMappedPhysicalField(attr, struct, db, db.getMappingRules())]
+		[if (field <> null)]
+			[if (field.ancestors(LongField) -> size() = 0)]
+			[comment]Short fields [/comment]
+doc.append("[getPhysicalName(field)/]", [rel.name.toLowerFirst()/].get[attr.name.toUpperFirst()/]());
+			[else]
+			[comment]Long fields [/comment]
+java.util.Map<String, String> longFieldValue = longFieldValues.get("[getPhysicalName(field.ancestors(LongField) -> first().oclAsType(LongField))/]");
+if(longFieldValue == null) {
+	longFieldValue = new java.util.HashMap<String, String>();
+	longFieldValues.put("[getPhysicalName(field.ancestors(LongField) -> first().oclAsType(LongField))/]", longFieldValue);
+}
+longFieldValue.put("[field.oclAsType(BracketsField).name/]", (value == null ? null : value.toString()));
+			[/if]
+		[/if]
+		[/let]
+	[/for]
+for(java.util.Map.Entry<String, java.util.Map<String, String>> entry : longFieldValues.entrySet()) {
+	String longField = entry.getKey();
+	java.util.Map<String, String> values = entry.getValue();
+	[for (lf : LongField | struct.getDescendentsLongField())]
+	if(longField.equals("[getPhysicalName(lf)/]")) {
+		String value;
+		String v;
+		[for (expr : TerminalExpression | lf.pattern)]
+			[if (expr.oclIsTypeOf(pml::BracketsField))]
+		v = values.get("[expr.oclAsType(BracketsField).name/]");
+			[else]
+		v = "[expr.literal/]";
+			[/if]
+			[if (i = 1)]
+		value = v;
+			[else]
+		value += v;
+			[/if]
+		[/for]
+
+		String fieldName = "[getPhysicalName(lf)/]";
+		doc.append(fieldName, value);
+	}
+	[/for]
+}	
+
+[comment]	Reference fields [/comment]
+		[for (ref : Reference | getRefOfPhysicalStructure(struct))]
+			[let role : Role = getMappedRoleOfReference(ref)]
+// Ref '[ref.name/]' mapped to role '[role.name/]'
+doc.append("[ref.sourceField->any(true).oclAsType(PhysicalField).getPhysicalName()/]",[role.name.toLowerFirst()/]_[role.entity.name.toLowerFirst()/].get[getMappedAttributeOfFieldInStructure(ref.targetField->any(true).oclAsType(PhysicalField), ref.targetField->any(true).oclAsType(PhysicalField).getAbstractPhysicalStructureNotEmbeddedObject()).name.toUpperFirst()/]());
+docsList.add(doc);
+			[/let]
+		[/for]
+	DBConnectionMgr.insertMany(docsList, "[struct.name/]", "[db.name/]");
+	return true;
+[/if]
+
+}[/template]
 
 [template public insertRInEmbeddedStruct(rel: RelationshipType, struct : AbstractPhysicalStructure, db : Database)]{
  	// Rel '[rel.name/]' Insert in embedded structure '[struct.name/]'

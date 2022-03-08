@@ -31,7 +31,7 @@ import be.unamur.polystore.acceleo.main.Generate;
 public class TestExecutor {
 	private static boolean logMvnTest = false;
 
-	private static final String unitTestDirName = "UnitTests";
+	private static final String unitTestDirName = "be.unamur.polystore.unittests";
 	private static final String dockerDirName = "docker";
 	private static final File unitTestDir = new File(
 			Paths.get(new File(System.getProperty("user.dir")).getParentFile().getAbsolutePath())
