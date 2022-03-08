@@ -1,0 +1,44 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	<groupId>be.unamur.polystore</groupId>
+	<artifactId>unittests</artifactId>
+	<version>0.0.1-SNAPSHOT</version>
+	<packaging>pom</packaging>
+	<name>HyDRa unit tests</name>
+	<description>Project gathering several HyDRa framework use tests</description>
+	<modules>
+		<module>insertR</module>
+		<module>insertR2</module>
+		<module>insertR3</module>
+		<module>insertR4</module>
+		<module>CS1PSaDoc</module>
+		<module>CS1PSaKey</module>
+		<module>CS1PSaRel</module>
+		<module>CS1PSbDoc</module>
+		<module>CS1PSbKey</module>
+		<module>CS1PSbRel</module>
+		<module>CS1PSbRelDoc</module>
+		<module>CS1PSbRelKey</module>
+		<module>CS1PSbKeyDoc</module>
+		<module>CS2PSaDoc</module>
+		<module>CS2PSaRel</module>
+		<module>CS2PSaKey</module>
+		<module>CS2PSbDocKey</module>
+		<module>CS2PSbDocRel</module>
+		<module>CS2PSbKeyDoc</module>
+		<module>CS2PSbKeyRel</module>
+		<module>CS2PSbRelDoc</module>
+		<module>CS2PSbRelKey</module>
+		<module>CS2PScDocKey</module>
+		<module>CS2PScDocRel</module>
+		<module>CS2PScKeyDoc</module>
+		<module>CS2PScKeyRel</module>
+		<module>CS2PSdDoc</module>
+		<module>CS3PSaDoc</module>
+		<module>CS3PSaRel</module>
+		<module>CS3PSaKey</module>
+		<module>CS3PSbDocKey</module>
+	</modules>
+</project>

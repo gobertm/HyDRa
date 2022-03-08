@@ -4,6 +4,7 @@
 [import be::unamur::polystore::acceleo::main::impl::select::relationshiptype::generateSelectMethodsImpl]
 [import be::unamur::polystore::acceleo::main::mappingrules::util /]
 [import be::unamur::polystore::acceleo::main::impl::select::entitytype::generateSimpleSelectFromGivenRelationalTable/]
+[import be::unamur::polystore::acceleo::main::impl::select::entitytype::generateSimpleSelectFromGivenColumnTable/]
 [import be::unamur::polystore::acceleo::main::impl::select::entitytype::generateSimpleSelectFromGivenDocumentCollection/]
 [import be::unamur::polystore::acceleo::main::impl::select::entitytype::generateSelectKeyValue/]
 
@@ -157,6 +158,8 @@ return null;
 [let db : Database = dbs->any(true)]
 [if (isRelational(db.dbType))]
 [generateSimpleSelectFromGivenRelationalTable(roleTarget.entity, ref.targetField->any(true).getAbstractPhysicalStructureNotEmbeddedObject(), db, Sequence{Sequence{ref, ref.targetField}})/][/if]
+[if (db.dbType = pml::DatabaseType::CASSANDRA)]
+[generateSimpleSelectFromGivenColumnTable(roleTarget.entity, ref.targetField->any(true).getAbstractPhysicalStructureNotEmbeddedObject(), db, Sequence{Sequence{ref, ref.targetField}})/][/if]
 [if (db.dbType = pml::DatabaseType::MONGODB)] 
 [generateSimpleSelectFromGivenDocumentCollection(roleTarget.entity, ref.targetField->any(true).getAbstractPhysicalStructureNotEmbeddedObject(), db, Sequence{Sequence{ref, ref.targetField}}) /]
 [/if]
@@ -202,6 +205,9 @@ return null;
 [comment TODO change here if needed to handle multi composed refrences/]
 [generateSimpleSelectFromGivenRelationalTable(roleSource.entity, ref.targetField->first().getAbstractPhysicalStructureNotEmbeddedObject(), db, Sequence{Sequence{ref, ref.targetField}})/]
 [/if]
+[if (db.dbType = pml::DatabaseType::CASSANDRA)]
+[generateSimpleSelectFromGivenColumnTable(roleSource.entity, ref.targetField->first().getAbstractPhysicalStructureNotEmbeddedObject(), db, Sequence{Sequence{ref, ref.targetField}})/]
+[/if]
 [if (db.dbType = pml::DatabaseType::MONGODB)] 
 [generateSimpleSelectFromGivenDocumentCollection(roleSource.entity, ref.targetField->any(true).getAbstractPhysicalStructureNotEmbeddedObject(), db, Sequence{Sequence{ref, ref.targetField}}) /]
 [/if]
@@ -233,6 +239,9 @@ return null;
 [comment TODO change here if needed to handle multi composed refrences/]
 [generateSimpleSelectFromGivenRelationalTable(roleSource.ancestors(RelationshipType)->any(true), ref.sourceField->first().getAbstractPhysicalStructureNotEmbeddedObject(), db, Sequence{Sequence{ref, ref.sourceField}, Sequence{ref2, ref2.sourceField}})/]
 [/if]
+[if (db.dbType = pml::DatabaseType::CASSANDRA)]
+[generateSimpleSelectFromGivenColumnTable(roleSource.ancestors(RelationshipType)->any(true), ref.sourceField->first().getAbstractPhysicalStructureNotEmbeddedObject(), db, Sequence{Sequence{ref, ref.sourceField}, Sequence{ref2, ref2.sourceField}})/]
+[/if]
 [if (db.dbType = pml::DatabaseType::MONGODB)]
 [generateSimpleSelectFromGivenDocumentCollection(roleSource.ancestors(RelationshipType)->any(true), ref.sourceField->any(true).getAbstractPhysicalStructureNotEmbeddedObject(), db, Sequence{Sequence{ref, ref.sourceField}, Sequence{ref2, ref2.sourceField}}) /]
 [/if]
@@ -251,6 +260,7 @@ return null;
 [let rel : RelationshipType = roleSource.ancestors(RelationshipType)->any(true)]
 [for (db : Database | dbs)]
 [if (override = true and (isRelational(db.dbType)))][generateGetSQLWhereClauseMethod(rel, struct, db)/][/if]
+[if (override = true and db.dbType = pml::DatabaseType::CASSANDRA)][generateGetCQLWhereClauseMethod(rel, struct, db)/][/if]
 [if (override = true and db.dbType = pml::DatabaseType::MONGODB) ][generateBSONMatchQueryMethod(rel, struct, db) /][/if]
 [if (override = true and db.dbType = pml::DatabaseType::REDIS) ]//TODO redis[/if]
 [/for]
@@ -823,18 +833,31 @@ private static Dataset<[rel.name.toUpperFirst()/]> fullOuterJoins[rel.name.toUpp
 					}
 				}
 
-				[role1.entity.name.toUpperFirst()/] [role1.name.toLowerFirst()/] = new [role1.entity.name.toUpperFirst()/]();
-				[for (attr : Attribute | role1.entity.attributes)]
-				[role1.name.toLowerFirst()/].set[attr.name.toUpperFirst()/](Util.get[generateJavaTypeMethodNameCompliant(attr.type) /]Value(r.getAs("[role1.name.toLowerFirst()/]_0.[attr.name.toLowerFirst()/]")));
+				[role1.entity.name.toUpperFirst()/] [role1.name.toLowerFirst()/]_res = new [role1.entity.name.toUpperFirst()/]();
+				[role2.entity.name.toUpperFirst()/] [role2.name.toLowerFirst()/]_res = new [role2.entity.name.toUpperFirst()/]();
+				
+				[for (ri : Role | Sequence{role1, role2})]
+				[for (attr : Attribute | ri.entity.attributes)]
+				// attribute '[ri.entity.name.toUpperFirst() /].[attr.name.toLowerFirst() /]'
+				[generateJavaType(attr.type) /] firstNotNull_[ri.name/]_[attr.name /] = Util.get[generateJavaTypeMethodNameCompliant(attr.type) /]Value(r.getAs("[ri.name.toLowerFirst()/]_0.[attr.name.toLowerFirst()/]"));
+				[if (ri.entity.identifier.attributes->includes(attr) = false)]
+				for (int i = 1; i < datasetsPOJO.size(); i++) {
+					[generateJavaType(attr.type) /] [ri.name/]_[attr.name.toLowerFirst() /]2 = Util.get[generateJavaTypeMethodNameCompliant(attr.type) /]Value(r.getAs("[ri.name.toLowerFirst()/]_" + i + ".[attr.name.toLowerFirst()/]"));
+					if (firstNotNull_[ri.name/]_[attr.name /] != null && [ri.name/]_[attr.name.toLowerFirst() /]2 != null && !firstNotNull_[ri.name/]_[attr.name /].equals([ri.name/]_[attr.name.toLowerFirst() /]2)) {
+						[rel.name.toLowerFirst() /]_res.addLogEvent("Data consistency problem for ['['/][ri.entity.name.toUpperFirst() /] - id :"[if (ri.entity.identifier.oclIsUndefined() = false)]+[for (attr : Attribute | ri.entity.identifier.attributes) separator('+')][ri.name.toLowerFirst() /]_res.get[attr.name.toUpperFirst()/]()[/for][/if]+"[']'/]: different values found for attribute '[ri.entity.name.toUpperFirst() /].[attr.name.toLowerFirst() /]': " + firstNotNull_[ri.name/]_[attr.name /] + " and " + [ri.name/]_[attr.name.toLowerFirst() /]2 + "." );
+						logger.warn("Data consistency problem for ['['/][ri.entity.name.toUpperFirst() /] - id :"[if (ri.entity.identifier.oclIsUndefined() = false)]+[for (attr : Attribute | ri.entity.identifier.attributes) separator('+')][ri.name.toLowerFirst() /]_res.get[attr.name.toUpperFirst()/]()[/for][/if]+"[']'/]: different values found for attribute '[ri.entity.name.toUpperFirst() /].[attr.name.toLowerFirst() /]': " + firstNotNull_[ri.name/]_[attr.name /] + " and " + [ri.name/]_[attr.name.toLowerFirst() /]2 + "." );
+					}
+					if (firstNotNull_[ri.name/]_[attr.name /] == null && [ri.name/]_[attr.name.toLowerFirst() /]2 != null) {
+						firstNotNull_[ri.name/]_[attr.name /] = [ri.name/]_[attr.name.toLowerFirst() /]2;
+					}
+				}
+				[/if]
+				[ri.name.toLowerFirst() /]_res.set[attr.name.toUpperFirst() /](firstNotNull_[ri.name/]_[attr.name /]);
+				[/for]
 				[/for]
 
-				[role2.entity.name.toUpperFirst()/] [role2.name.toLowerFirst()/] = new [role2.entity.name.toUpperFirst()/]();
-				[for (attr : Attribute | role2.entity.attributes)]
-				[role2.name.toLowerFirst()/].set[attr.name.toUpperFirst()/](Util.get[generateJavaTypeMethodNameCompliant(attr.type) /]Value(r.getAs("[role2.name.toLowerFirst()/]_0.[attr.name.toLowerFirst()/]")));
-				[/for]
-
-				[rel.name.toLowerFirst() /]_res.set[role1.name.toUpperFirst()/]([role1.name.toLowerFirst()/]);
-				[rel.name.toLowerFirst() /]_res.set[role2.name.toUpperFirst()/]([role2.name.toLowerFirst()/]);
+				[rel.name.toLowerFirst() /]_res.set[role1.name.toUpperFirst()/]([role1.name.toLowerFirst()/]_res);
+				[rel.name.toLowerFirst() /]_res.set[role2.name.toUpperFirst()/]([role2.name.toLowerFirst()/]_res);
 				return [rel.name.toLowerFirst() /]_res;
 	}
 	, Encoders.bean([rel.name.toUpperFirst()/].class));

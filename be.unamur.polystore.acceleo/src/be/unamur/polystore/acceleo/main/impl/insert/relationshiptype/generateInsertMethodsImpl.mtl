@@ -27,16 +27,17 @@
 
 [template public insertRInJoinStruct(rel: RelationshipType, struct : AbstractPhysicalStructure, db : Database)]{
  	// Rel '[rel.name/]' Insert in join structure '[struct.name/]'
-	List<String> columns = new ArrayList<>();
-	List<Object> values = new ArrayList<>();
-	List<List<Object>> rows = new ArrayList<>();
+	
 [for (rolerel : Role | rel.roles)]
 	[let entityType : EntityType = rolerel.entity]
-	[entityType.name.toUpperFirst()/] [entityType.name.toLowerFirst()/] = [rel.name.toLowerFirst()/].get[rolerel.name.toUpperFirst()/]();
+	[entityType.name.toUpperFirst()/] [rolerel.name.toLowerFirst()/]_[entityType.name.toLowerFirst()/] = [rel.name.toLowerFirst()/].get[rolerel.name.toUpperFirst()/]();
 [/let]
 [/for]
 [if (struct.oclIsTypeOf(Table))]
 [comment]Normal fields [/comment]
+	List<String> columns = new ArrayList<>();
+	List<Object> values = new ArrayList<>();
+	List<List<Object>> rows = new ArrayList<>();
 [for (field : PhysicalField | struct.oclAsType(Table).columns)]
 	[if (field.oclIsTypeOf(ShortField))]
 		[let attr : Attribute = getMappedAttributes(field, rel, rel.getMappingRules())->any(true)]
@@ -82,7 +83,7 @@
 		[let role : Role = getMappedRoleOfReference(ref)]
 	// Role in join structure 
 	columns.add("[ref.sourceField->any(true).oclAsType(PhysicalField).getPhysicalName()/]");
-	Object [role.entity.name.toLowerFirst()/]Id = [role.entity.name.toLowerFirst()/].get[getMappedAttributeOfFieldInStructure(ref.targetField->any(true).oclAsType(PhysicalField), ref.targetField->any(true).oclAsType(PhysicalField).getAbstractPhysicalStructureNotEmbeddedObject()).name.toUpperFirst()/]();
+	Object [role.entity.name.toLowerFirst()/]Id = [role.name.toLowerFirst()/]_[role.entity.name.toLowerFirst()/].get[getMappedAttributeOfFieldInStructure(ref.targetField->any(true).oclAsType(PhysicalField), ref.targetField->any(true).oclAsType(PhysicalField).getAbstractPhysicalStructureNotEmbeddedObject()).name.toUpperFirst()/]();
 	values.add([role.entity.name.toLowerFirst()/]Id);
 	[/let]
 	[/for]
@@ -148,11 +149,9 @@ for(java.util.Map.Entry<String, java.util.Map<String, String>> entry : longField
 [comment]	Reference fields [/comment]
 		[for (ref : Reference | getRefOfPhysicalStructure(struct))]
 			[let role : Role = getMappedRoleOfReference(ref)]
-			[if (role.isMandatoryRole())]
 // Ref '[ref.name/]' mapped to role '[role.name/]'
-doc.append("[ref.sourceField->any(true).oclAsType(PhysicalField).getPhysicalName()/]",[role.getOppositeRoleInBinaryRel().name.toLowerFirst()/][role.getRelationShipType().name.toUpperFirst()/].get[getMappedAttributeOfFieldInStructure(ref.targetField->any(true).oclAsType(PhysicalField), ref.targetField->any(true).oclAsType(PhysicalField).getAbstractPhysicalStructureNotEmbeddedObject()).name.toUpperFirst()/]());
+doc.append("[ref.sourceField->any(true).oclAsType(PhysicalField).getPhysicalName()/]",[role.name.toLowerFirst()/]_[role.entity.name.toLowerFirst()/].get[getMappedAttributeOfFieldInStructure(ref.targetField->any(true).oclAsType(PhysicalField), ref.targetField->any(true).oclAsType(PhysicalField).getAbstractPhysicalStructureNotEmbeddedObject()).name.toUpperFirst()/]());
 docsList.add(doc);
-			[/if]
 			[/let]
 		[/for]
 	DBConnectionMgr.insertMany(docsList, "[struct.name/]", "[db.name/]");

@@ -39,96 +39,102 @@ import be.unamur.polystore.pml.TerminalExpression;
 /**
  * This class contains custom scoping description.
  * 
- * See https://www.eclipse.org/Xtext/documentation/303_runtime_concepts.html#scoping
+ * See
+ * https://www.eclipse.org/Xtext/documentation/303_runtime_concepts.html#scoping
  * on how and when to use it.
  */
 public class PmlScopeProvider extends AbstractPmlScopeProvider {
 
 	@Override
 	public IScope getScope(EObject context, EReference reference) {
-		if (context instanceof EntityMappingRule && reference == PmlPackage.Literals.ENTITY_MAPPING_RULE__ATTRIBUTES_CONCEPTUAL) {
+		if (context instanceof EntityMappingRule
+				&& reference == PmlPackage.Literals.ENTITY_MAPPING_RULE__ATTRIBUTES_CONCEPTUAL) {
 			EntityMappingRule rule = EcoreUtil2.getContainerOfType(context, EntityMappingRule.class);
 			return Scopes.scopeFor(rule.getEntityConceptual().getAttributes());
 		}
-		if (context instanceof RelationshipMappingRule && reference == PmlPackage.Literals.RELATIONSHIP_MAPPING_RULE__ATTRIBUTES_CONCEPTUAL) {
+		if (context instanceof RelationshipMappingRule
+				&& reference == PmlPackage.Literals.RELATIONSHIP_MAPPING_RULE__ATTRIBUTES_CONCEPTUAL) {
 			RelationshipMappingRule rule = EcoreUtil2.getContainerOfType(context, RelationshipMappingRule.class);
 			return Scopes.scopeFor(rule.getRelationshipConceptual().getAttributes());
 		}
-		if (context instanceof EntityMappingRule && reference == PmlPackage.Literals.ENTITY_MAPPING_RULE__CONDITION_ATTRIBUTE) {
+		if (context instanceof EntityMappingRule
+				&& reference == PmlPackage.Literals.ENTITY_MAPPING_RULE__CONDITION_ATTRIBUTE) {
 			EntityMappingRule rule = EcoreUtil2.getContainerOfType(context, EntityMappingRule.class);
 			return Scopes.scopeFor(rule.getEntityConceptual().getAttributes());
 		}
-		if((context instanceof RoleToEmbbededObjectMappingRule || context instanceof EntityMappingRule || context instanceof RelationshipMappingRule) 
-				&& 
-				((reference == PmlPackage.Literals.ENTITY_MAPPING_RULE__PHYSICAL_FIELDS) || (reference==PmlPackage.Literals.RELATIONSHIP_MAPPING_RULE__PHYSICAL_FIELDS))) {
-			AbstractPhysicalStructure struct=null;
-			if(context instanceof RoleToEmbbededObjectMappingRule) {
-				RoleToEmbbededObjectMappingRule rule = EcoreUtil2.getContainerOfType(context, RoleToEmbbededObjectMappingRule.class);
+		if ((context instanceof RoleToEmbbededObjectMappingRule || context instanceof EntityMappingRule
+				|| context instanceof RelationshipMappingRule)
+				&& ((reference == PmlPackage.Literals.ENTITY_MAPPING_RULE__PHYSICAL_FIELDS)
+						|| (reference == PmlPackage.Literals.RELATIONSHIP_MAPPING_RULE__PHYSICAL_FIELDS))) {
+			AbstractPhysicalStructure struct = null;
+			if (context instanceof RoleToEmbbededObjectMappingRule) {
+				RoleToEmbbededObjectMappingRule rule = EcoreUtil2.getContainerOfType(context,
+						RoleToEmbbededObjectMappingRule.class);
 				struct = rule.getPhysicalStructure();
 			}
-			if(context instanceof EntityMappingRule) {
+			if (context instanceof EntityMappingRule) {
 				EntityMappingRule rule = EcoreUtil2.getContainerOfType(context, EntityMappingRule.class);
 				struct = rule.getPhysicalStructure();
 			}
-			if(context instanceof RelationshipMappingRule) {
+			if (context instanceof RelationshipMappingRule) {
 				RelationshipMappingRule rule = EcoreUtil2.getContainerOfType(context, RelationshipMappingRule.class);
 				struct = rule.getPhysicalStructure();
 			}
 			EList<PhysicalField> fields = new BasicEList<PhysicalField>();
-			if(struct instanceof Table) 
-				fields=((Table) struct).getColumns();
-			if(struct instanceof Collection) 
-				fields=((Collection) struct).getFields();
-			if(struct instanceof EmbeddedObject)
-				fields=((EmbeddedObject) struct).getFields();
-			if(struct instanceof Node)
-				fields= ((Node) struct).getFields();
-			if(struct instanceof Edge)
-				fields= ((Edge)struct).getFields();
-			if(struct instanceof TableColumnDB) {
-				EList<ColumnFamily> columnFamilies = ((TableColumnDB) struct).getColumnfamilies();
-				for(ColumnFamily cf : columnFamilies)
-					fields.addAll(cf.getColumns());
-			}
-			if(struct instanceof KeyValuePair) {
-				KeyValuePair kvpair = (KeyValuePair)struct;
+			if (struct instanceof Table)
+				fields = ((Table) struct).getColumns();
+			if (struct instanceof Collection)
+				fields = ((Collection) struct).getFields();
+			if (struct instanceof EmbeddedObject)
+				fields = ((EmbeddedObject) struct).getFields();
+			if (struct instanceof Node)
+				fields = ((Node) struct).getFields();
+			if (struct instanceof Edge)
+				fields = ((Edge) struct).getFields();
+			if (struct instanceof TableColumnDB)
+				fields = ((TableColumnDB) struct).getColumns();
+			if (struct instanceof KeyValuePair) {
+				KeyValuePair kvpair = (KeyValuePair) struct;
 				fields.addAll(getPhysicalFieldsFromKey(kvpair.getKey()));
 				PhysicalField field = kvpair.getValue();
-				if(field instanceof KVComplexField) {
+				if (field instanceof KVComplexField) {
 					KVComplexField kvcomplex = (KVComplexField) field;
 					fields.addAll(kvcomplex.getFields());
 				} else {
 					fields.add(kvpair.getValue());
 				}
-					
+
 			}
 			EList<PhysicalField> fieldsInComplex;
-			fieldsInComplex= getFieldsFromLongField(fields);
+			fieldsInComplex = getFieldsFromLongField(fields);
 			IScope scope = Scopes.scopeFor(fields);
-			//fields.addAll(fieldsInComplex);
-			return Scopes.scopeFor(fieldsInComplex,scope);
+			// fields.addAll(fieldsInComplex);
+			return Scopes.scopeFor(fieldsInComplex, scope);
 		}
-		if(context instanceof RoleToReferenceMappingRule && reference == PmlPackage.Literals.ROLE_TO_REFERENCE_MAPPING_RULE__REFERENCE) {
+		if (context instanceof RoleToReferenceMappingRule
+				&& reference == PmlPackage.Literals.ROLE_TO_REFERENCE_MAPPING_RULE__REFERENCE) {
 			return super.getScope(context, reference);
 		}
-		if(context instanceof RoleToKeyBracketsFieldMappingRule && reference == PmlPackage.Literals.ROLE_TO_KEY_BRACKETS_FIELD_MAPPING_RULE__KEY_FIELD) {
-			AbstractPhysicalStructure struct=null;
-			RoleToKeyBracketsFieldMappingRule rule = EcoreUtil2.getContainerOfType(context, RoleToKeyBracketsFieldMappingRule.class);
+		if (context instanceof RoleToKeyBracketsFieldMappingRule
+				&& reference == PmlPackage.Literals.ROLE_TO_KEY_BRACKETS_FIELD_MAPPING_RULE__KEY_FIELD) {
+			AbstractPhysicalStructure struct = null;
+			RoleToKeyBracketsFieldMappingRule rule = EcoreUtil2.getContainerOfType(context,
+					RoleToKeyBracketsFieldMappingRule.class);
 			struct = rule.getPhysicalStructure();
 			EList<PhysicalField> fields = new BasicEList<PhysicalField>();
-			fields.addAll(getPhysicalFieldsFromKey(((KeyValuePair)struct).getKey()));
+			fields.addAll(getPhysicalFieldsFromKey(((KeyValuePair) struct).getKey()));
 			return Scopes.scopeFor(fields);
 		}
 		return super.getScope(context, reference);
 	}
 
-	public EList<PhysicalField> getFieldsFromLongField(EList<PhysicalField> fields){
+	public EList<PhysicalField> getFieldsFromLongField(EList<PhysicalField> fields) {
 		EList<PhysicalField> fieldsInComplex = new BasicEList<PhysicalField>();
-		for(PhysicalField field : fields) {
-			if(field instanceof LongField){
-				for(TerminalExpression terminal : ((LongField)field).getPattern()) {
-					if(terminal instanceof BracketsField)
-						fieldsInComplex.add((BracketsField)terminal);
+		for (PhysicalField field : fields) {
+			if (field instanceof LongField) {
+				for (TerminalExpression terminal : ((LongField) field).getPattern()) {
+					if (terminal instanceof BracketsField)
+						fieldsInComplex.add((BracketsField) terminal);
 				}
 			}
 //			if(field instanceof LongKVField){
@@ -140,12 +146,12 @@ public class PmlScopeProvider extends AbstractPmlScopeProvider {
 		}
 		return fieldsInComplex;
 	}
-	
-	public EList<PhysicalField> getPhysicalFieldsFromKey(Key key){
+
+	public EList<PhysicalField> getPhysicalFieldsFromKey(Key key) {
 		EList<PhysicalField> fields = new BasicEList<PhysicalField>();
-		for(TerminalExpression terminal : key.getPattern()) {
-			if(terminal instanceof BracketsField)
-				fields.add((BracketsField)terminal);
+		for (TerminalExpression terminal : key.getPattern()) {
+			if (terminal instanceof BracketsField)
+				fields.add((BracketsField) terminal);
 		}
 		return fields;
 	}

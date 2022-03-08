@@ -18,6 +18,7 @@ package dao.services;
 import conditions.*;
 import pojo.[rel.name.toUpperFirst()/];
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 [for (role : Role | rel.roles)]
 import tdo.[role.entity.name.toUpperFirst() /]TDO;
 import tdo.[rel.name.toUpperFirst()/]TDO;

@@ -24,6 +24,7 @@ import java.util.HashSet;
 import java.math.BigDecimal;
 import java.sql.Timestamp;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.Set;
 import java.text.SimpleDateFormat;
 import java.text.ParseException;
@@ -44,6 +45,13 @@ public class Util {
 			return null;
 
 		//TODO comportement different en fct des types de donnees(ex: dates et leur format)
+		return o.toString();
+	}
+
+	public static String transformCQLValue(Object o) {
+		if(o == null)
+			return null;
+
 		return o.toString();
 	}
 
@@ -82,6 +90,19 @@ public class Util {
 		//TODO handle the other special data types, e.g., Byte, Date, ...
 		return value;
 		
+	}
+
+	public static String getDelimitedCQLValue(Class cl, String value) {
+		if(value == null)
+			return null;
+		if(cl == null)
+			return value;
+		if(cl == String.class)
+			return "'" + value.replaceAll("'", "\\\\\\\\'") + "'";
+		if(cl == LocalDate.class)
+			return "'" + value + "'";
+		//TODO other data types
+		return value;
 	}
 
 	public static String getDelimitedSQLValue(Class cl, String value) {
@@ -174,7 +195,8 @@ public class Util {
 			return ((Long) o).toString();
 		if(o instanceof String)
 			return (String) o ;
-		throw new IncompatibleAttributesTypeException("Conceptual attribute type in model file incompatible with found datatype in database. String vs "+o.getClass());
+		return o.toString();
+		//throw new IncompatibleAttributesTypeException("Conceptual attribute type in model file incompatible with found datatype in database");
 	}
 
 	public static Boolean getBooleanValue(Object o) {
@@ -195,6 +217,31 @@ public class Util {
 		throw new IncompatibleAttributesTypeException("Conceptual attribute type in model file incompatible with found datatype in database. Blob vs "+o.getClass());
 	}
 
+	public static LocalDateTime getLocalDateTimeValue(Object o){
+		if(o==null)
+			return null;
+		if(o instanceof LocalDateTime)
+			return (LocalDateTime) o;
+		if(o instanceof java.sql.Date)
+			return LocalDateTime.ofInstant(((java.sql.Date) o).toInstant(), ZoneId.systemDefault());
+		if(o instanceof LocalDate)
+			return ((LocalDate) o).atStartOfDay();
+		if(o instanceof Timestamp)
+			return ((Timestamp) o).toLocalDateTime();
+		if(o instanceof Date)
+			return LocalDateTime.ofInstant(((Date) o).toInstant(), ZoneId.systemDefault());
+		if(o instanceof java.time.Instant)
+			return LocalDateTime.ofInstant(((java.time.Instant) o), ZoneId.systemDefault());
+		try {
+			// TODO Fix customizable dateformat
+			java.time.format.DateTimeFormatter formatter = java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+			return LocalDateTime.parse(String.valueOf(o), formatter);
+		} catch (java.time.format.DateTimeParseException e) {
+			e.printStackTrace();
+		}
+		throw new IncompatibleAttributesTypeException("Conceptual attribute type in model file incompatible with found datatype in database");
+	}
+
 	public static LocalDate getLocalDateValue(Object o){
 		if(o==null)
 			return null;
@@ -206,6 +253,8 @@ public class Util {
 			return ((Timestamp) o).toLocalDateTime().toLocalDate();
 		if(o instanceof Date)
 			return ((Date) o).toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
+		if(o instanceof java.time.Instant)
+			return LocalDate.ofInstant(((java.time.Instant) o), ZoneId.systemDefault());
 		try {
 [comment]TODO Fix customizable dateformat[/comment]
 			// TODO Fix customizable dateformat
@@ -387,6 +436,8 @@ public abstract class Condition<E> implements Serializable {
 
 	public abstract boolean evaluate(IPojo obj);
 
+	public abstract boolean hasOrCondition();
+
 	public static Condition createOrCondition(Attributes attribute, Operator operator, Object['['/][']'/] values) {
 		if (values.length==1) {
 			return Condition.simple(attribute, operator, values['['/]0[']'/]);
@@ -426,6 +477,16 @@ public class AndCondition<E> extends Condition<E> {
 
 	public void setRightCondition(Condition<E> rightCondition) {
 		this.rightCondition = rightCondition;
+	}
+
+	@Override
+	public boolean hasOrCondition() {
+		boolean res = false;
+		if(getLeftCondition() != null)
+			res = getLeftCondition().hasOrCondition();
+		if(getRightCondition() != null)
+			res = res || getRightCondition().hasOrCondition();
+		return res;
 	}
 
 	@Override
@@ -479,6 +540,11 @@ public class OrCondition<E> extends Condition<E> {
 
 	public void setRightCondition(Condition<E> rightCondition) {
 		this.rightCondition = rightCondition;
+	}
+
+	@Override
+	public boolean hasOrCondition() {
+		return true;
 	}
 
 	@Override
@@ -544,6 +610,11 @@ public class SimpleCondition<E> extends Condition<E> {
 
 	public void setValue(Object value) {
 		this.value = value;
+	}
+
+	@Override
+	public boolean hasOrCondition() {
+		return false;
 	}
 
 	@Override
@@ -694,6 +765,21 @@ public enum Operator {
 			}
 			
 			return false;
+	}
+
+	public String getCQLOperator() {
+		if(this == EQUALS)
+			return "=";
+		if(this == GT)
+			return ">";
+		if(this == GTE)
+			return ">=";
+		if(this == LT)
+			return "<";
+		if(this == LTE)
+			return "<=";
+		
+		return null;
 	}
 
 	public String getSQLOperator() {

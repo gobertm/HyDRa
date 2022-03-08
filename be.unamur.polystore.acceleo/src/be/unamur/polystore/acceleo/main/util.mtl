@@ -28,7 +28,7 @@
 [if (type.oclIsTypeOf(pml::FloatType))]Double[/if]
 [if (type.oclIsTypeOf(pml::BlobType))]ByteArray[/if]
 [if (type.oclIsTypeOf(pml::DateType))]LocalDate[/if]
-[if (type.oclIsTypeOf(pml::DatetimeType))]LocalDate[/if]
+[if (type.oclIsTypeOf(pml::DatetimeType))]LocalDateTime[/if]
 [/template]
 
 [template public generateSparkDataType(type : DataType) post (replaceAll('\n', '').trim())]
@@ -157,6 +157,10 @@
 	attr.eContainer(pml::RelationshipType)
  /]
 
+[query public getEntityType(attr: Attribute): RelationshipType =
+	attr.eContainer(pml::EntityType)
+ /]
+
 [template public getListOfNullValues(nbOfValues: Integer)][getListOfNullValues(nbOfValues, false)/][/template]
 [template public getListOfNullValues(nbOfValues: Integer, hasPrevious: Boolean)][if (nbOfValues > 0)][if (hasPrevious)], [/if]null[getListOfNullValues(nbOfValues - 1, true)/][/if][/template]
 
@@ -193,12 +197,12 @@ invoke('be.unamur.polystore.acceleo.main.utils.Util', 'getPhysicalFieldAbsoluteP
 
 [query public isRelational(dbType : DatabaseType) : Boolean = dbType = DatabaseType::MARIADB or  dbType = DatabaseType::SQLITE or dbType = pml::DatabaseType::POSTGRESQL or dbType = pml::DatabaseType::MYSQL/]
 
-[query public getPomArtifactId() : String =  
-invoke('be.unamur.polystore.acceleo.main.utils.Util', 'getPomArtifactId()', Sequence{})
+[query public getPomArtifactId(o : OclAny) : String =  
+invoke('be.unamur.polystore.acceleo.main.utils.Util', 'getPomArtifactId(org.eclipse.emf.ecore.EObject)', Sequence{o})
 /]
 
-[query public getPomGroupId() : String =  
-invoke('be.unamur.polystore.acceleo.main.utils.Util', 'getPomGroupId()', Sequence{})
+[query public getPomGroupId(o : OclAny) : String =  
+invoke('be.unamur.polystore.acceleo.main.utils.Util', 'getPomGroupId(org.eclipse.emf.ecore.EObject)', Sequence{o})
 /]
 
 [query public isArrayEmbeddedObject(field : PhysicalField) : Boolean = field.oclIsTypeOf(EmbeddedObject) and (field.oclAsType(EmbeddedObject).cardinality = Cardinality::ONE_MANY or  field.oclAsType(EmbeddedObject).cardinality = Cardinality::ZERO_MANY)/]

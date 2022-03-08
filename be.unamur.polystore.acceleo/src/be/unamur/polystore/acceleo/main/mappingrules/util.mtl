@@ -129,6 +129,10 @@
 	invoke('be.unamur.polystore.acceleo.main.utils.Util', 'getMappedAttributes(be.unamur.polystore.pml.EntityType, be.unamur.polystore.pml.AbstractPhysicalStructure, be.unamur.polystore.pml.Database, be.unamur.polystore.pml.MappingRules)', Sequence{ent, struct, db, rules})
 /]
 
+[query public getMappedAttributesInStructure(rel: RelationshipType, struct : AbstractPhysicalStructure, db : Database, rules: MappingRules) : Collection(Attribute) =  
+	invoke('be.unamur.polystore.acceleo.main.utils.Util', 'getMappedAttributes(be.unamur.polystore.pml.RelationshipType, be.unamur.polystore.pml.AbstractPhysicalStructure, be.unamur.polystore.pml.Database, be.unamur.polystore.pml.MappingRules)', Sequence{rel, struct, db, rules})
+/]
+
 [query public getMappedAttributeOfFieldInStructure(f: PhysicalField, struct : AbstractPhysicalStructure) :Attribute =  
 	invoke('be.unamur.polystore.acceleo.main.utils.MappingRuleService', 'getMappedAttributeOfFieldInStructure(be.unamur.polystore.pml.PhysicalField, be.unamur.polystore.pml.AbstractPhysicalStructure)', Sequence{f, struct})
 /]

@@ -23,6 +23,8 @@
 
 
 
+
+
 [template public generateSimpleSelectFromGivenRelationalTable(pojoName : String, attributes : Collection(Attribute), struct: AbstractPhysicalStructure, db : Database, references : Sequence(Sequence(OclAny)))]
 
 [comment  select * from Client where (...) /]

@@ -80,7 +80,7 @@
 		if(joinCondition == null)
 			[role2.entity.name.toLowerFirst()/]TDO[ref.name/][role2.name/] = [role2.entity.name.toLowerFirst()/]TDO[ref.name/][role2.name/].as("A").join(all).select("A.*").as(Encoders.bean([role2.entity.name.toUpperFirst()/]TDO.class));
 		else
-			[role2.entity.name.toLowerFirst()/]TDO[ref.name/][role2.name/] = [role2.entity.name.toLowerFirst()/]TDO[ref.name/][role2.name/].as("A").join(all, joinCondition).as("A").select("A.*").as(Encoders.bean([role2.entity.name.toUpperFirst()/]TDO.class));
+			[role2.entity.name.toLowerFirst()/]TDO[ref.name/][role2.name/] = [role2.entity.name.toLowerFirst()/]TDO[ref.name/][role2.name/].as("A").join(all, joinCondition).select("A.*").as(Encoders.bean([role2.entity.name.toUpperFirst()/]TDO.class));
 	}
 
 	
@@ -165,9 +165,9 @@
 						[/for]
 					[/if]
 		if(joinCondition == null)
-			[role2.entity.name.toLowerFirst()/]TDO[ref.name/][role2.name/] = [role2.entity.name.toLowerFirst()/]TDO[ref.name/][role2.name/].as("A").join(all).as("A").select("A.*").as(Encoders.bean([role2.entity.name.toUpperFirst()/]TDO.class));
+			[role2.entity.name.toLowerFirst()/]TDO[ref.name/][role2.name/] = [role2.entity.name.toLowerFirst()/]TDO[ref.name/][role2.name/].as("A").join(all).select("A.*").as(Encoders.bean([role2.entity.name.toUpperFirst()/]TDO.class));
 		else
-			[role2.entity.name.toLowerFirst()/]TDO[ref.name/][role2.name/] = [role2.entity.name.toLowerFirst()/]TDO[ref.name/][role2.name/].as("A").join(all, joinCondition).as("A").select("A.*").as(Encoders.bean([role2.entity.name.toUpperFirst()/]TDO.class));
+			[role2.entity.name.toLowerFirst()/]TDO[ref.name/][role2.name/] = [role2.entity.name.toLowerFirst()/]TDO[ref.name/][role2.name/].as("A").join(all, joinCondition).select("A.*").as(Encoders.bean([role2.entity.name.toUpperFirst()/]TDO.class));
 	}
 			[if (ref.sourceField->any(true).oclIsTypeOf(ArrayField) or ref.sourceField.ancestors(EmbeddedObject)->size() > 0 or (ref.sourceField->any(true).ancestors(KVComplexField)->size()>0 and ref.sourceField->any(true).ancestors(KVComplexField)->any(true).type=KVDataType::LIST))]
 	// Multi valued reference
@@ -464,7 +464,13 @@ if([role2.name/]_refilter.booleanValue()) {
 }
 
 Dataset<Row> res_row_[ref.name/]_[ref2.name/] = res_[role.getRelationShipType().name/]_[ref.name/]_[ref2.name/].join(res_[ref2.name/]_[ref.name/].withColumnRenamed("logEvents", "[role.getRelationShipType().name/]_logEvents"),
-													res_[role.getRelationShipType().name/]_[ref.name/]_[ref2.name/].col("[getJavaAbsolutePath(ref2).toLowerFirst() /]_[ref2.sourceField->first().getPhysicalName()/]").equalTo(res_[ref2.name/]_[ref.name/].col("[getJavaAbsolutePath(ref2).toLowerFirst() /]_[ref2.targetField->first().getPhysicalName()/]")));
+																												[if (ref2.targetField->any(true).oclIsTypeOf(ArrayField)  or ref2.targetField.ancestors(EmbeddedObject)->size() > 0 or (ref2.targetField->any(true).ancestors(KVComplexField)->size() > 0 and ref2.targetField->any(true).ancestors(KVComplexField)->any(true).type=KVDataType::LIST))]
+																												// Multi valued reference
+																												functions.array_contains(res_[ref2.name/]_[ref.name/].col("[getJavaAbsolutePath(ref2).toLowerFirst() /]_[ref2.targetField->first().getPhysicalName()/]"),res_[role.getRelationShipType().name/]_[ref.name/]_[ref2.name/].col("[getJavaAbsolutePath(ref2).toLowerFirst() /]_[ref2.sourceField->first().getPhysicalName()/]")));
+																												[else]
+																												res_[role.getRelationShipType().name/]_[ref.name/]_[ref2.name/].col("[getJavaAbsolutePath(ref2).toLowerFirst() /]_[ref2.sourceField->first().getPhysicalName()/]").equalTo(res_[ref2.name/]_[ref.name/].col("[getJavaAbsolutePath(ref2).toLowerFirst() /]_[ref2.targetField->first().getPhysicalName()/]")));[/if]
+																												
+																												
 Dataset<[entity.name.toUpperFirst()/]> res_[entity.name/]_[ref.name/] = res_row_[ref.name/]_[ref2.name/].select("[role.name.toLowerFirst()/].*").as(Encoders.bean([entity.name.toUpperFirst()/].class));
 [elseif (db2 = joindb and db2.dbType.isRelational())]
 //join between 2 SQL tables and a non-relational structure
