@@ -39,5 +39,6 @@
 		<module>CS3PSaDoc</module>
 		<module>CS3PSaRel</module>
 		<module>CS3PSaKey</module>
+		<module>CS3PSbDocKey</module>
 	</modules>
 </project>
