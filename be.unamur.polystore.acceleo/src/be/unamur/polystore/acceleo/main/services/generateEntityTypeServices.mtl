@@ -1,6 +1,6 @@
 [comment encoding = UTF-8 /]
 [module generateEntityTypeServices('http://www.unamur.be/polystore/Pml')]
-[import be::unamur::polystore::acceleo::main::generateEntityTypeRelatedClasses /]
+[comment][import be::unamur::polystore::acceleo::main::generateEntityTypeRelatedClasses /][/comment]
 [import be::unamur::polystore::acceleo::main::generateRelationshipTypeClass /]
 [import be::unamur::polystore::acceleo::main::services::select::entitytype::generateSimpleSelectMethods /]
 [import be::unamur::polystore::acceleo::main::services::select::entitytype::generateRoleBasedSelectMethods/]

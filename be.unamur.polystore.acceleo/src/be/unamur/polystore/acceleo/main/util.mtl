@@ -1,7 +1,7 @@
 [comment encoding = UTF-8 /]
 [module util('http://www.unamur.be/polystore/Pml')]
 
-[import be::unamur::polystore::acceleo::main::mappingrules::util /]
+[comment][import be::unamur::polystore::acceleo::main::mappingrules::util /][/comment]
 
 [template public generateImportDataset(o: OclAny)][if (isSparkConfiguration())]import org.apache.spark.sql.Dataset;[else]import util.Dataset;[/if][/template]
 [template public generateImportRow(o: OclAny)][if (isSparkConfiguration())]import org.apache.spark.sql.Row;[else]import util.Row;[/if][/template]
@@ -195,7 +195,7 @@ field.eContainer(AbstractPhysicalSchema).name + '_' + field.getAbstractPhysicalS
 invoke('be.unamur.polystore.acceleo.main.utils.Util', 'getPhysicalFieldAbsolutePath(be.unamur.polystore.pml.PhysicalField)', Sequence{field})
 /]
 
-[query public isRelational(dbType : DatabaseType) : Boolean = dbType = DatabaseType::MARIADB or  dbType = DatabaseType::SQLITE or dbType = pml::DatabaseType::POSTGRESQL or dbType = pml::DatabaseType::MYSQL/]
+[query public isRelational(dbType : DatabaseType) : Boolean = dbType = DatabaseType::MARIADB or  dbType = DatabaseType::SQLITE or dbType = DatabaseType::POSTGRESQL or dbType = pml::DatabaseType::MYSQL/]
 
 [query public getPomArtifactId(o : OclAny) : String =  
 invoke('be.unamur.polystore.acceleo.main.utils.Util', 'getPomArtifactId(org.eclipse.emf.ecore.EObject)', Sequence{o})
@@ -207,6 +207,15 @@ invoke('be.unamur.polystore.acceleo.main.utils.Util', 'getPomGroupId(org.eclipse
 
 [query public isArrayEmbeddedObject(field : PhysicalField) : Boolean = field.oclIsTypeOf(EmbeddedObject) and (field.oclAsType(EmbeddedObject).cardinality = Cardinality::ONE_MANY or  field.oclAsType(EmbeddedObject).cardinality = Cardinality::ZERO_MANY)/]
 
+[query public getPhysicalName(field : PhysicalField): String
+= invoke('be.unamur.polystore.acceleo.main.utils.MappingRuleService', 'getPhysicalName(be.unamur.polystore.pml.PhysicalField)', Sequence{field}) /]
 
 
+[query public getConcernedRelationshipTypes(entityType : EntityType, conceptualSchema : ConceptualSchema) : Collection(pml::RelationshipType) = 
+	conceptualSchema.relationships->select(rel: RelationshipType | isConcernedByEntity(rel, entityType))
+ /]
 
+
+[query public isConcernedByEntity(rel : RelationshipType, ent : EntityType) : Boolean = 
+	(rel.roles-> select(role: Role | role.entity = ent)) -> size() > 0
+ /]

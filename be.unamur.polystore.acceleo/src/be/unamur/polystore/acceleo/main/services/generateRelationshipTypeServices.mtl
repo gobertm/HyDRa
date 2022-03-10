@@ -1,6 +1,6 @@
 [comment encoding = UTF-8 /]
 [module generateRelationshipTypeServices('http://www.unamur.be/polystore/Pml')]
-[import be::unamur::polystore::acceleo::main::generateRelationshipTypeClass /]
+[comment][import be::unamur::polystore::acceleo::main::generateRelationshipTypeClass /][/comment]
 [import be::unamur::polystore::acceleo::main::util /]
 [import be::unamur::polystore::acceleo::main::services::select::relationshiptype::generateBinaryWithAttributesSelectMethods /]
 [import be::unamur::polystore::acceleo::main::services::select::relationshiptype::generateSelectMethods /]

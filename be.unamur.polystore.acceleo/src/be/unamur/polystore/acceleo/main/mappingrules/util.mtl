@@ -64,9 +64,6 @@
 [query public getMappedPhysicalField(attr : Attribute, struct: AbstractPhysicalStructure, db: Database, rules: MappingRules) : PhysicalField 
 = invoke('be.unamur.polystore.acceleo.main.utils.MappingRuleService', 'getMappedPhysicalField(be.unamur.polystore.pml.Attribute, be.unamur.polystore.pml.AbstractPhysicalStructure, be.unamur.polystore.pml.Database, be.unamur.polystore.pml.MappingRules)', Sequence{attr, struct, db, rules}) /]
 
-[query public getPhysicalName(field : PhysicalField): String
-= invoke('be.unamur.polystore.acceleo.main.utils.MappingRuleService', 'getPhysicalName(be.unamur.polystore.pml.PhysicalField)', Sequence{field}) /]
-
 [query public getPreparedValue(attr: Attribute, field: PhysicalField, parent : LongField, escapeSQLReservedChar :  Boolean, escapeMongoReservedChar :  Boolean): String
 = invoke('be.unamur.polystore.acceleo.main.utils.MappingRuleService', 'getPreparedValue(be.unamur.polystore.pml.Attribute, be.unamur.polystore.pml.PhysicalField, be.unamur.polystore.pml.LongField, boolean, boolean)', Sequence{attr, field, parent, escapeSQLReservedChar, escapeMongoReservedChar}) /]
 
