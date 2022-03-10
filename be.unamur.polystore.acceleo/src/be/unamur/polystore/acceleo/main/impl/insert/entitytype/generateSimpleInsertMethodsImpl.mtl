@@ -265,10 +265,10 @@ values.add(value_[getPhysicalName(field)/]);
 	// Ref '[ref.name/]' mapped to role '[role.name/]'
 	columns.add("[ref.sourceField->any(true).oclAsType(PhysicalField).getPhysicalName()/]");
 	values.add([role.getOppositeRoleInBinaryRel().name.toLowerFirst()/][role.getRelationShipType().name.toUpperFirst()/].get[getMappedAttributeOfFieldInStructure(ref.targetField->any(true).oclAsType(PhysicalField), ref.targetField->any(true).oclAsType(PhysicalField).getAbstractPhysicalStructureNotEmbeddedObject()).name.toUpperFirst()/]());
-	rows.add(values);
 			[/if]
 			[/let]
 		[/for]
+	rows.add(values);
 	[/if]
 	DBConnectionMgr.insertInTable(columns, rows, "[struct.name/]", "[db.name/]");
 	return true;
