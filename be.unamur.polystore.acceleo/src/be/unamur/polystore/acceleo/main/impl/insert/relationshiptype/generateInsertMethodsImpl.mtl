@@ -157,6 +157,9 @@ docsList.add(doc);
 	DBConnectionMgr.insertMany(docsList, "[struct.name/]", "[db.name/]");
 	return true;
 [/if]
+[if (struct.oclIsTypeOf(KeyValuePair))]
+throw new UnsupportedOperationException("Not Implemented yet");
+[/if]
 
 }[/template]
 
@@ -178,7 +181,7 @@ docsList.add(doc);
 	[let entityType : EntityType = rolerel.entity]
 		[for (field : PhysicalField | struct.oclAsType(pml::Collection).fields)]
 			[if (field.isMappedToGivenRole(rolerel))]
-	[generateDocument(getOppositeRoleInBinaryRel(rolerel).entity,field.oclAsType(EmbeddedObject).fields, getPhysicalName(field),1,0)/]
+	[generateDocument(getOppositeRoleInBinaryRel(rolerel).entity,field.oclAsType(EmbeddedObject).fields, getPhysicalName(field),1,0,true)/]
 				[if (field.eContainer(EmbeddedObject).oclIsUndefined()=false)]
 	[ascendInStruct(field.eContainer(EmbeddedObject), getMappedRoleOfPhysicalField(field),struct, db, 0, entityType)/]
 	fieldName.add("[getPhysicalName(field)/]");
@@ -262,8 +265,11 @@ docsList.add(doc);
 		[/let]
 		[/for]
 		[else]
-	return false;
-		[/if]
+	[if (struct.oclIsTypeOf(KeyValuePair))]
+	throw new UnsupportedOperationException("Not Implemented yet");
+	[/if]
+
+	[/if]
 	[/if]
 }[/template]
 

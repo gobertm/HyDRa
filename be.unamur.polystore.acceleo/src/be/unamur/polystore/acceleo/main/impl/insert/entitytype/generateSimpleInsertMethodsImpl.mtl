@@ -73,7 +73,7 @@
 [/template]
 
 [template public insertInComplexEmbeddedStructure(entityType: EntityType, struct : AbstractPhysicalStructure, db : Database)]
-	[generateDocument(entityType, struct.oclAsType(pml::Collection).fields, struct.oclAsType(pml::Collection).name,1,0)/]
+	[generateDocument(entityType, struct.oclAsType(pml::Collection).fields, struct.oclAsType(pml::Collection).name,1,0,true)/]
 	DBConnectionMgr.insertMany(List.of(doc[struct.name/]_1), "[struct.name/]", "[db.name/]");
 	return true;
 	
@@ -102,7 +102,7 @@
 	List<Bson> arrayFilterCond = new ArrayList();
 	[let field : PhysicalField = getMappedPhysicalFieldOfRoleOfEntityWhereOppositeRoleIsMandatory(struct, entityType, entityType.getMappingRules())]
 	[let role : Role = getMappedRoleOfPhysicalField(field)]
-	[generateDocument(entityType,field.oclAsType(EmbeddedObject).fields, getPhysicalName(field),1,0)/]
+	[generateDocument(entityType,field.oclAsType(EmbeddedObject).fields, getPhysicalName(field),1,0,true)/]
 	[if (field.eContainer(EmbeddedObject).oclIsUndefined()=false)]
 	[ascendInStruct(field.eContainer(EmbeddedObject), getMappedRoleOfPhysicalField(field),struct, db, 0, entityType)/]
 	fieldName.add("[getPhysicalName(field)/]");
@@ -377,6 +377,7 @@ docsList.add(doc);
 	// In Key value database
 				[for (ref : Reference | getRefOfPhysicalStructure(struct))]
 				[let roleref : Role = getMappedRoleOfReference(ref)]
+				[if (roleref.isMandatoryRole())]
 				[let oppositerole : Role = roleref.getOppositeRoleInBinaryRel()]
 					[if (entityType=roleref.entity)]
 						[if (roleref.isCardinalityMaxN())]
@@ -385,34 +386,34 @@ docsList.add(doc);
 	[oppositerole.entity.name.toUpperFirst()/] [oppositerole.entity.name.toLowerFirst()/] = [oppositerole.name/][getRelationShipType(oppositerole).name.toUpperFirst()/];
 						[/if]
 	// Build key
-		String key="";
-		String value="";
+		String key[roleref.name.toUpperFirst()/]="";
+		String value[roleref.name.toUpperFirst()/]="";
 						[for (component : TerminalExpression | struct.oclAsType(KeyValuePair).key.pattern)]
 							[if (component.oclIsTypeOf(BracketsField))]
 							[let attr : Attribute = getMappedAttributeOfFieldInStructure(component.oclAsType(PhysicalField),struct)]
 								[if (attr.ancestors(EntityType)->first()=entityType)]
-		key += [roleref.entity.name.toLowerFirst()/].get[attr.name.toUpperFirst()/]();
+		key[roleref.name.toUpperFirst()/] += [roleref.entity.name.toLowerFirst()/].get[attr.name.toUpperFirst()/]();
 								[else]
-		key += [getOppositeRoleInBinaryRel(roleref).entity.name.toLowerFirst()/].get[attr.name.toUpperFirst()/]();
+		key[roleref.name.toUpperFirst()/] += [getOppositeRoleInBinaryRel(roleref).entity.name.toLowerFirst()/].get[attr.name.toUpperFirst()/]();
 								[/if]
 							[/let]
 							[else]
-		key += "[component.literal/]";
+		key[roleref.name.toUpperFirst()/] += "[component.literal/]";
 							[/if]
 						[/for]
 		// Value part
 						[if (struct.oclAsType(KeyValuePair).value.oclIsTypeOf(pml::KVComplexField) and struct.oclAsType(KeyValuePair).value.oclAsType(pml::KVComplexField).type=pml::KVDataType::HASH)]
 		// Generate for hash value
-		[generateValueForHashStructure(struct,entityType)/]
-		SparkConnectionMgr.writeKeyValueHash(key,hash, "[db.name/]");
+		[generateValueForHashStructure(struct,entityType,roleref.name.toUpperFirst())/]
+		SparkConnectionMgr.writeKeyValueHash(key[roleref.name.toUpperFirst()/],hash[roleref.name.toUpperFirst()/], "[db.name/]");
 						[else]
 		[comment Generate value for simple string value /]
 		// Generate Value for List 
 							[if (ref.sourceField.ancestors(KVComplexField)->first().type=pml::KVDataType::LIST)]
 							[let attr : Attribute = getMappedAttributeOfFieldInStructure(ref.sourceField->any(true).oclAsType(PhysicalField),struct)]
-		value =  [oppositerole.entity.name.toLowerFirst()/].get[attr.name.toUpperFirst()/]();
+		value[roleref.name.toUpperFirst()/] =  [oppositerole.entity.name.toLowerFirst()/].get[attr.name.toUpperFirst()/]();
 							[/let]
-		DBConnectionMgr.writeKeyValueList(key,value,"[db.name/]");
+		DBConnectionMgr.writeKeyValueList(key[roleref.name.toUpperFirst()/],value[roleref.name.toUpperFirst()/],"[db.name/]");
 							[/if]
 						[/if]
 					[if (roleref.isCardinalityMaxN())]
@@ -420,6 +421,7 @@ docsList.add(doc);
 					[/if]
 					[/if]
 				[/let]
+				[/if]
 				[/let]
 				[/for]
 	return false;
@@ -587,7 +589,7 @@ docsList.add(doc);
 	SparkConnectionMgr.writeDataset(listRows, struct, "mongo", "[struct.name/]", "[db.name/]");[/comment]
 	Bson filter = new Document();
 	Bson updateOp;
-	[generateDocument(entityType, struct.oclAsType(pml::Collection).fields, struct.oclAsType(pml::Collection).name,1,0)/]
+	[generateDocument(entityType, struct.oclAsType(pml::Collection).fields, struct.oclAsType(pml::Collection).name,1,0,true)/]
 	[for (attr : Attribute | entityType.identifier.attributes)]
 				[if (i=1)]
 	filter = eq("[getPhysicalName(getMappedPhysicalField(attr, struct, db, entityType.getMappingRules()))/]",[entityType.name.toLowerFirst()/].get[attr.name.toUpperFirst()/]());
@@ -615,7 +617,7 @@ docsList.add(doc);
 		[/for]
 		[if (struct.oclAsType(KeyValuePair).value.oclIsTypeOf(pml::KVComplexField) and struct.oclAsType(KeyValuePair).value.oclAsType(pml::KVComplexField).type=pml::KVDataType::HASH)]
 		// Generate for hash value
-		[generateValueForHashStructure(struct,entityType)/]
+		[generateValueForHashStructure(struct,entityType,'')/]
 		SparkConnectionMgr.writeKeyValueHash(key,hash, "[db.name/]");
 		[else]
 		[comment Generate value for simple string value /]
@@ -674,20 +676,20 @@ docsList.add(doc);
 		[/if]
 [/template]
 
-[template public generateValueForHashStructure(struct : AbstractPhysicalStructure, entityType: EntityType)]
+[template public generateValueForHashStructure(struct : AbstractPhysicalStructure, entityType: EntityType, suffix : String)]
 	[comment Generate value for hash structure /]
-boolean toAdd = false;
-List<Tuple2<String,String>> hash = new ArrayList<>();
+boolean toAdd[suffix/] = false;
+List<Tuple2<String,String>> hash[suffix/] = new ArrayList<>();
 	[for (field : PhysicalField | struct.oclAsType(KeyValuePair).value.oclAsType(KVComplexField).fields)]
-toAdd = false;
-String fieldname_[getPhysicalName(field)/]="[getPhysicalName(field)/]";
-String value_[getPhysicalName(field)/]="";
+toAdd[suffix/] = false;
+String [suffix/]_fieldname_[getPhysicalName(field)/]="[getPhysicalName(field)/]";
+String [suffix/]_value_[getPhysicalName(field)/]="";
 		[if (field.oclIsTypeOf(ShortField))]
 				[let attr : Attribute = getMappedAttributes(field, entityType, entityType.getMappingRules())->any(true)]
 					[if (attr.oclIsUndefined()=false)]
 if([entityType.name.toLowerFirst()/].get[attr.name.toUpperFirst()/]()!=null){
-	toAdd = true;
-	value_[getPhysicalName(field)/] += [entityType.name.toLowerFirst()/].get[attr.name.toUpperFirst()/]();
+	toAdd[suffix/] = true;
+	[suffix/]_value_[getPhysicalName(field)/] += [entityType.name.toLowerFirst()/].get[attr.name.toUpperFirst()/]();
 }
 					[/if]
 				[/let] 
@@ -699,8 +701,8 @@ if([entityType.name.toLowerFirst()/].get[attr.name.toUpperFirst()/]()!=null){
 					[let attr : Attribute = getMappedAttributes(field, entityType, entityType.getMappingRules())->any(true)]
 					[if (attr.oclIsUndefined()=false)]
 if([entityType.name.toLowerFirst()/].get[attr.name.toUpperFirst()/]()!=null){
-	toAdd = true;
-	value_[getPhysicalName(field)/] += [entityType.name.toLowerFirst()/].get[attr.name.toUpperFirst()/]();
+	toAdd[suffix/] = true;
+	[suffix/]_value_[getPhysicalName(field)/] += [entityType.name.toLowerFirst()/].get[attr.name.toUpperFirst()/]();
 }
 					[/if]
 					[/let] 
@@ -713,14 +715,14 @@ if([entityType.name.toLowerFirst()/].get[attr.name.toUpperFirst()/]()!=null){
 						[if (component.oclIsTypeOf(BracketsField))]
 							[let attr : Attribute = getMappedAttributes(component.oclAsType(BracketsField), entityType, entityType.getMappingRules())->any(true)]
 if([entityType.name.toLowerFirst()/].get[attr.name.toUpperFirst()/]()!=null){
-	toAdd = true;
-	value_[getPhysicalName(field)/] += [entityType.name.toLowerFirst()/].get[attr.name.toUpperFirst()/]();
+	toAdd[suffix/] = true;
+	[suffix/]_value_[getPhysicalName(field)/] += [entityType.name.toLowerFirst()/].get[attr.name.toUpperFirst()/]();
 }
 else
-	value_[getPhysicalName(field)/] += "";
+	[suffix/]_value_[getPhysicalName(field)/] += "";
 							[/let]
 						[else]
-value_[getPhysicalName(field)/] += "[component.literal/]";
+[suffix/]_value_[getPhysicalName(field)/] += "[component.literal/]";
 						[/if]
 					[/for]
 				[/if]
@@ -728,8 +730,8 @@ value_[getPhysicalName(field)/] += "[component.literal/]";
 		[/if]
 [comment When value is null for a field in the hash we dont add it to the hash.  /]
 // When value is null for a field in the hash we dont add it to the hash.
-if(toAdd)
-	hash.add(new Tuple2<String,String>(fieldname_[getPhysicalName(field)/],value_[getPhysicalName(field)/]));
+if(toAdd[suffix/])
+	hash[suffix/].add(new Tuple2<String,String>([suffix/]_fieldname_[getPhysicalName(field)/],[suffix/]_value_[getPhysicalName(field)/]));
 	[/for]
 
 [comment]// A -> B[/comment]
@@ -737,15 +739,15 @@ if(toAdd)
 	[let role : Role = getMappedRoleOfReference(ref)]
 		[if (role.isMandatoryRole())]
 // Ref '[ref.name/]' mapped to role '[role.name/]'
-hash.add(new Tuple2<String,String>("[ref.sourceField->any(true).oclAsType(PhysicalField).getPhysicalName()/]",[role.getOppositeRoleInBinaryRel().name.toLowerFirst()/][role.getRelationShipType().name.toUpperFirst()/].get[getMappedAttributeOfFieldInStructure(ref.targetField->any(true).oclAsType(PhysicalField), ref.targetField->any(true).oclAsType(PhysicalField).getAbstractPhysicalStructureNotEmbeddedObject()).name.toUpperFirst()/]()));
+hash[suffix/].add(new Tuple2<String,String>("[ref.sourceField->any(true).oclAsType(PhysicalField).getPhysicalName()/]",Util.getStringValue([role.getOppositeRoleInBinaryRel().name.toLowerFirst()/][role.getRelationShipType().name.toUpperFirst()/].get[getMappedAttributeOfFieldInStructure(ref.targetField->any(true).oclAsType(PhysicalField), ref.targetField->any(true).oclAsType(PhysicalField).getAbstractPhysicalStructureNotEmbeddedObject()).name.toUpperFirst()/]())));
 		[/if]
 	[/let]
 [/for]
 
 [/template]
 
-[template public generateDocument(entityType : EntityType, fields : Collection(PhysicalField), objectName : String, level : Integer, embeddedRoleLevel : Integer)]
-Document doc[objectName/]_[level/] = new Document();
+[template public generateDocument(entityType : EntityType, fields : Collection(PhysicalField), objectName : String, level : Integer, embeddedRoleLevel : Integer, newDoc : Boolean)]
+[if(newDoc)]Document doc[objectName/]_[level/] = new Document();[/if]
 [for (field : PhysicalField | fields)]
 	[if (field.oclIsTypeOf(ShortField))]
 		[let attr : Attribute = getMappedAttributes(field, entityType, entityType.getMappingRules())->any(true)]
@@ -807,7 +809,7 @@ doc[objectName/]_[level/].append("[ref.sourceField->any(true).oclAsType(Physical
 // Embedded structure [field.getPhysicalName()/]
 		[if (getMappedAttributes(field, entityType, entityType.getMappingRules())->size()>0 or getDescendentsLongField(field)->exists(lf | lf.pattern->size()=1 and lf.pattern->any(true).oclIsTypeOf(BracketsField)=false))]
 		[comment Generate only for embedded objects with at least one field mapped to the concerned ENT or a field composed only of a constant string. /]
-	[generateDocument(entityType, field.oclAsType(EmbeddedObject).fields, field.getPhysicalName(), level+1,embeddedRoleLevel)/]
+	[generateDocument(entityType, field.oclAsType(EmbeddedObject).fields, field.getPhysicalName(), level+1,embeddedRoleLevel,true)/]
 				[if (field.oclAsType(EmbeddedObject).cardinality= pml::Cardinality::ONE_MANY) or (field.oclAsType(EmbeddedObject).cardinality= pml::Cardinality::ZERO_MANY)]
 	List<Document> array[field.getPhysicalName()/]_[level/] = new ArrayList();
 	array[field.getPhysicalName()/]_[level/].add(doc[field.getPhysicalName()/]_[level+1/]);
@@ -834,13 +836,18 @@ doc[objectName/]_[level/].append("[ref.sourceField->any(true).oclAsType(Physical
 			[if (role.isCardinalityMaxN())]
 	List<Document> array[field.getPhysicalName()/]_[level/] = new ArrayList();
 		for([role.getOppositeRoleInBinaryRel().entity.name.toUpperFirst()/] [role.getOppositeRoleInBinaryRel().entity.name.toLowerFirst()/] : [role.getOppositeRoleInBinaryRel().name.toLowerFirst()/][getRelationShipType(role).name.toUpperFirst()/]){
-			[generateDocument(role.getOppositeRoleInBinaryRel().entity, field.oclAsType(EmbeddedObject).fields, field.getPhysicalName(), level+1,embeddedRoleLevel+1)/]
+			[generateDocument(role.getOppositeRoleInBinaryRel().entity, field.oclAsType(EmbeddedObject).fields, field.getPhysicalName(), level+1,embeddedRoleLevel+1,true)/]
 			array[field.getPhysicalName()/]_[level/].add(doc[field.getPhysicalName()/]_[level+1/]);
 		}
 	doc[objectName/]_[level/].append("[field.getPhysicalName()/]", array[field.getPhysicalName()/]_[level/]);
 			[else]
 		[role.getOppositeRoleInBinaryRel().entity.name.toUpperFirst()/] [role.getOppositeRoleInBinaryRel().entity.name.toLowerFirst()/] = [role.getOppositeRoleInBinaryRel().name.toLowerFirst()/][getRelationShipType(role).name.toUpperFirst()/];
-		[generateDocument(role.getOppositeRoleInBinaryRel().entity, field.oclAsType(EmbeddedObject).fields, field.getPhysicalName(), level+1,embeddedRoleLevel+1)/]
+		[generateDocument(role.getOppositeRoleInBinaryRel().entity, field.oclAsType(EmbeddedObject).fields, field.getPhysicalName(), level+1,embeddedRoleLevel+1,true)/]
+		[if (getMappedAttributes(field, entityType, entityType.getMappingRules())->size()>0 or getDescendentsLongField(field)->exists(lf | lf.pattern->size()=1 and lf.pattern->any(true).oclIsTypeOf(BracketsField)=false))]
+			// Embedded attributes of '[entityType.name.toUpperFirst()/]' in '[field.getPhysicalName()/]' which is also mapped to a role.
+		[comment Generate only for embedded objects with at least one field mapped to the concerned ENT or a field composed only of a constant string. /]
+			[generateDocument(entityType, field.oclAsType(EmbeddedObject).fields, field.getPhysicalName(), level+1,embeddedRoleLevel,false)/]
+		[/if]
 		doc[objectName/]_[level/].append("[field.getPhysicalName()/]", doc[field.getPhysicalName()/]_[level+1/]);
 			[/if]
 		[/if]
