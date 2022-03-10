@@ -28,6 +28,7 @@ package pojo;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Objects;
 
 public class [entityType.name.toUpperFirst() /] extends LoggingPojo {
 
@@ -85,7 +86,39 @@ public class [entityType.name.toUpperFirst() /] extends LoggingPojo {
     public Object clone() throws CloneNotSupportedException {
         return super.clone();
     }
+
+[comment]	equals function[/comment]
+	@Override
+	public boolean equals(Object o){
+		if(this==o) return true;
+		if (o == null || getClass() != o.getClass()) return false;
+		[entityType.name.toUpperFirst()/] [entityType.name/] = ([entityType.name.toUpperFirst()/]) o;
+		boolean eqSimpleAttr = [for (attr: Attribute | entityType.attributes) separator(') && ')]Objects.equals([attr.name/],[entityType.name/].[attr.name/][/for]);
+		boolean eqComplexAttr = false;
+		eqComplexAttr = true && 
+		[for (rel: RelationshipType | getConcernedRelationshipTypes(entityType, conceptualSchema))]
+		[for (r : Role | rel.roles)]
+			[if (r.entity = entityType and isRelationshipTypeComplex(rel))]
+				[if (r.cardinality = pml::Cardinality::ZERO_MANY or r.cardinality = pml::Cardinality::ONE_MANY)]
+	Objects.equals([rel.name/]ListAs[r.name.toUpperFirst()/],[entityType.name/].[rel.name/]ListAs[r.name.toUpperFirst()/]) &&
+				[else]
+	Objects.equals([rel.name/]As[r.name.toUpperFirst()/],[entityType.name/].[rel.name/]As[r.name.toUpperFirst()/]) &&
+				[/if]
+			[else]
+				[if (r.entity = entityType)]
+					[if (r.cardinality = pml::Cardinality::ZERO_MANY or r.cardinality = pml::Cardinality::ONE_MANY)]
+	Objects.equals([rel.roles->at(i.mod(2) + 1).name /]List, [entityType.name/].[rel.roles->at(i.mod(2) + 1).name /]List) &&
+					[else]
+	Objects.equals([rel.roles->at(i.mod(2) + 1).name /], [entityType.name/].[rel.roles->at(i.mod(2) + 1).name /]) &&
+					[/if] 
+				[/if]
+			[/if]
+		[/for]
+		[/for] true;
+		return eqSimpleAttr && eqComplexAttr;
+	}
 	
+[comment]toString function[/comment]
 	@Override
 	public String toString(){
 		return "[entityType.name/] { " + [for (attr: Attribute | entityType.attributes) separator ('+", "+\n\t\t\t\t\t')]"[attr.name/]="+[attr.name/] [/for]+"}"; 
