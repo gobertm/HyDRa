@@ -25,6 +25,9 @@ mvn install:install-file -Dfile=org.eclipse.acceleo.maven-3.5.2.jar -DgroupId=or
 mvn install:install-file -Dfile=org.eclipse.acceleo.engine_3.7.10.202002210922.jar -DgroupId=org.eclipse.acceleo.engine -DartifactId=org.eclipse.acceleo.engine -Dversion=3.7.10.202002210922 -Dpackaging=jar
 mvn install:install-file -Dfile=org.apache.commons.cli_1.4.0.v20200417-1444.jar -DgroupId=org.apache.commons.cli -DartifactId=org.apache.commons.cli -Dversion=1.4.0.v20200417-1444 -Dpackaging=jar
 mvn install:install-file -Dfile=org.eclipse.emf.codegen_2.21.0.v20200708-0547.jar -DgroupId=org.eclipse.emf.codegen -DartifactId=org.eclipse.emf.codegen -Dversion=2.21.0.v20200708-0547 -Dpackaging=jar
+mvn install:install-file -Dfile=org.eclipse.acceleo.maven-3.6.4.jar -DgroupId=org.eclipse.acceleo.maven -DartifactId=org.eclipse.acceleo.maven -Dversion=3.6.4 -Dpackaging=jar
+
+
 
 
 

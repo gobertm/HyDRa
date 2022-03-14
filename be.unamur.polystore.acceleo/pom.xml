@@ -127,7 +127,7 @@
 		</dependency>
 
 		<dependency>
-			<groupId>org.eclipse.acceleo</groupId>
+			<groupId>org.eclipse.acceleo.maven</groupId>
 			<artifactId>org.eclipse.acceleo.maven</artifactId>
 			<version>3.6.4</version>
 		</dependency>
@@ -154,7 +154,7 @@
 	<build>
 		<plugins>
 			<plugin>
-				<groupId>org.eclipse.acceleo</groupId>
+				<groupId>org.eclipse.acceleo.maven</groupId>
 				<artifactId>org.eclipse.acceleo.maven</artifactId>
 				<version>3.6.4</version>
 				<executions>
