@@ -24,11 +24,11 @@ import conditions.OrCondition;
 import conditions.SimpleCondition;
 import conditions.[rel.name.toUpperFirst()/]Attribute;
 import conditions.Operator;
-import pojo.[rel.name.toUpperFirst() /];
+import tdo.*;
+import pojo.*;
 [for (role : Role | rel.roles)]
 import tdo.[role.entity.name.toUpperFirst() /]TDO;
 import tdo.[rel.name.toUpperFirst()/]TDO;
-import pojo.[role.entity.name.toUpperFirst() /];
 import conditions.[role.entity.name.toUpperFirst() /]Attribute;
 import dao.services.[role.entity.name.toUpperFirst()/]Service;
 [/for]
