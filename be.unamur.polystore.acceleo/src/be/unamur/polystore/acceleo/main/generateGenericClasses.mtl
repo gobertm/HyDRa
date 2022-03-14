@@ -30,6 +30,7 @@ import java.text.SimpleDateFormat;
 import java.text.ParseException;
 import java.time.ZoneId;
 import java.util.Date;
+import org.bson.types.Binary;
 
 public class Util {
 	
@@ -214,6 +215,8 @@ public class Util {
 			return ((String) o).getBytes();
 		if (o instanceof byte['['/][']'/]) 
 			return (byte['['/][']'/]) o;
+		if(o instanceof Binary)
+			return ((Binary) o).getData();
 		throw new IncompatibleAttributesTypeException("Conceptual attribute type in model file incompatible with found datatype in database. Blob vs "+o.getClass());
 	}
 
