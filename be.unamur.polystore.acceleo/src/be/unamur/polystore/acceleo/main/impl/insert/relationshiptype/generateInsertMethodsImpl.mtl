@@ -181,7 +181,7 @@ throw new UnsupportedOperationException("Not Implemented yet");
 	[let entityType : EntityType = rolerel.entity]
 		[for (field : PhysicalField | struct.oclAsType(pml::Collection).fields)]
 			[if (field.isMappedToGivenRole(rolerel))]
-	[generateDocument(getOppositeRoleInBinaryRel(rolerel).entity,field.oclAsType(EmbeddedObject).fields, getPhysicalName(field),1,0,true)/]
+	[generateDocument(getOppositeRoleInBinaryRel(rolerel).entity,field.oclAsType(EmbeddedObject).fields, getPhysicalName(field),1,1,true)/]
 				[if (field.eContainer(EmbeddedObject).oclIsUndefined()=false)]
 	[ascendInStruct(field.eContainer(EmbeddedObject), getMappedRoleOfPhysicalField(field),struct, db, 0, entityType)/]
 	fieldName.add("[getPhysicalName(field)/]");
@@ -249,7 +249,7 @@ throw new UnsupportedOperationException("Not Implemented yet");
 			[for (ref : Reference | getRefOfPhysicalStructure(struct))]
 				[let roleref : Role = getMappedRoleOfReference(ref)]
 				[if (rolerel=roleref)]
-	updateOp = set("[ref.sourceField->any(true).oclAsType(PhysicalField).getPhysicalName()/]",[getOppositeRoleInBinaryRel(rolerel).entity.name.toLowerFirst()/][getOppositeRoleInBinaryRel(rolerel).name.toUpperFirst()/].get[getMappedAttributeOfFieldInStructure(ref.targetField->any(true).oclAsType(PhysicalField), ref.targetField->any(true).oclAsType(PhysicalField).getAbstractPhysicalStructureNotEmbeddedObject()).name.toUpperFirst()/]());
+	updateOp = set("[ref.sourceField->any(true).oclAsType(PhysicalField).getPhysicalName()/]",[getOppositeRoleInBinaryRel(rolerel).entity.name.toLowerFirst()/][getOppositeRoleInBinaryRel(rolerel).name.toUpperFirst()/]==null?null:[getOppositeRoleInBinaryRel(rolerel).entity.name.toLowerFirst()/][getOppositeRoleInBinaryRel(rolerel).name.toUpperFirst()/].get[getMappedAttributeOfFieldInStructure(ref.targetField->any(true).oclAsType(PhysicalField), ref.targetField->any(true).oclAsType(PhysicalField).getAbstractPhysicalStructureNotEmbeddedObject()).name.toUpperFirst()/]());
 					[for (attr : Attribute | entityType.identifier.attributes)]
 						[if (i=1)]
 	filter = eq("[getPhysicalName(getMappedPhysicalField(attr, struct, db, entityType.getMappingRules()))/]",[entityType.name.toLowerFirst()/][rolerel.name.toUpperFirst()/].get[attr.name.toUpperFirst()/]());
