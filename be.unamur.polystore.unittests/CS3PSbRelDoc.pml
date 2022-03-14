@@ -89,13 +89,13 @@ mapping rules
 databases {
 		mysql mysqlPerfTest{
 		dbname : "mysqlPerfTest"
-		host : "localhost"
+		host : "138.48.33.187"
 		login : "root"
 		password : "password"
 		port : 3334
 	}
 			mongodb mongoPerfTest{
-		host:"localhost"
+		host:"138.48.33.187"
 		port : 27701
 	}
 }

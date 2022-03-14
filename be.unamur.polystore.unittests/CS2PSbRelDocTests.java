@@ -75,16 +75,16 @@ public class CS2PSbRelDocTests {
 	@BeforeAll
 	public static void setUp() throws Exception {
 		mongoClient = MongoClients.create(MongoClientSettings.builder()
-				.applyToClusterSettings(builder -> builder.hosts(Arrays.asList(new ServerAddress("localhost", 27701))))
+				.applyToClusterSettings(builder -> builder.hosts(Arrays.asList(new ServerAddress("138.48.33.187", 27701))))
 				.build());
 		try {
-			connection = DriverManager.getConnection("jdbc:mysql://" + "localhost" + ":" + 3334 + "/" + "mysqlPerfTest",
+			connection = DriverManager.getConnection("jdbc:mysql://" + "138.48.33.187" + ":" + 3334 + "/" + "mysqlPerfTest",
 					"root", "password");
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
 
-		jedis = new Jedis("localhost", 6364);
+		jedis = new Jedis("138.48.33.187", 6364);
 
 	}
 

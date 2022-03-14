@@ -184,7 +184,7 @@ mapping rules{
 databases {
 	
 	mariadb mydb {
-		host: "localhost"
+		host: "138.48.33.187"
 		port: 3307
 		dbname : "mydb"
 		password : "password"
@@ -192,8 +192,8 @@ databases {
 	}
 	
 	mongodb mymongo{
-		host : "localhost"
-		port: 27100
+		host : "138.48.33.187"
+		port: 27101
 	}
 	
 }

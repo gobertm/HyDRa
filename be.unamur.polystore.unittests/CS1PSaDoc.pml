@@ -37,7 +37,7 @@ mapping rules {
 
 databases {
 		mongodb mongoPerfTest{
-		host:"localhost"
+		host:"138.48.33.187"
 		port : 27701
 	}
 }

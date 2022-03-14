@@ -31,7 +31,7 @@ mapping rules {
 
 databases {
 	redis redisPerfTest {
-		host : "localhost"
+		host : "138.48.33.187"
 		port : 6364
 	}
 }

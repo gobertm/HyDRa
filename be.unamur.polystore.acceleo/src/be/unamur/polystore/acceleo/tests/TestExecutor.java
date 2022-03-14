@@ -49,8 +49,8 @@ public class TestExecutor {
 			System.out.println("Jenkins process");
 		
 		
-		if (localExecution)
-			deployPolystore();
+//		if (localExecution)
+//			deployPolystore();
 
 		try {
 			System.out.println(unitTestDir.getAbsolutePath());
@@ -84,8 +84,8 @@ public class TestExecutor {
 				}
 			}
 		} finally {
-			if (localExecution)
-				stopPolystore();
+//			if (localExecution)
+//				stopPolystore();
 		}
 
 	}

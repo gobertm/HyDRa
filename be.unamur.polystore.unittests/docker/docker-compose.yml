@@ -7,9 +7,9 @@ services:
       - 6379:6379
 
   mymongo:
-    image: mongo:latest
+    image: mongo:4.4
     ports: 
-      - 27100:27017
+      - 27101:27017
 
   mysql:
     image: mysql:latest
@@ -22,7 +22,7 @@ services:
       - "./sqlTables.sql:/docker-entrypoint-initdb.d/1-structure.sql"
   
   mongoPerfTest:
-    image: mongo:latest
+    image: mongo:4.4
     ports: 
       - 27701:27017
   

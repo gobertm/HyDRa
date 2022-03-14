@@ -64,11 +64,11 @@ public class insertR2Tests {
         mongoClient = MongoClients.create(
                 MongoClientSettings.builder()
                         .applyToClusterSettings(builder ->
-                                builder.hosts(Arrays.asList(new ServerAddress("localhost", 27100))))
+                                builder.hosts(Arrays.asList(new ServerAddress("138.48.33.187", 27101))))
                         .build());
 
         try {
-            connection = DriverManager.getConnection("jdbc:mysql://" + "localhost" + ":" + 3307 + "/" + "mydb", "root", "password");
+            connection = DriverManager.getConnection("jdbc:mysql://" + "138.48.33.187" + ":" + 3307 + "/" + "mydb", "root", "password");
         } catch (SQLException e) {
             e.printStackTrace();
         }
