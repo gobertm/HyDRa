@@ -447,6 +447,33 @@ public static Pair<String, List<String>> getBSONQueryAndArrayFilterForUpdateQuer
 boolean toAdd[level /]  = false;
 WrappedArray array[level /]  = null;
 [for (child : PhysicalField | getChildrenNonArrayPhysicalFields(arg))]
+[if (rel.attributes->notEmpty())]
+	[for (mapAttr : Attribute | getMappedAttributes(child, rel, db.ancestors(Domainmodel)->first().mappingRules))]
+// Field '[child.getPhysicalName()/]' is mapped to '[mapAttr.name/]' attribute of rel '[rel.name/]' 
+if(nestedRow != null && Arrays.asList(nestedRow.schema().fieldNames()).contains("[getPhysicalName(child)/]")) {
+	[if (child.ancestors(LongField) -> size() = 0)]
+	[comment shortField or bracketfield/]
+	if(nestedRow.getAs("[getPhysicalName(child)/]")==null)
+		[rel.name.toLowerFirst() /][level/].set[mapAttr.name.toUpperFirst() /](null);
+	else{
+		[rel.name.toLowerFirst() /][level/].set[mapAttr.name.toUpperFirst() /](Util.get[generateJavaTypeMethodNameCompliant(mapAttr.type) /]Value(nestedRow.getAs("[getPhysicalName(child)/]")));
+		toAdd[level/] = true;					
+		}
+	[else]
+		[if (child.ancestors(LongField) -> first().oclAsType(LongField).pattern->size() = 1)][comment if you encounter a "short" long field. E.g., rate: rating  /]
+	if(nestedRow.getAs("[getPhysicalName(child.ancestors(LongField) -> first().oclAsType(LongField)) /]")==null)
+		[rel.name.toLowerFirst() /][level/].set[mapAttr.name.toUpperFirst() /](null)
+	else{
+		[rel.name.toLowerFirst() /][level/].set[mapAttr.name.toUpperFirst() /](Util.get[generateJavaTypeMethodNameCompliant(mapAttr.type) /]Value(nestedRow.getAs("[getPhysicalName(child.ancestors(LongField) -> first().oclAsType(LongField)) /]")));
+		toAdd[level/] = true;	
+		}
+		[else]
+	throw new UnsupportedOperationException("Get of relationship type attributes longField not implemented yet.");
+		[/if]
+	[/if]
+	}
+	[/for]
+[/if]
 [let mappedAttrList : Collection(Attribute) = getMappedAttributesFromMultipleEntityTypes(child, rel.roles -> collect(role : Role | role.entity)->asSet(), db.ancestors(Domainmodel)->first().mappingRules)]
 [if (mappedAttrList->size() > 0)]
 [for (attr : Attribute | mappedAttrList)]

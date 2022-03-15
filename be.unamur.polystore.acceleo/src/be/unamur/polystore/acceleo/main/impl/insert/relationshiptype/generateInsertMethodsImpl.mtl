@@ -190,6 +190,17 @@ throw new UnsupportedOperationException("Not Implemented yet");
 	DBConnectionMgr.upsertMany(filter, updateOp, arrayFilterCond, "[struct.name/]", "[db.name/]");
 				[else] 
 	// level 1 ascending
+	[if (rel.attributes->notEmpty())] // Rel attributes. Only simple ones. [/if] 
+					[for (relattr : Attribute | rel.attributes)]
+					[let fieldrel : PhysicalField = getMappedPhysicalField(relattr, struct, db, entityType.getMappingRules())]
+						[if (fieldrel.oclIsTypeOf(ShortField))]
+	doc[getPhysicalName(field)/]_1.append("[getPhysicalName(fieldrel)/]",[rel.name.toLowerFirst()/].get[relattr.name.toUpperFirst()/]());
+						[else]
+[comment]TODO LongField					[/comment]
+	throw new UnsupportedOperationException("Insert of relationship type attributes longField not implemented yet.");
+						[/if]
+					[/let]
+					[/for]
 					[for (attr : Attribute | rolerel.entity.identifier.attributes)]
 						[if (i=1)]
 	filter = eq("[getPhysicalName(getMappedPhysicalField(attr, struct, db, entityType.getMappingRules()))/]",[rolerel.entity.name.toLowerFirst()/].get[attr.name.toUpperFirst()/]());
