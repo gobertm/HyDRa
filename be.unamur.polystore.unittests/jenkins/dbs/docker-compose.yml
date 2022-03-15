@@ -3,16 +3,24 @@ version: "3"
 services:
   redisdb:
     image: redis:latest
+    container_name: redisdb
     ports: 
       - 6379:6379
+    networks:
+      - db-network
 
   mymongo:
     image: mongo:4.4
+    container_name: mymongo
     ports: 
       - 27101:27017
+    networks:
+      - db-network
+
 
   mysql:
     image: mysql:latest
+    container_name: mydb
     ports: 
       - 3307:3306
     environment:
@@ -20,19 +28,31 @@ services:
       - MYSQL_DATABASE=mydb
     volumes: 
       - "./sqlTables.sql:/docker-entrypoint-initdb.d/1-structure.sql"
+    networks:
+      - db-network
+
   
   mongoPerfTest:
     image: mongo:4.4
+    container_name: mongoPerfTest
     ports: 
       - 27701:27017
+    networks:
+      - db-network
+
   
   redisPerfTest:
     image: redis:latest
+    container_name: redisPerfTest
     ports: 
       - 6364:6379
+    networks:
+      - db-network
+
   
   mysqlPerfTest:
     image: mysql:latest
+    container_name: mysqlPerfTest
     ports: 
       - 3334:3306
     environment:
@@ -40,4 +60,10 @@ services:
       - MYSQL_DATABASE=mysqlPerfTest
     volumes: 
       - "./sqlTablesPerf.sql:/docker-entrypoint-initdb.d/1-sqlTables.sql"
-      
+    networks:
+      - db-network
+
+
+networks:
+  db-network:
+    name: db-network      
