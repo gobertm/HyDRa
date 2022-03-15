@@ -730,20 +730,20 @@ if(nestedRow != null) {
 	[if (child.ancestors(LongField) -> size() = 0)]
 		[if (child.oclIsTypeOf(ArrayField))]
 	// Reference is in an Array Field
-	[pojoName.toLowerFirst() /][level/].set[getJavaAbsolutePath(ref).toUpperFirst() /]_[refField.getPhysicalName() /](nestedRow.getAs("[refField.getPhysicalName() /]") == null ? null : new ArrayList<String>(ScalaUtil.javaList(nestedRow.getAs("[refField.getPhysicalName() /]"))));
+	[pojoName.toLowerFirst() /][level/].set[getJavaAbsolutePath(ref, refField).toUpperFirst() /](nestedRow.getAs("[refField.getPhysicalName() /]") == null ? null : new ArrayList<String>(ScalaUtil.javaList(nestedRow.getAs("[refField.getPhysicalName() /]"))));
 		[else]
 			[if (child.ancestors(EmbeddedObject)->size() > 0)]
 	// Reference is in an Array of Embedded Objects
-	[pojoName.toLowerFirst() /][level/].get[getJavaAbsolutePath(ref).toUpperFirst() /]_[refField.getPhysicalName() /]().add(nestedRow.getAs("[refField.getPhysicalName() /]") == null ? null : nestedRow.getAs("[refField.getPhysicalName() /]").toString());
+	[pojoName.toLowerFirst() /][level/].get[getJavaAbsolutePath(ref, refField).toUpperFirst() /]().add(nestedRow.getAs("[refField.getPhysicalName() /]") == null ? null : nestedRow.getAs("[refField.getPhysicalName() /]").toString());
 			[else]
-	[pojoName.toLowerFirst() /][level/].set[getJavaAbsolutePath(ref).toUpperFirst() /]_[refField.getPhysicalName() /](nestedRow.getAs("[refField.getPhysicalName() /]") == null ? null : nestedRow.getAs("[refField.getPhysicalName() /]").toString());
+	[pojoName.toLowerFirst() /][level/].set[getJavaAbsolutePath(ref, refField).toUpperFirst() /](nestedRow.getAs("[refField.getPhysicalName() /]") == null ? null : nestedRow.getAs("[refField.getPhysicalName() /]").toString());
 			[/if]
 		[/if]
 	[comment shortField or bracketfield/]
 	toAdd[level/] = true;					
 	[else]
 		[if (child.ancestors(LongField) -> first().oclAsType(LongField).pattern->size() = 1)][comment if you encounter a "short" long field. E.g., rate: rating  /]
-	[pojoName.toLowerFirst() /][level/].set[getJavaAbsolutePath(ref).toUpperFirst() /]_[refField.getPhysicalName() /]((String) nestedRow.getAs("[getPhysicalName(child.ancestors(LongField) -> first().oclAsType(LongField)) /]"));
+	[pojoName.toLowerFirst() /][level/].set[getJavaAbsolutePath(ref, refField).toUpperFirst() /]((String) nestedRow.getAs("[getPhysicalName(child.ancestors(LongField) -> first().oclAsType(LongField)) /]"));
 	toAdd[level/] = true;	
 		[else]
 	[comment LongField /]
@@ -758,8 +758,8 @@ if(nestedRow != null) {
 	m = p.matcher(value);
 	matches = m.find();
 	if(matches) {
-		String [getJavaAbsolutePath(ref) /]_[refField.getPhysicalName() /] = m.group(groupIndex.intValue());
-		[pojoName.toLowerFirst() /][level/].set[getJavaAbsolutePath(ref).toUpperFirst() /]_[refField.getPhysicalName() /]([getJavaAbsolutePath(ref) /]_[refField.getPhysicalName() /]);
+		String [getJavaAbsolutePath(ref, refField) /] = m.group(groupIndex.intValue());
+		[pojoName.toLowerFirst() /][level/].set[getJavaAbsolutePath(ref, refField).toUpperFirst() /]([getJavaAbsolutePath(ref, refField) /]);
 		toAdd[level/] = true;
 	} else {
 		logger.warn("Cannot retrieve value for [pojoName /][refField.getPhysicalName() /] attribute stored in db [db.name/]. Probably due to an ambiguous regex.");

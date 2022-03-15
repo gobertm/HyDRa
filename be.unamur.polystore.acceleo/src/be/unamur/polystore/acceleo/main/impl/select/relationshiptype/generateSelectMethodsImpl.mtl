@@ -54,9 +54,9 @@
 					[/for]
 			.withColumnRenamed("logEvents", "[role2.entity.name/]_logEvents"),
 			[if (ref.sourceField->any(true).oclIsTypeOf(ArrayField) or ref.sourceField.ancestors(EmbeddedObject)->size() > 0 or (ref.sourceField->any(true).ancestors(KVComplexField)->size() > 0 and ref.sourceField->any(true).ancestors(KVComplexField)->any(true).type=KVDataType::LIST))]
-			functions.array_contains([role.entity.name.toLowerFirst()/]TDO[ref.name/][role.name/].col("[getJavaAbsolutePath(ref).toLowerFirst() /]_[ref.sourceField->first().getPhysicalName()/]"),[role2.entity.name.toLowerFirst()/]TDO[ref.name/][role2.name/].col("[getJavaAbsolutePath(ref).toLowerFirst() /]_[ref.targetField->first().getPhysicalName()/]")));
+			functions.array_contains([role.entity.name.toLowerFirst()/]TDO[ref.name/][role.name/].col("[getJavaAbsolutePath(ref, ref.sourceField->first()).toLowerFirst() /]"),[role2.entity.name.toLowerFirst()/]TDO[ref.name/][role2.name/].col("[getJavaAbsolutePath(ref, ref.targetField->first()).toLowerFirst() /]")));
 			[else]
-			[role.entity.name.toLowerFirst()/]TDO[ref.name/][role.name/].col("[getJavaAbsolutePath(ref).toLowerFirst() /]_[ref.sourceField->first().getPhysicalName()/]").equalTo([role2.entity.name.toLowerFirst()/]TDO[ref.name/][role2.name/].col("[getJavaAbsolutePath(ref).toLowerFirst().toLowerFirst() /]_[ref.targetField->first().getPhysicalName()/]")));
+			[role.entity.name.toLowerFirst()/]TDO[ref.name/][role.name/].col("[getJavaAbsolutePath(ref, ref.sourceField->first()).toLowerFirst() /]").equalTo([role2.entity.name.toLowerFirst()/]TDO[ref.name/][role2.name/].col("[getJavaAbsolutePath(ref, ref.targetField->first()).toLowerFirst() /]")));
 			[/if]
 
 	Dataset<[rel.name.toUpperFirst()/]> res_[ref.name/] = res_[ref.name/]_temp.map(
@@ -116,7 +116,7 @@
 		[/for]
 		.withColumnRenamed("logEvents", "[role2.entity.name/]_logEvents")
 		.join([role.entity.name.toLowerFirst()/]TDO[ref.name/][role.name /],
-			functions.array_contains([role2.entity.name.toLowerFirst()/]TDO[ref.name/][role2.name/].col("[getJavaAbsolutePath(ref).toLowerFirst() /]_[ref.sourceField->first().getPhysicalName()/]"),[role.entity.name.toLowerFirst()/]TDO[ref.name/][role.name/].col("[getJavaAbsolutePath(ref).toLowerFirst() /]_[ref.targetField->first().getPhysicalName()/]")));
+			functions.array_contains([role2.entity.name.toLowerFirst()/]TDO[ref.name/][role2.name/].col("[getJavaAbsolutePath(ref, ref.sourceField->first()).toLowerFirst() /]"),[role.entity.name.toLowerFirst()/]TDO[ref.name/][role.name/].col("[getJavaAbsolutePath(ref, ref.targetField->first()).toLowerFirst() /]")));
 			[else]
 	Dataset<Row> res_[ref.name/]_temp = 
 		[role.entity.name.toLowerFirst()/]TDO[ref.name/][role.name /].join([role2.entity.name.toLowerFirst()/]TDO[ref.name/][role2.name/]
@@ -124,7 +124,7 @@
 			.withColumnRenamed("[attr.name.toLowerFirst() /]", "[role2.entity.name/]_[attr.name.toLowerFirst() /]")
 			[/for]
 			.withColumnRenamed("logEvents", "[role2.entity.name/]_logEvents"),
-			[role.entity.name.toLowerFirst()/]TDO[ref.name/][role.name/].col("[getJavaAbsolutePath(ref).toLowerFirst() /]_[ref.targetField->first().getPhysicalName()/]").equalTo([role2.entity.name.toLowerFirst()/]TDO[ref.name/][role2.name/].col("[getJavaAbsolutePath(ref).toLowerFirst() /]_[ref.sourceField->first().getPhysicalName()/]")));
+			[role.entity.name.toLowerFirst()/]TDO[ref.name/][role.name/].col("[getJavaAbsolutePath(ref, ref.targetField->first()).toLowerFirst() /]").equalTo([role2.entity.name.toLowerFirst()/]TDO[ref.name/][role2.name/].col("[getJavaAbsolutePath(ref, ref.sourceField->first()).toLowerFirst() /]")));
 			[/if]
 
 	Dataset<[rel.name.toUpperFirst()/]> res_[ref.name/] = res_[ref.name/]_temp.map(
@@ -247,7 +247,7 @@ Dataset<Row> B_res_[ref2.name/]_[ref.name/] = res_[ref2.name/]_[ref.name/]
 
 
 Dataset<Row> res_row_[ref.name/]_[ref2.name/] = res_[role.getRelationShipType().name/]_[ref.name/]_[ref2.name/].join(B_res_[ref2.name/]_[ref.name/],
-													res_[role.getRelationShipType().name/]_[ref.name/]_[ref2.name/].col("[getJavaAbsolutePath(ref2).toLowerFirst() /]_[ref2.sourceField->first().getPhysicalName()/]").equalTo(B_res_[ref2.name/]_[ref.name/].col("[getJavaAbsolutePath(ref2).toLowerFirst() /]_[ref2.targetField->first().getPhysicalName()/]")));
+													res_[role.getRelationShipType().name/]_[ref.name/]_[ref2.name/].col("[getJavaAbsolutePath(ref2, ref2.sourceField->first()).toLowerFirst() /]").equalTo(B_res_[ref2.name/]_[ref.name/].col("[getJavaAbsolutePath(ref2, ref2.targetField->first()).toLowerFirst() /]")));
 
 Dataset<[role.getRelationShipType().name.toUpperFirst()/]> res_[entity.name/]_[ref.name/] = res_row_[ref.name/]_[ref2.name/].map((MapFunction<Row, [role.getRelationShipType().name.toUpperFirst()/]>) r -> {
 			[role.getRelationShipType().name.toUpperFirst()/] res = new [role.getRelationShipType().name.toUpperFirst()/]();
@@ -300,7 +300,7 @@ Dataset<Row> B_res_[ref.name/]_[ref2.name/] = res_[ref.name/]_[ref2.name/]
 	.withColumnRenamed("logEvents", "B_logEvents");
 
 Dataset<Row> res_row_[ref2.name/]_[ref.name/] = res_[role2.getRelationShipType().name/]_[ref2.name/]_[ref.name/].join(B_res_[ref.name/]_[ref2.name/],
-	res_[role2.getRelationShipType().name/]_[ref2.name/]_[ref.name/].col("[getJavaAbsolutePath(ref).toLowerFirst() /]_[ref.sourceField->first().getPhysicalName()/]").equalTo(B_res_[ref.name/]_[ref2.name/].col("[getJavaAbsolutePath(ref).toLowerFirst() /]_[ref.targetField->first().getPhysicalName()/]")));
+	res_[role2.getRelationShipType().name/]_[ref2.name/]_[ref.name/].col("[getJavaAbsolutePath(ref, ref.sourceField->first()).toLowerFirst() /]").equalTo(B_res_[ref.name/]_[ref2.name/].col("[getJavaAbsolutePath(ref, ref.targetField->first()).toLowerFirst() /]")));
 Dataset<[role.getRelationShipType().name.toUpperFirst()/]> res_[entity.name/]_[ref.name/] = res_row_[ref2.name/]_[ref.name/].map((MapFunction<Row, [role.getRelationShipType().name.toUpperFirst()/]>) r -> {
 			[role.getRelationShipType().name.toUpperFirst()/] res = new [role.getRelationShipType().name.toUpperFirst()/]();
 			
@@ -357,9 +357,9 @@ Dataset<Row> C_[role2.entity.name.toLowerFirst()/]TDO[ref.name/][role2.name/] = 
 	.withColumnRenamed("logEvents", "C_logEvents");
 
 Dataset<Row> res_[ref.name/] = A_[entity.name.toLowerFirst()/]TDO[ref.name/][role.name/].join([role.getRelationShipType().name.toLowerFirst()/]TDO[ref.name/]_[ref2.name/],
-								A_[entity.name.toLowerFirst()/]TDO[ref.name/][role.name/].col("[getJavaAbsolutePath(ref).toLowerFirst() /]_[ref.targetField->first().getPhysicalName()/]").equalTo([role.getRelationShipType().name.toLowerFirst()/]TDO[ref.name/]_[ref2.name/].col("[getJavaAbsolutePath(ref).toLowerFirst() /]_[ref.sourceField->first().getPhysicalName()/]")));
+								A_[entity.name.toLowerFirst()/]TDO[ref.name/][role.name/].col("[getJavaAbsolutePath(ref, ref.targetField->first()).toLowerFirst() /]").equalTo([role.getRelationShipType().name.toLowerFirst()/]TDO[ref.name/]_[ref2.name/].col("[getJavaAbsolutePath(ref, ref.sourceField->first()).toLowerFirst() /]")));
 res_[ref.name/] = res_[ref.name/].join(C_[role2.entity.name.toLowerFirst()/]TDO[ref.name/][role2.name/],
-	res_[ref.name/].col("[getJavaAbsolutePath(ref2).toLowerFirst() /]_[ref2.sourceField->first().getPhysicalName()/]").equalTo(C_[role2.entity.name.toLowerFirst()/]TDO[ref.name/][role2.name/].col("[getJavaAbsolutePath(ref2).toLowerFirst() /]_[ref2.targetField->first().getPhysicalName()/]")));
+	res_[ref.name/].col("[getJavaAbsolutePath(ref2, ref2.sourceField->first()).toLowerFirst() /]").equalTo(C_[role2.entity.name.toLowerFirst()/]TDO[ref.name/][role2.name/].col("[getJavaAbsolutePath(ref2, ref2.targetField->first()).toLowerFirst() /]")));
 
 Dataset<[role.getRelationShipType().name.toUpperFirst()/]> res_[entity.name/]_[ref.name/] = res_[ref.name/].map((MapFunction<Row, [role.getRelationShipType().name.toUpperFirst()/]>) r -> {
 			[role.getRelationShipType().name.toUpperFirst()/] res = new [role.getRelationShipType().name.toUpperFirst()/]();
