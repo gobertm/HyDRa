@@ -19,11 +19,8 @@ import conditions.*;
 import pojo.[rel.name.toUpperFirst()/];
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-[for (role : Role | rel.roles)]
-import tdo.[role.entity.name.toUpperFirst() /]TDO;
-import tdo.[rel.name.toUpperFirst()/]TDO;
-import pojo.[role.entity.name.toUpperFirst() /];
-import pojo.[rel.name.toUpperFirst()/];
+import tdo.*;
+import pojo.*;
 import org.apache.commons.lang.mutable.MutableBoolean;
 import java.util.List;
 import java.util.ArrayList;
@@ -31,7 +28,6 @@ import org.apache.spark.sql.Column;
 import org.apache.spark.sql.Encoders;
 import org.apache.spark.api.java.function.MapFunction;
 import util.Util;
-[/for]
 
 
 public abstract class [rel.name.toUpperFirst() + 'Service' /] {

@@ -424,7 +424,15 @@ public class Dataset<E> extends ArrayList<E> {
 							}
 						}
 						if (key instanceof WrappedArray) {
-							if (((WrappedArray) key).list().contains(searchedvalue)) {
+							List<Object> element = ((WrappedArray) key).list();
+							boolean found = false;
+							if (!element.isEmpty()) {
+								if (element.stream().findFirst().get() instanceof Integer && searchedvalue instanceof String)
+									found = element.contains(Integer.parseInt((String) searchedvalue));
+								 else
+									found = element.contains(searchedvalue);
+							}
+							if(found){
 								value = hash.get(key);
 								break;
 							}

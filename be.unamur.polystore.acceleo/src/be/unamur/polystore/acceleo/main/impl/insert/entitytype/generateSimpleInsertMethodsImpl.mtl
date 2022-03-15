@@ -828,7 +828,7 @@ doc[objectName/]_[level/].append("[ref.sourceField->any(true).oclAsType(Physical
 				[else]
 		[role.getOppositeRoleInBinaryRel().entity.name.toUpperFirst()/] [role.getOppositeRoleInBinaryRel().name.toLowerFirst()/][getRelationShipType(role).name.toUpperFirst()/] = [entityType.name.toLowerFirst()/]._get[role.getOppositeRoleInBinaryRel().name.toUpperFirst()/]();
 				[/if]
-	if([role.getOppositeRoleInBinaryRel().name.toLowerFirst()/][getRelationShipType(role).name.toUpperFirst()/]==null [if (role.getOppositeRoleInBinaryRel().isCardinalityMaxN())]|| [role.getOppositeRoleInBinaryRel().name.toLowerFirst()/][getRelationShipType(role).name.toUpperFirst()/].size()==0[/if]){
+	if([role.getOppositeRoleInBinaryRel().name.toLowerFirst()/][getRelationShipType(role).name.toUpperFirst()/]==null [if (role.isCardinalityMaxN())]|| [role.getOppositeRoleInBinaryRel().name.toLowerFirst()/][getRelationShipType(role).name.toUpperFirst()/].size()==0[/if]){
 		logger.error("Physical Structure contains embedded attributes or reference to an indirectly linked object. Please set role attribute '[role.getOppositeRoleInBinaryRel().name/]' of type '[role.getOppositeRoleInBinaryRel().entity.name.toUpperFirst()/]' in entity object '[entityType.name.toUpperFirst()/]");
 		throw new PhysicalStructureException("Physical Structure contains embedded attributes or reference to an indirectly linked object. Please set role attribute '[role.getOppositeRoleInBinaryRel().name/]' of type '[role.getOppositeRoleInBinaryRel().entity.name.toUpperFirst()/]' in entity object '[entityType.name.toUpperFirst()/]");
 	}
