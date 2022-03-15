@@ -69,14 +69,14 @@ mapping rules {
 
 databases {
 	redis redisPerfTest {
-		host : "138.48.33.187"
-		port : 6364
+		host : "redisPerfTest"
+		port : 6379
 	}
 		mysql mysqlPerfTest{
 		dbname : "mysqlPerfTest"
-		host : "138.48.33.187"
+		host : "mysqlPerfTest"
 		login : "root"
 		password : "password"
-		port : 3334
+		port : 3306
 	}
 }

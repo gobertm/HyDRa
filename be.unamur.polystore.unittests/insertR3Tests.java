@@ -57,11 +57,11 @@ public class insertR3Tests {
 	@BeforeAll
 	public static void setUp() {
 		mongoClient = MongoClients.create(MongoClientSettings.builder()
-				.applyToClusterSettings(builder -> builder.hosts(Arrays.asList(new ServerAddress("138.48.33.187", 27101))))
+				.applyToClusterSettings(builder -> builder.hosts(Arrays.asList(new ServerAddress("mymongo", 27017))))
 				.build());
 
 		try {
-			connection = DriverManager.getConnection("jdbc:mysql://" + "138.48.33.187" + ":" + 3307 + "/" + "mydb", "root",
+			connection = DriverManager.getConnection("jdbc:mysql://" + "mydb" + ":" + 3306 + "/" + "mydb", "root",
 					"password");
 		} catch (SQLException e) {
 			e.printStackTrace();

@@ -66,7 +66,7 @@ mapping rules {
 
 databases {
 	redis redisPerfTest {
-		host : "138.48.33.187"
-		port : 6364
+		host : "redisPerfTest"
+		port : 6379
 	}
 }

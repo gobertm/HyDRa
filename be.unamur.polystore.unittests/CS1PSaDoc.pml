@@ -37,8 +37,8 @@ mapping rules {
 
 databases {
 		mongodb mongoPerfTest{
-		host:"138.48.33.187"
-		port : 27701
+		host:"mongoPerfTest"
+		port : 27017
 	}
 }
 	

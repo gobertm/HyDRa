@@ -38,10 +38,10 @@ mapping rules {
 databases {
 	mysql mysqlPerfTest{
 		dbname : "mysqlPerfTest"
-		host : "138.48.33.187"
+		host : "mysqlPerfTest"
 		login : "root"
 		password : "password"
-		port : 3334
+		port : 3306
 	}
 }
 	
