@@ -74,12 +74,12 @@ mapping rules {
 
 databases {
 		mongodb mongoPerfTest{
-		host:"localhost"
-		port : 27701
+		host:"mongoPerfTest"
+		port : 27017
 	}
 	redis redisPerfTest {
-		host : "localhost"
-		port : 6364
+		host : "redisPerfTest"
+		port : 6379
 	}
 }
 	

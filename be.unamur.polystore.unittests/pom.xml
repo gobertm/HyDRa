@@ -40,5 +40,11 @@
 		<module>CS3PSaRel</module>
 		<module>CS3PSaKey</module>
 		<module>CS3PSbDocKey</module>
+		<module>CS3PSbDocRel</module>
+		<module>CS3PSbKeyDoc</module>
+		<module>CS3PSbKeyRel</module>
+		<module>CS3PSbRelDoc</module>
+		<module>CS3PSbRelKey</module>
+		<module>CS3PScKeyRelDoc</module>
 	</modules>
 </project>
