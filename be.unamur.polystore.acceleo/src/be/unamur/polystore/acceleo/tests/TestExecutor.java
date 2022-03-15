@@ -29,6 +29,7 @@ import java.util.Set;
 import be.unamur.polystore.acceleo.main.Generate;
 
 public class TestExecutor {
+	private static boolean localExecution = false;
 	private static boolean logMvnTest = false;
 
 	private static final String unitTestDirName = "be.unamur.polystore.unittests";
@@ -41,9 +42,18 @@ public class TestExecutor {
 	private static Map<String, File> testFiles = new HashMap<String, File>();
 
 	public static void main(String[] args) throws Exception {
-		deployPolystore();
+		localExecution = args == null || args.length == 0;
+		if(localExecution)
+			System.out.println("Local process");
+		else
+			System.out.println("Jenkins process");
+		
+		
+//		if (localExecution)
+//			deployPolystore();
 
 		try {
+			System.out.println(unitTestDir.getAbsolutePath());
 			getPMLFiles();
 			System.out.println(getDate() + "Number of PML files detected: " + testFiles.size());
 			System.out.println();
@@ -59,19 +69,23 @@ public class TestExecutor {
 				}
 
 				System.out.println();
-				System.out.println(getDate() + "MVN test:");
-				i = 0;
-				for (Entry<String, File> entry : testFiles.entrySet()) {
-					boolean error = startMvnTest(entry.getKey(), entry.getValue());
-					i++;
-					System.out.println(getDate() + (i) + "/" + testFiles.size() + ") " + entry.getKey() + ": "
-							+ (error ? "unit tests encoutered errors" : "unit tests executed with success")
-							+ ". Log available: " + entry.getValue().getParentFile().getAbsolutePath() + File.separator
-							+ "logs" + File.separator + entry.getKey() + ".log");
+
+				if (localExecution) {
+					System.out.println(getDate() + "MVN test:");
+					i = 0;
+					for (Entry<String, File> entry : testFiles.entrySet()) {
+						boolean error = startMvnTest(entry.getKey(), entry.getValue());
+						i++;
+						System.out.println(getDate() + (i) + "/" + testFiles.size() + ") " + entry.getKey() + ": "
+								+ (error ? "unit tests encoutered errors" : "unit tests executed with success")
+								+ ". Log available: " + entry.getValue().getParentFile().getAbsolutePath()
+								+ File.separator + "logs" + File.separator + entry.getKey() + ".log");
+					}
 				}
 			}
 		} finally {
-			stopPolystore();
+//			if (localExecution)
+//				stopPolystore();
 		}
 
 	}
@@ -158,17 +172,17 @@ public class TestExecutor {
 	}
 
 	private static void pasteUnitTests(String testName, File pml) {
-		File original = new File(Paths.get(pml.getParentFile().getAbsolutePath()).resolve(testName + "Tests.java").toString());
+		File original = new File(
+				Paths.get(pml.getParentFile().getAbsolutePath()).resolve(testName + "Tests.java").toString());
 		File copied = new File(
 				Paths.get(pml.getParentFile().getAbsolutePath()).resolve(testName).toString() + File.separator + "src"
 						+ File.separator + "test" + File.separator + "java" + File.separator + testName + "Tests.java");
-		
-		if(!copied.getParentFile().getParentFile().exists())
+
+		if (!copied.getParentFile().getParentFile().exists())
 			copied.getParentFile().getParentFile().mkdir();
-		if(!copied.getParentFile().exists())
+		if (!copied.getParentFile().exists())
 			copied.getParentFile().mkdir();
-		
-		
+
 		try (InputStream in = new BufferedInputStream(new FileInputStream(original));
 				OutputStream out = new BufferedOutputStream(new FileOutputStream(copied))) {
 

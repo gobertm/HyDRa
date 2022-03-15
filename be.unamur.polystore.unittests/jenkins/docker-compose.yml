@@ -1,0 +1,20 @@
+# docker-compose.yaml
+version: '3'
+services:
+  jenkins:
+    image: jenkins_mvn3_jdk14
+    privileged: true
+    user: root
+    ports: 
+      - 8081:8080
+      - 50000:50000
+    container_name: jenkins
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    networks:
+      - to-db-network
+
+networks:
+    to-db-network:
+        external:
+            name: db-network

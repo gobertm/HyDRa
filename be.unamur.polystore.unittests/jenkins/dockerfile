@@ -1,0 +1,44 @@
+# Pull lts image
+FROM jenkins/jenkins:lts-jdk11
+
+
+# Build the container
+USER root
+
+# install wget
+RUN apt-get update
+RUN apt-get install -y wget
+
+
+ENV PATH=$PATH:/opt/java/jdk-15.0.2/bin
+
+WORKDIR /opt/java
+
+RUN curl https://download.java.net/java/GA/jdk15.0.2/0d1cfde4252546c6931946de8db48ee2/7/GPL/openjdk-15.0.2_linux-x64_bin.tar.gz -o openjdk-15.0.2_linux-x64_bin.tar.gz
+
+RUN tar -xzf openjdk-15.0.2_linux-x64_bin.tar.gz && \
+    rm -rf openjdk-15.0.2_linux-x64_bin.tar.gz
+ENV JAVA_HOME=/opt/java/jdk-15.0.2
+
+
+# get maven 3.2.2
+RUN wget --no-verbose -O /tmp/apache-maven-3.5.4-bin.tar.gz http://apache.cs.utah.edu/maven/maven-3/3.5.4/binaries/apache-maven-3.5.4-bin.tar.gz
+
+# verify checksum
+# RUN echo "35c39251d2af99b6624d40d801f6ff02 /tmp/apache-maven-3.4.0-bin.tar.gz" | md5sum -c
+
+# install maven
+RUN tar xzf /tmp/apache-maven-3.5.4-bin.tar.gz -C /opt/
+RUN ln -s /opt/apache-maven-3.5.4 /opt/maven
+RUN ln -s /opt/maven/bin/mvn /usr/local/bin
+RUN rm -f /tmp/apache-maven-3.5.4-bin.tar.gz
+ENV MAVEN_HOME /opt/maven
+
+RUN chown -R jenkins:jenkins /opt/maven
+
+
+# remove download archive files
+RUN apt-get clean
+
+
+

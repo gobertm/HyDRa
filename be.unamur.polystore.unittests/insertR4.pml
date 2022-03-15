@@ -150,16 +150,16 @@ mapping rules{
 databases {
 	
 	mariadb mydb {
-		host: "localhost"
-		port: 3307
+		host: "mydb"
+		port: 3306
 		dbname : "mydb"
 		password : "password"
 		login : "root"
 	}
 	
 	mongodb mymongo{
-		host : "localhost"
-		port: 27100
+		host : "mymongo"
+		port: 27017
 	}
 	
 }
