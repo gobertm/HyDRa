@@ -151,9 +151,9 @@ for(java.util.Map.Entry<String, java.util.Map<String, String>> entry : longField
 			[let role : Role = getMappedRoleOfReference(ref)]
 // Ref '[ref.name/]' mapped to role '[role.name/]'
 doc.append("[ref.sourceField->any(true).oclAsType(PhysicalField).getPhysicalName()/]",[role.name.toLowerFirst()/]_[role.entity.name.toLowerFirst()/].get[getMappedAttributeOfFieldInStructure(ref.targetField->any(true).oclAsType(PhysicalField), ref.targetField->any(true).oclAsType(PhysicalField).getAbstractPhysicalStructureNotEmbeddedObject()).name.toUpperFirst()/]());
-docsList.add(doc);
 			[/let]
 		[/for]
+	docsList.add(doc);
 	DBConnectionMgr.insertMany(docsList, "[struct.name/]", "[db.name/]");
 	return true;
 [/if]
