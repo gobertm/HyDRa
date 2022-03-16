@@ -72,6 +72,7 @@ physical schemas {
 mapping rules {
 	CS2PScKeyDoc.Customer(id,firstname, lastname, locationip, birthday, gender, creationDate, browser) -> kv.customerKV(customerid, firstname,lastname, locationip, birthday, gender, creationdate, browser),
 	CS2PScKeyDoc.Customer(id) -> kv.customerOrdersRefs( custid),
+	CS2PScKeyDoc.Order( id) -> kv.customerOrdersRefs( reforderid),
 	CS2PScKeyDoc.Order(id,orderdate,totalprice) -> mongoSchema.ordersCol(OrderId,OrderDate,TotalPrice),
 	CS2PScKeyDoc.buys.client -> kv.customerOrdersRefs.purchases
 }

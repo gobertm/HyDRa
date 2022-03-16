@@ -71,6 +71,7 @@ physical schemas {
 mapping rules {
 	CS2PScKeyRel.Customer(id,firstname, lastname, locationip, birthday, gender, creationDate, browser) -> kv.customerKV(customerid, firstname,lastname, locationip, birthday, gender, creationdate, browser),
 	CS2PScKeyRel.Customer(id) -> kv.customerOrdersRefs( custid),
+	CS2PScKeyRel.Order(id) -> kv.customerOrdersRefs( reforderid),
 	CS2PScKeyRel.Order(id, orderdate, totalprice) -> relSchema.orderTable( orderId, orderDate, totalamount),
 	CS2PScKeyRel.buys.client -> kv.customerOrdersRefs.purchases
 }

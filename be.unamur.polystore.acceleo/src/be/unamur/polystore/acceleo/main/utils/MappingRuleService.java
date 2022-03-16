@@ -579,11 +579,13 @@ public class MappingRuleService {
 		for (AbstractMappingRule rule : rules.getMappingRules()) {
 			if (rule instanceof EntityMappingRule) {
 				EntityMappingRule r = (EntityMappingRule) rule;
-				if(r.getPhysicalStructure()== structure) {
+				AbstractPhysicalStructure struct = r.getPhysicalStructure();
+//				struct = getPhysicalStructureNotEmbeddedObject(struct);
+				if(struct== structure) {
 					if (r.getAttributesConceptual().size() > 0) {
 						List<PhysicalField> fields = r.getPhysicalFields();
 						for (int i = 0; i < fields.size(); i++) {
-							if(fields.get(i).equals(field));
+							if(fields.get(i).equals(field))
 								return r.getAttributesConceptual().get(i); 
 						}
 					}

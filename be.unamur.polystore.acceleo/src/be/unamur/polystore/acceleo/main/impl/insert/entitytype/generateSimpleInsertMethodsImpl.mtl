@@ -411,7 +411,7 @@ docsList.add(doc);
 		// Generate Value for List 
 							[if (ref.sourceField.ancestors(KVComplexField)->first().type=pml::KVDataType::LIST)]
 							[let attr : Attribute = getMappedAttributeOfFieldInStructure(ref.sourceField->any(true).oclAsType(PhysicalField),struct)]
-		value[roleref.name.toUpperFirst()/] =  [oppositerole.entity.name.toLowerFirst()/].get[attr.name.toUpperFirst()/]();
+		value[roleref.name.toUpperFirst()/] =  Util.getStringValue([oppositerole.entity.name.toLowerFirst()/].get[attr.name.toUpperFirst()/]());
 							[/let]
 		DBConnectionMgr.writeKeyValueList(key[roleref.name.toUpperFirst()/],value[roleref.name.toUpperFirst()/],"[db.name/]");
 							[/if]
@@ -510,9 +510,9 @@ docsList.add(doc);
 							[/if]
 						[/for]
 						[if (ref.sourceField.ancestors(KVComplexField)->first().type=pml::KVDataType::LIST)]
-		// Value part
+		// Value part in List
 						[let attr : Attribute = getMappedAttributeOfFieldInStructure(ref.sourceField->any(true).oclAsType(PhysicalField),struct)]
-		value =  [getOppositeRoleInBinaryRel(roleref).entity.name.toLowerFirst()/].get[attr.name.toUpperFirst()/]();
+		value =  Util.getStringValue([getOppositeRoleInBinaryRel(roleref).entity.name.toLowerFirst()/].get[attr.name.toUpperFirst()/]());
 						[/let]
 		DBConnectionMgr.writeKeyValueList(key,value,"[db.name/]");
 						[/if]
