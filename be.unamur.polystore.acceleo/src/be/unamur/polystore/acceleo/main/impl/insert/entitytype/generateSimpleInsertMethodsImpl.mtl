@@ -511,7 +511,7 @@ docsList.add(doc);
 						[/for]
 						[if (ref.sourceField.ancestors(KVComplexField)->first().type=pml::KVDataType::LIST)]
 		// Value part in List
-						[let attr : Attribute = getMappedAttributeOfFieldInStructure(ref.sourceField->any(true).oclAsType(PhysicalField),struct)]
+						[let attr : Attribute = getMappedAttributeOfFieldInStructure(ref.targetField->any(true).oclAsType(PhysicalField),ref.targetField->any(true).oclAsType(PhysicalField).getAbstractPhysicalStructureNotEmbeddedObject())]
 		value =  Util.getStringValue([getOppositeRoleInBinaryRel(roleref).entity.name.toLowerFirst()/].get[attr.name.toUpperFirst()/]());
 						[/let]
 		DBConnectionMgr.writeKeyValueList(key,value,"[db.name/]");
