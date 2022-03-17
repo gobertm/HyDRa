@@ -580,7 +580,8 @@ public class MappingRuleService {
 			if (rule instanceof EntityMappingRule) {
 				EntityMappingRule r = (EntityMappingRule) rule;
 				AbstractPhysicalStructure struct = r.getPhysicalStructure();
-//				struct = getPhysicalStructureNotEmbeddedObject(struct);
+				if(r.getPhysicalStructure() instanceof EmbeddedObject)
+					struct = getPhysicalStructureNotEmbeddedObject(struct);
 				if(struct== structure) {
 					if (r.getAttributesConceptual().size() > 0) {
 						List<PhysicalField> fields = r.getPhysicalFields();
