@@ -410,7 +410,7 @@ docsList.add(doc);
 		[comment Generate value for simple string value /]
 		// Generate Value for List 
 							[if (ref.sourceField.ancestors(KVComplexField)->first().type=pml::KVDataType::LIST)]
-							[let attr : Attribute = getMappedAttributeOfFieldInStructure(ref.sourceField->any(true).oclAsType(PhysicalField),struct)]
+							[let attr : Attribute = getMappedAttributeOfFieldInStructure(ref.targetField->any(true).oclAsType(PhysicalField),ref.targetField->any(true).oclAsType(PhysicalField).getAbstractPhysicalStructureNotEmbeddedObject())]
 		value[roleref.name.toUpperFirst()/] =  Util.getStringValue([oppositerole.entity.name.toLowerFirst()/].get[attr.name.toUpperFirst()/]());
 							[/let]
 		DBConnectionMgr.writeKeyValueList(key[roleref.name.toUpperFirst()/],value[roleref.name.toUpperFirst()/],"[db.name/]");
