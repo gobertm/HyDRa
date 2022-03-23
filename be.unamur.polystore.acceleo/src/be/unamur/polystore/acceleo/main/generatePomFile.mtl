@@ -11,7 +11,8 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>[getPomGroupId(conceptualSchema)/]</groupId>
 	<artifactId>[getPomArtifactId(conceptualSchema)/]</artifactId>
-	<version>0.0.1-SNAPSHOT</version>
+	<version>1.0</version>
+	<packaging>jar</packaging>
 
 	<properties>
 		<maven.compiler.release>14</maven.compiler.release>
@@ -37,7 +38,11 @@
 			<artifactId>mysql-connector-java</artifactId>
 			<version>8.0.22</version>
 		</dependency>
-
+		<dependency>
+<groupId>com.opencsv</groupId>
+<artifactId>opencsv</artifactId>
+<version>5.6</version>
+</dependency>
 		[comment]
 		<!-- https://mvnrepository.com/artifact/org.mongodb/mongo-java-driver -->
 		<dependency>
@@ -81,8 +86,6 @@
 		    <version>3.1.2</version>
 		    <scope>provided</scope>
 		</dependency>
-
-
 
 		<!-- https://mvnrepository.com/artifact/org.apache.spark/spark-sql -->
 		<dependency>
@@ -131,13 +134,21 @@
 		<dependency>
 			<groupId>org.junit.jupiter</groupId>
 			<artifactId>junit-jupiter-api</artifactId>
-			<version>5.5.1</version>
+			<version>5.8.2</version>
 			<scope>test</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.junit.jupiter</groupId>
 			<artifactId>junit-jupiter-engine</artifactId>
-			<version>5.5.1</version>
+			<version>5.8.2</version>
+			<scope>test</scope>
+		</dependency>
+
+	<!-- https://mvnrepository.com/artifact/org.junit.platform/junit-platform-launcher -->
+		<dependency>
+			<groupId>org.junit.platform</groupId>
+			<artifactId>junit-platform-launcher</artifactId>
+			<version>1.8.2</version>
 			<scope>test</scope>
 		</dependency>
 
