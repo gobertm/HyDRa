@@ -76,6 +76,18 @@ public class MappingRuleService {
 		return res;
 	}
 	
+	public static String getJavaAbsolutePath(Reference ref, PhysicalField field) {
+		String prefix = "target";
+		for(PhysicalField pf : ref.getSourceField())
+			if(field == pf) {
+				prefix = "source";
+				break;
+			}
+		
+		AbstractPhysicalSchema schema = (AbstractPhysicalSchema) getFirstAncestor(AbstractPhysicalSchema.class, ref);
+		return schema.getName() + '_' + getPhysicalStructureNotEmbeddedObject(ref).getName() + '_' + ref.getName() + '_' + prefix + '_' + getPhysicalName(field);
+	}
+	
 	public static Set<AbstractPhysicalStructure> getMappedPhysicalStructureOfRoleToReference(Role role, MappingRules rules) {
 		Set<AbstractPhysicalStructure> res = new HashSet<>();
 		for (AbstractMappingRule rule : rules.getMappingRules()) {

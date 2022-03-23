@@ -193,13 +193,13 @@ public class [ent.name.toUpperFirst() /]TDO extends [ent.name.toUpperFirst() /] 
 					[if (role.entity = ent)]
 					[let fieldsList : Sequence(PhysicalField) = getFields(ref, role, role2)]
 						[for (field : PhysicalField | fieldsList)]
-	private [if (field.oclIsTypeOf(ArrayField)=true or field.ancestors(EmbeddedObject)->size() > 0 or (field.ancestors(KVComplexField)->size() > 0 and field.ancestors(KVComplexField)->any(true).type=KVDataType::LIST))]ArrayList<String> [getJavaAbsolutePath(ref).toLowerFirst() /]_[field.getPhysicalName() /] = new ArrayList<>();[else] String [getJavaAbsolutePath(ref).toLowerFirst() /]_[field.getPhysicalName() /];[/if] 
-	public [if (field.oclIsTypeOf(ArrayField)=true or field.ancestors(EmbeddedObject)->size() > 0 or (field.ancestors(KVComplexField)->size() > 0 and field.ancestors(KVComplexField)->any(true).type=KVDataType::LIST))]ArrayList<String> [else] String[/if] get[getJavaAbsolutePath(ref).toUpperFirst() /]_[field.getPhysicalName() /]() {
-		return this.[getJavaAbsolutePath(ref).toLowerFirst() /]_[field.getPhysicalName() /];
+	private [if (field.oclIsTypeOf(ArrayField)=true or field.ancestors(EmbeddedObject)->size() > 0 or (field.ancestors(KVComplexField)->size() > 0 and field.ancestors(KVComplexField)->any(true).type=KVDataType::LIST))]ArrayList<String> [getJavaAbsolutePath(ref, field).toLowerFirst() /] = new ArrayList<>();[else] String [getJavaAbsolutePath(ref, field).toLowerFirst() /];[/if] 
+	public [if (field.oclIsTypeOf(ArrayField)=true or field.ancestors(EmbeddedObject)->size() > 0 or (field.ancestors(KVComplexField)->size() > 0 and field.ancestors(KVComplexField)->any(true).type=KVDataType::LIST))]ArrayList<String> [else] String[/if] get[getJavaAbsolutePath(ref, field).toUpperFirst() /]() {
+		return this.[getJavaAbsolutePath(ref, field).toLowerFirst() /];
 	}
 
-	public void set[getJavaAbsolutePath(ref).toUpperFirst() /]_[field.getPhysicalName() /]( [if (field.oclIsTypeOf(ArrayField)=true or field.ancestors(EmbeddedObject)->size() > 0 or (field.ancestors(KVComplexField)->size() > 0 and field.ancestors(KVComplexField)->any(true).type=KVDataType::LIST))]ArrayList<String> [else] String[/if] [getJavaAbsolutePath(ref) /]_[field.getPhysicalName() /]) {
-		this.[getJavaAbsolutePath(ref).toLowerFirst() /]_[field.getPhysicalName() /] = [getJavaAbsolutePath(ref) /]_[field.getPhysicalName() /];
+	public void set[getJavaAbsolutePath(ref, field).toUpperFirst() /]( [if (field.oclIsTypeOf(ArrayField)=true or field.ancestors(EmbeddedObject)->size() > 0 or (field.ancestors(KVComplexField)->size() > 0 and field.ancestors(KVComplexField)->any(true).type=KVDataType::LIST))]ArrayList<String> [else] String[/if] [getJavaAbsolutePath(ref, field) /]) {
+		this.[getJavaAbsolutePath(ref, field).toLowerFirst() /] = [getJavaAbsolutePath(ref, field) /];
 	}
 
 						[/for]
@@ -207,13 +207,13 @@ public class [ent.name.toUpperFirst() /]TDO extends [ent.name.toUpperFirst() /] 
 					[/if]
 					[if (role2.entity = ent and hasMappedReferenceInSamePhysicalStructureForOppoisteRole(role2, ref.getAbstractPhysicalStructureNotEmbeddedObject()) = false)]
 						[for (field : PhysicalField | ref.targetField)]
-	private [if (field.oclIsTypeOf(ArrayField)=true)]List<String> [else] String[/if] [getJavaAbsolutePath(ref).toLowerFirst() /]_[field.getPhysicalName() /];
-	public [if (field.oclIsTypeOf(ArrayField)=true)]List<String> [else] String[/if] get[getJavaAbsolutePath(ref).toUpperFirst() /]_[field.getPhysicalName() /]() {
-		return this.[getJavaAbsolutePath(ref).toLowerFirst() /]_[field.getPhysicalName() /];
+	private [if (field.oclIsTypeOf(ArrayField)=true)]List<String> [else] String[/if] [getJavaAbsolutePath(ref, field).toLowerFirst() /];
+	public [if (field.oclIsTypeOf(ArrayField)=true)]List<String> [else] String[/if] get[getJavaAbsolutePath(ref, field).toUpperFirst() /]() {
+		return this.[getJavaAbsolutePath(ref, field).toLowerFirst() /];
 	}
 
-	public void set[getJavaAbsolutePath(ref).toUpperFirst() /]_[field.getPhysicalName() /]( [if (field.oclIsTypeOf(ArrayField)=true)]ArrayList<String> [else] String[/if] [getJavaAbsolutePath(ref) /]_[field.getPhysicalName() /]) {
-		this.[getJavaAbsolutePath(ref).toLowerFirst() /]_[field.getPhysicalName() /] = [getJavaAbsolutePath(ref) /]_[field.getPhysicalName() /];
+	public void set[getJavaAbsolutePath(ref, field).toUpperFirst() /]( [if (field.oclIsTypeOf(ArrayField)=true)]ArrayList<String> [else] String[/if] [getJavaAbsolutePath(ref, field) /]) {
+		this.[getJavaAbsolutePath(ref, field).toLowerFirst() /] = [getJavaAbsolutePath(ref, field) /];
 	}
 
 						[/for]

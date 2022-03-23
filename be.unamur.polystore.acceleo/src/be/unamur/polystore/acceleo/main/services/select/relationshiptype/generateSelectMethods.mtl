@@ -376,7 +376,7 @@ Dataset<[role.getRelationShipType().name.toUpperFirst() /]TDO> res = d.map((MapF
 			[for (sndRef : Reference | sndRefs)]
 				[for (field : PhysicalField | sndRef.sourceField)]
 			String [sndRef.name/]_[field.getPhysicalName()/] = r.getAs("[joinTable.name/]_[field.getPhysicalName()/]") == null ? null : r.getAs("[joinTable.name/]_[field.getPhysicalName()/]").toString();
-			[role.getRelationShipType().name.toLowerFirst() /]_res.set[joinTable.getPhysicalSchema().name.toUpperFirst()/]_[joinTable.name/]_[sndRef.name/]_[field.getPhysicalName()/]([sndRef.name/]_[field.getPhysicalName()/]);
+			[role.getRelationShipType().name.toLowerFirst() /]_res.set[getJavaAbsolutePath(sndRef, field).toUpperFirst()/]([sndRef.name/]_[field.getPhysicalName()/]);
 				[/for]
 			[/for]
 			

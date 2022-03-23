@@ -193,14 +193,14 @@
 					logger.warn("Cannot retrieve value '[refField.getPhysicalName()/]'. Regex ['['/]{}[']'/] Value ['['/]{}[']'/]",regex,value);
 					[pojoName.toLowerFirst() /]_res.addLogEvent("Cannot retrieve value for '[refField.getPhysicalName()/]' attribute stored in db [db.name/]. Probably due to an ambiguous regex.");
 					}
-					[pojoName.toLowerFirst() /]_res.set[getJavaAbsolutePath(ref).toUpperFirst() /]_[refField.getPhysicalName() /]([refField.getPhysicalName()/]);
+					[pojoName.toLowerFirst() /]_res.set[getJavaAbsolutePath(ref, refField).toUpperFirst() /]([refField.getPhysicalName()/]);
 					
 				}else {
 					//Retrieving reference field '[refField.getPhysicalName()/]' in Value
 					value = r.getAs("value");
 					[if (refField.ancestors(LongField) -> size() = 0)]
 					[comment shortField or bracketfield/] 
-					[pojoName.toLowerFirst() /]_res.set[getJavaAbsolutePath(ref).toUpperFirst() /]_[refField.getPhysicalName() /](value);
+					[pojoName.toLowerFirst() /]_res.set[getJavaAbsolutePath(ref, refField).toUpperFirst() /](value);
 					[else]
 					[comment LongField /]
 					regex = "[getJavaRegexFromLongField(refField.ancestors(LongField) -> first().oclAsType(LongField)) /]";
@@ -219,7 +219,7 @@
 						logger.warn("Cannot retrieve value for [pojoName/][refField.getPhysicalName() /] attribute stored in db [db.name/]. Regex ['['/]{}[']'/] Value ['['/]{}[']'/]",regex,value);
 						[pojoName.toLowerFirst() /]_res.addLogEvent("Cannot retrieve value for [pojoName /].[refField.getPhysicalName() /] attribute stored in db [db.name/]. Probably due to an ambiguous regex.");
 					}
-					[pojoName.toLowerFirst() /]_res.set[getJavaAbsolutePath(ref).toUpperFirst() /]_[refField.getPhysicalName() /]([refField.getPhysicalName() /]_ref);
+					[pojoName.toLowerFirst() /]_res.set[getJavaAbsolutePath(ref, refField).toUpperFirst() /]([refField.getPhysicalName() /]_ref);
 					[/if]
 					}
 					[/if]
@@ -355,13 +355,13 @@
 					logger.warn("Cannot retrieve value '[refField.getPhysicalName()/]'. Regex ['['/]{}[']'/] Value ['['/]{}[']'/]",regex,value);
 					[pojoName.toLowerFirst() /]_res.addLogEvent("Cannot retrieve value for '[refField.getPhysicalName()/]' attribute stored in db [db.name/]. Probably due to an ambiguous regex.");
 					}
-					[pojoName.toLowerFirst() /]_res.set[getJavaAbsolutePath(ref).toUpperFirst() /]_[refField.getPhysicalName() /]([ref.name/]_[refField.getPhysicalName()/]);
+					[pojoName.toLowerFirst() /]_res.set[getJavaAbsolutePath(ref, refField).toUpperFirst() /]([ref.name/]_[refField.getPhysicalName()/]);
 				}
 					[else]
 				// Get reference column in value [ '[' /][refField.getPhysicalName()/] [ ']' /] for reference [ '[' /][ref.name/][ ']' /]
 				[if (refField.ancestors(LongField) -> size() = 0)]
 				[comment shortField or bracketfield/]
-				[pojoName.toLowerFirst() /]_res.set[getJavaAbsolutePath(ref).toUpperFirst() /]_[refField.getPhysicalName() /]([if (refField.ancestors(KVComplexField)->any(true).type=KVDataType::LIST)]new ArrayList<String>(ScalaUtil.javaList(r.getAs("[getPhysicalName(refField) /]")))[else]r.getAs("[getPhysicalName(refField) /]")[/if]);
+				[pojoName.toLowerFirst() /]_res.set[getJavaAbsolutePath(ref, refField).toUpperFirst() /]([if (refField.ancestors(KVComplexField)->any(true).type=KVDataType::LIST)]new ArrayList<String>(ScalaUtil.javaList(r.getAs("[getPhysicalName(refField) /]")))[else]r.getAs("[getPhysicalName(refField) /]")[/if]);
 				[else]
 				[comment LongField /]
 				regex = "[getJavaRegexFromLongField(refField.ancestors(LongField) -> first().oclAsType(LongField)) /]";
@@ -374,14 +374,14 @@
 				p = Pattern.compile(regex);
 				m = p.matcher(value);
 				matches = m.find();
-				String [getJavaAbsolutePath(ref) /]_[refField.getPhysicalName() /] = null;
+				String [getJavaAbsolutePath(ref, refField) /] = null;
 				if(matches) {
-					[getJavaAbsolutePath(ref) /]_[refField.getPhysicalName() /] = m.group(groupIndex.intValue());
+					[getJavaAbsolutePath(ref, refField) /] = m.group(groupIndex.intValue());
 				} else {
 					logger.warn("Cannot retrieve value for [pojoName /][refField.getPhysicalName() /] attribute stored in db [db.name/]. Probably due to an ambiguous regex.");
 					[pojoName.toLowerFirst() /]_res.addLogEvent("Cannot retrieve value for BLABLABLA. Probably due to an ambiguous regex.");
 				}
-				[pojoName.toLowerFirst() /]_res.set[getJavaAbsolutePath(ref).toUpperFirst() /]_[refField.getPhysicalName() /]([getJavaAbsolutePath(ref) /]_[refField.getPhysicalName() /]);
+				[pojoName.toLowerFirst() /]_res.set[getJavaAbsolutePath(ref, refField).toUpperFirst() /]([getJavaAbsolutePath(ref, refField) /]);
 				[/if]
 					[/if]
 				[/if]
