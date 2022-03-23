@@ -5,8 +5,12 @@ package be.unamur.polystore.validation;
 
 import org.eclipse.xtext.validation.Check;
 
+import be.unamur.polystore.pml.AbstractMappingRule;
 import be.unamur.polystore.pml.Edge;
+import be.unamur.polystore.pml.EntityMappingRule;
 import be.unamur.polystore.pml.EntityType;
+import be.unamur.polystore.pml.MappingRules;
+import be.unamur.polystore.pml.PhysicalField;
 import be.unamur.polystore.pml.PmlPackage;
 import be.unamur.polystore.pml.RelationshipType;
 
@@ -18,6 +22,7 @@ import be.unamur.polystore.pml.RelationshipType;
 public class PmlValidator extends AbstractPmlValidator {
 	
 	public static final String INVALID_NAME = "invalidName";
+	public static final String INVALID_ERULE = "invalidEntityMappingRule";
 
 	@Check
 	public void checkEntityStartsWithCapital(EntityType entity) {
@@ -41,6 +46,27 @@ public class PmlValidator extends AbstractPmlValidator {
 		for(char c : edge.getName().toCharArray()) {
 			if(!Character.isUpperCase(c) && Character.isAlphabetic(c))
 				warning("Edges name should be full capital letters", PmlPackage.Literals.ABSTRACT_PHYSICAL_STRUCTURE__NAME,INVALID_NAME);
+		}
+	}
+	
+	@Check void checkAttributeVsFieldInEntityMappingRule(EntityMappingRule rule) {
+		if(rule.getAttributesConceptual().size()!= rule.getPhysicalFields().size()) {
+			error("Number of conceptual attributes and physical fields in entity mapping rule should be equal", PmlPackage.Literals.ENTITY_MAPPING_RULE__ENTITY_CONCEPTUAL, INVALID_ERULE);
+			error("Number of conceptual attributes and physical fields in entity mapping rule should be equal", PmlPackage.Literals.ENTITY_MAPPING_RULE__PHYSICAL_STRUCTURE, INVALID_ERULE);
+		}
+	}
+	
+	@Check void checkFieldIsMapped(PhysicalField field, MappingRules rules) {
+		boolean mapped = false;
+		for(AbstractMappingRule rule : rules.getMappingRules()) {
+			if(rule instanceof EntityMappingRule) {
+				if(((EntityMappingRule) rule).getPhysicalFields().contains(field)) {
+					mapped = true;
+					break;
+				}
+			}
+		}
+		if(!mapped) {
 		}
 	}
 	
