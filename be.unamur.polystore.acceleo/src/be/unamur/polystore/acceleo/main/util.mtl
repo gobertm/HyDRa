@@ -175,8 +175,11 @@
 
 [template public instantiateLogger(className : String)]static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger([className/].class);[/template]
 
-[query public getJavaAbsolutePath(ref : Reference) : String = 
-ref.eContainer(AbstractPhysicalSchema).name + '_' + ref.getAbstractPhysicalStructureNotEmbeddedObject().name + '_' + ref.name/]
+[comment][query public getJavaAbsolutePath(ref : Reference) : String = 
+ref.eContainer(AbstractPhysicalSchema).name + '_' + ref.getAbstractPhysicalStructureNotEmbeddedObject().name + '_' + ref.name/][/comment]
+
+[query public getJavaAbsolutePath(ref : Reference, field : PhysicalField) : String = 
+invoke('be.unamur.polystore.acceleo.main.utils.MappingRuleService', 'getJavaAbsolutePath(be.unamur.polystore.pml.Reference, be.unamur.polystore.pml.PhysicalField)', Sequence{ref, field})/]
 
 [query public getJavaAbsolutePath(field : PhysicalField) : String = 
 field.eContainer(AbstractPhysicalSchema).name + '_' + field.getAbstractPhysicalStructureNotEmbeddedObject().name + '_' + field.getPhysicalName()/]
