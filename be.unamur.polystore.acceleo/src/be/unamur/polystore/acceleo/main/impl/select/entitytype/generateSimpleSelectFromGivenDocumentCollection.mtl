@@ -57,7 +57,7 @@
 
 	}, Encoders.bean([rel.name.toUpperFirst() /].class));
 	// TODO drop duplicates based on roles ids
-	//res= res.dropDuplicates(new String {});
+	res= res.dropDuplicates(new String['['/][']'/]{[for (role : Role | rel.roles) separator (',')][for (attr : Attribute | role.entity.identifier.attributes) separator(',')]"[role.name.toLowerFirst()/].[attr.name/]"[/for][/for]});
 	return res;
 [/template]
 
