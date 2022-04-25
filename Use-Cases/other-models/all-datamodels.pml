@@ -1,237 +1,471 @@
-conceptual schema cs {
-	entity type Product{
-		id:string,
-		name:string,
-		price:float,
-		description:string,
-		cat_name : string,
-		cat_description: string,
-		photo : blob
-
-		identifier{
-			id
-		}
-	} 
-	
-	entity type Review {
-		id: string,
-		rating : int,
-		content : string
-		
-		identifier{
-			id
-		}
-	}
-	
-	entity type Client {
-		id : int,
-		firstname : string,
-		lastname : string,
-		street : string,
-		number : int
-		
-		identifier {
-			id
-		}
-	}
-	
-	entity type CreditCard{
-		id : string,
-		number : int,
-		expirymonth : date // add format 
-	}
-	
-	entity type Order{
-		id : string,
-		orderDate : date
-	}
-	
-	relationship type productReview{
-		reviews[1]: Review,
-		product[0-N] : Product
-	}
-	
-	relationship type reviewClient {
-		poster[0-N] : Client,
-		review[1] : Review
-	}
-	
-	relationship type orderClient {
-		order[1] : Order,
-		customer[0-N] : Client
-	}
-	
-	relationship type orderCreditCard {
-		order [0-1] : Order,
-		payment_card [0-N] : CreditCard
-	}
-
-}
-physical schemas {
-	document schema myDocSchema : mymongo {
-		collection productCollection{
-			fields { 
-				id,
-				Name,
-				Description,
-				price,
-				review[0-N]{
-					numberofstars:[rate],
-					ratingstring :[rate2]"*",
-					content,
-					posted_by
-				}
-			}
-			references {
-				poster : review.posted_by -> KVSchema.KVClient.clientID
-				}
-		}
-	}
-	
-	document schema categorySchema : mymongo2 {
-			collection categoryCollection {
-				fields {
-					categoryname,
-					products[0-N]{
-						id
-					}
-				}
-			}
-	}
-	
-	relational schema myRelSchema : mydb {
-		table CreditCard {
-			columns {
-				id,
-				number,
-				expiryDate
-			}
-		} 
-		
-		table Order {
-			columns{ 
-				id,
-				dateOrder,
-				cust_id,
-				card_id
-			}	
-			references {
-				 bought_by : cust_id -> KVSchema.KVClient.clientID
-				 paid_with : card_id -> CreditCard.id
-			}
-		}
-		
-		table ArchiveOrder {
-			columns{ 
-				id,
-				dateOrder,
-				cust_id,
-				card_id
-			}	
-			references {
-				 bought_by : cust_id -> KVSchema.KVClient.clientID
-				 paid_with : card_id -> CreditCard.id
-			}
-		}
-	}
-	
-	graph schema myGraphSchema {
-		Node Product {
-			product_id,
-			Name,
-			Description
-		}
-		
-		Node Order {
-			orderid
-		}
-		
-		Edge CONTAINS {
-			Product -> Order,
-			quantity  // How to map this one?
-		}
-	}
-	
-	key value schema KVSchema : myredis {
-	
-		kvpairs KVClient {
-			key : "CLIENT:"[clientID],
-			value : attr hash { 
-				name : [firstname]"_"[lastname],
-				streetnumber : [streetnbr], 
-				street
-			}
-		}
-		
-		kvpairs kvProdPhotos {
-			key:"PRODUCT:"[prodid],
-			value : photo
-		}
-	}
-	
-	column schema colSchema {
-		
-		table Client {
-			rowkey{
-				clientnumber
-			}
-			
-			columnfamilies {
-				personnal {
-					name:[first]"_"[last]
-					}
-				address{
-					street,
-					number,
-					zipcode
-				}
-			}
-		}
-	}
-}
-
-mapping rules { 
-	  cs.Product(id, name, description, price) -> myDocSchema.productCollection(id,Name,Description, price),
-	  cs.Product(cat_name) -> categorySchema.categoryCollection(categoryname),
-	  cs.Product(id) -> categorySchema.categoryCollection.products(id),
-	  cs.Product(id,name,description) -> myGraphSchema.Product(product_id,Name,Description),
-	  cs.Product(id,photo) -> KVSchema.kvProdPhotos(prodid,photo),
-	  cs.Review(content,rating) -> myDocSchema.productCollection.review(content,rate),
-	  cs.Review(rating) -> myDocSchema.productCollection.review(rate2),
-	  cs.reviewClient.review -> myDocSchema.productCollection.poster,
-	  cs.productReview.reviews -> myDocSchema.productCollection.review(),
-	  cs.CreditCard(id,number, expirymonth) -> myRelSchema.CreditCard(id,number,expiryDate),
-	  cs.orderCreditCard.order -> myRelSchema.Order.paid_with,
-	  cs.Order(id, orderDate) -> myRelSchema.Order(id,dateOrder),
-	  cs.Order(id, orderDate) -(orderDate < "2019")-> myRelSchema.ArchiveOrder(id,dateOrder),
-	  cs.Order(id) -> myGraphSchema.Order(orderid),
-	  cs.Client(lastname,firstname) -> colSchema.Client(first,last),
-	  cs.Client(id) -> KVSchema.KVClient(clientID),
-	  cs.Client(firstname, lastname, street, number) -> KVSchema.KVClient.attr(firstname, lastname, street, streetnbr)
-	  
-	}
-	
-databases{
-	redis myredis{
-		host:"localhost"
-		port:6363
-	}
-	
-	sqlite mydb {
-		host: "localhost"
-		port: 3307
-		login: "root"
-		password: "password"
-	}
-	
-	mongodb mymongo {
+databases {
+	mysql relData {
+		dbname : "reldata"
 		host : "localhost"
-		port:27000
+		login : "root"
+		password : "password"
+		port : 3399
 	}
-	
-	mongodb mymongo2 {
-		host:"localhost"
-		port: 27100
-		}
+	mongodb myMongoDB {
+		dbname : "myMongoDB"
+		host : "localhost"
+		port : 27777
+	}
+	redis redisDB {
+		host : "localhost"
+		port : 6666
+	}
 }
+// Conceptual schema
+conceptual schema conceptualSchema {
+	//entities
+	entity type Shippers { 
+		shipperID : int,
+		companyName : string, 
+		phone : string
+		identifier {
+			shipperID
+		}
+	}
+	entity type Products {
+		productID : int, 
+		productName : string, 
+		// SupplierRef : int,
+		// CategoryRef : int,
+		quantityPerUnit : string,
+		unitPrice : float,
+		unitsInStock : int,
+		unitsOnOrder : int,
+		reorderLevel : int,
+		discontinued : bool
+		identifier {
+			productID
+		}
+	}
+	entity type Suppliers { // OK
+		supplierID : int,
+		companyName : string,
+		contactName : string, 
+		contactTitle : string,
+		address : string,
+		city : string,
+		region : string,
+		postalCode : string,
+		country : string,
+		phone : string,
+		fax : string,
+		homePage : string
+		identifier {
+			supplierID
+		}
+	}
+	entity type Customers { // ok
+		customerID : string,
+		companyName : string, 
+		contactName : string, 
+		contactTitle : string, 
+		address : string,
+		city : string,
+		region : string, 
+		postalCode : string,
+		country : string, 
+		phone : string, 
+		fax : string
+		identifier {
+			customerID
+		}
+	}
+	entity type Orders { // ok
+		orderID : int,
+		// CustomerRef : string,
+		// EmployeeRef : int,
+		orderDate : date,
+		requiredDate : date,
+		shippedDate : date,
+		shipVia : int,
+		freight : float,
+		shipName : string,
+		shipAddress : string,
+		shipCity : string,
+		shipRegion : string,
+		shipPostalCode : string, 
+		shipCountry : string
+		identifier {
+			orderID
+		}
+	}
+	entity type Categories { // ok
+		categoryID : int,
+		categoryName : string,
+		description : string,
+		picture : string
+		identifier {
+			categoryID
+		}
+	}
+	// entity type EmployeeTerritories {  // ok
+	// 	EmployeeRef : int,
+	// 	TerritoryRef : string
+	// }
+
+	entity type Employees { // ok
+		employeeID : int,
+		firstName : string,
+		lastName : string,
+		title : string,
+		titleOfCourtesy : string,
+		birthDate : date,
+		hireDate : date,
+		address : string, 
+		city : string,
+		region : string,
+		postalCode : string,
+		country : string,
+		homePhone : string,
+		extension : string,
+		photo : string,
+		notes : string,
+		reportsTo : int,
+		photoPath : string,
+		salary : float
+		identifier {
+			employeeID
+		}
+	}
+	entity type Region { // ok 
+		regionID : int,
+		regionDescription : string
+		identifier {
+			regionID
+		}
+	}
+	entity type Territories { // ok
+		territoryID : string,
+		territoryDescription : string,
+		regionRef : int
+		identifier {
+			territoryID
+		}
+	}
+	//relationships
+	relationship type make_by {
+		order[1]: Orders,
+		client[0-N]: Customers
+	}
+	relationship type contains {
+		territory[1]: Territories,
+		region[1-N]: Region
+	}
+	relationship type are_in {
+		employee[1-N]: Employees,
+		territory[1-N]: Territories 
+	}
+	relationship type report_to {
+		lowerEmployee[0-1]: Employees,
+		higherEmployee[0-N]: Employees
+	}
+	relationship type ship_via {
+		shipper[1-N]: Shippers,
+		order[1]: Orders
+	}
+	relationship type handle {
+		employee[1-N]: Employees,
+		order[1]: Orders
+	}
+	relationship type insert {
+		supplier[1-N]: Suppliers,
+		product[1]: Products
+		
+	}
+}
+//Physical schema
+physical schemas {
+	key value schema kv : redisDB {
+		kvpairs shipperCompanyNamePairs {
+			key : "SHIPPERS:"[SHIPPERSid]":COMPANYNAME",
+			value : COMPANYNAME
+		}
+		kvpairs shipperPhonePairs {
+			key : "SHIPPERS:"[SHIPPERSid]":PHONE",
+			value : PHONE 
+		}
+		kvpairs stockInfoPairs {
+			key : "PRODUCT:"[productid]":STOCKINFO",
+			value : hash {
+				UnitsInStock,
+				UnitsOnOrder
+			}
+		}
+	}
+	relational schema relSchema : relData {
+		table Territories {
+			columns {
+				TerritoryID,
+				TerritoryDescription ,
+				RegionRef 
+			}
+		}
+		table EmployeeTerritories {
+			columns {
+				EmployeeRef ,
+				TerritoryRef 
+			}
+		}
+		table Employees {
+			columns {
+				EmployeeID ,
+				FirstName ,
+				LastName ,
+				Title ,
+				TitleOfCourtesy ,
+				BirthDate,
+				HireDate,
+				Address ,
+				City ,
+				Region ,
+				PostalCode ,
+				Country ,
+				HomePhone ,
+				Extension,
+				Photo,
+				Notes,
+				ReportsTo ,
+				PhotoPath,
+				Salary
+			}
+		}
+
+		table Region {
+			columns {
+				RegionID ,
+				RegionDescription
+			}
+		}
+
+		
+		table Shippers {
+			columns {
+				ShipperID ,
+				CompanyName ,
+				Phone 
+			}
+		}
+
+		table Orders {
+			columns {
+				OrderID ,
+				CustomerRef,
+				EmployeeRef ,
+				OrderDate,
+				RequiredDate,
+				ShippedDate,
+				ShipVia ,
+				Freight ,
+				ShipName ,
+				ShipAddress,
+				ShipCity ,
+				ShipRegion,
+				ShipPostalCode ,
+				ShipCountry 
+			}
+		}
+
+		table Order_Details {
+			columns {
+				OrderRef ,
+				ProductRef ,
+				UnitPrice ,
+				Quantity ,
+				Discount 
+			}
+		}
+
+		table Customers {
+			columns {
+				CustomerID,
+				CompanyName,
+				ContactName ,
+				ContactTitle ,
+				Address ,
+				City ,
+				Region ,
+				PostalCode ,
+				Country ,
+				Phone ,
+				Fax  
+			}
+		}
+
+		table Products {
+			columns {
+				ProductID,
+				ProductName,
+				SupplierRef,
+				CategoryRef,
+				QuantityPerUnit,
+				UnitPrice,
+				UnitsInStock,
+				UnitsOnOrder,
+				ReorderLevel,
+				Discontinued
+			}
+		}
+
+		table Categories {
+			columns {
+				CategoryID,
+				CategoryName,
+				Description,
+				Picture
+			}
+		}
+
+
+		table Suppliers {
+			columns {
+				SupplierID,
+				CompanyName,
+				ContactName,
+				ContactTitle,
+				Address,
+				City,
+				Region,
+				PostalCode,
+				Country,
+				Phone,
+				Fax,
+				HomePage
+			}
+		}
+
+
+		table ProductsInfo {
+			columns {
+				ProductID,
+				ProductName,
+				SupplierRef,
+				CategoryRef,
+				QuantityPerUnit,
+				UnitPrice,
+				ReorderLevel,
+				Discontinued
+			}
+		}
 	
+	}
+	document schema mongoSchema : myMongoDB {
+		collection Customers {
+			fields {
+				ID,
+				Address,
+				City,
+				CompanyName,
+				ContactName,
+				ContactTitle,
+				Country,
+				Fax,
+				Phone,
+				PostalCode,
+				Region
+			}
+		}
+		collection Employees {
+			fields {
+				EmployeeID,
+				Address,
+				BirthDate,
+				City,
+				Country,
+				Extension,
+				FirstName,
+				HireDate,
+				HomePhone,
+				LastName,
+				Notes,
+				Photo,
+				PhotoPath,
+				PostalCode,
+				Region,
+				Salary,
+				ReportsTo,
+				Title,
+				TitleOfCourtesy
+			}
+		}
+		collection Orders {
+			fields {
+				OrderID,
+				EmployeeRef,
+				Freight,
+				OrderDate,
+				RequiredDate,
+				ShipAddress,
+				ShipCity,
+				ShipCountry,
+				ShipName,
+				ShipPostalCode,
+				ShipRegion,
+				ShipVia,
+				ShippedDate
+			//	customer[1]{
+			//		CustomerID,
+			//		ContactName
+			//  }
+			}
+			// references {
+			//	empOrder: EmployeeRef -> Employees.EmployeeID
+			//}
+		}
+		collection Suppliers {
+			fields {
+				SupplierID,
+				Address,
+				City,
+				CompanyName,
+				ContactName,
+				ContactTitle,
+				Country,
+				Fax,	
+				Phone,
+				HomePage,
+				PostalCode,
+				Region
+			}
+		}
+	}
+}
+mapping rules {
+	//Employee
+	conceptualSchema.Employees(employeeID, address, birthDate, city, country, extension, firstname, hireDate, homePhone, lastname, photo, postalCode, region, salary, title, notes, photoPath, titleOfCourtesy) 
+	-> mongoSchema.Employees(EmployeeID, Address, BirthDate, City, Country, Extension, FirstName, HireDate, HomePhone, LastName, Photo, PostalCode, Region, Salary, Title, Notes, PhotoPath, TitleOfCourtesy),
+	
+	//Region
+	conceptualSchema.Region(regionID, description) -> mongoSchema.Employees.territories.region(RegionID, RegionDescription),
+	
+	//Territory
+	conceptualSchema.Territories(territoryID, description) -> mongoSchema.Employees.territories(TerritoryID, TerritoryDescription),
+	
+	//Product
+	conceptualSchema.Products(productID, name, supplierRef, categoryRef,quantityPerUnit, unitPrice, reorderLevel, discontinued) -> relSchema.ProductsInfo(ProductID, ProductName, SupplierRef, CategoryRef, QuantityPerUnit, UnitPrice, ReorderLevel, Discontinued),
+	conceptualSchema.Products(productID, unitsInStock, unitsOnOrder) -> kv.stockInfoPairs(productid, UnitsInStock, UnitsOnOrder),
+	
+	//Category
+	conceptualSchema.Categories(categoryID, categoryName, description, picture) -> kv.categoryPairs(categoryid, CategoryName, Description, Picture),	
+	
+	//Shipper
+	conceptualSchema.Shippers(shipperID, companyName, phone) -> relSchema.Shippers(ShipperID, CompanyName, Phone),
+	
+	//Customer
+	conceptualSchema.Customers(customerID, city, companyName, contactName, contactTitle, country, fax, phone, postalCode, region, address) -> mongoSchema.Customers(ID, City, CompanyName, ContactName, ContactTitle, Country, Fax, Phone, PostalCode, Region, Address),
+	conceptualSchema.Customers(customerID, companyName) -> mongoSchema.Orders.customer(CustomerID, ContactName),
+		
+	//Order
+	conceptualSchema.Orders(orderID, freight, orderDate, requiredDate, shipAddress, shipCity, shipCountry, shipName, shipPostalCode, shipRegion, shippedDate) -> mongoSchema.Orders(OrderID, Freight, OrderDate, RequiredDate, ShipAddress, ShipCity, ShipCountry, ShipName, ShipPostalCode, ShipRegion, ShippedDate),
+	
+	//Supplier
+	conceptualSchema.Suppliers(supplierID, address, city, companyName, contactName, contactTitle, country, fax, homePage, phone, postalCode, region) 
+	-> mongoSchema.Suppliers(SupplierID, Address, City, CompanyName, contactName, ContactTitle, Country, Fax, HomePage, Phone, PostalCode, Region)
+	//Employee -> Order
+	//conceptualSchema.handle.order -> mongoSchema.Orders.empOrder
+	
+}
