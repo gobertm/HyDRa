@@ -53,6 +53,15 @@ public class PmlValidator extends AbstractPmlValidator {
 		}
 	}
 	
+	@Check
+	public void checkAttributeStartsWithLowerCase(Attribute attribute) {
+		if (!Character.isLowerCase(attribute.getName().charAt(0))) {
+			error("Attribute names must start with a lower case letter",
+					PmlPackage.Literals.ATTRIBUTE__NAME,
+					INVALID_NAME);
+		}
+	}
+	
 	@Check void checkCapitalLettersForEdge(Edge edge) {
 		for(char c : edge.getName().toCharArray()) {
 			if(!Character.isUpperCase(c) && Character.isAlphabetic(c))
