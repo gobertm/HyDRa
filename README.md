@@ -69,7 +69,7 @@ A HyDRa polystore schema is given as input of this process. The generation itsel
 
 ![API](Use-Cases/resources/ApiGeneration.PNG)
 
-## API Usage
+## API Usage Code Example
 
 Below you will find code examples of the generated API usage.
 The conceptual model of the code below is the following : 
