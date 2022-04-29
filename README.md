@@ -13,7 +13,7 @@ Here we list the operations manipulating modeled domain entities objects support
 | Feature | Relational DB | Document DB | Key Value DB | Graph DB | Column DB |
 |----|:---:|:---:|:---:|:---:|---|
 | `Read ` | 🌕 | 🌕 | 🌔 (only supports string, hash and lists datatypes) | 🌑 | 🌑 |
-| `Insert` | 🌕 | 🌕 | 🌓 (only for structures not mapped to roles) | 🌑 | 🌑 |
+| `Insert` | 🌕 | 🌕 | 🌕 | 🌑 | 🌑 |
 | `Update` | 🌑 | 🌒 (via insert of embedded entities) | 🌑 | 🌑 | 🌑 |
 | `Delete` | 🌑 | 🌑 | 🌑 | 🌑 | 🌑 |
 
