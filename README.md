@@ -68,3 +68,57 @@ The HyDRa framework also includes a conceptual access API generation process.
 A HyDRa polystore schema is given as input of this process. The generation itself is implemented using an Acceleo-based tool (see [acceleo sources](be.unamur.polystore.acceleo)) which generates object classes and data manipulation classes. The API generation tool can be launched by right-clicking on a .pml HyDRa polystore schema.
 
 ![API](Use-Cases/resources/ApiGeneration.PNG)
+
+## API Usage
+
+Below you will find code examples of the generated API usage.
+The conceptual model of the code below is the following : 
+![Imdb](Use-Cases/resources/Imdbmodel.PNG)
+
+Get all entity type objects :
+```
+ActorService actorService = new ActorServiceImpl();
+Dataset<Actor> actors = actorService.getActorList();
+```
+
+Get entities by an attribute :
+```
+MovieService movieService = new MovieServiceImpl();
+Dataset<Movie> movie = movieService.getMovieListByPrimaryTitle("The Big Lebowski");
+```
+
+Get entities by a Condition object : 
+```
+SimpleCondition<MovieAttribute> condition = new SimpleCondition<>(MovieAttribute.primaryTitle, Operator.EQUALS, "Ocean's Eleven");
+movieDataset = movieService.getMovieList(condition);
+```
+or 
+```
+directorDataset = directorService.getDirectorList(Condition.simple(DirectorAttribute.id, Operator.EQUALS, "nm0304098"));
+```
+
+Get entities on several attribute, using an 'and' Condition object :
+```
+AndCondition<DirectorAttribute> directorCondition = Condition.and(
+                Condition.simple(DirectorAttribute.lastName,Operator.EQUALS,"Spielberg"),
+                Condition.simple(DirectorAttribute.firstName, Operator.EQUALS, "Steven"));
+Dataset<Director> directors = directorService.getDirectorList(directorCondition); 
+```
+
+Get entities of a relationship given opposite entity type Condition object (see above how to define Condition objects) :
+```
+Dataset<Movie> movies = movieService.getMovieList(Movie.direct.directed_movie, conditionSpielberg);
+Dataset<Actor> actors = actorService.getActorList(Actor.play.character,Condition.simple(MovieAttribute.primaryTitle,Operator.EQUALS,"Tennet"));
+```
+
+Get entities by relationship opposite Entity type object :
+```
+Director spielberg = directors.collectAsList().get(0); // 'directors' list retrieved before
+Dataset<Movie> movies = movieService.getMovieList(Movie.direct.directed_movie, spielberg)
+```
+
+Get entities by relationship using conditions on both relationship type entity types : 
+```
+//  Movie by Director and Movie Conditions
+Dataset<Movie> movies = movieService.getMovieList(Movie.direct.directed_movie, movieCondition, conditionSpielberg);
+```
