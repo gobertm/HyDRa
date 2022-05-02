@@ -14,12 +14,6 @@
 	<version>1.0</version>
 	<packaging>jar</packaging>
 
-	<properties>
-		<maven.compiler.release>14</maven.compiler.release>
-		<maven.compiler.target>14</maven.compiler.target>
-		<maven.compiler.source>14</maven.compiler.source>
-	</properties>
-
 	<dependencies>
 		<!-- https://mvnrepository.com/artifact/com.redislabs/spark-redis -->
 		<dependency>
@@ -39,10 +33,10 @@
 			<version>8.0.22</version>
 		</dependency>
 		<dependency>
-<groupId>com.opencsv</groupId>
-<artifactId>opencsv</artifactId>
-<version>5.6</version>
-</dependency>
+		<groupId>com.opencsv</groupId>
+		<artifactId>opencsv</artifactId>
+		<version>5.6</version>
+		</dependency>
 		[comment]
 		<!-- https://mvnrepository.com/artifact/org.mongodb/mongo-java-driver -->
 		<dependency>
@@ -72,26 +66,37 @@
 		    <version>4.9.0</version>
 		</dependency>
 		[/comment]
+		
 		<!-- https://mvnrepository.com/artifact/org.apache.spark/spark-core -->
 		<dependency>
-		    <groupId>org.apache.spark</groupId>
-		    <artifactId>spark-core_2.12</artifactId>
-		    <version>3.1.2</version>
+			<groupId>org.apache.spark</groupId>
+			<artifactId>spark-core_2.13</artifactId>
+			<version>3.2.1</version>
 		</dependency>
+
 
 		<!-- https://mvnrepository.com/artifact/org.apache.spark/spark-streaming -->
 		<dependency>
-		    <groupId>org.apache.spark</groupId>
-		    <artifactId>spark-streaming_2.12</artifactId>
-		    <version>3.1.2</version>
-		    <scope>provided</scope>
+			<groupId>org.apache.spark</groupId>
+			<artifactId>spark-streaming_2.13</artifactId>
+			<version>3.2.1</version>
+			<scope>provided</scope>
 		</dependency>
+
 
 		<!-- https://mvnrepository.com/artifact/org.apache.spark/spark-sql -->
 		<dependency>
 			<groupId>org.apache.spark</groupId>
-			<artifactId>spark-sql_2.12</artifactId>
-			<version>3.0.1</version>
+			<artifactId>spark-sql_2.13</artifactId>
+			<version>3.2.1</version>
+			<scope>provided</scope>
+		</dependency>
+
+		<!-- https://mvnrepository.com/artifact/org.mongodb.spark/mongo-spark-connector -->
+		<dependency>
+			<groupId>org.mongodb.spark</groupId>
+			<artifactId>mongo-spark-connector_2.12</artifactId>
+			<version>3.0.2</version>
 		</dependency>
 
 		<!-- https://mvnrepository.com/artifact/mysql/mysql-connector-java -->
