@@ -11,6 +11,7 @@
 [comment get{E}List({E)AttributeCondition /]
 
 [template public generateSimpleSelectMethodsImpl(entityType: EntityType, conceptualSchema: ConceptualSchema)]{
+	StopWatch stopwatch = new StopWatch();
 	MutableBoolean refilterFlag = new MutableBoolean(false);
 	List<Dataset<[entityType.name.toUpperFirst() /]>> datasets = new ArrayList<Dataset<[entityType.name.toUpperFirst() /]>>();
 	Dataset<[entityType.name.toUpperFirst()/]> d = null;
@@ -40,6 +41,7 @@
 	[else]
 	d = d.dropDuplicates(new String[ '[' /][ ']' /] {[if (entityType.identifier.oclIsUndefined() = false)][for (attr : Attribute | entityType.identifier.attributes) separator(',')]"[attr.name/]"[/for][/if]});
 	[/if]
+	logger.info("Execution time in seconds : ", stopwatch.getElapsedTimeInSeconds());
 	return d;
 }[/template]
 
