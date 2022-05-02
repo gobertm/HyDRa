@@ -35,11 +35,11 @@ conceptual schema conceptualSchema{
 		}
 	}
 	   
-    relationship type movieDirector{
+    relationship type direct {
 		directed_movie[0-N]: Movie,
 		director[0-N] : Director
 	}
-	relationship type movieActor{
+	relationship type play{
 		character[0-N]: Actor,
 		movie[0-N] : Movie
 	}    
@@ -105,11 +105,11 @@ physical schemas {
 
 mapping rules{
 	conceptualSchema.Actor(id,fullName,yearOfBirth,yearOfDeath) -> IMDB_Mongo.actorCollection(id,fullname,birthyear,deathyear),
-	conceptualSchema.movieActor.character-> IMDB_Mongo.actorCollection.movies(),
+	conceptualSchema.play.character-> IMDB_Mongo.actorCollection.movies(),
 	conceptualSchema.Director(id,firstName,lastName, yearOfBirth,yearOfDeath) -> myRelSchema.directorTable(id,firstname,lastname,birth,death),
-	conceptualSchema.movieDirector.director -> myRelSchema.directed.directed_by,
-	conceptualSchema.movieDirector.directed_movie -> myRelSchema.directed.has_directed,
-	conceptualSchema.movieDirector.directed_movie -> myRelSchema.directed.movie_info,
+	conceptualSchema.direct.director -> myRelSchema.directed.directed_by,
+	conceptualSchema.direct.directed_movie -> myRelSchema.directed.has_directed,
+	conceptualSchema.direct.directed_movie -> myRelSchema.directed.movie_info,
 	conceptualSchema.Movie(id) -> movieRedis.movieKV(id),
 	conceptualSchema.Movie(primaryTitle,originalTitle,isAdult,startYear,runtimeMinutes) ->movieRedis.movieKV(title,originalTitle,isAdult,startYear,runtimeMinutes), 
 	conceptualSchema.Movie(averageRating,numVotes) -> IMDB_Mongo.actorCollection.movies.rating(rate,numberofvotes),

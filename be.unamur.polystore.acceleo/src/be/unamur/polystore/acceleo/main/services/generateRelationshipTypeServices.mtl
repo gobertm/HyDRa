@@ -27,7 +27,7 @@ import java.util.ArrayList;
 import org.apache.spark.sql.Column;
 import org.apache.spark.sql.Encoders;
 import org.apache.spark.api.java.function.MapFunction;
-import util.Util;
+import util.*;
 
 
 public abstract class [rel.name.toUpperFirst() + 'Service' /] {
