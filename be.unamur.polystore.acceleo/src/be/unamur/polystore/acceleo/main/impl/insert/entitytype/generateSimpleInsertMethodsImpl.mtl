@@ -14,31 +14,31 @@
 	// Insert in structures containing double embedded role
 	[for (struct: AbstractPhysicalStructure | getMappedComplexEmbeddedStructureOfEntity(entityType, entityType.ancestors(Domainmodel)->first()))]
 	[for (db: Database | getConcernedDatabases(struct, entityType.ancestors(Domainmodel)->first()))]
-    inserted = insert[entityType.name.toUpperFirst() /]In[struct.name.toUpperFirst()/]From[db.name.toUpperFirst() /]([entityType.name.toLowerFirst() /][for (role: Role | getMandatoryRoles(entityType, conceptualSchema))],[role.getOppositeRoleInBinaryRel().name.toLowerFirst()/][getRelationShipType(role).name.toUpperFirst()/][/for]) || inserted ;
+    inserted = insert[entityType.name.toUpperFirst() /]In[struct.name.toUpperFirst()/]From[db.name.toUpperFirst() /]([entityType.name.toLowerFirst() /][for (role: Role | getMandatoryRoles(entityType, conceptualSchema))],[role.getOppositeRoleInBinaryRel().name.toLowerFirst()/][getRelationShipType(role).name.toUpperFirst()/][/for][for (attr: Attribute | getAttributesFromMandatoryRoles(entityType, conceptualSchema))], [getRelationshipType(attr).name /]_[attr.name /][/for]) || inserted ;
 	[/for]
 	[/for]
 	// Insert in descending structures
 	[for (struct: AbstractPhysicalStructure | getDescendingOneLevelPhysicalStructuresOfEntity(entityType, entityType.ancestors(Domainmodel)->first()))]
 	[for (db: Database | getConcernedDatabases(struct, entityType.ancestors(Domainmodel)->first()))]
-	inserted = insert[entityType.name.toUpperFirst() /]In[struct.name.toUpperFirst()/]From[db.name.toUpperFirst() /]([entityType.name.toLowerFirst() /][for (role: Role | getMandatoryRoles(entityType, conceptualSchema))],[role.getOppositeRoleInBinaryRel().name.toLowerFirst()/][getRelationShipType(role).name.toUpperFirst()/][/for])|| inserted ;
+	inserted = insert[entityType.name.toUpperFirst() /]In[struct.name.toUpperFirst()/]From[db.name.toUpperFirst() /]([entityType.name.toLowerFirst() /][for (role: Role | getMandatoryRoles(entityType, conceptualSchema))],[role.getOppositeRoleInBinaryRel().name.toLowerFirst()/][getRelationShipType(role).name.toUpperFirst()/][/for][for (attr: Attribute | getAttributesFromMandatoryRoles(entityType, conceptualSchema))], [getRelationshipType(attr).name /]_[attr.name /][/for])|| inserted ;
 	[/for]
 	[/for]
 	// Insert in ascending structures 
 	[for (struct: AbstractPhysicalStructure | getAscendingPhysicalStructuresOfEntity(entityType, entityType.ancestors(Domainmodel)->first()))]
 	[for (db: Database | getConcernedDatabases(struct, entityType.ancestors(Domainmodel)->first()))]
-	inserted = insert[entityType.name.toUpperFirst() /]In[struct.name.toUpperFirst()/]From[db.name.toUpperFirst() /]([entityType.name.toLowerFirst() /][for (role: Role | getMandatoryRoles(entityType, conceptualSchema))],[role.getOppositeRoleInBinaryRel().name.toLowerFirst()/][getRelationShipType(role).name.toUpperFirst()/][/for])|| inserted ;
+	inserted = insert[entityType.name.toUpperFirst() /]In[struct.name.toUpperFirst()/]From[db.name.toUpperFirst() /]([entityType.name.toLowerFirst() /][for (role: Role | getMandatoryRoles(entityType, conceptualSchema))],[role.getOppositeRoleInBinaryRel().name.toLowerFirst()/][getRelationShipType(role).name.toUpperFirst()/][/for][for (attr: Attribute | getAttributesFromMandatoryRoles(entityType, conceptualSchema))], [getRelationshipType(attr).name /]_[attr.name /][/for])|| inserted ;
 	[/for]
 	[/for]
 	// Insert in ref structures 
 	[for (struct: AbstractPhysicalStructure | getRemainingRefStructureOfMappedMandatoryRoleOfEntity(entityType, entityType.ancestors(Domainmodel)->first()))]
 	[for (db: Database | getConcernedDatabases(struct, entityType.ancestors(Domainmodel)->first()))]
-	inserted = insert[entityType.name.toUpperFirst() /]In[struct.name.toUpperFirst()/]From[db.name.toUpperFirst() /]([entityType.name.toLowerFirst() /][for (role: Role | getMandatoryRoles(entityType, conceptualSchema))],[role.getOppositeRoleInBinaryRel().name.toLowerFirst()/][getRelationShipType(role).name.toUpperFirst()/][/for])|| inserted ;
+	inserted = insert[entityType.name.toUpperFirst() /]In[struct.name.toUpperFirst()/]From[db.name.toUpperFirst() /]([entityType.name.toLowerFirst() /][for (role: Role | getMandatoryRoles(entityType, conceptualSchema))],[role.getOppositeRoleInBinaryRel().name.toLowerFirst()/][getRelationShipType(role).name.toUpperFirst()/][/for][for (attr: Attribute | getAttributesFromMandatoryRoles(entityType, conceptualSchema))], [getRelationshipType(attr).name /]_[attr.name /][/for])|| inserted ;
 	[/for]
 	[/for]
 	// Insert in ref structures mapped to opposite role of mandatory role  
 	[for (struct: AbstractPhysicalStructure | getRemainingRefStructureMappedToOppositeOfMandatoryRoleOfEntity(entityType, entityType.ancestors(Domainmodel)->first()))]
 	[for (db: Database | getConcernedDatabases(struct, entityType.ancestors(Domainmodel)->first()))]
-	inserted = insert[entityType.name.toUpperFirst() /]In[struct.name.toUpperFirst()/]From[db.name.toUpperFirst() /]([entityType.name.toLowerFirst() /][for (role: Role | getMandatoryRoles(entityType, conceptualSchema))],[role.getOppositeRoleInBinaryRel().name.toLowerFirst()/][getRelationShipType(role).name.toUpperFirst()/][/for])|| inserted ;
+	inserted = insert[entityType.name.toUpperFirst() /]In[struct.name.toUpperFirst()/]From[db.name.toUpperFirst() /]([entityType.name.toLowerFirst() /][for (role: Role | getMandatoryRoles(entityType, conceptualSchema))],[role.getOppositeRoleInBinaryRel().name.toLowerFirst()/][getRelationShipType(role).name.toUpperFirst()/][/for][for (attr: Attribute | getAttributesFromMandatoryRoles(entityType, conceptualSchema))], [getRelationshipType(attr).name /]_[attr.name /][/for])|| inserted ;
 	[/for]
 	[/for]
 	return inserted;
