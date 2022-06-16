@@ -210,7 +210,10 @@ throw new UnsupportedOperationException("Not Implemented yet");
 					[/for]
 	updateOp = addToSet("[field.getPhysicalName()/]", doc[getPhysicalName(field)/]_1);
 	DBConnectionMgr.update(filter, updateOp, "[struct.name/]", "[db.name/]");					
-				[/if]	
+				[/if]
+			[else]
+[comment]TODO Handle deep embedded of role in document
+Fields of first level does not contain mapped embedded object to given rel roles. We need to go deeper. Change the algorithm to make a recursive descending in struct .	[/comment]
 			[/if]
 		[/for]
 	[/let]
@@ -260,7 +263,11 @@ throw new UnsupportedOperationException("Not Implemented yet");
 			[for (ref : Reference | getRefOfPhysicalStructure(struct))]
 				[let roleref : Role = getMappedRoleOfReference(ref)]
 				[if (rolerel=roleref)]
+					[if (ref.sourceField->any(true).oclIsTypeOf(ArrayField))]
+	updateOp = addToSet("[ref.sourceField->any(true).oclAsType(PhysicalField).getPhysicalName()/]",[getOppositeRoleInBinaryRel(rolerel).entity.name.toLowerFirst()/][getOppositeRoleInBinaryRel(rolerel).name.toUpperFirst()/]==null?null:[getOppositeRoleInBinaryRel(rolerel).entity.name.toLowerFirst()/][getOppositeRoleInBinaryRel(rolerel).name.toUpperFirst()/].get[getMappedAttributeOfFieldInStructure(ref.targetField->any(true).oclAsType(PhysicalField), ref.targetField->any(true).oclAsType(PhysicalField).getAbstractPhysicalStructureNotEmbeddedObject()).name.toUpperFirst()/]());
+					[else]
 	updateOp = set("[ref.sourceField->any(true).oclAsType(PhysicalField).getPhysicalName()/]",[getOppositeRoleInBinaryRel(rolerel).entity.name.toLowerFirst()/][getOppositeRoleInBinaryRel(rolerel).name.toUpperFirst()/]==null?null:[getOppositeRoleInBinaryRel(rolerel).entity.name.toLowerFirst()/][getOppositeRoleInBinaryRel(rolerel).name.toUpperFirst()/].get[getMappedAttributeOfFieldInStructure(ref.targetField->any(true).oclAsType(PhysicalField), ref.targetField->any(true).oclAsType(PhysicalField).getAbstractPhysicalStructureNotEmbeddedObject()).name.toUpperFirst()/]());
+					[/if]
 					[for (attr : Attribute | entityType.identifier.attributes)]
 						[if (i=1)]
 	filter = eq("[getPhysicalName(getMappedPhysicalField(attr, struct, db, entityType.getMappingRules()))/]",[entityType.name.toLowerFirst()/][rolerel.name.toUpperFirst()/].get[attr.name.toUpperFirst()/]());
