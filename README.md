@@ -43,7 +43,11 @@ Here we list the operations manipulating modeled domain entities objects support
 > Try restarting Eclipse.
 - My project is full of compilation errors. 
 > Make sure the source containing folders are correctly set in project build path. Build Path > Configure Build path > Source . 2 folders should be listed *project*/src/main/java & *project*/src/main/java
-
+- When running my application code using the generated API I get error :
+```
+Caused by: java.lang.reflect.InaccessibleObjectException: Unable to make private java.nio.DirectByteBuffer(long,int) accessible: module java.base does not "opens java.nio" to unnamed module @59505b48
+``` 
+This is caused by an incompatible JDK executing the code. Please make sure to set the Java Compiler to JDK 14.
 ## Use-Cases 
 
 -   [uc1-imdb](Use-Cases/uc1-imdb) is a complete use case illustrating all functionalities and benefits of the HyDRa framework.
@@ -75,19 +79,33 @@ Below you will find code examples of the generated API usage.
 The conceptual model of the code below is the following : 
 ![Imdb](Use-Cases/resources/Imdbmodel.PNG)
 
-Get all entity type objects :
+### Get all entity type objects 
+Generated Methods signatures :
+
+**Dataset<_E_> get_E_List();**
+
+Example :
 ```
 ActorService actorService = new ActorServiceImpl();
 Dataset<Actor> actors = actorService.getActorList();
 ```
 
-Get entities by an attribute :
+### Get entities by an attribute :
+Signature :
+
+**Dataset<_E_> get_E_ListBy_ConceptualAttributeName_(_value_);**
+
+Example:
 ```
 MovieService movieService = new MovieServiceImpl();
 Dataset<Movie> movie = movieService.getMovieListByPrimaryTitle("The Big Lebowski");
 ```
 
-Get entities by a Condition object : 
+### Get entities by a Condition object : 
+Signature :
+
+**Dataset<_E_> get_E_List(Condition<_E_Attribute> _cond_);**
+Example : 
 ```
 SimpleCondition<MovieAttribute> condition = new SimpleCondition<>(MovieAttribute.primaryTitle, Operator.EQUALS, "Ocean's Eleven");
 movieDataset = movieService.getMovieList(condition);
@@ -97,7 +115,7 @@ or
 directorDataset = directorService.getDirectorList(Condition.simple(DirectorAttribute.id, Operator.EQUALS, "nm0304098"));
 ```
 
-Get entities on several attribute, using an 'and' Condition object :
+### Get entities given several attribute values, using an 'and' Condition object :
 ```
 AndCondition<DirectorAttribute> directorCondition = Condition.and(
                 Condition.simple(DirectorAttribute.lastName,Operator.EQUALS,"Spielberg"),
@@ -105,20 +123,34 @@ AndCondition<DirectorAttribute> directorCondition = Condition.and(
 Dataset<Director> directors = directorService.getDirectorList(directorCondition); 
 ```
 
-Get entities of a relationship given opposite entity type Condition object (see above how to define Condition objects) :
+### Get entities of a relationship given opposite entity type Condition object or instance :
+Those methods are very useful when you want to get entities linked by a relationship given an attribute or an instance of the other entity. 
+Such as *Get me the movies directed by this specific director* or *Get all actors that play in this movie* .
+
+Signature :
+**Dataset<_E1_> get_E1_ListIn_RelationshipName_(_E1_._RelationshipName_._RoleE1_, Condition<_E2_Attribute> conditionOn_E2_);**
+**Dataset<_E1_> get_E1_ListIn_RelationshipName_(__E1_._RelationshipName_._RoleE1_, _E2_ e2object);**
+
+Examples : 
 ```
+// Get By Condition object
 Dataset<Movie> movies = movieService.getMovieList(Movie.direct.directed_movie, conditionSpielberg);
 Dataset<Actor> actors = actorService.getActorList(Actor.play.character,Condition.simple(MovieAttribute.primaryTitle,Operator.EQUALS,"Tennet"));
-```
 
-Get entities by relationship opposite Entity type object :
-```
+// Get by other entity instance
 Director spielberg = directors.collectAsList().get(0); // 'directors' list retrieved before
 Dataset<Movie> movies = movieService.getMovieList(Movie.direct.directed_movie, spielberg)
 ```
 
-Get entities by relationship using conditions on both relationship type entity types : 
+### Get Relationship type object :
+You can also retrieve object representing a Relationship type, containing their respective entity type in getters.
+Getters exist using a condition on relationship type attributes (if any) , or condtions on involved Entity types.
+Signature : 
+
+**Dataset<_R_> get_R_List();**
+**Dataset<_R_> get_R_List(Condition<_E1_Attribute> condE1, Condition<_E2_Attribute> condE2, Condition<_R_Attribute> condR);**
+Example : 
 ```
-//  Movie by Director and Movie Conditions
-Dataset<Movie> movies = movieService.getMovieList(Movie.direct.directed_movie, movieCondition, conditionSpielberg);
+PlayService playService = new PlayServiceImpl();
+Dataset<Play> plays = playService.getPlayList();
 ```
