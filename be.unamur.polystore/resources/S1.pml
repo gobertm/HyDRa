@@ -338,7 +338,8 @@ physical schemas {
 			columns{
 			   ShipperID,
 			   CompanyName,
-			   Phone
+			   Phone,
+		           test: [X]" "[Y]
 			}
 		}
 	}

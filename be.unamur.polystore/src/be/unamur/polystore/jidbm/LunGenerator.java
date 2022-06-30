@@ -100,6 +100,8 @@ public class LunGenerator {
 
 	public static void main(String[] args) throws IOException {
 		String pmlFile = "C:/Users/lmeurice/Documents/HyDRa/be.unamur.polystore/resources/S1.pml";
+		pmlFile = "C:/Users/lmeurice/Documents/UNamur - examens/2021-2022/IDASM101 - Big Data/Phases II et III/Groupe 8/S8.pml";
+		pmlFile = "C:/Users/lmeurice/Desktop/output2.pml";
 		String outputLun = "C:/Users/lmeurice/Desktop/output.lun";
 
 		LunGenerator generator = new LunGenerator(pmlFile, outputLun);
@@ -143,9 +145,9 @@ public class LunGenerator {
 	private void readLunFile() throws IOException {
 		this.lib = new DBMLibrary();
 		this.project = lib.loadDBMProject(outputLun);
-		this.conceptualSchema = getDBMSchema(project, "CONCEPTUAL SCHEMA");
-		this.physicalSchema = getDBMSchema(project, "PHYSICAL SCHEMA");
-		this.dbSchema = getDBMSchema(project, "DATABASES");
+		this.conceptualSchema = getDBMSchema(project, Constants.CONCEPTUAL_SCHEMA);
+		this.physicalSchema = getDBMSchema(project, Constants.PHYSICAL_SCHEMA);
+		this.dbSchema = getDBMSchema(project, Constants.DATABASE_SCHEMA);
 //		DBMSchema schema = pro.getFirstProductSchema();
 //		schema.createEntityType("test", "test");
 //		lib.unloadLUN(pro.getProjectIdentifier(), outputLun);
@@ -201,7 +203,7 @@ public class LunGenerator {
 		case "TextTypeImpl":
 			return "text";
 		case "BoolTypeImpl":
-			return "boolean";
+			return "bool";
 		case "FloatTypeImpl":
 			return "float";
 		case "BlobTypeImpl":
@@ -434,7 +436,7 @@ public class LunGenerator {
 	}
 
 	private void createKeyValueSchema(DBMCollection collection, KeyValueSchema schema) {
-		collection.setMetaPropertyValue("HyDRa type", "key-value");
+		collection.setMetaPropertyValue(Constants.HYDRA_TYPE_MP, Constants.KVSCHEMA);
 		DBMEntityType prev = null;
 		for (KeyValuePair kvpair : schema.getKvpairs()) {
 			DBMEntityType t = physicalSchema.createEntityType(kvpair.getName(), kvpair.getName());
@@ -455,7 +457,7 @@ public class LunGenerator {
 						position = variables.size();
 						prev_var = t.createSimpleAttribute(varName, varName, 1, 1, ' ', DBMSimpleAttribute.VARCHAR_ATT,
 								true, false, 15, (short) 0, this.physicalSchema, prev_var);
-						addStringtoListMetaproperty(prev_var, "Stereotype", "var");
+						addStringtoListMetaproperty(prev_var, Constants.STEREOTYPE, Constants.VARIABLE);
 						attributes.put((BracketsField) expr, prev_var);
 					}
 					colName += "[" + position + "]";
@@ -466,14 +468,14 @@ public class LunGenerator {
 
 			prev_attr = t.createSimpleAttribute(colName, colName, 1, 1, ' ', DBMSimpleAttribute.VARCHAR_ATT, true,
 					false, 15, (short) 0, this.physicalSchema, prev_attr);
-			addStringtoListMetaproperty(prev_attr, "Stereotype", "key");
+			addStringtoListMetaproperty(prev_attr, Constants.STEREOTYPE, Constants.KEY);
 
 			PhysicalField value = kvpair.getValue();
 			if (value instanceof ShortField) {
 				ShortField sf = (ShortField) value;
 				prev_attr = t.createSimpleAttribute(sf.getName(), sf.getName(), 1, 1, ' ',
 						DBMSimpleAttribute.VARCHAR_ATT, true, false, 15, (short) 0, this.physicalSchema, prev_attr);
-				addStringtoListMetaproperty(prev_attr, "Stereotype", "value");
+				addStringtoListMetaproperty(prev_attr, Constants.STEREOTYPE, Constants.VALUE);
 				attributes.put(sf, prev_attr);
 			}
 
@@ -490,7 +492,7 @@ public class LunGenerator {
 							prev_var = t.createSimpleAttribute(varName, varName, 1, 1, ' ',
 									DBMSimpleAttribute.VARCHAR_ATT, true, false, 15, (short) 0, this.physicalSchema,
 									prev_var);
-							addStringtoListMetaproperty(prev_var, "Stereotype", "var");
+							addStringtoListMetaproperty(prev_var, Constants.STEREOTYPE, Constants.VARIABLE);
 							attributes.put((BracketsField) expr, prev_var);
 						}
 						colName += "[" + position + "]";
@@ -501,8 +503,8 @@ public class LunGenerator {
 
 				prev_attr = t.createSimpleAttribute(colName, colName, 1, 1, ' ', DBMSimpleAttribute.VARCHAR_ATT, true,
 						false, 15, (short) 0, this.physicalSchema, prev_attr);
-				addStringtoListMetaproperty(prev_attr, "Stereotype", "value");
-				addStringtoListMetaproperty(prev_attr, "Stereotype", "comp");
+				addStringtoListMetaproperty(prev_attr, "Stereotype", Constants.VALUE);
+				addStringtoListMetaproperty(prev_attr, "Stereotype", Constants.COMPOSED_FIELD);
 			}
 
 			if (value instanceof KVComplexField) {
@@ -511,7 +513,7 @@ public class LunGenerator {
 				switch (valueType) {
 				case "hash":
 					prev_attr = t.createCompoundAttribute("hash", "hash", 1, 1, ' ', this.physicalSchema, prev_attr);
-					addStringtoListMetaproperty(prev_attr, "Stereotype", "value");
+					addStringtoListMetaproperty(prev_attr, Constants.STEREOTYPE, Constants.VALUE);
 					DBMAttribute prev_sub = null;
 					for (PhysicalField pf : cf.getFields()) {
 						if (pf instanceof ShortField) {
@@ -535,7 +537,7 @@ public class LunGenerator {
 										prev_var = t.createSimpleAttribute(varName, varName, 1, 1, ' ',
 												DBMSimpleAttribute.VARCHAR_ATT, true, false, 15, (short) 0,
 												this.physicalSchema, prev_var);
-										addStringtoListMetaproperty(prev_var, "Stereotype", "var");
+										addStringtoListMetaproperty(prev_var, Constants.STEREOTYPE, Constants.VARIABLE);
 										attributes.put((BracketsField) expr, prev_var);
 									}
 									colName += "[" + position + "]";
@@ -547,8 +549,8 @@ public class LunGenerator {
 							prev_attr = t.createSimpleAttribute(colName, colName, 1, 1, ' ',
 									DBMSimpleAttribute.VARCHAR_ATT, true, false, 15, (short) 0, this.physicalSchema,
 									prev_attr);
-							addStringtoListMetaproperty(prev_attr, "Stereotype", "value");
-							addStringtoListMetaproperty(prev_attr, "Stereotype", "comp");
+							addStringtoListMetaproperty(prev_attr, Constants.STEREOTYPE, Constants.VALUE);
+							addStringtoListMetaproperty(prev_attr, Constants.STEREOTYPE, Constants.COMPOSED_FIELD);
 						}
 					}
 					break;
@@ -559,8 +561,8 @@ public class LunGenerator {
 
 					prev_attr = t.createSimpleAttribute(sf.getName(), sf.getName(), 0, DBMRole.N_CARD, ' ',
 							DBMSimpleAttribute.VARCHAR_ATT, true, false, 15, (short) 0, this.physicalSchema, prev_attr);
-					prev_attr.setMetaPropertyValue("HyDRa type", valueType);
-					addStringtoListMetaproperty(prev_attr, "Stereotype", "value");
+					prev_attr.setMetaPropertyValue(Constants.HYDRA_TYPE_MP, valueType);
+					addStringtoListMetaproperty(prev_attr, Constants.STEREOTYPE, Constants.VALUE);
 					attributes.put(sf, prev_attr);
 					break;
 				}
@@ -571,7 +573,7 @@ public class LunGenerator {
 	}
 
 	private void createDocumentSchema(DBMCollection collection, DocumentSchema schema) {
-		collection.setMetaPropertyValue("HyDRa type", "document");
+		collection.setMetaPropertyValue(Constants.HYDRA_TYPE_MP, Constants.DOCUMENTSCHEMA);
 		DBMEntityType prev = null;
 		for (Collection coll : schema.getCollections()) {
 			DBMEntityType t = physicalSchema.createEntityType(coll.getName(), coll.getName());
@@ -614,7 +616,7 @@ public class LunGenerator {
 								DBMSimpleAttribute.VARCHAR_ATT, true, false, 15, (short) 0, this.physicalSchema,
 								prev_var);
 
-						addStringtoListMetaproperty(prev_var, "Stereotype", "var");
+						addStringtoListMetaproperty(prev_var, Constants.STEREOTYPE, Constants.VARIABLE);
 						attributes.put((BracketsField) expr, prev_var);
 					}
 					colName += "[" + position + "]";
@@ -625,7 +627,7 @@ public class LunGenerator {
 
 			prev_attr = parent.createSimpleAttribute(colName, colName, 1, 1, ' ', DBMSimpleAttribute.VARCHAR_ATT, true,
 					false, 15, (short) 0, this.physicalSchema, prev_attr);
-			addStringtoListMetaproperty(prev_attr, "Stereotype", "comp");
+			addStringtoListMetaproperty(prev_attr, Constants.STEREOTYPE, Constants.COMPOSED_FIELD);
 		}
 
 		if (pf instanceof EmbeddedObject) {
@@ -654,14 +656,14 @@ public class LunGenerator {
 				prev_var = collection.createSimpleAttribute(varName, varName, 1, 1, ' ', DBMSimpleAttribute.VARCHAR_ATT,
 						true, false, 15, (short) 0, this.physicalSchema, prev_var);
 				attributes.put(af, prev_var);
-				addStringtoListMetaproperty(prev_var, "Stereotype", "var");
+				addStringtoListMetaproperty(prev_var, Constants.STEREOTYPE, Constants.VARIABLE);
 			}
 
 			String colName = af.getPhysicalName() + ": [" + position + "]";
 			prev_attr = parent.createSimpleAttribute(colName, colName, 0, DBMRole.N_CARD, ' ',
 					DBMSimpleAttribute.VARCHAR_ATT, true, false, 15, (short) 0, this.physicalSchema, prev_attr);
-			addStringtoListMetaproperty(prev_attr, "Stereotype", "comp");
-			addStringtoListMetaproperty(prev_attr, "HyDRa type", "list");
+			addStringtoListMetaproperty(prev_attr, Constants.STEREOTYPE, Constants.COMPOSED_FIELD);
+			addStringtoListMetaproperty(prev_attr, Constants.HYDRA_TYPE_MP, Constants.LIST_TYPE);
 
 		}
 
@@ -670,7 +672,7 @@ public class LunGenerator {
 
 	private void createRelationalSchema(DBMCollection collection, RelationalSchema schema) {
 
-		collection.setMetaPropertyValue("HyDRa type", "relational");
+		collection.setMetaPropertyValue(Constants.HYDRA_TYPE_MP, Constants.RELATIONSCHEMA);
 		DBMEntityType prev = null;
 		for (Table table : schema.getTables()) {
 			DBMEntityType t = physicalSchema.createEntityType(table.getName(), table.getName());
@@ -705,7 +707,7 @@ public class LunGenerator {
 
 								attributes.put((BracketsField) expr, prev_var);
 
-								addStringtoListMetaproperty(prev_var, "Stereotype", "var");
+								addStringtoListMetaproperty(prev_var, Constants.STEREOTYPE, Constants.VARIABLE);
 							}
 							colName += "[" + position + "]";
 						} else
@@ -715,7 +717,7 @@ public class LunGenerator {
 
 					prev_attr = t.createSimpleAttribute(colName, colName, 1, 1, ' ', DBMSimpleAttribute.VARCHAR_ATT,
 							true, false, 15, (short) 0, this.physicalSchema, prev_attr);
-					addStringtoListMetaproperty(prev_attr, "Stereotype", "comp");
+					addStringtoListMetaproperty(prev_attr, Constants.STEREOTYPE, Constants.COMPOSED_FIELD);
 				}
 			}
 
@@ -787,7 +789,7 @@ public class LunGenerator {
 			for (Attribute attr : ent.getAttributes()) {
 				prev = entity.createSimpleAttribute(attr.getName(), attr.getName(), 1, 1, ' ',
 						DBMSimpleAttribute.VARCHAR_ATT, true, false, 15, (short) 0, this.conceptualSchema, prev);
-				prev.setMetaPropertyValue("HyDRa type", getConceptualType(attr.getType()));
+				prev.setMetaPropertyValue(Constants.HYDRA_TYPE_MP, getConceptualType(attr.getType()));
 				attributes.put(attr.getName(), prev);
 			}
 
@@ -808,7 +810,7 @@ public class LunGenerator {
 			for (Attribute attr : rel.getAttributes()) {
 				prev = rtype.createSimpleAttribute(attr.getName(), attr.getName(), 1, 1, ' ',
 						DBMSimpleAttribute.VARCHAR_ATT, true, false, 15, (short) 0, this.conceptualSchema, prev);
-				prev.setMetaPropertyStringValue("HyDRa type", getConceptualType(attr.getType()));
+				prev.setMetaPropertyStringValue(Constants.HYDRA_TYPE_MP, getConceptualType(attr.getType()));
 			}
 
 			for (Role role : rel.getRoles()) {
@@ -834,12 +836,12 @@ public class LunGenerator {
 			String password = db.getPassword();
 			String dbType = db.getDbType().getLiteral();
 			DBMCollection coll = dbSchema.createCollection(name, name);
-			addStringtoStringMetaproperty(coll, "db type", dbType);
-			addStringtoStringMetaproperty(coll, "host", host);
-			addStringtoStringMetaproperty(coll, "db name", dbName);
-			addStringtoStringMetaproperty(coll, "login", login);
-			addStringtoStringMetaproperty(coll, "password", password);
-			addInttoIntMetaproperty(coll, "port", port);
+			addStringtoStringMetaproperty(coll, Constants.DB_TYPE_MP, dbType);
+			addStringtoStringMetaproperty(coll, Constants.DB_HOST_MP, host);
+			addStringtoStringMetaproperty(coll, Constants.DB_NAME_MP, dbName);
+			addStringtoStringMetaproperty(coll, Constants.DB_LOGIN_MP, login);
+			addStringtoStringMetaproperty(coll, Constants.DB_PASSWORD_MP, password);
+			addInttoIntMetaproperty(coll, Constants.DB_PORT_MP, port);
 			
 		}
 	}
@@ -849,6 +851,7 @@ public class LunGenerator {
 			DBMCollection schemaColl = schemas.get(schema);
 			for(Database db : schema.getDatabases()) {
 				DBMCollection dbColl = findCollection(dbSchema, db.getName());
+				
 				map(dbColl, schemaColl);
 			}
 		}
@@ -865,8 +868,8 @@ public class LunGenerator {
 	}
 
 	private void map(DBMGenericObject conceptual, DBMGenericObject physical) {
-		Vector<Integer> v1 = conceptual.getMetaPropertyIntListValue("MappingOID");
-		Vector<Integer> v2 = physical.getMetaPropertyIntListValue("MappingOID");
+		Vector<Integer> v1 = conceptual.getMetaPropertyIntListValue(Constants.MAPPING_OID_MP);
+		Vector<Integer> v2 = physical.getMetaPropertyIntListValue(Constants.MAPPING_OID_MP);
 
 		if (v1 == null)
 			v1 = new Vector<Integer>();
@@ -877,8 +880,8 @@ public class LunGenerator {
 		v3.addAll(v1);
 		v3.addAll(v2);
 
-		conceptual.setMetaPropertyIntListValue("MappingOID", v3);
-		physical.setMetaPropertyIntListValue("MappingOID", v3);
+		conceptual.setMetaPropertyIntListValue(Constants.MAPPING_OID_MP, v3);
+		physical.setMetaPropertyIntListValue(Constants.MAPPING_OID_MP, v3);
 	}
 
 }
