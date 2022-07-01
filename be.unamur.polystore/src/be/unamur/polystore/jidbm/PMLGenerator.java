@@ -60,6 +60,7 @@ public class PMLGenerator {
 
 	public static void main(String[] args) throws Exception {
 		String lun = "C:/Users/lmeurice/Desktop/output2.lun";
+		lun = "C:/Users/lmeurice/Documents/SECO-ASSIST/HyDRa/Use-Cases/LUN/schema.lun";
 		String outputPML = "C:/Users/lmeurice/Desktop/output2.pml";
 
 		PMLGenerator generator = new PMLGenerator(lun);
@@ -138,9 +139,14 @@ public class PMLGenerator {
 			while (role != null) {
 				if (cnt > 0)
 					conceptualSchemaStr.append(",\n");
+				String roleName = role.getName();
+				if(role == null || role.getName().trim().isEmpty()) {
+					roleName = role.getFirstEntityType().getName();
+					role.setName(roleName);
+				}
+								
 				conceptualSchemaStr.append(TAB + TAB
-						+ (role.getName() != null && !role.getName().trim().isEmpty() ? role.getName()
-								: role.getFirstEntityType().getName())
+						+ roleName
 						+ getRoleStr(role) + " : " + role.getFirstEntityType().getName());
 
 				role = rel.getNextRole(role);
@@ -1089,7 +1095,7 @@ public class PMLGenerator {
 				if (cnt == 0)
 					res = " : ";
 				else
-					res = ", ";
+					res += ", ";
 				res += db.getName();
 				cnt++;
 			}
