@@ -4,8 +4,11 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Vector;
@@ -13,9 +16,12 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import com.dbmain.jidbm.DBMAttribute;
+import com.dbmain.jidbm.DBMAttributeOwner;
 import com.dbmain.jidbm.DBMCollection;
 import com.dbmain.jidbm.DBMCompoundAttribute;
+import com.dbmain.jidbm.DBMConcreteObject;
 import com.dbmain.jidbm.DBMDataObject;
+import com.dbmain.jidbm.DBMEntityRelationshipType;
 import com.dbmain.jidbm.DBMEntityType;
 import com.dbmain.jidbm.DBMGenericObject;
 import com.dbmain.jidbm.DBMGroup;
@@ -41,6 +47,8 @@ public class PMLGenerator {
 	private DBMSchema conceptualSchema;
 	private DBMSchema physicalSchema;
 	private DBMSchema dbSchema;
+
+	private String conceptualSchemaName = "cs";
 
 	public PMLGenerator(String lun) throws IOException {
 		this.lib = new DBMLibrary();
@@ -78,7 +86,11 @@ public class PMLGenerator {
 	}
 
 	private void readConceptualSchema() {
-		conceptualSchemaStr.append("conceptual schema cs {\n\n");
+		String v = conceptualSchema.getShortName();
+		if (v != null && !v.isEmpty())
+			conceptualSchemaName = v;
+
+		conceptualSchemaStr.append("conceptual schema " + conceptualSchemaName + " {\n\n");
 		DBMEntityType ent = conceptualSchema.getFirstDataObjectEntityType();
 		while (ent != null) {
 			conceptualSchemaStr.append(TAB + "entity type " + ent.getName() + " {\n");
@@ -313,6 +325,7 @@ public class PMLGenerator {
 					if (refName == null || refName.trim().isEmpty()) {
 						// random ref name
 						refName = "ref" + randomNameCnt;
+						origin.setName(refName);
 						randomNameCnt++;
 					}
 
@@ -353,34 +366,33 @@ public class PMLGenerator {
 
 	private String readRedisValue(DBMAttribute value, Map<DBMSimpleAttribute, Integer> variables) throws Exception {
 		String res = "";
-		
+
 		if (value.getMaximumCardinality() == DBMRole.N_CARD) {
 			// list, set, ordered set
 			String type = value.getMetaPropertyStringValue(Constants.HYDRA_TYPE_MP);
-			if(type == null || type.trim().isEmpty())
+			if (type == null || type.trim().isEmpty())
 				type = Constants.LIST_TYPE;
-			
+
 			if (value.getMetaPropertyStringListValue(Constants.STEREOTYPE) != null
 					&& value.getMetaPropertyStringListValue(Constants.STEREOTYPE).contains(Constants.COMPOSED_FIELD)) {
-				//composed field e.g., list { x: "VALUE"[y]}
+				// composed field e.g., list { x: "VALUE"[y]}
 				return type + "{ " + readComposedField((DBMSimpleAttribute) value, variables) + " }";
 			} else {
-				//normal field e.g., list {x}
+				// normal field e.g., list {x}
 				return type + " { " + value.getName() + " }";
 			}
-			
-			
+
 		} else if (value instanceof DBMCompoundAttribute) {
 			// hash
-			
+
 			res = "hash {\n";
 			DBMAttribute a = ((DBMCompoundAttribute) value).getFirstAttribute();
 			int cnt = 0;
-			while(a != null) {
+			while (a != null) {
 				if (cnt > 0)
 					res += ",\n";
-				if (a.getMetaPropertyStringListValue(Constants.STEREOTYPE) == null || !a
-						.getMetaPropertyStringListValue(Constants.STEREOTYPE).contains(Constants.COMPOSED_FIELD)) {
+				if (a.getMetaPropertyStringListValue(Constants.STEREOTYPE) == null
+						|| !a.getMetaPropertyStringListValue(Constants.STEREOTYPE).contains(Constants.COMPOSED_FIELD)) {
 					// normal column
 					res += TAB(4) + a.getName();
 				} else {
@@ -390,21 +402,20 @@ public class PMLGenerator {
 				}
 
 				cnt++;
-				
+
 				a = ((DBMCompoundAttribute) value).getNextAttribute(a);
 			}
-			
-			
+
 			res += "\n" + TAB(3) + "}";
-			
+
 		} else {
-			//binary value
+			// binary value
 			if (value.getMetaPropertyStringListValue(Constants.STEREOTYPE) != null
 					&& value.getMetaPropertyStringListValue(Constants.STEREOTYPE).contains(Constants.COMPOSED_FIELD)) {
-				//composed field e.g., x: "VALUE"[y]
+				// composed field e.g., x: "VALUE"[y]
 				res = readComposedField((DBMSimpleAttribute) value, variables);
 			} else {
-				//normal field e.g., list {x}
+				// normal field e.g., list {x}
 				res = value.getName();
 			}
 		}
@@ -717,55 +728,353 @@ public class PMLGenerator {
 			throw new Exception("Composed field with invalid name: " + fullName);
 		}
 	}
-	
+
 	private void readDatabases() throws Exception {
 		databasesStr.append("databases {\n");
 		DBMCollection db = dbSchema.getFirstCollection();
-		while(db != null) {
+		while (db != null) {
 			String dbType = db.getMetaPropertyStringValue(Constants.DB_TYPE_MP);
-			if(dbType == null || dbType.trim().isEmpty())
+			if (dbType == null || dbType.trim().isEmpty())
 				throw new Exception("Database " + db.getName() + " has no defined db type");
-			
+
 			databasesStr.append(TAB(1) + dbType + " " + db.getName() + " {\n");
-			
+
 			String dbName = db.getMetaPropertyStringValue(Constants.DB_NAME_MP);
 			String host = db.getMetaPropertyStringValue(Constants.DB_HOST_MP);
 			Integer port = db.getMetaPropertyIntValue(Constants.DB_PORT_MP);
 			String login = db.getMetaPropertyStringValue(Constants.DB_LOGIN_MP);
 			String password = db.getMetaPropertyStringValue(Constants.DB_PASSWORD_MP);
-			
-			
-			if(dbName != null && !dbName.isEmpty()) {
+
+			if (dbName != null && !dbName.isEmpty()) {
 				databasesStr.append(TAB(2) + "dbname: \"" + dbName + "\"\n");
 			}
-			
-			if(host != null && !host.isEmpty()) {
+
+			if (host != null && !host.isEmpty()) {
 				databasesStr.append(TAB(2) + "host: \"" + host + "\"\n");
 			}
-			
-			if(port != null && !port.toString().isEmpty()) {
+
+			if (port != null && !port.toString().isEmpty()) {
 				databasesStr.append(TAB(2) + "port: " + port + "\n");
 			}
-			
-			if(login != null && !login.isEmpty()) {
+
+			if (login != null && !login.isEmpty()) {
 				databasesStr.append(TAB(2) + "login: \"" + login + "\"\n");
 			}
-			
-			if(password != null && !password.isEmpty()) {
+
+			if (password != null && !password.isEmpty()) {
 				databasesStr.append(TAB(2) + "password: \"" + password + "\"\n");
 			}
-			
-			
+
 			databasesStr.append(TAB(1) + "}\n");
 			db = dbSchema.getNextCollection(db);
 		}
 		databasesStr.append("\n}");
 	}
-	
-	private void readMappings() {
+
+	private void readMappings() throws Exception {
 		mappingsStr.append("mapping rules {\n");
+
+		DBMEntityType ent = conceptualSchema.getFirstDataObjectEntityType();
+		boolean atLeastOneRule = false;
+		while (ent != null) {
+			// Entity Mapping rules
+			Map<DBMAttribute, List<DBMAttribute>> mappings = getEntityOrRelationshipTypeMappingRule(ent);
+			Map<DBMAttributeOwner, Map<DBMAttribute, List<DBMAttribute>>> mappingByAttributeOwner = sortByAttributeOwner(
+					mappings);
+			atLeastOneRule = generateEntityOrRelationMappingRules(ent, mappingByAttributeOwner, atLeastOneRule);
+
+			ent = conceptualSchema.getNextDataObjectEntityType(ent);
+		}
 		
-		mappingsStr.append("}\n");
+		
+		//RelationshipMappingRule
+		DBMRelationshipType rel = conceptualSchema.getFirstDataObjectRelationshipType();
+		while(rel != null) {
+			Map<DBMAttribute, List<DBMAttribute>> mappings = getEntityOrRelationshipTypeMappingRule(rel);
+			Map<DBMAttributeOwner, Map<DBMAttribute, List<DBMAttribute>>> mappingByAttributeOwner = sortByAttributeOwner(
+					mappings);
+			atLeastOneRule = generateEntityOrRelationMappingRules(rel, mappingByAttributeOwner, atLeastOneRule);
+			
+			rel = conceptualSchema.getNextDataObjectRelationshipType(rel);
+		}
+		
+		//RoleToEmbbededObjectMappingRule
+		rel = conceptualSchema.getFirstDataObjectRelationshipType();
+		while(rel != null) {
+			DBMRole role = rel.getFirstRole();
+			while(role != null) {
+				List<DBMCompoundAttribute> embeddedFields = getMappedEmbeddedFields(role);
+				atLeastOneRule = generateRoleToEmbeddedObjectMappingRules(role, embeddedFields, atLeastOneRule);
+				role = rel.getNextRole(role);
+			}
+			rel = conceptualSchema.getNextDataObjectRelationshipType(rel);
+		}
+		
+		//RoleToReferenceMappingRule
+		rel = conceptualSchema.getFirstDataObjectRelationshipType();
+		while(rel != null) {
+			DBMRole role = rel.getFirstRole();
+			while(role != null) {
+				List<DBMGroup> groups = getMappedReferenceGroup(role);
+				atLeastOneRule = generateRoleToReferenceMappingRules(role, groups, atLeastOneRule);
+				role = rel.getNextRole(role);
+			}
+			rel = conceptualSchema.getNextDataObjectRelationshipType(rel);
+		}
+		
+		//TODO ? RoleToKeyBracketsFieldMappingRule
+		// none of the developers can tell what a RoleToKeyBracketsFieldMappingRule is
+
+		mappingsStr.append("\n}\n");
+	}
+	
+	private boolean generateRoleToEmbeddedObjectMappingRules(DBMRole role, List<DBMCompoundAttribute> embeddedFields,
+			boolean atLeastOneRule) throws Exception {
+		String conceptualPart = conceptualSchemaName + "." + role.getRelationshipType().getName() + "." + role.getName() + " -> ";
+		for(DBMCompoundAttribute attr : embeddedFields) {
+			String rule = conceptualPart + getAbsoluteEmbeddedAttributeName(attr) + "()";
+			if(atLeastOneRule)
+				mappingsStr.append(",\n");
+			
+			mappingsStr.append(TAB(1) + rule);
+			atLeastOneRule = true;
+		}
+		
+		return atLeastOneRule;
+	}
+	
+	private boolean generateRoleToReferenceMappingRules(DBMRole role, List<DBMGroup> references,
+			boolean atLeastOneRule) throws Exception {
+		String conceptualPart = conceptualSchemaName + "." + role.getRelationshipType().getName() + "." + role.getName() + " -> ";
+		for(DBMGroup g : references) {
+			DBMEntityType ent = (DBMEntityType) g.getDataObject();
+			DBMCollection coll = getPhysicalSchema(ent);
+			String structName = coll.getName() + "." + ent.getName() + "." + g.getName();
+			String rule = conceptualPart + structName;
+			if(atLeastOneRule)
+				mappingsStr.append(",\n");
+			
+			mappingsStr.append(TAB(1) + rule);
+			atLeastOneRule = true;
+		}
+		
+		return atLeastOneRule;
+	}
+	
+	private List<DBMCompoundAttribute> getMappedEmbeddedFields(DBMRole role) {
+		List<DBMCompoundAttribute> res = new ArrayList<DBMCompoundAttribute>();
+		DBMCollection coll = physicalSchema.getFirstCollection();
+		while(coll != null) {
+			DBMEntityType ent = coll.getFirstDataObjectEntityType();
+			while(ent != null) {
+				res.addAll(getMappedEmbeddedFields(role, ent));
+				ent = coll.getNextDataObjectEntityType(ent);
+			}
+			coll = physicalSchema.getNextCollection(coll);
+		}
+		return res;
+	}
+	
+	private List<DBMGroup> getMappedReferenceGroup(DBMRole role) {
+		List<DBMGroup> res = new ArrayList<DBMGroup>();
+		DBMCollection coll = physicalSchema.getFirstCollection();
+		while(coll != null) {
+			DBMEntityType ent = coll.getFirstDataObjectEntityType();
+			while(ent != null) {
+				DBMGroup g = ent.getFirstGroup();
+				while (g != null) {
+					if (g.getFirstConstraintOrigin() != null && isMapped(role, g)) {
+						res.add(g);
+					}
+					g = ent.getNextGroup(g);
+				}
+				
+				
+				ent = coll.getNextDataObjectEntityType(ent);
+			}
+			coll = physicalSchema.getNextCollection(coll);
+		}
+		return res;
+	}
+	
+
+	private List<DBMCompoundAttribute> getMappedEmbeddedFields(DBMRole role, DBMAttributeOwner owner) {
+		List<DBMCompoundAttribute> res = new ArrayList<DBMCompoundAttribute>();
+		if(owner instanceof DBMCompoundAttribute && isMapped((DBMGenericObject) owner, role))
+			res.add((DBMCompoundAttribute) owner);
+		
+		DBMAttribute a = owner.getFirstAttribute();
+		while(a != null) {
+			if(a instanceof DBMAttributeOwner)
+				res.addAll(getMappedEmbeddedFields(role, (DBMAttributeOwner) a));
+			a = owner.getNextAttribute(a);
+		}
+		
+		return res;
+	}
+
+	private boolean generateEntityOrRelationMappingRules(DBMEntityRelationshipType ent,
+			Map<DBMAttributeOwner, Map<DBMAttribute, List<DBMAttribute>>> mappingByAttributeOwner, boolean atLeastOneRule) throws Exception {
+
+		String conceptualPart = conceptualSchemaName + "." + ent.getName() + "(";
+		for (Entry<DBMAttributeOwner, Map<DBMAttribute, List<DBMAttribute>>> entry : mappingByAttributeOwner
+				.entrySet()) {
+			DBMAttributeOwner owner = entry.getKey();
+			Map<DBMAttribute, List<DBMAttribute>> attributes = entry.getValue();
+
+			String rule = conceptualPart;
+			int i = 0;
+			for (DBMAttribute a : attributes.keySet()) {
+				if (i > 0)
+					rule += ", ";
+				rule += a.getName();
+				i++;
+			}
+
+			rule += ") -> ";
+
+			String physicalOwner = "";
+			if (owner instanceof DBMAttribute) {
+				physicalOwner = getAbsoluteEmbeddedAttributeName((DBMAttribute) owner);
+			}
+			if (owner instanceof DBMEntityType) {
+				physicalOwner = getPhysicalSchema((DBMEntityType) owner) + "." + ((DBMEntityType) owner).getName();
+			}
+
+			String staticOwner = physicalOwner;
+
+			physicalOwner += "(";
+			int j = 0;
+			for (DBMAttribute a : attributes.keySet()) {
+				if (j > 0)
+					physicalOwner += ", ";
+
+				List<DBMAttribute> pfields = attributes.get(a);
+				physicalOwner += pfields.get(0).getName();
+
+				pfields.remove(0);
+
+				if (pfields.size() > 0) {
+					// more than one fields in same owner mapped to the same conceptual attribute.
+					// E.g, table Customer (lastname, lastname2)
+					// separate rules are required
+					for (DBMAttribute a2 : pfields) {
+						String rule2 = conceptualPart + a.getName() + ") -> " + staticOwner + "(" + a2.getName() + ")";
+						if(atLeastOneRule)
+							mappingsStr.append(",\n");
+						
+						mappingsStr.append(TAB(1) + (ent instanceof DBMRelationshipType ? "rel: " : "") + rule2);
+						atLeastOneRule = true;
+					}
+				}
+
+				j++;
+			}
+
+			physicalOwner += ")";
+
+			rule += physicalOwner;
+			if(atLeastOneRule)
+				mappingsStr.append(",\n");
+			
+			mappingsStr.append(TAB(1) + (ent instanceof DBMRelationshipType ? "rel: " : "") + rule);
+			atLeastOneRule = true;
+		}
+		
+		return atLeastOneRule;
+
+	}
+
+	private Map<DBMAttributeOwner, Map<DBMAttribute, List<DBMAttribute>>> sortByAttributeOwner(
+			Map<DBMAttribute, List<DBMAttribute>> mappings) {
+		Map<DBMAttributeOwner, Map<DBMAttribute, List<DBMAttribute>>> res = new HashMap<DBMAttributeOwner, Map<DBMAttribute, List<DBMAttribute>>>();
+
+		for (Entry<DBMAttribute, List<DBMAttribute>> entry : mappings.entrySet()) {
+			DBMAttribute attr = entry.getKey();
+			List<DBMAttribute> fields = entry.getValue();
+
+			for (DBMAttribute field : fields) {
+				DBMAttributeOwner parent = (DBMAttributeOwner) field.getAttributeOwner();
+				Vector<String> stereotypes = ((DBMGenericObject) parent).getMetaPropertyStringListValue(Constants.STEREOTYPE);
+				if(stereotypes != null && stereotypes.contains(Constants.VALUE) && parent instanceof DBMCompoundAttribute) {
+					//parent = hash {...}
+					parent = (DBMAttributeOwner) ((DBMCompoundAttribute)parent).getAttributeOwner();
+				}
+				
+				
+				Map<DBMAttribute, List<DBMAttribute>> map = res.get(parent);
+				if (map == null) {
+					map = new LinkedHashMap<DBMAttribute, List<DBMAttribute>>();
+					res.put(parent, map);
+				}
+
+				List<DBMAttribute> pfields = map.get(attr);
+				if (pfields == null) {
+					pfields = new ArrayList<DBMAttribute>();
+					map.put(attr, pfields);
+				}
+				pfields.add(field);
+			}
+
+		}
+
+		return res;
+	}
+
+	private Map<DBMAttribute, List<DBMAttribute>> getEntityOrRelationshipTypeMappingRule(DBMEntityRelationshipType ent) {
+		Map<DBMAttribute, List<DBMAttribute>> res = new LinkedHashMap<DBMAttribute, List<DBMAttribute>>();
+
+		DBMAttribute a = ent.getFirstAttribute();
+		while (a != null) {
+			DBMEntityType physicalStruc = physicalSchema.getFirstDataObjectEntityType();
+			while (physicalStruc != null) {
+				List<DBMAttribute> fields = getEntityMappingRule(a, physicalStruc);
+				if (fields != null && fields.size() > 0) {
+					List<DBMAttribute> list = res.get(a);
+					if (list == null) {
+						list = new ArrayList<DBMAttribute>();
+						res.put(a, list);
+					}
+
+					list.addAll(fields);
+				}
+
+				physicalStruc = physicalSchema.getNextDataObjectEntityType(physicalStruc);
+			}
+
+			a = ent.getNextAttribute(a);
+		}
+
+		return res;
+
+	}
+
+	private List<DBMAttribute> getEntityMappingRule(DBMAttribute a, DBMAttributeOwner owner) {
+		List<DBMAttribute> res = new ArrayList<DBMAttribute>();
+		DBMAttribute a2 = owner.getFirstAttribute();
+		while (a2 != null) {
+			if (isMapped(a, a2))
+				res.add(a2);
+
+			if (a2 instanceof DBMCompoundAttribute) {
+				res.addAll(getEntityMappingRule(a, (DBMAttributeOwner) a2));
+			}
+
+			a2 = owner.getNextAttribute(a2);
+		}
+		return res;
+	}
+
+	private boolean isMapped(DBMGenericObject a, DBMGenericObject a2) {
+		Vector<Integer> oids1 = a.getMetaPropertyIntListValue(Constants.MAPPING_OID_MP);
+		Vector<Integer> oids2 = a2.getMetaPropertyIntListValue(Constants.MAPPING_OID_MP);
+		if (oids1 == null || oids2 == null)
+			return false;
+
+		for (Integer oid : oids1)
+			if (oids2.contains(oid))
+				return true;
+		return false;
 	}
 
 	private String getDatabasesMappings(DBMCollection schema) {

@@ -100,8 +100,8 @@ public class LunGenerator {
 
 	public static void main(String[] args) throws IOException {
 		String pmlFile = "C:/Users/lmeurice/Documents/HyDRa/be.unamur.polystore/resources/S1.pml";
-		pmlFile = "C:/Users/lmeurice/Documents/UNamur - examens/2021-2022/IDASM101 - Big Data/Phases II et III/Groupe 8/S8.pml";
-		pmlFile = "C:/Users/lmeurice/Desktop/output2.pml";
+//		pmlFile = "C:/Users/lmeurice/Documents/UNamur - examens/2021-2022/IDASM101 - Big Data/Phases II et III/Groupe 8/S8.pml";
+//		pmlFile = "C:/Users/lmeurice/Desktop/output2.pml";
 		String outputLun = "C:/Users/lmeurice/Desktop/output.lun";
 
 		LunGenerator generator = new LunGenerator(pmlFile, outputLun);
