@@ -158,9 +158,13 @@ ColumnSchema:
 
 TableColumnDB:
 	'table' name=ID '{'
-		'columns' '{'
-			(columns+=LimitedPhysicalField (',' columns+=LimitedPhysicalField)*)
-		'}'
+		(	('columns' '{'
+				(columns+=LimitedPhysicalField (',' columns+=LimitedPhysicalField)*)
+			'}')
+		|
+			(rowkey=Rowkey ('columnfamilies' '{'columnfamilies+=ColumnFamily*'}'))
+			
+		)
 		('references' '{'references+=Reference*'}')?
 	'}'
 ;

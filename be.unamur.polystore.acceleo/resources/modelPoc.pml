@@ -156,7 +156,7 @@ physical schemas {
 	
 		kvpairs KVClient {
 			key : "CLIENT:"[clientID],
-			value : attr hash { 
+			value : hash { 
 				name : [firstname]"_"[lastname],
 				streetnumber : [streetnbr], 
 				street

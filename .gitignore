@@ -44,3 +44,4 @@ Use-Cases/uc5-SANER2022/data-deployment/ModelA/dump.rdb
 Use-Cases/uc5-SANER2022/data-deployment/ModelA/Order.json
 Use-Cases/uc5-SANER2022/data-deployment/ModelA/productTable.sql
 Use-Cases/uc5-SANER2022/data-deployment/ModelA/sqlTables.sql
+be.unamur.polystore.acceleo/src/my_definitions.txt

@@ -26,4 +26,5 @@ Export-Package: be.unamur.polystore,
  be.unamur.polystore.generator,
  be.unamur.polystore.parser.antlr.internal,
  be.unamur.polystore.parser.antlr
-Import-Package: org.apache.log4j
+Import-Package: be.unamur.polystore.pml,
+ org.apache.log4j
