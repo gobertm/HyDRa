@@ -22,8 +22,9 @@ Here we list the operations manipulating modeled domain entities objects support
 **A video of the installation and usage of HyDRa tools is available [here](https://github.com/gobertm/HyDRa/raw/main/Use-Cases/resources/Video-Installation-Usage.mp4) or on [youtube](https://youtu.be/-Auy5prYMOw)**
 [![youtube](https://img.youtube.com/vi/-Auy5prYMOw/0.jpg)](https://youtu.be/-Auy5prYMOw)
 
+
 -   Make sure Java 14 is installed on your computer
--   Run Eclipse and install the HyDRa plugins
+-   Run Eclipse IDE (For Java Developpers) and install the HyDRa plugins
     -   Help > Install New Software > Add > https://staff.info.unamur.be/gobertm/
 -   Restart Eclipse. (Note that in some cases the API generation tool requires a second restart of Eclipse)
 
